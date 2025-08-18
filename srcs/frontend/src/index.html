@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>42 Pong</title>
+</head>
+<body>
+    <h1>Welcome to 42 Pong</h1>
+
+    <div id="game">
+        <p>Loading game...</p>
+    </div>
+</body>
+<script>
+    const gameDiv = document.getElementById('game');
+    
+    async function getData() {
+        const url = "https://localhost:4443/api/game/ping";
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            gameDiv.innerHTML = `<p>Game ping: ${result.message}</p><br>
+                                 <p>User: ${result.user.name}</p>`;
+        } catch (error) {
+            gameDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+        }
+    }
+
+    getData();
+</script>
+</html>
