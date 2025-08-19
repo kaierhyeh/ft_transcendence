@@ -1,0 +1,15 @@
+###################################################
+----------------TRANSCENDANCE----------------------
+###################################################
+
+
+Notes sur le projet en cours : 
+
+
+
+Notes mémo apprentissage utiles : 
+
+const ctx (variable conventionelle mais peu avoir nimporte quel nom) = canvas.getContext('2d'); Permet d'assigner la boite a outils 2d (ex pinceau ..) a 
+ctx.fillRect();  Dessiner un rectangle (appel dle fonction fillrect() venant de 2d) assigné a const ctx.
+ctx.arc();        Dessiner un cercle  
+ctx.moveTo();     Tracer une ligne

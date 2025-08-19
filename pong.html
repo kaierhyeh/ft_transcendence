@@ -17,10 +17,10 @@
             color: pink;
             font-size: 40px;
         }
-        
+
         #pongBoard
         {
-            border: 2px solid white;
+            border: 2px solid grey;
             background-color: black;
             margin: 20px auto;
             display: block;
@@ -32,6 +32,20 @@
     <p> let's play ! </p>
     
     <canvas id="pongBoard" width="800" height="400"></canvas>
-    
+    <script>
+        const canvas = document.getElementById('pongBoard');
+        const ctx = canvas.getContext('2d');
+        
+        ctx.strokeStyle = 'grey';
+        ctx.lineWidth = 1;
+        
+        ctx.beginPath();
+        ctx.moveTo(400, 0);
+        ctx.lineTo(400, 400);
+        ctx.stroke();
+        
+        ctx.fillStyle = 'pink';
+        ctx.fillRect(100, 100, 20, 20);
+    </script>
 </body>
 </html>
