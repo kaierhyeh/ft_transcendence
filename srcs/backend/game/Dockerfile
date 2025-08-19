@@ -2,10 +2,10 @@ FROM node:lts-alpine
 
 WORKDIR /app
 
-RUN npm i fastify
+RUN npm i fastify @fastify/websocket
 
 COPY . .
 
 EXPOSE 3000
 
-CMD [ "nodejs", "index.js" ]
+CMD [ "node", "index.js" ]

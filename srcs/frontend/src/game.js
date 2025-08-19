@@ -54,78 +54,138 @@
 
 
 // Global variables
+const WS_GAME_ENDPOINT = "wss://localhost:4443/api/game/ws";
 const API_GAME_ENDPOINT = "https://localhost:4443/api/game";
 
 let canvas = document.getElementById("game");
 let ctx = canvas.getContext("2d");
 let game_data;
 let keys = {};
+let ws;
+let isWebSocketConnected = false;
 
 // Event listeners
-document.addEventListener("keydown", function (e) {return keys[e.key] = true; });
-document.addEventListener("keyup", function (e) { return keys[e.key] = false; });
+document.addEventListener("keydown", function (e) { keys[e.key] = true; });
+document.addEventListener("keyup", function (e) { keys[e.key] = false; });
 
-async function getGameData() {
-    const url = API_GAME_ENDPOINT + "/data";
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
+// WebSocket connection for real-time updates
+function connectWebSocket() {
+    console.log("Attempting to connect to:", WS_GAME_ENDPOINT);
+    ws = new WebSocket(WS_GAME_ENDPOINT);
+    
+    ws.onopen = function() {
+        console.log("WebSocket connected successfully");
+        isWebSocketConnected = true;
+        startInputSending();
+    };
+    
+    ws.onmessage = function(event) {
+        try {
+            game_data = JSON.parse(event.data);
+            draw();
+        } catch (error) {
+            console.error("Error parsing game data:", error);
         }
+    };
+    
+    ws.onclose = function(event) {
+        console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
+        isWebSocketConnected = false;
+        // Try to reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+    };
+    
+    ws.onerror = function(error) {
+        console.error("WebSocket error:", error);
+        isWebSocketConnected = false;
+    };
+}
 
-        return await response.json();
-    } catch (error) {
-        return error;
-    }
+// Fallback: use REST API if WebSocket fails
+async function fallbackToREST() {
+    console.log("Using REST API fallback");
+    setInterval(async () => {
+        try {
+            await postUserInput();
+            const response = await fetch(API_GAME_ENDPOINT + "/data");
+            game_data = await response.json();
+            draw();
+        } catch (error) {
+            console.error("REST API error:", error);
+        }
+    }, 100); // 10fps for REST fallback
 }
 
 async function postUserInput() {
-    if (Object.keys(keys).length === 0)
-        return ;
+    const activeKeys = Object.keys(keys).filter(key => keys[key]);
+    if (activeKeys.length === 0) return;
+    
+    const inputData = {};
+    activeKeys.forEach(key => inputData[key] = true);
+    
     const url = API_GAME_ENDPOINT + "/input";
     await fetch(url, {
         method: "POST",
-        body: JSON.stringify(keys),
+        body: JSON.stringify(inputData),
         headers: {
             "Content-type": "application/json; charset=UTF-8"
         }
     });
 }
 
+// Send input periodically (much less frequent than rendering)
+function startInputSending() {
+    setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            // Only send if there are active keys
+            const activeKeys = Object.keys(keys).filter(key => keys[key]);
+            if (activeKeys.length > 0) {
+                const inputData = {};
+                activeKeys.forEach(key => inputData[key] = true);
+                ws.send(JSON.stringify(inputData));
+            }
+        }
+    }, 50); // Send input 20 times per second (much better than 60!)
+}
+
 function draw() {
-    if (!game_data) return; // Safety check
+    if (!game_data) return;
+    
     ctx.clearRect(0, 0, game_data.canvas_width, game_data.canvas_height);
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "white";
+    
+    // Draw paddle
     ctx.fillRect(0, game_data.paddleY, game_data.paddle_width, game_data.paddle_height);
+    
+    // Draw ball
+    ctx.fillRect(game_data.ballX, game_data.ballY, 10, 10);
 }
 
 async function init() {
     try {
-        game_data = await getGameData();
+        // Get initial game data via REST API
+        const response = await fetch(API_GAME_ENDPOINT + "/data");
+        game_data = await response.json();
+        
         canvas.width = game_data.canvas_width;
         canvas.height = game_data.canvas_height;
+        
         console.log("Game initialized:", game_data);
+        
+        // Try WebSocket first, fallback to REST if it fails
+        connectWebSocket();
+        
+        // If WebSocket doesn't connect within 5 seconds, use REST fallback
+        setTimeout(() => {
+            if (!isWebSocketConnected) {
+                console.log("WebSocket failed to connect, falling back to REST API");
+                fallbackToREST();
+            }
+        }, 5000);
+        
     } catch (error) {
         console.error("Failed to initialize game:", error);
     }
 }
 
-async function gameLoop() {
-    try {
-        await postUserInput();
-        game_data = await getGameData();
-        draw();
-    } catch (error) {
-        console.error("Game loop error:", error);
-    }
-    
-    // Use requestAnimationFrame for smooth animation (60fps max)
-    requestAnimationFrame(gameLoop);
-}
-
-async function main() {
-    await init();
-    gameLoop();
-}
-
-main();
+init();
