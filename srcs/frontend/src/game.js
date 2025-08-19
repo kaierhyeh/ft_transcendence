@@ -51,25 +51,22 @@
 // }
 // loop();
 
-var WIDTH = canvas.width;
-var HEIGHT = canvas.height;
-var PADDLE_WIDTH = 10;
-var PADDLE_HEIGHT = 80;
-var paddleY = HEIGHT / 2 - PADDLE_HEIGHT / 2;
-var PADDLE_SPEED = 4;
 
 
 // Global variables
-let canvas = document.getElementById("game").getContext("2d");
+const API_GAME_ENDPOINT = "https://localhost:4443/api/game";
+
+let canvas = document.getElementById("game");
+let ctx = canvas.getContext("2d");
 let game_data;
-let keys;
+let keys = {};
 
 // Event listeners
 document.addEventListener("keydown", function (e) {return keys[e.key] = true; });
 document.addEventListener("keyup", function (e) { return keys[e.key] = false; });
 
 async function getGameData() {
-    const url = "https://localhost:4443/api/game/data";
+    const url = API_GAME_ENDPOINT + "/data";
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -83,8 +80,9 @@ async function getGameData() {
 }
 
 async function postUserInput() {
-    
-    const url = "https://localhost:4443/api/game/input";
+    if (Object.keys(keys).length === 0)
+        return ;
+    const url = API_GAME_ENDPOINT + "/input";
     await fetch(url, {
         method: "POST",
         body: JSON.stringify(keys),
@@ -95,18 +93,39 @@ async function postUserInput() {
 }
 
 function draw() {
-    canvas.clearRect(0, 0, game_data.canvas_width, game_data.canvas_height);
-    canvas.fillStyle = "white";
-    canvas.fillRect(0, game_data.paddleY, game_data.paddle_width, game_data.paddle_height);
+    if (!game_data) return; // Safety check
+    ctx.clearRect(0, 0, game_data.canvas_width, game_data.canvas_height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, game_data.paddleY, game_data.paddle_width, game_data.paddle_height);
 }
 
-function main() {
-    game_data = getGameData();
-    while (true) {
-        postUserInput();
-        getGameData();
-        draw();
+async function init() {
+    try {
+        game_data = await getGameData();
+        canvas.width = game_data.canvas_width;
+        canvas.height = game_data.canvas_height;
+        console.log("Game initialized:", game_data);
+    } catch (error) {
+        console.error("Failed to initialize game:", error);
     }
+}
+
+async function gameLoop() {
+    try {
+        await postUserInput();
+        game_data = await getGameData();
+        draw();
+    } catch (error) {
+        console.error("Game loop error:", error);
+    }
+    
+    // Use requestAnimationFrame for smooth animation (60fps max)
+    requestAnimationFrame(gameLoop);
+}
+
+async function main() {
+    await init();
+    gameLoop();
 }
 
 main();
