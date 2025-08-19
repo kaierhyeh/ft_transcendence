@@ -32,20 +32,10 @@
     <p> let's play ! </p>
     
     <canvas id="pongBoard" width="800" height="400"></canvas>
+    <script src="pong.js"></script>
     <script>
-        const canvas = document.getElementById('pongBoard');
-        const ctx = canvas.getContext('2d');
-        
-        ctx.strokeStyle = 'grey';
-        ctx.lineWidth = 1;
-        
-        ctx.beginPath();
-        ctx.moveTo(400, 0);
-        ctx.lineTo(400, 400);
-        ctx.stroke();
-        
-        ctx.fillStyle = 'pink';
-        ctx.fillRect(100, 100, 20, 20);
+        initGame();
     </script>
+
 </body>
 </html>
