@@ -4,12 +4,12 @@ const fastify = require("fastify")({ logger: true });
 fastify.register(require('@fastify/websocket'));
 
 // Constants
-const PADDLE_SPEED = 4;
+const PADDLE_SPEED = 6;
 const WIDTH = 600;
 const HEIGHT = 400;
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 80;
-const GAME_FPS = 30; // Reduce from 60fps to 30fps for server efficiency
+const GAME_FPS = 60;
 
 const game_data = {
   canvas_width: WIDTH,
@@ -26,8 +26,6 @@ const game_data = {
 
 // Store connected clients
 const clients = new Set();
-
-;
 
 // Game loop function
 function updateGame() {
@@ -60,8 +58,9 @@ function updateGame() {
 
 function broadcastGameState() {
   const gameState = JSON.stringify(game_data);
+
   clients.forEach(client => {
-    if (client.readyState === 1) { // WebSocket.OPEN
+    if (client && client.readyState === WebSocket.OPEN) {
       client.send(gameState);
     }
   });
@@ -77,10 +76,11 @@ fastify.get("/game/data", async (request, reply) => {
 
 // WebSocket endpoint for real-time game updates
 fastify.register(async function (fastify) {
-  fastify.get('/game/ws', { websocket: true }, (connection, req) => {
-    clients.add(connection.socket);
+  fastify.get('/game/ws', { websocket: true }, (client, req) => {
+
+    clients.add(client);
     
-    connection.socket.on('message', (message) => {
+    client.on('message', (message) => {
       try {
         const input = JSON.parse(message);
         
@@ -96,25 +96,13 @@ fastify.register(async function (fastify) {
       }
     });
     
-    connection.socket.on('close', () => {
-      clients.delete(connection.socket);
+    client.on('close', () => {
+      clients.delete(client);
     });
     
     // Send initial game state
-    connection.socket.send(JSON.stringify(game_data));
+    client.send(JSON.stringify(game_data));
   });
-});
-
-// Keep the old POST endpoint for backward compatibility
-fastify.post("/game/input", async (request, reply) => {
-  const keys = request.body;
-
-  if (keys["ArrowUp"] && game_data.paddleY > 0)
-    game_data.paddleY -= PADDLE_SPEED;
-  if (keys["ArrowDown"] && game_data.paddleY < HEIGHT - PADDLE_HEIGHT)
-    game_data.paddleY += PADDLE_SPEED;
-
-  reply.code(204);
 });
 
 

@@ -62,7 +62,6 @@ let ctx = canvas.getContext("2d");
 let game_data;
 let keys = {};
 let ws;
-let isWebSocketConnected = false;
 
 // Event listeners
 document.addEventListener("keydown", function (e) { keys[e.key] = true; });
@@ -75,7 +74,6 @@ function connectWebSocket() {
     
     ws.onopen = function() {
         console.log("WebSocket connected successfully");
-        isWebSocketConnected = true;
         startInputSending();
     };
     
@@ -90,14 +88,12 @@ function connectWebSocket() {
     
     ws.onclose = function(event) {
         console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
-        isWebSocketConnected = false;
         // Try to reconnect after 3 seconds
         setTimeout(connectWebSocket, 3000);
     };
     
     ws.onerror = function(error) {
         console.error("WebSocket error:", error);
-        isWebSocketConnected = false;
     };
 }
 
@@ -116,22 +112,6 @@ async function fallbackToREST() {
     }, 100); // 10fps for REST fallback
 }
 
-async function postUserInput() {
-    const activeKeys = Object.keys(keys).filter(key => keys[key]);
-    if (activeKeys.length === 0) return;
-    
-    const inputData = {};
-    activeKeys.forEach(key => inputData[key] = true);
-    
-    const url = API_GAME_ENDPOINT + "/input";
-    await fetch(url, {
-        method: "POST",
-        body: JSON.stringify(inputData),
-        headers: {
-            "Content-type": "application/json; charset=UTF-8"
-        }
-    });
-}
 
 // Send input periodically (much less frequent than rendering)
 function startInputSending() {
@@ -172,16 +152,7 @@ async function init() {
         
         console.log("Game initialized:", game_data);
         
-        // Try WebSocket first, fallback to REST if it fails
         connectWebSocket();
-        
-        // If WebSocket doesn't connect within 5 seconds, use REST fallback
-        setTimeout(() => {
-            if (!isWebSocketConnected) {
-                console.log("WebSocket failed to connect, falling back to REST API");
-                fallbackToREST();
-            }
-        }, 5000);
         
     } catch (error) {
         console.error("Failed to initialize game:", error);
