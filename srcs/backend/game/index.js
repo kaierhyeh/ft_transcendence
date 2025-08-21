@@ -16,7 +16,17 @@ const game_data = {
   canvas_height: HEIGHT,
   paddle_width: PADDLE_WIDTH,
   paddle_height: PADDLE_HEIGHT,
-  paddleY: HEIGHT / 2 - PADDLE_HEIGHT / 2,
+  // Players public data
+  players: [
+    {
+      paddleX: 0,
+      paddleY: HEIGHT / 2 - PADDLE_HEIGHT / 2
+    },
+    {
+      paddleX: WIDTH - PADDLE_WIDTH,
+      paddleY: HEIGHT / 2 - PADDLE_HEIGHT / 2
+    }
+  ],
   // Add ball for complete pong
   ballX: WIDTH / 2,
   ballY: HEIGHT / 2,
@@ -45,10 +55,17 @@ function updateGame() {
     game_data.ballVX = -game_data.ballVX;
   }
   
-  // Simple paddle collision (left side only for now)
+  // Simple paddle collision (left side)
   if (game_data.ballX <= PADDLE_WIDTH && 
-      game_data.ballY >= game_data.paddleY && 
-      game_data.ballY <= game_data.paddleY + PADDLE_HEIGHT) {
+      game_data.ballY >= game_data.players[0].paddleY && 
+      game_data.ballY <= game_data.players[0].paddleY + PADDLE_HEIGHT) {
+    game_data.ballVX = -game_data.ballVX;
+  }
+  
+  // Simple paddle collision (Right side)
+  if (game_data.ballX >= WIDTH - PADDLE_WIDTH && 
+      game_data.ballY >= game_data.players[1].paddleY && 
+      game_data.ballY <= game_data.players[1].paddleY + PADDLE_HEIGHT) {
     game_data.ballVX = -game_data.ballVX;
   }
   
@@ -84,12 +101,19 @@ fastify.register(async function (fastify) {
       try {
         const input = JSON.parse(message);
         
-        // Process player input immediately
-        if (input.ArrowUp && game_data.paddleY > 0) {
-          game_data.paddleY -= PADDLE_SPEED;
+        // Process player 0 input immediately
+        if (input.w && game_data.players[0].paddleY > 0) {
+          game_data.players[0].paddleY -= PADDLE_SPEED;
         }
-        if (input.ArrowDown && game_data.paddleY < HEIGHT - PADDLE_HEIGHT) {
-          game_data.paddleY += PADDLE_SPEED;
+        if (input.s && game_data.players[0].paddleY < HEIGHT - PADDLE_HEIGHT) {
+          game_data.players[0].paddleY += PADDLE_SPEED;
+        }
+        // Process player 1 input immediately
+        if (input.ArrowUp && game_data.players[1].paddleY > 0) {
+          game_data.players[1].paddleY -= PADDLE_SPEED;
+        }
+        if (input.ArrowDown && game_data.players[1].paddleY < HEIGHT - PADDLE_HEIGHT) {
+          game_data.players[1].paddleY += PADDLE_SPEED;
         }
       } catch (err) {
         fastify.log.error('Invalid message:', err);

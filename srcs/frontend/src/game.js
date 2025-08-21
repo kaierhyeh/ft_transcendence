@@ -134,9 +134,12 @@ function draw() {
     ctx.clearRect(0, 0, game_data.canvas_width, game_data.canvas_height);
     ctx.fillStyle = "white";
     
-    // Draw paddle
-    ctx.fillRect(0, game_data.paddleY, game_data.paddle_width, game_data.paddle_height);
+    // Draw paddle Player 0
+    ctx.fillRect(game_data.players[0].paddleX, game_data.players[0].paddleY, game_data.paddle_width, game_data.paddle_height);
     
+    // Draw paddle Player 1
+    ctx.fillRect(game_data.players[1].paddleX, game_data.players[1].paddleY, game_data.paddle_width, game_data.paddle_height);
+
     // Draw ball
     ctx.fillRect(game_data.ballX, game_data.ballY, 10, 10);
 }
