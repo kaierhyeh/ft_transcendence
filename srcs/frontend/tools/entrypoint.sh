@@ -3,7 +3,7 @@ set -e  # Exit on error
 
 # Function to generate one SSL certificate
 generate_ssl_cert() {
-    subject="/C=FR/ST=IDF/L=Paris/O=42/OU=42ft_transcendence/CN=${FQDN}"
+    subject="/C=FR/ST=IDF/L=Paris/O=42/OU=42ft_transcendence/CN=localhost"
 
     if [ -f "$KEYS_DIR/ssl.key" ] && [ -f "$CERTS_DIR/ssl.crt" ]; then
         echo "ℹ️ SSL cert already exists, skipping generation."

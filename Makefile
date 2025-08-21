@@ -1,5 +1,3 @@
-include srcs/.env  # Load variables from .env
-
 COMPOSE_FILE := srcs/docker-compose.yml
 
 all: up

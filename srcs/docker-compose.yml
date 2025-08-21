@@ -10,7 +10,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4443:443"
-    env_file: .env
     volumes:
       - ssl:/etc/ssl/
     networks:
