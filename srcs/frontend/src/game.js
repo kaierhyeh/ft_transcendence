@@ -88,8 +88,16 @@ function connectWebSocket() {
     
     ws.onclose = function(event) {
         console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
-        // Try to reconnect after 3 seconds
-        setTimeout(connectWebSocket, 3000);
+        if (game_data.ongoing) {
+            // Try to reconnect after 3 seconds
+            setTimeout(connectWebSocket, 3000);
+        }
+        else {
+            const winner = document.getElementById("winner");
+            if (winner.innerText.length == 0) {
+                winner.innerText = "Player " + game_data.score.indexOf(game_data.win_point) + " won !";
+            }
+        }
     };
     
     ws.onerror = function(error) {
@@ -142,6 +150,13 @@ function draw() {
 
     // Draw ball
     ctx.fillRect(game_data.ballX, game_data.ballY, 10, 10);
+
+    // Display score
+    ctx.font = "48px Courier";
+    // ctx.fillStyle = "white";
+    console.log("score: " + game_data.score[0] + " - " + game_data.score[1]);
+    ctx.fillText(game_data.score[0], game_data.canvas_width / 2 - 50, 50);
+    ctx.fillText(game_data.score[1], game_data.canvas_width / 2 + 50, 50);
 }
 
 async function init() {

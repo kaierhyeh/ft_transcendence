@@ -10,6 +10,8 @@ const HEIGHT = 400;
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 80;
 const GAME_FPS = 60;
+const WIN_POINT = 11;
+
 
 const game_data = {
   canvas_width: WIDTH,
@@ -27,6 +29,9 @@ const game_data = {
       paddleY: HEIGHT / 2 - PADDLE_HEIGHT / 2
     }
   ],
+  score: [0, 0],
+  win_point: WIN_POINT,
+  ongoing: true,
   // Add ball for complete pong
   ballX: WIDTH / 2,
   ballY: HEIGHT / 2,
@@ -34,11 +39,17 @@ const game_data = {
   ballVY: 2
 };
 
+let game_result = {};
+// let interval_id;
+
 // Store connected clients
 const clients = new Set();
 
 // Game loop function
 function updateGame() {
+  if (game_data.ongoing == false)
+    return ;
+
   // Update ball position
   game_data.ballX += game_data.ballVX;
   game_data.ballY += game_data.ballVY;
@@ -50,6 +61,13 @@ function updateGame() {
   
   // Ball collision with left/right walls (reset ball)
   if (game_data.ballX <= 0 || game_data.ballX >= WIDTH) {
+    // Score update
+    if (game_data.ballX <= 0)
+      game_data.score[1]++;
+    else
+      game_data.score[0]++;
+    
+    // Ball reset
     game_data.ballX = WIDTH / 2;
     game_data.ballY = HEIGHT / 2;
     game_data.ballVX = -game_data.ballVX;
@@ -68,9 +86,18 @@ function updateGame() {
       game_data.ballY <= game_data.players[1].paddleY + PADDLE_HEIGHT) {
     game_data.ballVX = -game_data.ballVX;
   }
+
+  if (Math.max(...game_data.score) == WIN_POINT)
+    game_data.ongoing = false;
   
   // Broadcast game state to all connected clients
   broadcastGameState();
+
+  if (game_data.ongoing == false) {
+    clients.forEach(client => {
+      client.close(1001, "Game is finished");
+    });
+  }
 }
 
 function broadcastGameState() {
@@ -90,6 +117,11 @@ setInterval(updateGame, 1000 / GAME_FPS);
 fastify.get("/game/data", async (request, reply) => {
   return game_data;
 });
+
+// // REST API for initial game data (less frequent)
+// fastify.get("/game/start", async (request, reply) => {
+//   return game_data;
+// });
 
 // WebSocket endpoint for real-time game updates
 fastify.register(async function (fastify) {
