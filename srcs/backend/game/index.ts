@@ -68,6 +68,7 @@ interface GameState {
   tick: number;
   ball: Ball;
   players: PlayerState[];
+  websockets: Set<SocketStream>;
   ongoing: boolean;
 }
 
@@ -86,7 +87,7 @@ interface GameSession {
   conf: GameConf;
   state: GameState;
   created_at: Date;
-  winner_id: number;
+  winner_id: number | undefined;
 }
 
 // Game configuration
@@ -103,14 +104,12 @@ const game_conf: GameConf = {
 const game_sessions: Map<number, GameSession> = new Map();
 
 // Game state
-const game_state: GameState = {
+const default_state: GameState = {
   type: "state",
   tick: 0,
   ball: { x: WIDTH / 2, y: HEIGHT / 2, vx: BALL_SPEED, vy: BALL_SPEED / 2 },
-  players: [
-    {player_id: 1, session_id: "session_id_1", paddle_coord:  HEIGHT / 2 - PADDLE_HEIGHT / 2, field_slot: "left", score: 0},
-    {player_id: 2, session_id: "session_id_2", paddle_coord:  HEIGHT / 2 - PADDLE_HEIGHT / 2, field_slot: "right", score: 0},
-  ],
+  players: [],
+  websockets: new Set<SocketStream>(),
   ongoing: false
 };
 
@@ -205,13 +204,35 @@ setInterval(updateGame, 1000 / GAME_FPS);
 fastify.get("/game/conf", async (request: FastifyRequest, reply: FastifyReply): Promise<GameConf> => {
   return game_conf;
 });
+
+function createGameSession(participants: GameParticipant[], game_id: number): GameSession {
+  const new_game: GameSession = {
+    id: game_id,
+    conf: game_conf,
+    state: default_state,
+    created_at: new Date(),
+    winner_id: undefined
+  }
+  new_game.state.players = participants.map((p, idx) => ({
+    player_id: p.player_id,
+    session_id: p.session_id,
+    paddle_coord: HEIGHT / 2 - PADDLE_HEIGHT / 2,
+    field_slot: idx === 0 ? "left" : "right",
+    score: 0,
+  }));
+   return new_game;
+}
   
 fastify.post<{Body: GameCreationBody }>("/game/create", async (request, reply) => {
   const { participants } = request.body;
+
+  if (participants.length != 2) {
+    reply.code(400).send({error: "Invalid number of participant"})
+    return ;
+  }
+  
   const game_id = next_id++;
-
-  game_sessions.set(next_id++, createGameSession(participants));
-
+  game_sessions.set(game_id, createGameSession(participants, game_id));
   reply.send({ success: true, game_id: game_id});
 });
 
@@ -232,8 +253,17 @@ fastify.post<{ Body: StartGameBody }>("/game/start", async (request, reply) => {
 
 // WebSocket endpoint for real-time game updates
 fastify.register(async function (fastify: FastifyInstance) {
-  fastify.get('/game/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
-    clients.add(connection);
+  fastify.get('/game/:id/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
+    const { id } = req.params as { id: number};
+
+    if (!game_sessions.has(id)) {
+      connection.socket.close(1011, "Game id doens't exist");
+      return ;
+    }
+    const game_session = game_sessions.get(id);
+    const { websockets } = game_session?.state as {websockets: Set<SocketStream>};
+
+    websockets.add(connection);
     
     connection.socket.on('message', (message: Buffer) => {
       try {
