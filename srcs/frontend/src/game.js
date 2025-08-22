@@ -104,7 +104,7 @@ function connectWebSocket() {
         else {
             const winner = document.getElementById("winner");
             if (winner.innerText.length == 0) {
-                winner.innerText = "Player " + game_state.score.indexOf(game_properties.win_point) + " won !";
+                winner.innerText = "Player " + game_state.score.indexOf(game_conf.win_point) + " won !";
             }
         }
     };
@@ -145,37 +145,37 @@ function draw() {
     if (!game_state) return;
      console.log(game_state)
     
-    ctx.clearRect(0, 0, game_properties.canvas_width, game_properties.canvas_height);
+    ctx.clearRect(0, 0, game_conf.canvas_width, game_conf.canvas_height);
     ctx.fillStyle = "white";
     
     // Draw paddle Player 0
-    ctx.fillRect(0, game_state.paddle_y[0], game_properties.paddle_width, game_properties.paddle_height);
+    ctx.fillRect(0, game_state.paddle_y[0], game_conf.paddle_width, game_conf.paddle_height);
     
     // Draw paddle Player 1
-    ctx.fillRect(game_properties.canvas_width - game_properties.ball_size, game_state.paddle_y[1], game_properties.paddle_width, game_properties.paddle_height);
+    ctx.fillRect(game_conf.canvas_width - game_conf.ball_size, game_state.paddle_y[1], game_conf.paddle_width, game_conf.paddle_height);
 
     // Draw ball
-    ctx.fillRect(game_state.ball.x, game_state.ball.y, game_properties.ball_size, game_properties.ball_size);
+    ctx.fillRect(game_state.ball.x, game_state.ball.y, game_conf.ball_size, game_conf.ball_size);
 
     // Display score
     ctx.font = "48px Courier";
     // ctx.fillStyle = "white";
     // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
-    ctx.fillText(game_state.score[0], game_properties.canvas_width / 2 - 50, 50);
-    ctx.fillText(game_state.score[1], game_properties.canvas_width / 2 + 50, 50);
+    ctx.fillText(game_state.score[0], game_conf.canvas_width / 2 - 50, 50);
+    ctx.fillText(game_state.score[1], game_conf.canvas_width / 2 + 50, 50);
 }
 
 async function run() {
     try {
         // Get initial game data via REST API
         {
-            const response = await fetch(API_GAME_ENDPOINT + "/properties");
-            game_properties = await response.json();
+            const response = await fetch(API_GAME_ENDPOINT + "/conf");
+            game_conf = await response.json();
             
-            canvas.width = game_properties.canvas_width;
-            canvas.height = game_properties.canvas_height;
+            canvas.width = game_conf.canvas_width;
+            canvas.height = game_conf.canvas_height;
             
-            console.log("Game initialized:", game_properties);
+            console.log("Game initialized:", game_conf);
 
         }    
         {

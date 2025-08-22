@@ -20,7 +20,7 @@ const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 6;
 
 // Type definitions
-interface GameProperties {
+interface GameConf {
   canvas_width: number;
   canvas_height: number;
   paddle_width: number;
@@ -36,12 +36,38 @@ interface Ball {
   vy: number;
 }
 
+type PlayerSlot =
+  | "left"
+  | "right"
+  | "top"
+  | "bottom"
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
+
+interface PlayerState {
+  player_id: number;        // permanent DB id
+  session_id: string;       // ephemeral session id
+  paddle_coord: number;     // current paddle coordinate along its axis
+  field_slot: PlayerSlot;   // fixed place on the arena (left, right, top-left...)
+  score: number;            // current score
+}
+
+interface GameParticipant {
+  player_id: number;        // permanent DB id
+  session_id: string;       // ephemeral session id
+}
+
+interface GameCreationBody {
+  participants: GameParticipant[];
+}
+
 interface GameState {
   type: string;
   tick: number;
   ball: Ball;
-  paddle_y: [number, number];
-  score: [number, number];
+  players: PlayerState[];
   ongoing: boolean;
 }
 
@@ -55,8 +81,16 @@ interface StartGameBody {
   session_id: string;
 }
 
+interface GameSession {
+  id: number;
+  conf: GameConf;
+  state: GameState;
+  created_at: Date;
+  winner_id: number;
+}
+
 // Game configuration
-const game_properties: GameProperties = {
+const game_conf: GameConf = {
   canvas_width: WIDTH,
   canvas_height: HEIGHT,
   paddle_width: PADDLE_WIDTH,
@@ -65,16 +99,18 @@ const game_properties: GameProperties = {
   ball_size: BALL_SIZE,
 };
 
+// Game sessions
+const game_sessions: Map<number, GameSession> = new Map();
+
 // Game state
 const game_state: GameState = {
   type: "state",
   tick: 0,
   ball: { x: WIDTH / 2, y: HEIGHT / 2, vx: BALL_SPEED, vy: BALL_SPEED / 2 },
-  paddle_y: [
-    HEIGHT / 2 - PADDLE_HEIGHT / 2,
-    HEIGHT / 2 - PADDLE_HEIGHT / 2
+  players: [
+    {player_id: 1, session_id: "session_id_1", paddle_coord:  HEIGHT / 2 - PADDLE_HEIGHT / 2, field_slot: "left", score: 0},
+    {player_id: 2, session_id: "session_id_2", paddle_coord:  HEIGHT / 2 - PADDLE_HEIGHT / 2, field_slot: "right", score: 0},
   ],
-  score: [0, 0],
   ongoing: false
 };
 
@@ -85,6 +121,7 @@ player_ids.set("session_id_1", 1);
 
 let player_ready: Set<string> = new Set();
 let game_result: Record<string, unknown> = {};
+let next_id = 0;
 
 // Store connected WebSocket clients
 const clients: Set<SocketStream> = new Set();
@@ -146,7 +183,7 @@ function updateGame(): void {
   // Close connections when game ends
   if (!game_state.ongoing) {
     clients.forEach(client => {
-      client.socket.close(1001, "Game is finished");
+      client.socket.close(1001, "Game ended");
     });
   }
 }
@@ -165,8 +202,17 @@ function broadcastGameState(): void {
 setInterval(updateGame, 1000 / GAME_FPS);
 
 // REST API Routes
-fastify.get("/game/properties", async (request: FastifyRequest, reply: FastifyReply): Promise<GameProperties> => {
-  return game_properties;
+fastify.get("/game/conf", async (request: FastifyRequest, reply: FastifyReply): Promise<GameConf> => {
+  return game_conf;
+});
+  
+fastify.post<{Body: GameCreationBody }>("/game/create", async (request, reply) => {
+  const { participants } = request.body;
+  const game_id = next_id++;
+
+  game_sessions.set(next_id++, createGameSession(participants));
+
+  reply.send({ success: true, game_id: game_id});
 });
 
 fastify.post<{ Body: StartGameBody }>("/game/start", async (request, reply) => {
