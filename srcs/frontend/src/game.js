@@ -54,7 +54,6 @@
 
 
 // Global variables
-const WS_GAME_ENDPOINT = "wss://localhost:4443/api/game/ws";
 const API_GAME_ENDPOINT = "https://localhost:4443/api/game";
 
 let canvas = document.getElementById("game");
@@ -78,8 +77,9 @@ document.addEventListener("keyup", function (e) { keys[e.key] = false; });
 
 // WebSocket connection for real-time updates
 function connectWebSocket() {
-    console.log("Attempting to connect to:", WS_GAME_ENDPOINT);
-    ws = new WebSocket(WS_GAME_ENDPOINT);
+    const url = API_GAME_ENDPOINT + "/ws";
+    console.log("Attempting to connect to:", url);
+    ws = new WebSocket(url);
     
     ws.onopen = function() {
         console.log("WebSocket connected successfully");

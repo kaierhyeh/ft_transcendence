@@ -1,0 +1,22 @@
+{
+  "name": "pong-game-service",
+  "version": "1.0.0",
+  "description": "Server-side Pong game microservice",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "dev": "ts-node --watch index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.0.0",
+    "@fastify/websocket": "^8.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.18.1",
+    "ts-node": "^10.0.0"
+  }
+}
