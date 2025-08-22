@@ -72,6 +72,12 @@ interface GameState {
   ongoing: boolean;
 }
 
+type PublicPlayerState = Omit<PlayerState, "session_id">;
+
+interface PublicGameState extends Omit<GameState, "websockets" | "players"> {
+  players: PublicPlayerState[];
+}
+
 interface PlayerInput {
   type: string;
   session_id: string;
@@ -100,9 +106,6 @@ const game_conf: GameConf = {
   ball_size: BALL_SIZE,
 };
 
-// Game sessions
-const game_sessions: Map<number, GameSession> = new Map();
-
 // Game state
 const default_state: GameState = {
   type: "state",
@@ -113,6 +116,9 @@ const default_state: GameState = {
   ongoing: false
 };
 
+// Game sessions
+const game_sessions: Map<number, GameSession> = new Map();
+
 // Player management
 const player_ids: Map<string, number> = new Map();
 player_ids.set("session_id_0", 0);
@@ -121,9 +127,6 @@ player_ids.set("session_id_1", 1);
 let player_ready: Set<string> = new Set();
 let game_result: Record<string, unknown> = {};
 let next_id = 0;
-
-// Store connected WebSocket clients
-const clients: Set<SocketStream> = new Set();
 
 // Game loop function
 function updateGame(): void {
@@ -201,7 +204,7 @@ function broadcastGameState(): void {
 setInterval(updateGame, 1000 / GAME_FPS);
 
 // REST API Routes
-fastify.get("/game/conf", async (request: FastifyRequest, reply: FastifyReply): Promise<GameConf> => {
+fastify.get("/game/:id/conf", async (request, reply): Promise<GameConf> => {
   return game_conf;
 });
 
@@ -251,16 +254,23 @@ fastify.post<{ Body: StartGameBody }>("/game/start", async (request, reply) => {
   reply.send({ success: true, ongoing: game_state.ongoing });
 });
 
+function toPublicGameState(state: GameState): PublicGameState {
+  return {
+    ...state,
+    players: state.players.map(({ session_id, ...rest}) => rest),
+  }
+}
+
 // WebSocket endpoint for real-time game updates
 fastify.register(async function (fastify: FastifyInstance) {
   fastify.get('/game/:id/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
     const { id } = req.params as { id: number};
 
-    if (!game_sessions.has(id)) {
+    const game_session: GameSession | undefined = game_sessions.get(id);
+    if (game_session === undefined) {
       connection.socket.close(1011, "Game id doens't exist");
       return ;
     }
-    const game_session = game_sessions.get(id);
     const { websockets } = game_session?.state as {websockets: Set<SocketStream>};
 
     websockets.add(connection);
@@ -274,19 +284,20 @@ fastify.register(async function (fastify: FastifyInstance) {
           throw new Error("Invalid input format");
         }
         
-        const player_id = player_ids.get(input.session_id);
-        
-        if (player_id === undefined) {
+        const { players } = game_session.state as {players: PlayerState[]};
+
+        const player: PlayerState | undefined = players.find((player) => player.session_id === input.session_id);
+        if (player === undefined) {
           throw new Error("Invalid session id");
         }
         
         // Process player movement
-        if (input.move === "up" && game_state.paddle_y[player_id] > 0) {
-          game_state.paddle_y[player_id] -= PADDLE_SPEED;
+        if (input.move === "up" && player.paddle_coord > 0) {
+          player.paddle_coord -= PADDLE_SPEED;
         }
         
-        if (input.move === "down" && game_state.paddle_y[player_id] < HEIGHT - PADDLE_HEIGHT) {
-          game_state.paddle_y[player_id] += PADDLE_SPEED;
+        if (input.move === "down" && player.paddle_coord < HEIGHT - PADDLE_HEIGHT) {
+          player.paddle_coord += PADDLE_SPEED;
         }
         
       } catch (err) {
@@ -297,17 +308,18 @@ fastify.register(async function (fastify: FastifyInstance) {
     });
     
     connection.socket.on('close', () => {
-      clients.delete(connection);
+      websockets.delete(connection);
     });
     
     connection.socket.on('error', (error: Error) => {
       // Fix: Convert Error to string for logging
       fastify.log.error('WebSocket error: ' + error.message);
-      clients.delete(connection);
+      websockets.delete(connection);
     });
     
+    const public_game_state: PublicGameState = toPublicGameState(game_session.state);
     // Send initial game state
-    connection.socket.send(JSON.stringify(game_state));
+    connection.socket.send(JSON.stringify(public_game_state));
   });
 });
 
