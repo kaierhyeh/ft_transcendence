@@ -59,9 +59,18 @@ const API_GAME_ENDPOINT = "https://localhost:4443/api/game";
 
 let canvas = document.getElementById("game");
 let ctx = canvas.getContext("2d");
-let game_data;
+let game_state;
 let keys = {};
+const input = {
+    type: "input",
+    session_id: "",
+    move: ""
+}
 let ws;
+let session_ids = [
+    "session_id_0",
+    "session_id_1"
+]
 
 // Event listeners
 document.addEventListener("keydown", function (e) { keys[e.key] = true; });
@@ -79,7 +88,7 @@ function connectWebSocket() {
     
     ws.onmessage = function(event) {
         try {
-            game_data = JSON.parse(event.data);
+            game_state = JSON.parse(event.data);
             draw();
         } catch (error) {
             console.error("Error parsing game data:", error);
@@ -88,14 +97,14 @@ function connectWebSocket() {
     
     ws.onclose = function(event) {
         console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
-        if (game_data.ongoing) {
+        if (game_state.ongoing) {
             // Try to reconnect after 3 seconds
             setTimeout(connectWebSocket, 3000);
         }
         else {
             const winner = document.getElementById("winner");
             if (winner.innerText.length == 0) {
-                winner.innerText = "Player " + game_data.score.indexOf(game_data.win_point) + " won !";
+                winner.innerText = "Player " + game_state.score.indexOf(game_properties.win_point) + " won !";
             }
         }
     };
@@ -105,22 +114,6 @@ function connectWebSocket() {
     };
 }
 
-// Fallback: use REST API if WebSocket fails
-async function fallbackToREST() {
-    console.log("Using REST API fallback");
-    setInterval(async () => {
-        try {
-            await postUserInput();
-            const response = await fetch(API_GAME_ENDPOINT + "/data");
-            game_data = await response.json();
-            draw();
-        } catch (error) {
-            console.error("REST API error:", error);
-        }
-    }, 100); // 10fps for REST fallback
-}
-
-
 // Send input periodically (much less frequent than rendering)
 function startInputSending() {
     setInterval(() => {
@@ -128,47 +121,86 @@ function startInputSending() {
             // Only send if there are active keys
             const activeKeys = Object.keys(keys).filter(key => keys[key]);
             if (activeKeys.length > 0) {
+                    // console.log(input);
                 const inputData = {};
                 activeKeys.forEach(key => inputData[key] = true);
-                ws.send(JSON.stringify(inputData));
+                if (inputData["w"] || inputData["s"]) {
+                    input.session_id = session_ids[0];
+                    input.move = inputData["w"] ? "up" : "down";
+                    // console.log(input);
+                    ws.send(JSON.stringify(input));
+                }
+                if (inputData["ArrowUp"] || inputData["ArrowDown"]) {
+                    input.session_id = session_ids[1];
+                    input.move = inputData["ArrowUp"] ? "up" : "down";
+                    // console.log(input);
+                    ws.send(JSON.stringify(input));
+                }
             }
         }
     }, 50); // Send input 20 times per second (much better than 60!)
 }
 
 function draw() {
-    if (!game_data) return;
+    if (!game_state) return;
+     console.log(game_state)
     
-    ctx.clearRect(0, 0, game_data.canvas_width, game_data.canvas_height);
+    ctx.clearRect(0, 0, game_properties.canvas_width, game_properties.canvas_height);
     ctx.fillStyle = "white";
     
     // Draw paddle Player 0
-    ctx.fillRect(game_data.players[0].paddleX, game_data.players[0].paddleY, game_data.paddle_width, game_data.paddle_height);
+    ctx.fillRect(0, game_state.paddle_y[0], game_properties.paddle_width, game_properties.paddle_height);
     
     // Draw paddle Player 1
-    ctx.fillRect(game_data.players[1].paddleX, game_data.players[1].paddleY, game_data.paddle_width, game_data.paddle_height);
+    ctx.fillRect(game_properties.canvas_width - game_properties.ball_size, game_state.paddle_y[1], game_properties.paddle_width, game_properties.paddle_height);
 
     // Draw ball
-    ctx.fillRect(game_data.ballX, game_data.ballY, 10, 10);
+    ctx.fillRect(game_state.ball.x, game_state.ball.y, game_properties.ball_size, game_properties.ball_size);
 
     // Display score
     ctx.font = "48px Courier";
     // ctx.fillStyle = "white";
-    console.log("score: " + game_data.score[0] + " - " + game_data.score[1]);
-    ctx.fillText(game_data.score[0], game_data.canvas_width / 2 - 50, 50);
-    ctx.fillText(game_data.score[1], game_data.canvas_width / 2 + 50, 50);
+    // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
+    ctx.fillText(game_state.score[0], game_properties.canvas_width / 2 - 50, 50);
+    ctx.fillText(game_state.score[1], game_properties.canvas_width / 2 + 50, 50);
 }
 
-async function init() {
+async function run() {
     try {
         // Get initial game data via REST API
-        const response = await fetch(API_GAME_ENDPOINT + "/data");
-        game_data = await response.json();
+        {
+            const response = await fetch(API_GAME_ENDPOINT + "/properties");
+            game_properties = await response.json();
+            
+            canvas.width = game_properties.canvas_width;
+            canvas.height = game_properties.canvas_height;
+            
+            console.log("Game initialized:", game_properties);
+
+        }    
+        {
+            await fetch(API_GAME_ENDPOINT + "/start", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(
+                    { session_id: session_ids[0] }
+                )
+            });
+        }
+        {
+            await fetch(API_GAME_ENDPOINT + "/start", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(
+                    { session_id: session_ids[1] }
+                )
+            });
+        }
         
-        canvas.width = game_data.canvas_width;
-        canvas.height = game_data.canvas_height;
-        
-        console.log("Game initialized:", game_data);
         
         connectWebSocket();
         
@@ -177,4 +209,4 @@ async function init() {
     }
 }
 
-init();
+run();
