@@ -120,72 +120,103 @@ const game_sessions: Map<number, GameSession> = new Map();
 let game_result: Record<string, unknown> = {};
 let next_id = 0;
 
-// Game loop function
-function updateGame(): void {
-  if (!game_state.ongoing) {
-    return;
+function checkAndStartGame(game_session: GameSession): void {
+  if (game_session.state.ongoing) {
+    return ; // Game already started
   }
-
-  // Update ball position
-  game_state.ball.x += game_state.ball.vx;
-  game_state.ball.y += game_state.ball.vy;
-  
-  // Ball collision with top/bottom walls
-  if (game_state.ball.y <= 0 || game_state.ball.y >= HEIGHT) {
-    game_state.ball.vy = -game_state.ball.vy;
-  }
-  
-  // Ball collision with left/right walls (reset ball)
-  if (game_state.ball.x <= 0 || game_state.ball.x >= WIDTH) {
-    // Score update
-    if (game_state.ball.x <= 0) {
-      game_state.score[1]++;
-    } else {
-      game_state.score[0]++;
-    }
-    
-    // Ball reset
-    game_state.ball.x = WIDTH / 2;
-    game_state.ball.y = HEIGHT / 2;
-    game_state.ball.vx = -game_state.ball.vx;
-  }
-  
-  // Simple paddle collision (left side)
-  if (game_state.ball.x <= PADDLE_WIDTH && 
-      game_state.ball.y >= game_state.paddle_y[0] && 
-      game_state.ball.y <= game_state.paddle_y[0] + PADDLE_HEIGHT) {
-    game_state.ball.vx = -game_state.ball.vx;
-  }
-  
-  // Simple paddle collision (right side)
-  if (game_state.ball.x >= WIDTH - PADDLE_WIDTH && 
-      game_state.ball.y >= game_state.paddle_y[1] && 
-      game_state.ball.y <= game_state.paddle_y[1] + PADDLE_HEIGHT) {
-    game_state.ball.vx = -game_state.ball.vx;
-  }
-
-  // Check for game end
-  if (Math.max(...game_state.score) === WIN_POINT) {
-    game_state.ongoing = false;
-  }
-
-  game_state.tick++;
-  
-  // Broadcast game state to all connected clients
-  broadcastGameState();
-
-  // Close connections when game ends
-  if (!game_state.ongoing) {
-    clients.forEach(client => {
-      client.socket.close(1001, "Game ended");
-    });
+  const all_ready = game_session.state.players.every(p => p.ready);
+  if (all_ready && game_session.state.players.length > 0) {
+    game_session.state.ongoing = true;
+    console.log(`Game ${game_session.id} started!`);
   }
 }
 
-function broadcastGameState(): void {
-  const data: string = JSON.stringify(game_state);
+function updateGameSession(game_session: GameSession): void {
+ const { state } = game_session;
+  
+  // Update ball position
+  state.ball.x += state.ball.vx;
+  state.ball.y += state.ball.vy;
+  
+  // Ball collision with top/bottom walls
+  if (state.ball.y <= 0 || state.ball.y >= HEIGHT) {
+    state.ball.vy = -state.ball.vy;
+  }
+  
+  // Ball collision with left/right walls (reset ball)
+  if (state.ball.x <= 0 || state.ball.x >= WIDTH) {
+    // Score update
+    if (state.ball.x <= 0) {
+      state.players[1].score++;
+    } else {
+      state.players[0].score++;
+    }
+    
+    // Ball reset
+    state.ball.x = WIDTH / 2;
+    state.ball.y = HEIGHT / 2;
+    state.ball.vx = -state.ball.vx;
+  }
+  
+  // Paddle collision (left side)
+  const leftPlayer = state.players.find(p => p.field_slot === "left");
+  if (leftPlayer && state.ball.x <= PADDLE_WIDTH && 
+      state.ball.y >= leftPlayer.paddle_coord && 
+      state.ball.y <= leftPlayer.paddle_coord + PADDLE_HEIGHT) {
+    state.ball.vx = -state.ball.vx;
+  }
+  
+  // Paddle collision (right side)
+  const rightPlayer = state.players.find(p => p.field_slot === "right");
+  if (rightPlayer && state.ball.x >= WIDTH - PADDLE_WIDTH && 
+      state.ball.y >= rightPlayer.paddle_coord && 
+      state.ball.y <= rightPlayer.paddle_coord + PADDLE_HEIGHT) {
+    state.ball.vx = -state.ball.vx;
+  }
 
-  clients.forEach(client => {
+  // Check for game end
+  const maxScore = Math.max(...state.players.map(p => p.score));
+  if (maxScore >= WIN_POINT) {
+    state.ongoing = false;
+    // Set winner
+    const winner = state.players.find(p => p.score === maxScore);
+    if (winner) {
+      game_session.winner_id = winner.player_id;
+    }
+  }
+
+  state.tick++;
+  
+  // Broadcast game state to connected clients
+  broadcastGameState(game_session);
+
+  // Close connections when game ends
+  if (!state.ongoing) {
+    state.websockets.forEach(client => {
+      client.socket.close(1001, "Game ended");
+    });
+    state.websockets.clear();
+  }
+}
+
+// Game loop function
+function updateGame(): void {
+
+  game_sessions.forEach((game_session) => {
+    if (!game_session.state.ongoing) {
+      checkAndStartGame(game_session);
+      return;
+    }
+    updateGameSession(game_session);
+  });
+
+}
+
+function broadcastGameState(game_session: GameSession): void {
+  const public_state = toPublicGameState(game_session.state);
+  const data: string = JSON.stringify(public_state);
+
+  game_session.state.websockets.forEach(client => {
     if (client && client.socket.readyState === client.socket.OPEN) {
       client.socket.send(data);
     }
@@ -238,16 +269,15 @@ fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) =
   
   const game_session: GameSession | undefined = game_sessions.get(id);
   if (game_session === undefined) {
-    reply.code(400).send({error: "Game id doens't exist"});
+    reply.code(404).send({error: "Game not found"});
     return ;
   }
   const player: PlayerState | undefined = game_session.state.players.find((p) => p.session_id === session_id);
   if (player === undefined) {
-    reply.code(400).send({error: "Invalid session_id"});
+    reply.code(403).send({error: "Invalid session_id"});
     return;
   }
   player.ready = true;
-  
   reply.send({success: true});
 });
 
