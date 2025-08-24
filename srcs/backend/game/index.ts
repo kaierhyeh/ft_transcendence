@@ -52,6 +52,7 @@ interface PlayerState {
   paddle_coord: number;     // current paddle coordinate along its axis
   field_slot: PlayerSlot;   // fixed place on the arena (left, right, top-left...)
   score: number;            // current score
+  ready: boolean;
 }
 
 interface GameParticipant {
@@ -64,7 +65,6 @@ interface GameCreationBody {
 }
 
 interface GameState {
-  type: string;
   tick: number;
   ball: Ball;
   players: PlayerState[];
@@ -72,14 +72,13 @@ interface GameState {
   ongoing: boolean;
 }
 
-type PublicPlayerState = Omit<PlayerState, "session_id">;
+type PublicPlayerState = Omit<PlayerState, "session_id" | "ready">;
 
 interface PublicGameState extends Omit<GameState, "websockets" | "players"> {
   players: PublicPlayerState[];
 }
 
 interface PlayerInput {
-  type: string;
   session_id: string;
   move: 'up' | 'down';
 }
@@ -108,7 +107,6 @@ const game_conf: GameConf = {
 
 // Game state
 const default_state: GameState = {
-  type: "state",
   tick: 0,
   ball: { x: WIDTH / 2, y: HEIGHT / 2, vx: BALL_SPEED, vy: BALL_SPEED / 2 },
   players: [],
@@ -119,12 +117,6 @@ const default_state: GameState = {
 // Game sessions
 const game_sessions: Map<number, GameSession> = new Map();
 
-// Player management
-const player_ids: Map<string, number> = new Map();
-player_ids.set("session_id_0", 0);
-player_ids.set("session_id_1", 1);
-
-let player_ready: Set<string> = new Set();
 let game_result: Record<string, unknown> = {};
 let next_id = 0;
 
@@ -222,6 +214,7 @@ function createGameSession(participants: GameParticipant[], game_id: number): Ga
     paddle_coord: HEIGHT / 2 - PADDLE_HEIGHT / 2,
     field_slot: idx === 0 ? "left" : "right",
     score: 0,
+    ready: false
   }));
    return new_game;
 }
@@ -236,22 +229,26 @@ fastify.post<{Body: GameCreationBody }>("/game/create", async (request, reply) =
   
   const game_id = next_id++;
   game_sessions.set(game_id, createGameSession(participants, game_id));
-  reply.send({ success: true, game_id: game_id});
+  reply.send({success: true, game_id: game_id});
 });
 
-fastify.post<{ Body: StartGameBody }>("/game/start", async (request, reply) => {
-  const { session_id } = request.body;
+fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) => {
+  const { session_id } = request.body as { session_id: string };
+  const { id } = request.params as { id: number};
   
-  if (!player_ids.has(session_id)) {
-    reply.code(400).send({ error: "Invalid session_id" });
+  const game_session: GameSession | undefined = game_sessions.get(id);
+  if (game_session === undefined) {
+    reply.code(400).send({error: "Game id doens't exist"});
+    return ;
+  }
+  const player: PlayerState | undefined = game_session.state.players.find((p) => p.session_id === session_id);
+  if (player === undefined) {
+    reply.code(400).send({error: "Invalid session_id"});
     return;
   }
+  player.ready = true;
   
-  player_ready.add(session_id);
-  game_state.ongoing = player_ready.size === 2;
-  
-  console.log("ongoing: ", game_state.ongoing);
-  reply.send({ success: true, ongoing: game_state.ongoing });
+  reply.send({success: true});
 });
 
 function toPublicGameState(state: GameState): PublicGameState {
