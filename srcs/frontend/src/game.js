@@ -61,7 +61,6 @@ let ctx = canvas.getContext("2d");
 let game_state;
 let keys = {};
 const input = {
-    type: "input",
     session_id: "",
     move: ""
 }
@@ -70,6 +69,7 @@ let session_ids = [
     "session_id_0",
     "session_id_1"
 ]
+let game_id;
 
 // Event listeners
 document.addEventListener("keydown", function (e) { keys[e.key] = true; });
@@ -77,7 +77,7 @@ document.addEventListener("keyup", function (e) { keys[e.key] = false; });
 
 // WebSocket connection for real-time updates
 function connectWebSocket() {
-    const url = API_GAME_ENDPOINT + "/ws";
+    const url = API_GAME_ENDPOINT + `/${game_id}/ws`;
     console.log("Attempting to connect to:", url);
     ws = new WebSocket(url);
     
@@ -127,13 +127,13 @@ function startInputSending() {
                 if (inputData["w"] || inputData["s"]) {
                     input.session_id = session_ids[0];
                     input.move = inputData["w"] ? "up" : "down";
-                    // console.log(input);
+                    console.log(input);
                     ws.send(JSON.stringify(input));
                 }
                 if (inputData["ArrowUp"] || inputData["ArrowDown"]) {
                     input.session_id = session_ids[1];
                     input.move = inputData["ArrowUp"] ? "up" : "down";
-                    // console.log(input);
+                    console.log(input);
                     ws.send(JSON.stringify(input));
                 }
             }
@@ -143,16 +143,20 @@ function startInputSending() {
 
 function draw() {
     if (!game_state) return;
-     console.log(game_state)
+    //  console.log(game_state)
     
     ctx.clearRect(0, 0, game_conf.canvas_width, game_conf.canvas_height);
     ctx.fillStyle = "white";
     
+    const   left_player = game_state.players.left;
+    const   right_player = game_state.players.right;
     // Draw paddle Player 0
-    ctx.fillRect(0, game_state.paddle_y[0], game_conf.paddle_width, game_conf.paddle_height);
+    if (left_player)
+        ctx.fillRect(0, left_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
     
     // Draw paddle Player 1
-    ctx.fillRect(game_conf.canvas_width - game_conf.ball_size, game_state.paddle_y[1], game_conf.paddle_width, game_conf.paddle_height);
+    if (right_player)
+        ctx.fillRect(game_conf.canvas_width - game_conf.ball_size, right_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
 
     // Draw ball
     ctx.fillRect(game_state.ball.x, game_state.ball.y, game_conf.ball_size, game_conf.ball_size);
@@ -161,15 +165,34 @@ function draw() {
     ctx.font = "48px Courier";
     // ctx.fillStyle = "white";
     // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
-    ctx.fillText(game_state.score[0], game_conf.canvas_width / 2 - 50, 50);
-    ctx.fillText(game_state.score[1], game_conf.canvas_width / 2 + 50, 50);
+    ctx.fillText(left_player.score, game_conf.canvas_width / 2 - 50, 50);
+    ctx.fillText(right_player.score, game_conf.canvas_width / 2 + 50, 50);
 }
 
 async function run() {
     try {
         // Get initial game data via REST API
         {
-            const response = await fetch(API_GAME_ENDPOINT + "/conf");
+            const response = await fetch(API_GAME_ENDPOINT + "/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(
+                    {
+                        participants: [
+                            {id: 0, session_id: session_ids[0] },
+                            {id: 1, session_id: session_ids[1] },
+                        ]
+                    })
+                });
+                data = await response.json();
+                game_id = data.game_id;
+                console.log(game_id);
+                
+        }
+        {
+            const response = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
             game_conf = await response.json();
             
             canvas.width = game_conf.canvas_width;
@@ -179,7 +202,7 @@ async function run() {
 
         }    
         {
-            await fetch(API_GAME_ENDPOINT + "/start", {
+            await fetch(API_GAME_ENDPOINT + `/${game_id}/join`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -188,9 +211,7 @@ async function run() {
                     { session_id: session_ids[0] }
                 )
             });
-        }
-        {
-            await fetch(API_GAME_ENDPOINT + "/start", {
+            await fetch(API_GAME_ENDPOINT + `/${game_id}/join`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -17,7 +17,7 @@ const PADDLE_HEIGHT: number = 80;
 const GAME_FPS: number = 30;
 const WIN_POINT: number = 11;
 const BALL_SIZE: number = 10;
-const BALL_SPEED: number = 6;
+const BALL_SPEED: number = 200;
 
 // Type definitions
 interface GameConf {
@@ -66,6 +66,7 @@ interface GameCreationBody {
 
 interface GameState {
   tick: number;
+  last_time: number;
   ball: Ball;
   players: Map<PlayerSlot, PlayerState>;
   websockets: Set<SocketStream>;
@@ -88,7 +89,7 @@ interface StartGameBody {
 }
 
 interface GameSession {
-  id: number;
+  id: number; // TODO - Delete this if non used
   conf: GameConf;
   state: GameState;
   created_at: Date;
@@ -108,6 +109,7 @@ const game_conf: GameConf = {
 // Game state
 const default_state: GameState = {
   tick: 0,
+  last_time: -1,
   ball: { x: WIDTH / 2, y: HEIGHT / 2, vx: BALL_SPEED, vy: BALL_SPEED / 2 },
   players: new Map<PlayerSlot, PlayerState>(),
   websockets: new Set<SocketStream>(),
@@ -128,6 +130,7 @@ function checkAndStartGame(game_session: GameSession): void {
   const all_ready = players.every(p => p.ready);
   if (all_ready && players.length > 0) {
     game_session.state.ongoing = true;
+    game_session.state.last_time = Date.now();
     console.log(`Game ${game_session.id} started!`);
   }
 }
@@ -135,17 +138,18 @@ function checkAndStartGame(game_session: GameSession): void {
 function updateGameSession(game_session: GameSession): void {
  const { state } = game_session;
   
+ const dt: number =  Date.now() - state.last_time;
   // Update ball position
-  state.ball.x += state.ball.vx;
-  state.ball.y += state.ball.vy;
+  state.ball.x += state.ball.vx * (dt / 1000);
+  state.ball.y += state.ball.vy * (dt / 1000);
   
   // Ball collision with top/bottom walls
-  if (state.ball.y <= 0 || state.ball.y >= HEIGHT) {
+  if (state.ball.y <= 0 || state.ball.y + BALL_SIZE >= HEIGHT) {
     state.ball.vy = -state.ball.vy;
   }
   
   // Ball collision with left/right walls (reset ball)
-  if (state.ball.x <= 0 || state.ball.x >= WIDTH) {
+  if (state.ball.x <= 0 || state.ball.x + BALL_SIZE >= WIDTH) {
     // Score update
     if (state.ball.x <= 0) {
       const right_player = state.players.get("right");
@@ -171,7 +175,7 @@ function updateGameSession(game_session: GameSession): void {
   
   // Paddle collision (right side)
   const right_player = state.players.get("right");
-  if (right_player && state.ball.x >= WIDTH - PADDLE_WIDTH && 
+  if (right_player && state.ball.x + BALL_SIZE >= WIDTH - PADDLE_WIDTH && 
       state.ball.y >= right_player.paddle_coord && 
       state.ball.y <= right_player.paddle_coord + PADDLE_HEIGHT) {
     state.ball.vx = -state.ball.vx;
@@ -190,6 +194,7 @@ function updateGameSession(game_session: GameSession): void {
   }
 
   state.tick++;
+  state.last_time = Date.now();
   
   // Broadcast game state to connected clients
   broadcastGameState(game_session);
@@ -232,12 +237,18 @@ setInterval(updateGame, 1000 / GAME_FPS);
 
 // REST API Routes
 fastify.get("/game/:id/conf", async (request, reply) => {
-  const { id } = request.params as { id: number};
+  const { id } = request.params as { id: string };
+  const game_id = parseInt(id, 10);
   
-  const game_session: GameSession | undefined = game_sessions.get(id);
+  if (isNaN(game_id)) {
+    reply.code(400).send({error: "Invalid game ID"});
+    return;
+  }
+  
+  const game_session: GameSession | undefined = game_sessions.get(game_id);
   if (game_session === undefined) {
     reply.code(404).send({error: "Game not found"});
-    return ;
+    return;
   }
   return game_session.conf;
 });
@@ -274,17 +285,27 @@ fastify.post<{Body: GameCreationBody }>("/game/create", async (request, reply) =
   
   const game_id = next_id++;
   game_sessions.set(game_id, createGameSession(participants, game_id));
-  reply.send({success: true, game_id: game_id});
+  reply.send({game_id: game_id});
 });
 
 fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) => {
   const { session_id } = request.body as { session_id: string };
-  const { id } = request.params as { id: number};
+  const { id } = request.params as { id: string }; // Correct: params are strings
   
-  const game_session: GameSession | undefined = game_sessions.get(id);
+  const game_id = parseInt(id, 10); // Convert string to number
+  if (isNaN(game_id)) {
+    reply.code(400).send({error: "Invalid game ID"});
+    return;
+  }
+  
+  console.log("game id:", game_id);
+  console.log(game_sessions);
+  const game_session: GameSession | undefined = game_sessions.get(game_id); // Use number
+  console.log(game_sessions.get(game_id));
+  
   if (game_session === undefined) {
     reply.code(404).send({error: "Game not found"});
-    return ;
+    return;
   }
   const player: PlayerState | undefined = Array.from(game_session.state.players.values())
     .find((player) => player.session_id === session_id);
@@ -312,9 +333,15 @@ function toPublicGameState(state: GameState): PublicGameState {
 // WebSocket endpoint for real-time game updates
 fastify.register(async function (fastify: FastifyInstance) {
   fastify.get('/game/:id/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
-    const { id } = req.params as { id: number};
+    const { id } = req.params as { id: string };
+    const game_id = parseInt(id, 10);
+    
+    if (isNaN(game_id)) {
+      connection.socket.close(1011, "Invalid game ID");
+      return;
+    }
 
-    const game_session: GameSession | undefined = game_sessions.get(id);
+    const game_session: GameSession | undefined = game_sessions.get(game_id);
     if (game_session === undefined) {
       connection.socket.close(1011, "Game id doens't exist");
       return ;
