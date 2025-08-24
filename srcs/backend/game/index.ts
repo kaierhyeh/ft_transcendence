@@ -227,8 +227,15 @@ function broadcastGameState(game_session: GameSession): void {
 setInterval(updateGame, 1000 / GAME_FPS);
 
 // REST API Routes
-fastify.get("/game/:id/conf", async (request, reply): Promise<GameConf> => {
-  return game_conf;
+fastify.get("/game/:id/conf", async (request, reply) => {
+  const { id } = request.params as { id: number};
+  
+  const game_session: GameSession | undefined = game_sessions.get(id);
+  if (game_session === undefined) {
+    reply.code(404).send({error: "Game not found"});
+    return ;
+  }
+  return game_session.conf;
 });
 
 function createGameSession(participants: GameParticipant[], game_id: number): GameSession {
