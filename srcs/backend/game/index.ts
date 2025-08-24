@@ -36,6 +36,7 @@ interface Ball {
   vy: number;
 }
 
+// fixed place on the arena (left, right, top-left...)
 type PlayerSlot =
   | "left"
   | "right"
@@ -50,7 +51,6 @@ interface PlayerState {
   player_id: number;        // permanent DB id
   session_id: string;       // ephemeral session id
   paddle_coord: number;     // current paddle coordinate along its axis
-  field_slot: PlayerSlot;   // fixed place on the arena (left, right, top-left...)
   score: number;            // current score
   ready: boolean;
 }
@@ -67,7 +67,7 @@ interface GameCreationBody {
 interface GameState {
   tick: number;
   ball: Ball;
-  players: PlayerState[];
+  players: Map<PlayerSlot, PlayerState>;
   websockets: Set<SocketStream>;
   ongoing: boolean;
 }
@@ -75,7 +75,7 @@ interface GameState {
 type PublicPlayerState = Omit<PlayerState, "session_id" | "ready">;
 
 interface PublicGameState extends Omit<GameState, "websockets" | "players"> {
-  players: PublicPlayerState[];
+  players: Partial<Record<PlayerSlot, PublicPlayerState>>;
 }
 
 interface PlayerInput {
@@ -109,7 +109,7 @@ const game_conf: GameConf = {
 const default_state: GameState = {
   tick: 0,
   ball: { x: WIDTH / 2, y: HEIGHT / 2, vx: BALL_SPEED, vy: BALL_SPEED / 2 },
-  players: [],
+  players: new Map<PlayerSlot, PlayerState>(),
   websockets: new Set<SocketStream>(),
   ongoing: false
 };
@@ -124,8 +124,9 @@ function checkAndStartGame(game_session: GameSession): void {
   if (game_session.state.ongoing) {
     return ; // Game already started
   }
-  const all_ready = game_session.state.players.every(p => p.ready);
-  if (all_ready && game_session.state.players.length > 0) {
+  const players = Array.from(game_session.state.players.values());
+  const all_ready = players.every(p => p.ready);
+  if (all_ready && players.length > 0) {
     game_session.state.ongoing = true;
     console.log(`Game ${game_session.id} started!`);
   }
@@ -147,9 +148,11 @@ function updateGameSession(game_session: GameSession): void {
   if (state.ball.x <= 0 || state.ball.x >= WIDTH) {
     // Score update
     if (state.ball.x <= 0) {
-      state.players[1].score++;
+      const right_player = state.players.get("right");
+      if (right_player) right_player.score++;
     } else {
-      state.players[0].score++;
+      const left_player = state.players.get("left");
+      if (left_player) left_player.score++;
     }
     
     // Ball reset
@@ -159,27 +162,28 @@ function updateGameSession(game_session: GameSession): void {
   }
   
   // Paddle collision (left side)
-  const leftPlayer = state.players.find(p => p.field_slot === "left");
-  if (leftPlayer && state.ball.x <= PADDLE_WIDTH && 
-      state.ball.y >= leftPlayer.paddle_coord && 
-      state.ball.y <= leftPlayer.paddle_coord + PADDLE_HEIGHT) {
+  const left_player = state.players.get("left");
+  if (left_player && state.ball.x <= PADDLE_WIDTH && 
+      state.ball.y >= left_player.paddle_coord && 
+      state.ball.y <= left_player.paddle_coord + PADDLE_HEIGHT) {
     state.ball.vx = -state.ball.vx;
   }
   
   // Paddle collision (right side)
-  const rightPlayer = state.players.find(p => p.field_slot === "right");
-  if (rightPlayer && state.ball.x >= WIDTH - PADDLE_WIDTH && 
-      state.ball.y >= rightPlayer.paddle_coord && 
-      state.ball.y <= rightPlayer.paddle_coord + PADDLE_HEIGHT) {
+  const right_player = state.players.get("right");
+  if (right_player && state.ball.x >= WIDTH - PADDLE_WIDTH && 
+      state.ball.y >= right_player.paddle_coord && 
+      state.ball.y <= right_player.paddle_coord + PADDLE_HEIGHT) {
     state.ball.vx = -state.ball.vx;
   }
 
   // Check for game end
-  const maxScore = Math.max(...state.players.map(p => p.score));
+  const players = Array.from(state.players.values());
+  const maxScore = Math.max(...players.map(p => p.score));
   if (maxScore >= WIN_POINT) {
     state.ongoing = false;
     // Set winner
-    const winner = state.players.find(p => p.score === maxScore);
+    const winner = players.find(p => p.score === maxScore);
     if (winner) {
       game_session.winner_id = winner.player_id;
     }
@@ -246,15 +250,18 @@ function createGameSession(participants: GameParticipant[], game_id: number): Ga
     created_at: new Date(),
     winner_id: undefined
   }
-  new_game.state.players = participants.map((p, idx) => ({
-    player_id: p.player_id,
-    session_id: p.session_id,
-    paddle_coord: HEIGHT / 2 - PADDLE_HEIGHT / 2,
-    field_slot: idx === 0 ? "left" : "right",
-    score: 0,
-    ready: false
-  }));
-   return new_game;
+  participants.forEach((p, idx ) => 
+    new_game.state.players.set(idx === 0 ? "left" : "right", 
+      {
+        player_id: p.player_id,
+        session_id: p.session_id,
+        paddle_coord: HEIGHT / 2 - PADDLE_HEIGHT / 2,
+        score: 0,
+        ready: false
+      }
+    )
+  );
+  return new_game;
 }
   
 fastify.post<{Body: GameCreationBody }>("/game/create", async (request, reply) => {
@@ -279,7 +286,8 @@ fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) =
     reply.code(404).send({error: "Game not found"});
     return ;
   }
-  const player: PlayerState | undefined = game_session.state.players.find((p) => p.session_id === session_id);
+  const player: PlayerState | undefined = Array.from(game_session.state.players.values())
+    .find((player) => player.session_id === session_id);
   if (player === undefined) {
     reply.code(403).send({error: "Invalid session_id"});
     return;
@@ -289,10 +297,16 @@ fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) =
 });
 
 function toPublicGameState(state: GameState): PublicGameState {
+  const playersObject = Object.fromEntries(
+    Array.from(state.players.entries()).map(([slot, player]) => {
+      const { session_id, ready, ...publicPlayer } = player;
+      return [slot, publicPlayer];
+    })
+  );
   return {
     ...state,
-    players: state.players.map(({ session_id, ...rest}) => rest),
-  }
+    players: playersObject,
+  };
 }
 
 // WebSocket endpoint for real-time game updates
@@ -318,9 +332,8 @@ fastify.register(async function (fastify: FastifyInstance) {
           throw new Error("Invalid input format");
         }
         
-        const { players } = game_session.state as {players: PlayerState[]};
-
-        const player: PlayerState | undefined = players.find((player) => player.session_id === input.session_id);
+        const player: PlayerState | undefined = Array.from(game_session.state.players.values())
+          .find((player) => player.session_id === input.session_id);
         if (player === undefined) {
           throw new Error("Invalid session id");
         }
