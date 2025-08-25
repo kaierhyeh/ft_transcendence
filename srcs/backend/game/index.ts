@@ -9,7 +9,7 @@ const fastify: FastifyInstance = Fastify({ logger: true });
 fastify.register(websocketPlugin);
 
 // Constants
-const PADDLE_SPEED: number = 9;
+const PADDLE_STEP: number = 9; // in pixels
 const WIDTH: number = 600;
 const HEIGHT: number = 400;
 const PADDLE_WIDTH: number = 10;
@@ -17,7 +17,7 @@ const PADDLE_HEIGHT: number = 80;
 const GAME_FPS: number = 30;
 const WIN_POINT: number = 11;
 const BALL_SIZE: number = 10;
-const BALL_SPEED: number = 200;
+const BALL_SPEED: number = 200; // in pixels/s
 
 // Type definitions
 interface GameConf {
@@ -118,7 +118,7 @@ function checkAndStartGame(game_session: GameSession): void {
 function updateGameSession(game_session: GameSession): void {
  const { state } = game_session;
   
- const dt: number =  Date.now() - state.last_time;
+ const dt: number =  Date.now() - state.last_time; // in ms
   // Update ball position
   state.ball.x += state.ball.vx * (dt / 1000);
   state.ball.y += state.ball.vy * (dt / 1000);
@@ -374,11 +374,11 @@ fastify.register(async function (fastify: FastifyInstance) {
         
         // Process player movement
         if (input.move === "up" && player.paddle_coord > 0) {
-          player.paddle_coord -= PADDLE_SPEED;
+          player.paddle_coord -= PADDLE_STEP;
         }
         
         if (input.move === "down" && player.paddle_coord < HEIGHT - PADDLE_HEIGHT) {
-          player.paddle_coord += PADDLE_SPEED;
+          player.paddle_coord += PADDLE_STEP;
         }
         
       } catch (err) {
