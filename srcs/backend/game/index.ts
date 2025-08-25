@@ -40,8 +40,6 @@ interface Ball {
 type PlayerSlot =
   | "left"
   | "right"
-  | "top"
-  | "bottom"
   | "top-left"
   | "top-right"
   | "bottom-left"
@@ -191,15 +189,20 @@ function updateGameSession(game_session: GameSession): void {
 // Game loop function
 function updateGame(): void {
 
-  game_sessions.forEach((game_session) => {
-    // console.log("game session ", game_session.id, " update");
-    if (!game_session.state.ongoing) {
-      checkAndStartGame(game_session);
-      return;
+  for (const key of game_sessions.keys()) {
+    const game = game_sessions.get(key);
+    if (!game)
+      continue ;
+    if (!game.state.ongoing) {
+      checkAndStartGame(game);
+      continue ;
     }
-    updateGameSession(game_session);
-  });
-
+    updateGameSession(game);
+    if (!game.state.ongoing) {
+      // save game session in database
+      game_sessions.delete(key);
+    }
+  }
 }
 
 function broadcastGameState(game_session: GameSession): void {

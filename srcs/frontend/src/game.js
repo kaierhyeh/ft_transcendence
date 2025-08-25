@@ -202,7 +202,7 @@ async function run() {
             
             console.log("Game initialized:", game_conf);
 
-        }    
+        }
         {
             await fetch(API_GAME_ENDPOINT + `/${game_id}/join`, {
                 method: "POST",
