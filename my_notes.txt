@@ -2,8 +2,19 @@
 ----------------TRANSCENDANCE----------------------
 ###################################################
 
+POUR LANCER MON COdE : python -m http.server 8000
+
+PONG :
+Direction de balle vers le gagnant
+reduire vitesse de balle
+
+MULTIJOUEUR :
+
+Donc ajouter que le dernier joueur qui a touche la balle a le point ? 
 
 
+
+TO OPEN PONG ATM : python -m http.server 8000 then open http://localhost:8000/pong.html in browser
 
 Suivi des étapes : 
 Afficher une page html
@@ -20,6 +31,8 @@ Faire bouger paddle
 update collision, si la balle touche le mur droit ou gauche alors elle revient au centre
 ajouter ecouteur de touche pour pouvoir bouger les raquettes
 ajouter collisions avec raquettes
+_____________________________________
+REFACTORING CODE IN TYPECRIPT ADDAPTING KILFENN PONG TO MULTIPLAYER
 
 
 
@@ -40,6 +53,7 @@ Tout redessiner demande de la ressource mais cest tres rapide (60dessin/sec) don
 
 Notes mémo apprentissage utiles : 
 
+en typescript , la comparaison d'egalite se fait === au lieu de == (== uniquemnt pour comparaison +conversion de type , rarement utilise)
 pas vraiment utile ici mais bien de se familisariser avec:
 const COLORS = {
     background: 'black',
@@ -57,5 +71,20 @@ ctx.arc();        Dessiner un cercle
 ctx.moveTo();     Tracer une ligne
 
 
+    ┌─────rebond─────┐
+50 % J1             50% j2
+    |                |
+    -                -
+    |                |
+50 % J3           J4 50%
+    └─────rebond─────┘
 
+    ┌───J3 (50%)───┐ 
+100%│J1          J2│  100%
+    └───J4 (50%)───┘ 
 
+       25%        25%
+   ┌───-J3-──┬───-J4-──┐
+50%│J1←      │      →J2│ 50%
+   └───-J5-─ ┴───-J6-──┘ 
+      25%           25%

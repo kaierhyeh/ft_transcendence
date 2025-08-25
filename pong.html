@@ -1,41 +1,42 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PONG 42</title>
-    <style>
-        body
-        {
-            background-color: black;
-            color: white;
-            font-family: Arial;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        h1
-        {
-            color: pink;
-            font-size: 40px;
-        }
-
-        #pongBoard
-        {
-            border: 2px solid grey;
-            background-color: black;
-            margin: 20px auto;
-            display: block;
-        }
-    </style>
+<title>PONG 42</title>
+<style>
+body {
+    background-color: black;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+    padding: 20px;
+}
+h1 {
+    color: pink;
+    font-size: 40px;
+}
+#pong {
+    border: 2px solid grey;
+    background-color: black;
+    margin: 20px auto;
+    display: block;
+}
+</style>
 </head>
 <body>
     <h1>PONG GAME</h1>
-    <p> let's play ! </p>
+    <p>Let's play!</p>
+    <canvas id="pong" width="800" height="400"></canvas>
     
-    <canvas id="pongBoard" width="800" height="400"></canvas>
-    <script src="pong.js"></script>
+    <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
     <script>
-        initGame();
+        fetch('./pong.ts')
+            .then(response => response.text())
+            .then(source => {
+                const result = ts.transpile(source);
+                eval(result);
+            });
     </script>
-
 </body>
 </html>
+
