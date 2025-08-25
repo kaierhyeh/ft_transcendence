@@ -191,15 +191,22 @@ function updateGame(): void {
 
   for (const key of game_sessions.keys()) {
     const game = game_sessions.get(key);
-    if (!game)
+    if (!game) {
       continue ;
+    }
     if (!game.state.ongoing) {
       checkAndStartGame(game);
+      continue ;
+    }
+    if (game.state.websockets.size === 0) {
+      console.log(`[WARN] Game ${key} ended: no connected player`);
+      game_sessions.delete(key);
       continue ;
     }
     updateGameSession(game);
     if (!game.state.ongoing) {
       // save game session in database
+      console.log(`[INFO] Game ${key} ended!`);
       game_sessions.delete(key);
     }
   }
@@ -307,10 +314,10 @@ fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) =
     return;
   }
   
-  console.log("game id:", game_id);
-  console.log(game_sessions);
+  // console.log("game id:", game_id);
   const game_session: GameSession | undefined = game_sessions.get(game_id); // Use number
-  console.log(game_sessions.get(game_id));
+  console.log(game_sessions);
+  // console.log(game_sessions.get(game_id));
   
   if (game_session === undefined) {
     reply.code(404).send({error: "Game not found"});
@@ -392,6 +399,7 @@ fastify.register(async function (fastify: FastifyInstance) {
     });
     
     connection.socket.on('close', () => {
+      console.log("[WARN] A connection closed on game", game_session.id);
       websockets.delete(connection);
     });
     
