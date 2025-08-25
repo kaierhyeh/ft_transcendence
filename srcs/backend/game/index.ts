@@ -65,6 +65,7 @@ interface GameCreationBody {
 interface GameState {
   tick: number;
   last_time: number;
+  last_connection_time: number;
   ball: Ball;
   players: Map<PlayerSlot, PlayerState>;
   websockets: Set<SocketStream>;
@@ -73,7 +74,7 @@ interface GameState {
 
 type PublicPlayerState = Omit<PlayerState, "session_id" | "ready">;
 
-interface PublicGameState extends Omit<GameState, "websockets" | "players"> {
+interface PublicGameState extends Omit<GameState, "websockets" | "players" | "last_connection_time"> {
   players: Partial<Record<PlayerSlot, PublicPlayerState>>;
 }
 
@@ -192,17 +193,23 @@ function updateGame(): void {
   for (const key of game_sessions.keys()) {
     const game = game_sessions.get(key);
     if (!game) {
+      console.log(`[DEBUG] Game ${key} was deleted during this update cycle`);
       continue ;
     }
     if (!game.state.ongoing) {
       checkAndStartGame(game);
       continue ;
     }
-    if (game.state.websockets.size === 0) {
-      console.log(`[WARN] Game ${key} ended: no connected player`);
+    if (game.state.websockets.size === 0 && 
+      Date.now() - game.state.last_connection_time >= 5000) {
+      console.log(`[WARN] Game ${key} timeout after 5s: no connected player`);
       game_sessions.delete(key);
-      continue ;
+      continue;
     }
+    // else {
+    //   if (game.state.tick % 30 === 0)
+    //     console.log(`Game ${key} has ${game.state.websockets.size} connected players`);
+    // }
     updateGameSession(game);
     if (!game.state.ongoing) {
       // save game session in database
@@ -249,6 +256,7 @@ function createGameSession(participants: GameParticipant[], game_id: number): Ga
   const fresh_state: GameState = {
     tick: 0,
     last_time: -1,
+    last_connection_time: Date.now(),
     ball: { 
       x: WIDTH / 2, 
       y: HEIGHT / 2, 
@@ -365,7 +373,7 @@ fastify.register(async function (fastify: FastifyInstance) {
     const { websockets } = game_session?.state as {websockets: Set<SocketStream>};
 
     websockets.add(connection);
-    // console.log("game id: ", game_id, " websockets: ", websockets);
+    game_session.state.last_connection_time = Date.now(); // Update when connection added
     
     connection.socket.on('message', (message: Buffer) => {
       try {
@@ -401,6 +409,7 @@ fastify.register(async function (fastify: FastifyInstance) {
     connection.socket.on('close', () => {
       console.log("[WARN] A connection closed on game", game_session.id);
       websockets.delete(connection);
+      game_session.state.last_connection_time = Date.now(); // Update when connection removed
     });
     
     connection.socket.on('error', (error: Error) => {
