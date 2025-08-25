@@ -96,26 +96,6 @@ interface GameSession {
   winner_id: number | undefined;
 }
 
-// Game configuration
-const game_conf: GameConf = {
-  canvas_width: WIDTH,
-  canvas_height: HEIGHT,
-  paddle_width: PADDLE_WIDTH,
-  paddle_height: PADDLE_HEIGHT,
-  win_point: WIN_POINT,
-  ball_size: BALL_SIZE,
-};
-
-// Game state
-const default_state: GameState = {
-  tick: 0,
-  last_time: -1,
-  ball: { x: WIDTH / 2, y: HEIGHT / 2, vx: BALL_SPEED, vy: BALL_SPEED / 2 },
-  players: new Map<PlayerSlot, PlayerState>(),
-  websockets: new Set<SocketStream>(),
-  ongoing: false
-};
-
 // Game sessions
 const game_sessions: Map<number, GameSession> = new Map();
 
@@ -131,7 +111,7 @@ function checkAndStartGame(game_session: GameSession): void {
   if (all_ready && players.length > 0) {
     game_session.state.ongoing = true;
     game_session.state.last_time = Date.now();
-    console.log(`Game ${game_session.id} started!`);
+    // console.log(`Game ${game_session.id} started!`);
   }
 }
 
@@ -212,6 +192,7 @@ function updateGameSession(game_session: GameSession): void {
 function updateGame(): void {
 
   game_sessions.forEach((game_session) => {
+    // console.log("game session ", game_session.id, " update");
     if (!game_session.state.ongoing) {
       checkAndStartGame(game_session);
       return;
@@ -254,24 +235,49 @@ fastify.get("/game/:id/conf", async (request, reply) => {
 });
 
 function createGameSession(participants: GameParticipant[], game_id: number): GameSession {
+  // Create a deep copy of default_state for each game session
+  const fresh_state: GameState = {
+    tick: 0,
+    last_time: -1,
+    ball: { 
+      x: WIDTH / 2, 
+      y: HEIGHT / 2, 
+      vx: BALL_SPEED, 
+      vy: BALL_SPEED / 2 
+    },
+    players: new Map<PlayerSlot, PlayerState>(),
+    websockets: new Set<SocketStream>(),
+    ongoing: false
+  };
+
+  // Create a copy of game_conf (in case you want to customize per game)
+  const fresh_conf: GameConf = {
+    canvas_width: WIDTH,
+    canvas_height: HEIGHT,
+    paddle_width: PADDLE_WIDTH,
+    paddle_height: PADDLE_HEIGHT,
+    win_point: WIN_POINT,
+    ball_size: BALL_SIZE,
+  };
+
   const new_game: GameSession = {
     id: game_id,
-    conf: game_conf,
-    state: default_state,
+    conf: fresh_conf,        // Use fresh copy
+    state: fresh_state,      // Use fresh copy
     created_at: new Date(),
     winner_id: undefined
   }
-  participants.forEach((p, idx ) => 
-    new_game.state.players.set(idx === 0 ? "left" : "right", 
-      {
-        player_id: p.player_id,
-        session_id: p.session_id,
-        paddle_coord: HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        score: 0,
-        ready: false
-      }
-    )
+
+  participants.forEach((p, idx) => 
+    new_game.state.players.set(idx === 0 ? "left" : "right", {
+      player_id: p.player_id,
+      session_id: p.session_id,
+      paddle_coord: HEIGHT / 2 - PADDLE_HEIGHT / 2,
+      score: 0,
+      ready: false
+    })
   );
+
   return new_game;
 }
   
@@ -349,6 +355,7 @@ fastify.register(async function (fastify: FastifyInstance) {
     const { websockets } = game_session?.state as {websockets: Set<SocketStream>};
 
     websockets.add(connection);
+    // console.log("game id: ", game_id, " websockets: ", websockets);
     
     connection.socket.on('message', (message: Buffer) => {
       try {

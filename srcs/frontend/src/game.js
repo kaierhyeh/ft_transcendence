@@ -80,6 +80,8 @@ function connectWebSocket() {
     const url = API_GAME_ENDPOINT + `/${game_id}/ws`;
     console.log("Attempting to connect to:", url);
     ws = new WebSocket(url);
+
+    console.log(`websocket for /game/${game_id}/ws: `, ws);
     
     ws.onopen = function() {
         console.log("WebSocket connected successfully");
@@ -127,13 +129,13 @@ function startInputSending() {
                 if (inputData["w"] || inputData["s"]) {
                     input.session_id = session_ids[0];
                     input.move = inputData["w"] ? "up" : "down";
-                    console.log(input);
+                    // console.log(input);
                     ws.send(JSON.stringify(input));
                 }
                 if (inputData["ArrowUp"] || inputData["ArrowDown"]) {
                     input.session_id = session_ids[1];
                     input.move = inputData["ArrowUp"] ? "up" : "down";
-                    console.log(input);
+                    // console.log(input);
                     ws.send(JSON.stringify(input));
                 }
             }
