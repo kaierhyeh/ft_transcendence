@@ -15,7 +15,8 @@ const HEIGHT: number = 400;
 const PADDLE_WIDTH: number = 10;
 const PADDLE_HEIGHT: number = 80;
 const UPDATE_PERIOD: number = 1000 / 30;
-const WIN_POINT: number = 11;
+// const WIN_POINT: number = 11;
+const WIN_POINT: number = 5;
 const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 200;
 
@@ -98,6 +99,34 @@ interface GameSession {
 }
 
 // ==========================
+// Schemas
+// ==========================
+
+const createGameSchema = {
+  body: {
+    type: 'object',
+    required: ['participants'],
+    properties: {
+      participants: {
+        type: 'array',
+        minItems: 2,
+        maxItems: 2,
+        items: {
+          type: 'object',
+          required: ['player_id', 'session_id'],
+          properties: {
+            player_id: { type: 'number' },
+            session_id: { type: 'string' }
+          },
+          additionalProperties: false  // ← This would catch "id" instead of "player_id"
+        }
+      }
+    }
+  }
+};
+
+
+// ==========================
 // Globals
 // ==========================
 const fastify: FastifyInstance = Fastify({ logger: true });
@@ -171,7 +200,11 @@ function updateGameSession(game_session: GameSession): void {
     state.ongoing = false;
     const winner = players.find((p) => p.score === maxScore);
     if (winner) {
+      console.log("[INFO]: we have a winner!");
       game_session.winner_id = winner.player_id;
+    }
+    else {
+        fastify.log.error("No winner found!");
     }
   }
 
@@ -202,19 +235,34 @@ function updateGameSession(game_session: GameSession): void {
         winner_id
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
-    saveGameInDb.run(
-      'pvp',
-      null,
-      state.players.get('left')?.player_id,
-      state.players.get('right')?.player_id,
-      null,
-      null,
-      state.players.get('left')?.score,
-      state.players.get('right')?.score,
-      null,
-      null,
-      game_session.winner_id
-    );
+    
+    if (left_player != undefined && right_player != undefined && game_session.winner_id != undefined) {
+      saveGameInDb.run(
+        'pvp',
+        null,
+        left_player.player_id,
+        right_player.player_id,
+        null,
+        null,
+        left_player.score,
+        right_player.score,
+        null,
+        null,
+        game_session.winner_id
+      );
+
+    }
+    else {
+  console.log("=== DEBUG GAME SAVE FAILURE ===");
+  console.log("leftplayer:", JSON.stringify(left_player, null, 2));
+  console.log("rightplayer:", JSON.stringify(right_player, null, 2));  
+  console.log("game_session:", JSON.stringify(game_session, null, 2));  
+  console.log("game_session.winner_id:", game_session.winner_id);
+  console.log("game_session.id:", game_session.id);
+  console.log("players map:", JSON.stringify(Array.from(game_session.state.players.entries()), null, 2));
+  console.log("===============================");
+  fastify.log.error("Failed to save game - check debug output above");
+    }
   }
 }
 
@@ -354,9 +402,10 @@ async function main() {
           return game_session.conf;
         });
 
-        fastify.post<{Body: GameCreationBody }>("/create", async (request, reply) => {
-          const { participants } = request.body;
+        fastify.post<{Body: GameCreationBody }>("/create", { schema: createGameSchema }, async (request, reply) => {
+          const { participants } = request.body as GameCreationBody;
 
+          // TODO - this check may drop
           if (participants.length != 2) {
             reply.code(400).send({error: "Invalid number of participant"})
             return ;
@@ -448,7 +497,7 @@ async function main() {
           });
           
           connection.socket.on('close', () => {
-            console.log("[WARN] A connection closed on game", game_session.id);
+            fastify.log.warn("A connection closed on game " + game_session.id);
             websockets.delete(connection);
             game_session.state.last_connection_time = Date.now(); // Update when connection removed
           });

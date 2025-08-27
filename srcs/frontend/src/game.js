@@ -183,8 +183,8 @@ async function run() {
                 body: JSON.stringify(
                     {
                         participants: [
-                            {id: 0, session_id: session_ids[0] },
-                            {id: 1, session_id: session_ids[1] },
+                            {player_id: 0, session_id: session_ids[0] },
+                            {player_id: 1, session_id: session_ids[1] },
                         ]
                     })
                 });

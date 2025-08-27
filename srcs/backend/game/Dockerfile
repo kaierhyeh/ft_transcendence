@@ -1,5 +1,8 @@
 FROM node:lts-alpine
 
+# Install sqlite3 for debugging
+RUN apk add --no-cache sqlite
+
 WORKDIR /app
 
 # Copy package files first for better Docker layer caching
