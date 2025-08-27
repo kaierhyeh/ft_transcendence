@@ -1,42 +1,18 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-<title>PONG 42</title>
-<style>
-body {
-    background-color: black;
-    color: white;
-    font-family: Arial;
-    text-align: center;
-    padding: 20px;
-}
-h1 {
-    color: pink;
-    font-size: 40px;
-}
-#pong {
-    border: 2px solid grey;
-    background-color: black;
-    margin: 20px auto;
-    display: block;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Pong 2 Players</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    @font-face {
+        font-family: "Bit5x3";
+        src: url("fonts/bit5x3.otf") format("truetype");
+    }
+    </style>
 </head>
-<body>
-    <h1>PONG GAME</h1>
-    <p>Let's play!</p>
-    <canvas id="pong" width="800" height="400"></canvas>
-    
-    <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
-    <script>
-        fetch('./pong.ts')
-            .then(response => response.text())
-            .then(source => {
-                const result = ts.transpile(source);
-                eval(result);
-            });
-    </script>
+<body class="m-0 bg-white flex justify-center items-center h-screen">
+    <canvas id="pong" width="800" height="400" class="bg-black block"></canvas>
+    <script src="pong4players.js"></script>
 </body>
 </html>
-

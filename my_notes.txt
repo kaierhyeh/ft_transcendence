@@ -33,6 +33,8 @@ ajouter ecouteur de touche pour pouvoir bouger les raquettes
 ajouter collisions avec raquettes
 _____________________________________
 REFACTORING CODE IN TYPECRIPT ADDAPTING KILFENN PONG TO MULTIPLAYER
+Remove left/right paddle and create 4 with their position
+draw les 4 paddles
 
 
 

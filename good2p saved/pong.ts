@@ -5,6 +5,7 @@ const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 50;
 const BALL_SIZE = 10;
 const WIN_SCORE = 11;
+const PADDLE_SPEED = 6;
 
 interface Paddle {
     x: number;
@@ -108,11 +109,11 @@ function moveBall() {
 
     if (ball.x < 0) {
         scoreRight++;
-        resetBall("right")
+        resetBall("right");
     }
     if (ball.x > canvas.width) {
         scoreLeft++;
-        resetBall("left")
+        resetBall("left");
     }
 }
 
@@ -129,6 +130,7 @@ function resetBall(to: "left" | "right") {
         ball.dx = Math.abs(Math.cos(angle) * speed);
     }
     ball.dy = Math.sin(angle) * speed;
+    
     paused = true;
     setTimeout(() => {
         paused = false;
@@ -139,20 +141,32 @@ function gameOver(): boolean {
     return scoreLeft === WIN_SCORE || scoreRight === WIN_SCORE;
 }
 
+
 const keys: Record<string, boolean> = {};
 document.addEventListener("keydown", e => { keys[e.key] = true; });
 document.addEventListener("keyup", e => { keys[e.key] = false; });
 
 function movePaddles() {
-    if (keys["w"] && leftPaddle.y > 0) leftPaddle.y -= 6;
-    if (keys["s"] && leftPaddle.y + PADDLE_HEIGHT < canvas.height) leftPaddle.y += 6;
 
-    if (keys["ArrowUp"] && rightPaddle.y > 0) rightPaddle.y -= 6;
-    if (keys["ArrowDown"] && rightPaddle.y + PADDLE_HEIGHT < canvas.height) rightPaddle.y += 6;
+    if (keys["w"] && leftPaddle.y > 0) {
+        leftPaddle.y -= PADDLE_SPEED;
+    }
+    if (keys["s"] && leftPaddle.y + PADDLE_HEIGHT < canvas.height) {
+        leftPaddle.y += PADDLE_SPEED;
+    }
+
+
+    if (keys["ArrowUp"] && rightPaddle.y > 0) {
+        rightPaddle.y -= PADDLE_SPEED;
+    }
+    if (keys["ArrowDown"] && rightPaddle.y + PADDLE_HEIGHT < canvas.height) {
+        rightPaddle.y += PADDLE_SPEED;
+    }
 }
 
 function game() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 
     drawCenterLine();
     drawRect(leftPaddle.x, leftPaddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
@@ -163,14 +177,17 @@ function game() {
     if (gameOver()) {
         ctx.font = "64px Bit5x3";
         ctx.fillStyle = "white";
-        if (scoreLeft === WIN_SCORE)
-            ctx.fillText("Player 1 win", canvas.width / 2 - 200, canvas.height / 2 + 32);
-        else
-            ctx.fillText("Player 2 win", canvas.width / 2 - 200, canvas.height / 2 + 32);
-    }
-    else if (!paused)
+        if (scoreLeft === WIN_SCORE) {
+            ctx.fillText("Player 1 Wins!", canvas.width / 2 - 220, canvas.height / 2 + 32);
+        } else {
+            ctx.fillText("Player 2 Wins!", canvas.width / 2 - 220, canvas.height / 2 + 32);
+        }
+    } else if (!paused) {
         moveBall();
+    }
+    
     movePaddles();
+    
     requestAnimationFrame(game);
 }
 
