@@ -88,7 +88,7 @@ interface StartGameBody {
 }
 
 interface GameSession {
-  id: number; // TODO - Delete this if non used
+  id: number; // helpful for debugging
   conf: GameConf;
   state: GameState;
   created_at: Date;
@@ -233,23 +233,6 @@ function broadcastGameState(game_session: GameSession): void {
 // Start game loop
 setInterval(updateGame, UPDATE_PERIOD);
 
-// REST API Routes
-fastify.get("/game/:id/conf", async (request, reply) => {
-  const { id } = request.params as { id: string };
-  const game_id = parseInt(id, 10);
-  
-  if (isNaN(game_id)) {
-    reply.code(400).send({error: "Invalid game ID"});
-    return;
-  }
-  
-  const game_session: GameSession | undefined = game_sessions.get(game_id);
-  if (game_session === undefined) {
-    reply.code(404).send({error: "Game not found"});
-    return;
-  }
-  return game_session.conf;
-});
 
 function createGameSession(participants: GameParticipant[], game_id: number): GameSession {
   // Create a deep copy of default_state for each game session
@@ -299,47 +282,6 @@ function createGameSession(participants: GameParticipant[], game_id: number): Ga
   return new_game;
 }
   
-fastify.post<{Body: GameCreationBody }>("/game/create", async (request, reply) => {
-  const { participants } = request.body;
-
-  if (participants.length != 2) {
-    reply.code(400).send({error: "Invalid number of participant"})
-    return ;
-  }
-  
-  const game_id = next_id++;
-  game_sessions.set(game_id, createGameSession(participants, game_id));
-  reply.send({game_id: game_id});
-});
-
-fastify.post<{ Body: StartGameBody }>("/game/:id/join", async (request, reply) => {
-  const { session_id } = request.body as { session_id: string };
-  const { id } = request.params as { id: string }; // Correct: params are strings
-  
-  const game_id = parseInt(id, 10); // Convert string to number
-  if (isNaN(game_id)) {
-    reply.code(400).send({error: "Invalid game ID"});
-    return;
-  }
-  
-  // console.log("game id:", game_id);
-  const game_session: GameSession | undefined = game_sessions.get(game_id); // Use number
-  console.log(game_sessions);
-  // console.log(game_sessions.get(game_id));
-  
-  if (game_session === undefined) {
-    reply.code(404).send({error: "Game not found"});
-    return;
-  }
-  const player: PlayerState | undefined = Array.from(game_session.state.players.values())
-    .find((player) => player.session_id === session_id);
-  if (player === undefined) {
-    reply.code(403).send({error: "Invalid session_id"});
-    return;
-  }
-  player.ready = true;
-  reply.send({success: true});
-});
 
 function toPublicGameState(state: GameState): PublicGameState {
   const playersObject = Object.fromEntries(
@@ -354,9 +296,70 @@ function toPublicGameState(state: GameState): PublicGameState {
   };
 }
 
-// WebSocket endpoint for real-time game updates
 fastify.register(async function (fastify: FastifyInstance) {
-  fastify.get('/game/:id/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
+
+  // REST API Routes
+  fastify.get("/:id/conf", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const game_id = parseInt(id, 10);
+    
+    if (isNaN(game_id)) {
+      reply.code(400).send({error: "Invalid game ID"});
+      return;
+    }
+    
+    const game_session: GameSession | undefined = game_sessions.get(game_id);
+    if (game_session === undefined) {
+      reply.code(404).send({error: "Game not found"});
+      return;
+    }
+    return game_session.conf;
+  });
+
+  fastify.post<{Body: GameCreationBody }>("/create", async (request, reply) => {
+    const { participants } = request.body;
+
+    if (participants.length != 2) {
+      reply.code(400).send({error: "Invalid number of participant"})
+      return ;
+    }
+    
+    const game_id = next_id++;
+    game_sessions.set(game_id, createGameSession(participants, game_id));
+    reply.send({game_id: game_id});
+  });
+
+  fastify.post<{ Body: StartGameBody }>("/:id/join", async (request, reply) => {
+    const { session_id } = request.body as { session_id: string };
+    const { id } = request.params as { id: string }; // Correct: params are strings
+    
+    const game_id = parseInt(id, 10); // Convert string to number
+    if (isNaN(game_id)) {
+      reply.code(400).send({error: "Invalid game ID"});
+      return;
+    }
+    
+    // console.log("game id:", game_id);
+    const game_session: GameSession | undefined = game_sessions.get(game_id); // Use number
+    console.log(game_sessions);
+    // console.log(game_sessions.get(game_id));
+    
+    if (game_session === undefined) {
+      reply.code(404).send({error: "Game not found"});
+      return;
+    }
+    const player: PlayerState | undefined = Array.from(game_session.state.players.values())
+      .find((player) => player.session_id === session_id);
+    if (player === undefined) {
+      reply.code(403).send({error: "Invalid session_id"});
+      return;
+    }
+    player.ready = true;
+    reply.send({success: true});
+  });
+
+  // WebSocket endpoint for real-time game updates
+   fastify.get('/:id/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
     const { id } = req.params as { id: string };
     const game_id = parseInt(id, 10);
     
@@ -422,7 +425,7 @@ fastify.register(async function (fastify: FastifyInstance) {
     // Send initial game state
     connection.socket.send(JSON.stringify(public_game_state));
   });
-});
+}, { prefix: '/game'});
 
 // Server startup
 const run = async (): Promise<void> => {
