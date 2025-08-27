@@ -14,7 +14,7 @@ const WIDTH: number = 600;
 const HEIGHT: number = 400;
 const PADDLE_WIDTH: number = 10;
 const PADDLE_HEIGHT: number = 80;
-const GAME_FPS: number = 30;
+const UPDATE_PERIOD: number = 1000 / 30; // 33 ms <=> 30 times / s
 const WIN_POINT: number = 11;
 const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 200; // in pixels/s
@@ -231,7 +231,7 @@ function broadcastGameState(game_session: GameSession): void {
 }
 
 // Start game loop
-setInterval(updateGame, 1000 / GAME_FPS);
+setInterval(updateGame, UPDATE_PERIOD);
 
 // REST API Routes
 fastify.get("/game/:id/conf", async (request, reply) => {
