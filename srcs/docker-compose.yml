@@ -44,6 +44,8 @@ services:
     build:
       context: ./backend/game
       dockerfile: Dockerfile
+    volumes:
+      - game_sessions:/app/sessions
     networks:
       - pong_network
     init: true
@@ -80,3 +82,4 @@ networks:
 
 volumes:
   ssl:
+  game_sessions:
