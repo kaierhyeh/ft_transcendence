@@ -2,7 +2,7 @@
 ----------------TRANSCENDANCE----------------------
 ###################################################
 
-POUR LANCER MON COdE : python -m http.server 8000
+POUR LANCER MON COdE : tsc tous les fichiers.ts
 
 PONG :
 Direction de balle vers le gagnant
@@ -10,9 +10,7 @@ reduire vitesse de balle
 
 MULTIJOUEUR :
 
-Donc ajouter que le dernier joueur qui a touche la balle a le point ? 
-
-
+Ajouter que le dernier joueur qui a touche la balle a le point ? ou teamplay
 
 TO OPEN PONG ATM : python -m http.server 8000 then open http://localhost:8000/pong.html in browser
 
@@ -35,6 +33,8 @@ _____________________________________
 REFACTORING CODE IN TYPECRIPT ADDAPTING KILFENN PONG TO MULTIPLAYER
 Remove left/right paddle and create 4 with their position
 draw les 4 paddles
+add menu
+REFACTORING TO MAKE MODULAR ACHITECTURE TO IMPLEMENT REMOTE PLAYERS
 
 
 
@@ -90,3 +90,30 @@ ctx.moveTo();     Tracer une ligne
 50%│J1←      │      →J2│ 50%
    └───-J5-─ ┴───-J6-──┘ 
       25%           25%
+
+ GPT NOTES IDEA OF FINAL ARCHITECTURE VISUAL : 
+
+      projet/
+├── frontend/
+│   ├── src/
+│   │   ├── marine/                 ← VOS FICHIERS
+│   │   │   ├── GameEngine.js
+│   │   │   ├── NetworkManager.js
+│   │   │   └── GameController.js
+│   │   ├── aleksei/               ← FICHIERS ALEKSEI
+│   │   │   └── ChatManager.js
+│   │   ├── kilfen/                ← FICHIERS KILFEN  
+│   │   │   ├── AIPlayer.js
+│   │   │   └── StatsManager.js
+│   │   ├── alex/                  ← FICHIERS ALEX
+│   │   │   └── AuthManager.js
+│   │   └── shared/                ← PARTAGÉ
+│   │       └── types.ts
+│   └── index.html
+├── backend/                       ← STEVEN
+│   ├── src/
+│   │   ├── api/
+│   │   ├── websockets/
+│   │   └── database/
+│   └── package.json
+└── docker-compose.yml            ← TOUT L'ÉQUIPE

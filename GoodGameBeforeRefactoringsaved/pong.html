@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Pong - Multijoueur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    @font-face {
+        font-family: "Bit5x3";
+        src: url("fonts/bit5x3.otf") format("truetype");
+    }
+    </style>
+</head>
+<script src="pongSelectMode.js"></script>
+<body class="m-0 bg-black flex justify-center items-center h-screen">
+
+    <div id="menu" class="text-center text-white">
+        <h1 class="text-6xl mb-8" style="font-family: Bit5x3;">PONG</h1>
+        <div class="space-y-4">
+            <button id="btn2players" class="bg-blue-600 hover:bg-blue-700 text-white text-2xl px-8 py-4 rounded block mx-auto">
+                2 JOUEURS
+            </button>
+            <button id="btn4players" class="bg-green-600 hover:bg-green-700 text-white text-2xl px-8 py-4 rounded block mx-auto">
+                4 JOUEURS
+            </button>
+        </div>
+    </div>
+
+    <canvas id="pong" width="800" height="400" class="bg-black hidden"></canvas>
+</body>
+</html>
