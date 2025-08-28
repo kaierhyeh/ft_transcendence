@@ -16,7 +16,7 @@ const PADDLE_WIDTH: number = 10;
 const PADDLE_HEIGHT: number = 80;
 const UPDATE_PERIOD: number = 1000 / 30;
 // const WIN_POINT: number = 11;
-const WIN_POINT: number = 5;
+const WIN_POINT: number = 3;
 const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 200;
 const CONNECTION_TIMEOUT = 5000; // ms
@@ -61,7 +61,13 @@ interface GameParticipant {
   session_id: string;
 }
 
+type GameType =
+  | 'pvp'
+  | 'multi'
+  | 'tournament';
+
 interface GameCreationBody {
+  type: GameType;
   participants: GameParticipant[];
 }
 
@@ -93,6 +99,7 @@ interface StartGameBody {
 
 interface GameSession {
   id: number;
+  type: GameType;
   conf: GameConf;
   state: GameState;
   created_at: Date;
@@ -106,8 +113,12 @@ interface GameSession {
 const createGameSchema = {
   body: {
     type: 'object',
-    required: ['participants'],
+    required: ['type', 'participants'],
     properties: {
+      type: {
+        type: 'string',
+        enum: ['pvp', 'multi', 'tournament']
+      },
       participants: {
         type: 'array',
         minItems: 2,
@@ -121,7 +132,8 @@ const createGameSchema = {
           },
           additionalProperties: false  // ← This would catch "id" instead of "player_id"
         }
-      }
+      },
+    additionalProperties: false
     }
   }
 };
@@ -220,6 +232,8 @@ function updateGameSession(game_session: GameSession): void {
     });
     state.websockets.clear();
 
+    const created_at: string = game_session.created_at.toISOString().slice(0, 19).replace('T', ' ');
+    fastify.log.info("[INFO] created_at: " + created_at);
     try {
       saveSession(game_session);
     } catch(err) {
@@ -242,8 +256,9 @@ function saveSession(game_session: GameSession): void {
         score_player2,
         score_player3,
         score_player4,
-        winner_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        winner_id,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
 
     const left_player = game_session.state.players.get("left");
@@ -252,9 +267,11 @@ function saveSession(game_session: GameSession): void {
 
     if (left_player === undefined || right_player === undefined || winner_id === undefined) 
       throw new Error("Invalid game session data");
+
+    const created_at: string = game_session.created_at.toISOString().slice(0, 19).replace('T', ' ');
   
     saveGameInDb.run(
-      'pvp',
+      game_session.type,
       null,
       left_player.player_id,
       right_player.player_id,
@@ -264,7 +281,8 @@ function saveSession(game_session: GameSession): void {
       right_player.score,
       null,
       null,
-      winner_id
+      winner_id,
+      created_at
     );
 }
 
@@ -315,7 +333,7 @@ function broadcastGameState(game_session: GameSession): void {
 }
 
 
-function createGameSession(participants: GameParticipant[], game_id: number): GameSession {
+function createGameSession(creation_data: GameCreationBody, game_id: number): GameSession {
   // Create a deep copy of default_state for each game session
   const fresh_state: GameState = {
     tick: 0,
@@ -344,13 +362,14 @@ function createGameSession(participants: GameParticipant[], game_id: number): Ga
 
   const new_game: GameSession = {
     id: game_id,
+    type: creation_data.type,
     conf: fresh_conf,        // Use fresh copy
     state: fresh_state,      // Use fresh copy
     created_at: new Date(),
     winner_id: undefined
   }
 
-  participants.forEach((p, idx) => 
+  creation_data.participants.forEach((p, idx) => 
     new_game.state.players.set(idx === 0 ? "left" : "right", {
       player_id: p.player_id,
       session_id: p.session_id,
@@ -409,16 +428,10 @@ async function main() {
         });
 
         fastify.post<{Body: GameCreationBody }>("/create", { schema: createGameSchema }, async (request, reply) => {
-          const { participants } = request.body as GameCreationBody;
+          const creation_data = request.body as GameCreationBody;
 
-          // TODO - this check may drop
-          if (participants.length != 2) {
-            reply.code(400).send({error: "Invalid number of participant"})
-            return ;
-          }
-          
           const game_id = next_id++;
-          game_sessions.set(game_id, createGameSession(participants, game_id));
+          game_sessions.set(game_id, createGameSession(creation_data, game_id));
           reply.send({game_id: game_id});
         });
 
