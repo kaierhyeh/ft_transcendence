@@ -61,6 +61,7 @@ let ctx = canvas.getContext("2d");
 let game_state;
 let keys = {};
 const input = {
+    type: "input",
     session_id: "",
     move: ""
 }
@@ -74,6 +75,22 @@ let game_id;
 // Event listeners
 document.addEventListener("keydown", function (e) { keys[e.key] = true; });
 document.addEventListener("keyup", function (e) { keys[e.key] = false; });
+
+function handleServerMessage(message) {
+    switch (message.level) {
+        case "info":
+            console.info(`[Server] ${message.message}`);
+            break;
+        case "warning":
+            console.warn(`[Server Warning] ${message.message}`);
+            // You could show a subtle notification here
+            break;
+        case "error":
+            console.error(`[Server Error] ${message.message}`);
+            // You could show an error notification here
+            break;
+    }
+}
 
 // WebSocket connection for real-time updates
 function connectWebSocket() {
@@ -90,8 +107,14 @@ function connectWebSocket() {
     
     ws.onmessage = function(event) {
         try {
-            game_state = JSON.parse(event.data);
-            draw();
+            const message = JSON.parse(event.data);
+            
+            if (message.type === "game_state") {
+                game_state = message; // Your existing game_state structure is preserved
+                draw();
+            } else if (message.type === "server_message") {
+                handleServerMessage(message);
+            }
         } catch (error) {
             console.error("Error parsing game data:", error);
         }
@@ -116,6 +139,7 @@ function connectWebSocket() {
     };
 }
 
+
 // Send input periodically (much less frequent than rendering)
 function startInputSending() {
     setInterval(() => {
@@ -123,7 +147,7 @@ function startInputSending() {
             // Only send if there are active keys
             const activeKeys = Object.keys(keys).filter(key => keys[key]);
             if (activeKeys.length > 0) {
-                    // console.log(input);
+                // console.log(input);
                 const inputData = {};
                 activeKeys.forEach(key => inputData[key] = true);
                 if (inputData["w"] || inputData["s"]) {

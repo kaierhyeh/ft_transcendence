@@ -88,12 +88,7 @@ interface PublicGameState
   players: Partial<Record<PlayerSlot, PublicPlayerState>>;
 }
 
-interface PlayerInput {
-  session_id: string;
-  move: 'up' | 'down';
-}
-
-interface StartGameBody {
+interface JoinGameBody {
   session_id: string;
 }
 
@@ -105,6 +100,42 @@ interface GameSession {
   created_at: Date;
   winner_id: number | undefined;
 }
+
+// ==========================
+// Message types
+// ==========================
+
+// Add these interfaces to your existing types section
+interface BaseMessage {
+  type: string;
+  timestamp?: number;
+}
+
+interface GameStateMessage extends BaseMessage {
+  type: "game_state";
+  // Your existing game state data (no changes needed)
+  tick: number;
+  ball: Ball;
+  players: Partial<Record<PlayerSlot, PublicPlayerState>>;
+  ongoing: boolean;
+}
+
+type  LogLevel = "info" | "warning" | "error";
+
+interface ServerMessage extends BaseMessage {
+  type: "server_message";
+  level: LogLevel;
+  message: string;
+  code?: string;
+}
+
+interface PlayerInputMessage extends BaseMessage {
+  type: "input";
+  session_id: string;
+  move: "up" | "down";
+}
+
+// type WebSocketMessage = GameStateMessage | ServerMessage| PlayerInputMessage;
 
 // ==========================
 // Schemas
@@ -227,23 +258,17 @@ function updateGameSession(game_session: GameSession): void {
   broadcastGameState(game_session);
 
   if (!state.ongoing) {
+    saveSession(game_session);
+
     state.websockets.forEach((client) => {
       client.socket.close(1001, 'Game ended');
     });
     state.websockets.clear();
-
-    const created_at: string = game_session.created_at.toISOString().slice(0, 19).replace('T', ' ');
-    fastify.log.info("[INFO] created_at: " + created_at);
-    try {
-      saveSession(game_session);
-    } catch(err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      fastify.log.error("Failed to save game session: " + errorMessage);
-    }
   }
 }
 
 function saveSession(game_session: GameSession): void {
+  try {
     const saveGameInDb = fastify.db.prepare(
       `INSERT INTO sessions (
         type,
@@ -284,6 +309,15 @@ function saveSession(game_session: GameSession): void {
       winner_id,
       created_at
     );
+
+    console.log(`[INFO] Game ${game_session.id} saved successfully`);
+   } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[WARN] Failed to save game ${game_session.id}:`, errorMessage);
+      fastify.log.warn({ gameId: game_session.id, error: errorMessage }, "Database save failed");
+      
+      broadcastServerMessage(game_session, "warning", "Game statistics could not be saved", "DB_SAVE_FAILED");
+  }
 }
 
 function connectionTimeout(game_state: GameState): boolean
@@ -323,7 +357,31 @@ function updateGame(): void {
 
 function broadcastGameState(game_session: GameSession): void {
   const public_state = toPublicGameState(game_session.state);
-  const data: string = JSON.stringify(public_state);
+
+  const message: GameStateMessage = {
+    type: "game_state",
+    ...public_state
+  };
+
+  const data: string = JSON.stringify(message);
+
+  game_session.state.websockets.forEach(client => {
+    if (client && client.socket.readyState === client.socket.OPEN) {
+      client.socket.send(data);
+    }
+  });
+}
+
+function broadcastServerMessage(game_session: GameSession, level: LogLevel, message: string, code?: string): void {
+  const serverMessage: ServerMessage = {
+    type: "server_message",
+    level,
+    message,
+    code,
+    timestamp: Date.now()
+  };
+
+  const data = JSON.stringify(serverMessage);
 
   game_session.state.websockets.forEach(client => {
     if (client && client.socket.readyState === client.socket.OPEN) {
@@ -435,7 +493,7 @@ async function main() {
           reply.send({game_id: game_id});
         });
 
-        fastify.post<{ Body: StartGameBody }>("/:id/join", async (request, reply) => {
+        fastify.post<{ Body: JoinGameBody }>("/:id/join", async (request, reply) => {
           const { session_id } = request.body as { session_id: string };
           const { id } = request.params as { id: string }; // Correct: params are strings
           
@@ -486,10 +544,10 @@ async function main() {
           
           connection.socket.on('message', (message: Buffer) => {
             try {
-              const input: PlayerInput = JSON.parse(message.toString());
+              const input: PlayerInputMessage = JSON.parse(message.toString()) as PlayerInputMessage;
               
               // Validate input structure
-              if (!input.session_id || !input.move) {
+              if (!input.type || input.type !== "input" || !input.session_id || !input.move || (input.move !== "up" && input.move !== "down")) {
                 throw new Error("Invalid input format");
               }
               
@@ -509,9 +567,9 @@ async function main() {
               }
               
             } catch (err) {
-              // Fix: Convert unknown to string for logging
               const errorMessage = err instanceof Error ? err.message : String(err);
               fastify.log.error('Invalid message: ' + errorMessage);
+              // TODO: you may inform the client of the problem
             }
           });
           
