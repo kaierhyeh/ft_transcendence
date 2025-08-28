@@ -19,6 +19,7 @@ const UPDATE_PERIOD: number = 1000 / 30;
 const WIN_POINT: number = 5;
 const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 200;
+const CONNECTION_TIMEOUT = 5000; // ms
 
 // ==========================
 // Game-related types
@@ -219,7 +220,16 @@ function updateGameSession(game_session: GameSession): void {
     });
     state.websockets.clear();
 
-    // ✅ TS now recognizes fastify.db
+    try {
+      saveSession(game_session);
+    } catch(err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      fastify.log.error("Failed to save game session: " + errorMessage);
+    }
+  }
+}
+
+function saveSession(game_session: GameSession): void {
     const saveGameInDb = fastify.db.prepare(
       `INSERT INTO sessions (
         type,
@@ -235,35 +245,32 @@ function updateGameSession(game_session: GameSession): void {
         winner_id
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
-    
-    if (left_player != undefined && right_player != undefined && game_session.winner_id != undefined) {
-      saveGameInDb.run(
-        'pvp',
-        null,
-        left_player.player_id,
-        right_player.player_id,
-        null,
-        null,
-        left_player.score,
-        right_player.score,
-        null,
-        null,
-        game_session.winner_id
-      );
 
-    }
-    else {
-  console.log("=== DEBUG GAME SAVE FAILURE ===");
-  console.log("leftplayer:", JSON.stringify(left_player, null, 2));
-  console.log("rightplayer:", JSON.stringify(right_player, null, 2));  
-  console.log("game_session:", JSON.stringify(game_session, null, 2));  
-  console.log("game_session.winner_id:", game_session.winner_id);
-  console.log("game_session.id:", game_session.id);
-  console.log("players map:", JSON.stringify(Array.from(game_session.state.players.entries()), null, 2));
-  console.log("===============================");
-  fastify.log.error("Failed to save game - check debug output above");
-    }
-  }
+    const left_player = game_session.state.players.get("left");
+    const right_player = game_session.state.players.get("right");
+    const winner_id = game_session.winner_id;
+
+    if (left_player === undefined || right_player === undefined || winner_id === undefined) 
+      throw new Error("Invalid game session data");
+  
+    saveGameInDb.run(
+      'pvp',
+      null,
+      left_player.player_id,
+      right_player.player_id,
+      null,
+      null,
+      left_player.score,
+      right_player.score,
+      null,
+      null,
+      winner_id
+    );
+}
+
+function connectionTimeout(game_state: GameState): boolean
+{
+  return Date.now() - game_state.last_connection_time >= CONNECTION_TIMEOUT;
 }
 
 // Game loop function
@@ -278,8 +285,7 @@ function updateGame(): void {
       checkAndStartGame(game);
       continue ;
     }
-    if (game.state.websockets.size === 0 && 
-      Date.now() - game.state.last_connection_time >= 5000) {
+    if (game.state.websockets.size === 0 && connectionTimeout(game.state)) {
       console.log(`[WARN] Game ${key} timeout after 5s: no connected player`);
       game_sessions.delete(key);
       continue;
