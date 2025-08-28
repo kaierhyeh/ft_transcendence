@@ -24,7 +24,7 @@ let rightPaddle: Paddle = { x: canvas.width - 30, y: canvas.height / 2 - PADDLE_
 let paused = false;
 
 let angle = Math.random() * (Math.PI / 2) - Math.PI / 4;
-let speed = 7;
+let speed = 5;
 
 let ball: Ball = { 
     x: canvas.width / 2 - BALL_SIZE / 2, 
