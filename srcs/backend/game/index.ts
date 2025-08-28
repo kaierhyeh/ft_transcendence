@@ -105,37 +105,32 @@ interface GameSession {
 // Message types
 // ==========================
 
-// Add these interfaces to your existing types section
-interface BaseMessage {
+interface MessageEnvelope {
   type: string;
   timestamp?: number;
 }
 
-interface GameStateMessage extends BaseMessage {
+type GameStateMessage = MessageEnvelope & {
   type: "game_state";
-  // Your existing game state data (no changes needed)
-  tick: number;
-  ball: Ball;
-  players: Partial<Record<PlayerSlot, PublicPlayerState>>;
-  ongoing: boolean;
-}
+} & PublicGameState;
 
 type  LogLevel = "info" | "warning" | "error";
 
-interface ServerMessage extends BaseMessage {
+type ServerMessage = MessageEnvelope & {
   type: "server_message";
   level: LogLevel;
   message: string;
   code?: string;
 }
 
-interface PlayerInputMessage extends BaseMessage {
+
+type PlayerInputMessage = MessageEnvelope & {
   type: "input";
   session_id: string;
   move: "up" | "down";
 }
 
-// type WebSocketMessage = GameStateMessage | ServerMessage| PlayerInputMessage;
+type WebSocketMessage = GameStateMessage | ServerMessage| PlayerInputMessage;
 
 // ==========================
 // Schemas
