@@ -8,7 +8,7 @@
         - *GameEngine.ts*
         - *GameState.ts*
         - *index.ts* *// re-export*
-    - `routes/`
+    - `routes/`                           
         - *sessions.ts*
         - *game.ts*
         - *index.ts* *// re-export*
@@ -18,6 +18,7 @@
         - *messages.ts*
         - *index.ts* *// re-export*
     - `websockets/`
+        - *ConnectionManager.ts*
         - *MessageHandler.ts*
         - *index.ts* *// re-export*
     - `server/`
@@ -33,9 +34,18 @@
 
 ## Types
 *Those types mostly defines data carriers*
+- Score:
+    - left: number
+    - right: number
+- Move = "up" | "down"
+- PlayerSlot = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right"
+- PublicPlayerState:
+  - player_id: number
+  - paddle_coord: number
 - PublicGameState:
-    - ball
-    - 
+    - ball: Ball
+    - players: Map<PlayerSlot, PublicPlayerState> // will be transformed into an object
+    - score: Score
 
 
 ## Class structure
@@ -51,14 +61,17 @@
     2. 2 getters (I think it is the best):
         - `get` lastConnectionTime(): `number`
         - `get` liveConnectionsCount(): `number`
+- `get` ball(): `Ball`
+- **incrementScore**(slot: "left" | "right")
+- **movePaddle**(player_slot: PlayerSlot, step: number)
 
 **private**
 - **type_**: `GameType`
 - **last_connection_time_**: `number`
 - **ball_**: `Ball`
 - **websockets_**: `Set(SocketStream)`
-- **left_team**: TeamState
-- **right_team**: TeamState
+- **players_**: Map<PlayerSlot, PlayerState>
+- **score_**: Score
 - **ongoing**: boolean
 
 
@@ -82,11 +95,13 @@
 ### GameEngine
 *Handles game physics. Adapts to gameplay mode (2 players, 4 players) by itself or maybe via derived class or whatever*
 
+*needs its own clock*
+
 **public**
 - `constructor` **GameEngine()**
 - **moveBall**(game_state: GameState)
 - **resetBall**(game_state: GameState)
-- **movePaddle**(player_input: PlayerInput, game_state: GameState)
+- **movePaddle**(move: Move, player_slot: PlayerSlot, game_state: GameState)
 - **getConf**(game_type: GameType): `GameConf`
 - **toFreshState**(game_state: GameState)
 
@@ -115,3 +130,34 @@
     - **joinGameSession_**(game_id: number) *// used by /game/:id/join*
     - **getGameSessionConf_**(game_id: number) *// used by /game/:id/conf*
     - **processPlayerInput_** (game_id: number, player_input: PlayerInput) *// usede by /game/:id/ws*
+
+### ConnectionManager
+
+**public**
+
+- **accept**(game_id: number): `boolean`
+- **setupNewConnection**(game_id: number)
+- **closeAllConnections**(code: number, reason: string)
+
+**private**
+
+
+### MessageHandler
+
+**public**
+- **handlePlayerInput**(input: PlayerInputMessage, game_session: GameSession)
+- **broadcastMessage**(message: OutbondMessage, game_session: GameSession)
+
+**private**
+
+### Db
+
+*Repository pattern*
+
+- save
+- findby ...
+- ...
+
+
+// Query parameters
+?page=1&limit=10&sort=created_at&order=desc&type=pvp&player_id=123

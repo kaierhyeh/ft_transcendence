@@ -38,8 +38,8 @@ const dbConnector: FastifyPluginAsync<DbPluginOptions> = async (fastify, opts) =
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       session_id INTEGER NOT NULL.
       user_id INTEGER NOT NULL.
-      team TEXT NOT NULL CHECK (team IN 'left'. 'right'),
-      player_slot INTEGER NOT NULL DEFAULT 0,
+      team TEXT NOT NULL CHECK (team IN 'left', 'right'),
+      player_slot TEXT NOT NULL CHECK (player_slot IN 'left', 'right', 'top-left', 'bottom-left', 'top-right', 'bottom-right'),
       score INTEGER DEFAULT 0,
       winner BOOLEAN DEFAULT 0,
       FOREIGN KEY (session_id) REFERENCES sessions(id)
