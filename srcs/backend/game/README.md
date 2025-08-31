@@ -7,12 +7,22 @@
         - *GameSession.ts*
         - *GameEngine.ts*
         - *GameState.ts*
+        - *index.ts* *// re-export*
     - `routes/`
+        - *sessions.ts*
+        - *game.ts*
+        - *index.ts* *// re-export*
     - `schemas/`
     - `types/`
+        - *game.ts*
+        - *messages.ts*
+        - *index.ts* *// re-export*
     - `websockets/`
+        - *MessageHandler.ts*
+        - *index.ts* *// re-export*
     - `server/`
         - *Server.ts*
+        - *index.ts* *// re-export*
     - *index.ts*
   - *package-lock.json*
   - *package.json*
@@ -25,6 +35,7 @@
 *Those types mostly defines data carriers*
 - PublicGameState:
     - ball
+    - 
 
 
 ## Class structure
@@ -43,12 +54,12 @@
 
 **private**
 - **type_**: `GameType`
-- **last_connection_time_**: `number`;
-- **ball_**: `Ball`;
+- **last_connection_time_**: `number`
+- **ball_**: `Ball`
 - **websockets_**: `Set(SocketStream)`
-  left_team: TeamState;
-  right_team: TeamState;
-  ongoing: boolean;
+- **left_team**: TeamState
+- **right_team**: TeamState
+- **ongoing**: boolean
 
 
 ### GameSession
@@ -77,9 +88,10 @@
 - **resetBall**(game_state: GameState)
 - **movePaddle**(player_input: PlayerInput, game_state: GameState)
 - **getConf**(game_type: GameType): `GameConf`
+- **toFreshState**(game_state: GameState)
 
 **private**
- - ...
+ - *to the developer discretion...*
 
 ### Server
 `Extends fastify`
