@@ -1,4 +1,4 @@
-import { Ball, GameConf, GameParticipant, GameType, PlayerSlot } from "../types";
+import { GameConf, GameType, PlayerSlot } from "../types";
 import { GameState } from "./GameState";
 
 const PADDLE_STEP: number = 9;

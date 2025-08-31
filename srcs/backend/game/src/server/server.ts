@@ -14,5 +14,7 @@ export function createServer() {
     fastify.register(route, { prefix: "/game" });
   }
 
+  setInterval(updateGame, UPDATE_PERIOD);
+
   return fastify;
 }
