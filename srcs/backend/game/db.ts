@@ -26,20 +26,24 @@ const dbConnector: FastifyPluginAsync<DbPluginOptions> = async (fastify, opts) =
   db.exec(`
     CREATE TABLE IF NOT EXISTS sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT NOT NULL CHECK (type IN ('pvp', 'multi', 'tournament')) DEFAULT 'pvp',
+      type TEXT NOT NULL CHECK (type IN ('pvp', 'multi', 'tournament')),
       tournament_id INTEGER DEFAULT NULL,
-      player1_id INTEGER NOT NULL,
-      player2_id INTEGER NOT NULL,
-      player3_id INTEGER DEFAULT NULL,
-      player4_id INTEGER DEFAULT NULL,
-      score_player1 INTEGER DEFAULT 0,
-      score_player2 INTEGER DEFAULT 0,
-      score_player3 INTEGER DEFAULT NULL,
-      score_player4 INTEGER DEFAULT NULL,
-      winner_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME,
+      started_at DATETIME,
+      ended_at DATETIME,
       CHECK (type != 'tournament' OR tournament_id IS NOT NULL)
     );
+
+    CREATE TABLE IF NOT EXISTS session_players {
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL.
+      user_id INTEGER NOT NULL.
+      team TEXT NOT NULL CHECK (team IN 'left'. 'right'),
+      player_slot INTEGER NOT NULL DEFAULT 0,
+      score INTEGER DEFAULT 0,
+      winner BOOLEAN DEFAULT 0,
+      FOREIGN KEY (session_id) REFERENCES sessions(id)
+    };
   `);
 
   // expose db on the fastify instance

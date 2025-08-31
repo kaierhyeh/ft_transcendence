@@ -40,20 +40,20 @@ interface Ball {
   vy: number;
 }
 
-type PlayerSlot =
-  | 'left'
-  | 'right'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
-
 interface PlayerState {
   player_id: number;
   session_id: string;
   paddle_coord: number;
-  score: number;
   ready: boolean;
+}
+
+type PlayerSlot =
+  | 'top'
+  | 'bottom';
+
+interface TeamState {
+  players: PlayerState[];
+  score: number;
 }
 
 interface GameParticipant {
@@ -72,11 +72,12 @@ interface GameCreationBody {
 }
 
 interface GameState {
-  tick: number;
-  last_time: number;
+  tick: number; // TODO - remove or keep?
+  last_time: number; // TODO - remove or keep?
   last_connection_time: number;
   ball: Ball;
-  players: Map<PlayerSlot, PlayerState>;
+  left_team: TeamState;
+  right_team: TeamState;
   websockets: Set<SocketStream>;
   ongoing: boolean;
 }
@@ -84,8 +85,8 @@ interface GameState {
 type PublicPlayerState = Omit<PlayerState, 'session_id' | 'ready'>;
 
 interface PublicGameState
-  extends Omit<GameState, 'websockets' | 'players' | 'last_connection_time'> {
-  players: Partial<Record<PlayerSlot, PublicPlayerState>>;
+  extends Omit<GameState, 'websockets' | 'teams' | 'last_connection_time'> {
+  teams: Map<TeamSlot, PublicTeamState>;
 }
 
 interface JoinGameBody {
@@ -201,8 +202,8 @@ function updateGameSession(game_session: GameSession): void {
 
   if (state.ball.x <= 0 || state.ball.x + BALL_SIZE >= WIDTH) {
     if (state.ball.x <= 0) {
-      const right_player = state.players.get('right');
-      if (right_player) right_player.score++;
+      const right_player = state.teams.get('right');
+      if (right_player) state.teams.get('right').score++;
     } else {
       const left_player = state.players.get('left');
       if (left_player) left_player.score++;
