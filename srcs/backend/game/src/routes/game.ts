@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { createGameSchema, GameCreationBody} from "../schemas";
+import { createGameSchema, GameCreationBody, GetGameConfParams, getGameConfSchema, JoinGameBody} from "../schemas";
+import { error } from "console";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: GameCreationBody }>(
@@ -8,28 +9,23 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const { type, participants } = request.body;
       const game_id = fastify.sessions.createGameSession(type, participants);
-      reply.code(201).send({game_id: game_id});
+      reply.status(201).send({game_id: game_id});
   });
 
-  fastify.get("/:id/conf", async (req, reply) => {
-    const { id } = req.params as { id: string };
-    // return fastify.connectionManager.accept(Number(id));
-    const game_id = parseInt(id, 10);
-          
-          if (isNaN(game_id)) {
-            reply.code(400).send({error: "Invalid game ID"});
-            return;
-          }
-          
-          const game_session: GameSession | undefined = game_sessions.get(game_id);
-          if (game_session === undefined) {
-            reply.code(404).send({error: "Game not found"});
-            return;
-          }
-          return game_session.conf;
+  fastify.get<{ Params: GetGameConfParams }>(
+    "/:id/conf", 
+    { schema: { params: getGameConfSchema } },
+    async (request, reply) => {
+    const { id } = request.params;
+    const session = fastify.sessions.getGameSession(id);
+    if (!session) return reply.status(404).send({ error: "Game not found"});
+    reply.send(session.conf);
   });
 
-  fastify.post<{ Body: JoinGameBody }>("/:id/join", async (request, reply) => {
+  fastify.post<{ Body: JoinGameBody }>(
+    "/:id/join",
+    { schema: { }},
+    async (request, reply) => {
   const { session_id } = request.body as { session_id: string };
   const { id } = request.params as { id: string }; // Correct: params are strings
   

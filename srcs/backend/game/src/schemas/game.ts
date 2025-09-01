@@ -28,3 +28,27 @@ export const createGameSchema = {
 
 // 👇 This automatically derives the TS type from the JSON Schema
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
+
+export const joinGameSchema = {
+  type: "object",
+  required: ["player_id", "match_ticket"],
+  properties: {
+    player_id: { type: "number" },
+    match_ticket: { type: "string" },
+  },
+  additionalProperties: false,
+} as const;
+
+export type JoinGameBody = FromSchema<typeof joinGameSchema>;
+
+// src/schemas/game.ts
+export const getGameConfSchema = {
+  type: "object",
+  required: ["id"],
+  properties: {
+    id: { type: "number" },
+  },
+  additionalProperties: false,
+} as const;
+
+export type GetGameConfParams = FromSchema<typeof getGameConfSchema>;

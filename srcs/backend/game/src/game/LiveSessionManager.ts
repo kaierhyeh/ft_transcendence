@@ -27,7 +27,7 @@ export class LiveSessionManager {
 
     }
 
-    getGameSessionConf(game_id: number): void {
-
+    getGameSession(game_id: number): GameSession | undefined {
+        return this.game_sessions.get(game_id);
     }
 }
