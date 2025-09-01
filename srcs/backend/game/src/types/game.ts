@@ -27,17 +27,22 @@ export interface PlayerState {
     session_id: string;
     ready: boolean;
 }
-
 export type PublicPlayerState = Omit<PlayerState, 'session_id' | 'ready'>;
 
 export type PlayerMap = Map<PlayerSlot, PlayerState>;
 export type SerializedPlayerMap = Partial<Record<PlayerSlot, PublicPlayerState>>;
 
-
-export interface PublicGameState {
-    ball: Ball;
+export interface GameState {
+    type: GameType;
+    last_time: number | undefined;
+    players: PlayerMap;
+    ball: Ball | undefined;
+    score: Record<Team, number>;
+    ongoing: boolean;
+}
+export interface PublicGameState
+    extends Omit<GameState, "type" | "last_time" | "players"> {
     players: SerializedPlayerMap;
-    scores: Record<Team, number>;
 }
 
 export interface GameConf {

@@ -1,5 +1,4 @@
-import { GameConf, GameType, PlayerSlot } from "../types";
-import { GameState } from "./GameState";
+import { GameConf, GameState, GameType, PlayerSlot } from "../types";
 
 const PADDLE_STEP: number = 9;
 const WIDTH: number = 600;
