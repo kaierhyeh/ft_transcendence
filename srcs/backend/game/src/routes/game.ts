@@ -1,16 +1,14 @@
 import { FastifyInstance } from "fastify";
+import { createGameSchema, GameCreationBody} from "../schemas";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
-  fastify.post("/create", async (req, reply) => {
-    const session_id: number = fastify.sessions.createGameSession("pvp", participants);
-    return {game_id: session_id};
-    // fastify.live_session_manager.
-    // // use services / session manager here
-    //  const creation_data = request.body as GameCreationBody;
-
-    //       const game_id = next_id++;
-    //       game_sessions.set(game_id, createGameSession(creation_data, game_id));
-    //       reply.send({game_id: game_id});
+  fastify.post<{ Body: GameCreationBody }>(
+    "/create",
+    { schema: { body: createGameSchema } },
+    async (request, reply) => {
+      const { type, participants } = request.body;
+      const game_id = fastify.sessions.createGameSession(type, participants);
+      reply.code(201).send({game_id: game_id});
   });
 
   fastify.get("/:id/conf", async (req, reply) => {

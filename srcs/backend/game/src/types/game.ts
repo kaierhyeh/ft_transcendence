@@ -24,7 +24,7 @@ export interface PlayerState {
     player_id: number;
     team: Team;
     paddle_coord: number;
-    session_id: string;
+    match_ticket: string;
     ready: boolean;
 }
 export type PublicPlayerState = Omit<PlayerState, 'session_id' | 'ready'>;
@@ -52,9 +52,4 @@ export interface GameConf {
     paddle_height: number;
     win_point: number;
     ball_size: number;
-}
-
-export interface GameParticipant {
-    player_id: number;
-    session_id: string;
 }

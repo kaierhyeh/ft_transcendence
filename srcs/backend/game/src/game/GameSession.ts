@@ -1,4 +1,5 @@
-import { GameConf, Team, GameType, GameParticipant, PlayerMap, PlayerSlot, GameState } from '../types'
+import { GameCreationBody } from '../schemas';
+import { GameConf, Team, GameType, PlayerMap, PlayerSlot, GameState } from '../types'
 import { GameEngine } from './GameEngine';
 
 export class GameSession {
@@ -10,7 +11,7 @@ export class GameSession {
     ended_at_: Date | undefined;
     winner_: Team | undefined;
 
-    constructor(game_type: GameType, participants: GameParticipant[]) {
+    constructor(game_type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]) {
         this.type = game_type;
         this.state = {
             type: game_type,
@@ -48,9 +49,9 @@ export class GameSession {
     //     };
     // }
 
-    private loadPlayers_(participants: GameParticipant[]): void {
+    private loadPlayers_(participants: GameCreationBody["participants"][number][]): void {
         const players: PlayerMap = this.state.players;
-        const game_type: GameType = this.type;
+        const game_type = this.type;
 
         participants.forEach((p, idx) => {
             if (game_type === 'multi')
@@ -61,7 +62,7 @@ export class GameSession {
             
             players.set(slot, {
                 player_id: p.player_id,
-                session_id: p.session_id,
+                match_ticket: p.match_ticket,
                 team: team,
                 paddle_coord: GameEngine.getPaddleFreshState(slot, game_type),
                 ready: false
