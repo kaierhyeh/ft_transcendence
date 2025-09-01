@@ -1,4 +1,5 @@
-import { GameCreationBody } from "../schemas";
+import { GameCreationBody, GameParticipant } from "../schemas";
+import { Result } from "../types";
 import { GameSession } from "./GameSession";
 
 let next_id = 0;
@@ -17,6 +18,20 @@ export class LiveSessionManager {
         this.game_sessions.set(game_id, new_game);
 
         return game_id;
+    }
+
+    joinGameSession(game_id: number, participant: GameParticipant): Result {
+        const session = this.game_sessions.get(game_id);
+        if (!session)
+            return {success: false, status: 404, msg: "Game not found"};
+
+        const player = Array.from(session.state.players.values())
+            .find((p) => p.match_ticket === participant.match_ticket);
+        if (!player)
+            return {success: false, status: 401, msg: "Unauthorized participant"};
+
+        player.ready = true;
+        return {success: true, status: 200, msg: "Succesfully joined game"};
     }
 
     deleteGameSession(game_id: number): void {

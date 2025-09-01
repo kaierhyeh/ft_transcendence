@@ -1,5 +1,29 @@
 import { FromSchema } from "json-schema-to-ts";
 
+export const playerSchema = {
+  type: "object",
+  required: ["player_id", "match_ticket"],
+  properties: {
+    player_id: { type: "number" },
+    match_ticket: { type: "string" },
+  },
+  additionalProperties: false,
+} as const;
+
+export type GameParticipant = FromSchema<typeof playerSchema>;
+
+export const gameIdSchema = {
+  type: "object",
+    required: ["id"],
+    properties: {
+      id: { type: "number" },
+    },
+    additionalProperties: false,
+} as const;
+
+export type GameIdParams = FromSchema<typeof gameIdSchema>;
+
+
 export const createGameSchema = {
   type: "object",
   required: ["type", "participants"],
@@ -12,15 +36,7 @@ export const createGameSchema = {
       type: "array",
       minItems: 2,
       maxItems: 4,
-      items: {
-        type: "object",
-        required: ["player_id", "match_ticket"],
-        properties: {
-          player_id: { type: "number" },
-          match_ticket: { type: "string" },
-        },
-        additionalProperties: false,
-      },
+      items: playerSchema,
     },
   },
   additionalProperties: false,
@@ -30,25 +46,14 @@ export const createGameSchema = {
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 
 export const joinGameSchema = {
-  type: "object",
-  required: ["player_id", "match_ticket"],
-  properties: {
-    player_id: { type: "number" },
-    match_ticket: { type: "string" },
+  body: {
+    type: "object",
+    required: ["participant"],
+    properties: {
+      participant: playerSchema,
+    }
   },
-  additionalProperties: false,
+  params: gameIdSchema,
 } as const;
 
-export type JoinGameBody = FromSchema<typeof joinGameSchema>;
-
-// src/schemas/game.ts
-export const getGameConfSchema = {
-  type: "object",
-  required: ["id"],
-  properties: {
-    id: { type: "number" },
-  },
-  additionalProperties: false,
-} as const;
-
-export type GetGameConfParams = FromSchema<typeof getGameConfSchema>;
+export type JoinGameBody = FromSchema<typeof joinGameSchema["body"]>;
