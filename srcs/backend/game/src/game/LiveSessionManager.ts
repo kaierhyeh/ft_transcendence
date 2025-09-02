@@ -1,13 +1,9 @@
+import { SocketStream } from "@fastify/websocket";
 import { GameCreationBody, GameParticipant } from "../schemas";
-import { Result } from "../types";
+import { GameConf, Result } from "../types";
 import { GameSession } from "./GameSession";
 
 let next_id = 0;
-
-interface Status {
-    code: number;
-    reason: string;
-}
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
@@ -25,32 +21,36 @@ export class LiveSessionManager {
         return game_id;
     }
 
-    public joinGameSession(game_id: number, participant: GameParticipant): Result {
-        const session = this.game_sessions.get(game_id);
+    public getGameSessionConf(id: number): GameConf | undefined {
+        return this.game_sessions.get(id)?.config();
+    }
+
+    public joinGameSession(id: number, participant: GameParticipant): Result {
+        const session = this.game_sessions.get(id);
         if (!session)
             return {success: false, status: 404, msg: "Game not found"};
-
-        const player = Array.from(session.state.players.values())
-            .find((p) => p.match_ticket === participant.match_ticket);
-        if (!player)
+        if (!session.join(participant))
             return {success: false, status: 401, msg: "Unauthorized participant"};
-
-        player.ready = true;
         return {success: true, status: 200, msg: "Succesfully joined game"};
     }
 
-    private saveSession_(session: GameSession): void {
+    public connectToGameSession(id: number, connection: SocketStream): void {
+        const session = this.game_sessions.get(id);
+        if (!session) {
+            connection.socket.close(1011, "Game id doens't exist");
+            return ;
+        }
+        session.addConnection(id, connection);
+    }
 
+    private saveSession_(session: GameSession): void {
+        // save in dB
     }
 
     private terminateSession_(id: number, session: GameSession): void {
         this.saveSession_(session);
-        session.closeAllConnections(); 
+        session.closeAllConnections(1001, "Game ended"); 
         this.game_sessions.delete(id);
-    }
-
-    public getGameSession(game_id: number): GameSession | undefined {
-        return this.game_sessions.get(game_id);
     }
 
     public update(): void {
@@ -74,6 +74,6 @@ export class LiveSessionManager {
             if (!game.over())
                 this.terminateSession_(id, game);
         }
-
     }
+
 }
