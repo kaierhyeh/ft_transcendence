@@ -5,7 +5,7 @@ import { GameSession } from "./GameSession";
 let next_id = 0;
 
 export class LiveSessionManager {
-    game_sessions: Map<number, GameSession>;
+    private game_sessions: Map<number, GameSession>;
 
     constructor () {
         this.game_sessions = new Map();
@@ -44,5 +44,9 @@ export class LiveSessionManager {
 
     getGameSession(game_id: number): GameSession | undefined {
         return this.game_sessions.get(game_id);
+    }
+
+    update(): void {
+
     }
 }

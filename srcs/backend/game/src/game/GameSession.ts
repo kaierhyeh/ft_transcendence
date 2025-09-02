@@ -1,5 +1,6 @@
+import { SocketStream } from '@fastify/websocket';
 import { GameCreationBody } from '../schemas';
-import { GameConf, Team, GameType, PlayerMap, PlayerSlot, GameState } from '../types'
+import { GameConf, Team, GameType, PlayerMap, PlayerSlot, GameState, GameMessage } from '../types'
 import { GameEngine } from './GameEngine';
 
 export class GameSession {
@@ -10,6 +11,7 @@ export class GameSession {
     started_at: Date | undefined;
     ended_at_: Date | undefined;
     winner_: Team | undefined;
+    connections: Map<SocketStream, number>;
 
     constructor(game_type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]) {
         this.type = game_type;
@@ -23,14 +25,40 @@ export class GameSession {
         };
         this.conf = GameEngine.getConf(game_type);
         this.created_at = new Date();
+        this.connections = new Map();
         
         this.loadPlayers_(participants);
     }
 
+    public addConnection(player_id: number, connection: SocketStream): void {
+        this.connections.set(connection, player_id);
+        // this.state.players.g
+    }
 
-    // public toDbRecord (): DbSession {
-    // ...
-    // }
+    public removeConnection(connection: SocketStream, status: number, reason: string): void {
+
+    }
+
+    // public connectionsCount():number
+    public connectedPlayerCount(): number {
+        return 0;
+    }    
+
+    private broadcast_(message: GameMessage): void {
+    }
+    
+    private broadcast_state_(): void {
+        const message = Messenger.make("game_state", state);
+        this.broadcast_(message);
+
+    }
+    public handlePlayerInput(message: GameMessage): void {
+
+    }
+
+    public update() {
+
+    }
 
     // toPublic(): PublicGameState {
     //     if (this.ball === undefined) {
