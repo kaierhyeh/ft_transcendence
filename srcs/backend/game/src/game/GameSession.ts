@@ -4,14 +4,14 @@ import { GameConf, Team, GameType, PlayerMap, PlayerSlot, GameState, GameMessage
 import { GameEngine } from './GameEngine';
 
 export class GameSession {
-    type: GameType;
-    state: GameState;
-    conf: GameConf;
-    created_at: Date;
-    started_at: Date | undefined;
-    ended_at_: Date | undefined;
-    winner_: Team | undefined;
-    connections: Map<SocketStream, number>;
+    private type: GameType;
+    private state: GameState;
+    private conf: GameConf;
+    private created_at: Date;
+    private started_at: Date | undefined;
+    private ended_at_: Date | undefined;
+    private winner_: Team | undefined;
+    private connections: Map<SocketStream, number>;
 
     constructor(game_type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]) {
         this.type = game_type;
@@ -39,15 +39,21 @@ export class GameSession {
 
     }
 
+    public closeAllConnections(): void {
+
+    }
+
     // public connectionsCount():number
     public connectedPlayerCount(): number {
         return 0;
     }    
 
     private broadcast_(message: GameMessage): void {
+        const str = JSON.stringify(message);
+        for (const conn of this.sockets) conn.socket.send(str);
     }
     
-    private broadcast_state_(): void {
+    public broadcastState(): void {
         const message = Messenger.make("game_state", state);
         this.broadcast_(message);
 
@@ -57,6 +63,22 @@ export class GameSession {
     }
 
     public update() {
+
+    }
+
+    public started(): boolean {
+        return false;
+    }
+
+    public timeout(): boolean {
+        return false;
+    }
+
+    public over(): boolean {
+        return false;
+    }
+
+    public checkAndStart(): void {
 
     }
 

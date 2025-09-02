@@ -4,6 +4,11 @@ import { GameSession } from "./GameSession";
 
 let next_id = 0;
 
+interface Status {
+    code: number;
+    reason: string;
+}
+
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
 
@@ -11,7 +16,7 @@ export class LiveSessionManager {
         this.game_sessions = new Map();
     }
 
-    createGameSession(type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]): number {
+    public createGameSession(type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]): number {
         const game_id = next_id++;
 
         const new_game = new GameSession(type, participants);
@@ -20,7 +25,7 @@ export class LiveSessionManager {
         return game_id;
     }
 
-    joinGameSession(game_id: number, participant: GameParticipant): Result {
+    public joinGameSession(game_id: number, participant: GameParticipant): Result {
         const session = this.game_sessions.get(game_id);
         if (!session)
             return {success: false, status: 404, msg: "Game not found"};
@@ -34,19 +39,41 @@ export class LiveSessionManager {
         return {success: true, status: 200, msg: "Succesfully joined game"};
     }
 
-    deleteGameSession(game_id: number): void {
+    private saveSession_(session: GameSession): void {
 
     }
 
-    saveGameSession(game_id: number): void {
-
+    private terminateSession_(id: number, session: GameSession): void {
+        this.saveSession_(session);
+        session.closeAllConnections(); 
+        this.game_sessions.delete(id);
     }
 
-    getGameSession(game_id: number): GameSession | undefined {
+    public getGameSession(game_id: number): GameSession | undefined {
         return this.game_sessions.get(game_id);
     }
 
-    update(): void {
+    public update(): void {
+        for (const id of this.game_sessions.keys()) {
+            const game = this.game_sessions.get(id);
+
+            if (!game) continue;
+
+            if (!game.started()) {
+                game.checkAndStart();
+                continue;
+            }
+            if (game.timeout()) {
+                this.game_sessions.delete(id);
+                continue ;
+            }
+
+            game.update();
+            game.broadcastState();
+
+            if (!game.over())
+                this.terminateSession_(id, game);
+        }
 
     }
 }
