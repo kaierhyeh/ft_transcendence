@@ -4,7 +4,7 @@
   "description": "Server-side Pong game microservice",
   "main": "index.ts",
   "scripts": {
-    "start": "ts-node index.ts",
+    "start": "ts-node src/index.ts",
     "dev": "ts-node --watch index.ts",
     "build": "tsc",
     "serve": "node dist/index.js"

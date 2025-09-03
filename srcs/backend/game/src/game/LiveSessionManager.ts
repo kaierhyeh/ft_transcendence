@@ -2,14 +2,17 @@ import { SocketStream } from "@fastify/websocket";
 import { GameCreationBody, GameParticipant } from "../schemas";
 import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
+import { FastifyBaseLogger } from "fastify";
 
 let next_id = 0;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
+    private logger: FastifyBaseLogger;
 
-    constructor () {
+    constructor(logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
+        this.logger = logger;
     }
 
     public createGameSession(type: GameCreationBody["type"], participants: GameParticipant[]): number {
@@ -29,25 +32,30 @@ export class LiveSessionManager {
         const session = this.game_sessions.get(id);
         if (!session) {
             connection.socket.close(4004, "Game not found");
-            return ;
+            return;
         }
 
         connection.socket.once("message", (raw: string) => {
-            const msg = JSON.parse(raw);  // TODO - can fail, maybe wrap it intry catch
+            try {
+                const msg = JSON.parse(raw);
 
-            if (msg.type === "join") {
-                const ticket = msg.ticket;
-                const success = session.connectPlayer(ticket, connection);
+                if (msg.type === "join") {
+                    const ticket = msg.ticket;
+                    this.logger.info(`Player with ticket ${ticket} is trying to join game ${id}`);
+                    const success = session.connectPlayer(ticket, connection);
 
-                if (!success) {
-                    connection.socket.close(4001, "Invalid or duplicate ticket");
-                    return ;
+                    if (!success) {
+                        connection.socket.close(4001, "Invalid or duplicate ticket");
+                        return ;
+                    }
+                    session.setupPlayerListeners(ticket, connection);
+                } else if (msg.type === "view") {
+                    session.connectViewer(connection);
+                } else {
+                    connection.socket.close(4000, "First message myst be join or view");
                 }
-                session.setupPlayerListeners(ticket, connection);
-            } else if (msg.type === "view") {
-                session.connectViewer(connection);
-            } else {
-                connection.socket.close(4000, "First message myst be join or view");
+            } catch(err) {
+                connection.socket.close(4002, "Invalid JSON");
             }
         });
     }

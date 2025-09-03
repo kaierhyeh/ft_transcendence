@@ -45,16 +45,3 @@ export const createGameSchema = {
 // 👇 This automatically derives the TS type from the JSON Schema
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 export type GameType = GameCreationBody["type"];
-
-export const joinGameSchema = {
-  body: {
-    type: "object",
-    required: ["participant"],
-    properties: {
-      participant: playerSchema,
-    }
-  },
-  params: gameIdSchema,
-} as const;
-
-export type JoinGameBody = FromSchema<typeof joinGameSchema["body"]>;

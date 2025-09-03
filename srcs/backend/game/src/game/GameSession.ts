@@ -2,6 +2,7 @@ import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameType } from '../schemas';
 import { Team, PlayerSlot, GameMessage } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
+import { FastifyBaseLogger } from 'fastify';
 
 interface Player {
     player_id: number;
@@ -27,15 +28,16 @@ export class GameSession {
     private started_at: Date | undefined;
     private ended_at: Date | undefined;
     private winner: Team | undefined;
+    private logger: FastifyBaseLogger;
 
-    
-    constructor(game_type: GameType, participants: GameParticipant[]) {
+    constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
         this.type = game_type;
         this.players = this.loadPlayers_(participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.last_activity = Date.now();
         this.game_engine = new GameEngine(game_type, this.players);
+        this.logger = logger;
     }
 
     private loadPlayers_(participants: GameParticipant[]): PlayerMap {
@@ -122,6 +124,9 @@ export class GameSession {
 
     public connectPlayer(ticket: string, connection: SocketStream): boolean {
         const player = this.players.get(ticket);
+
+        this.logger.info(`Player connecting with ticket: ${ticket}`);
+
         if (!player || player.socket ) return false;
 
         player.socket = connection;

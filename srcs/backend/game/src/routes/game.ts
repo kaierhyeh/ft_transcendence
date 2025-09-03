@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema,JoinGameBody, joinGameSchema} from "../schemas";
+import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema } from "../schemas";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: GameCreationBody }>(

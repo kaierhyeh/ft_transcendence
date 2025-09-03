@@ -147,6 +147,7 @@ function connectWebSocket() {
 // Send input periodically (much less frequent than rendering)
 function startInputSending() {
     if (ws && ws.readyState === WebSocket.OPEN) {
+        console.log("Sending join requests for both players");
         join_request.ticket = session_ids[0];
         ws.send(JSON.stringify(join_request));
         join_request.ticket = session_ids[1];
@@ -217,10 +218,10 @@ async function run() {
                 },
                 body: JSON.stringify(
                     {
-                        type: "multi",
+                        type: "pvp",
                         participants: [
-                            {player_id: 0, session_id: session_ids[0] },
-                            {player_id: 1, session_id: session_ids[1] },
+                            {player_id: 0, match_ticket: session_ids[0] },
+                            {player_id: 1, match_ticket: session_ids[1] },
                         ]
                     })
                 });
