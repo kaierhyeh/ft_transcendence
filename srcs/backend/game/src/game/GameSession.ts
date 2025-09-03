@@ -51,7 +51,7 @@ export class GameSession {
             const slot: PlayerSlot = idx === 0 ? "left" : "right";
             const team: Team = idx === 0 ? "left" : "right";
 
-            players.set(slot, {
+            players.set(p.match_ticket, {
                 player_id: p.player_id,
                 match_ticket: p.match_ticket,
                 slot: slot,
@@ -121,21 +121,44 @@ export class GameSession {
         });
     }
     
+    public connectPlayer(ticket: string, connection: SocketStream): void {
+        if (this.viewers.has(connection)) {
+            connection.socket.close(4001, "viewer cannot become a player");
+            return;
+        }
 
-    public connectPlayer(ticket: string, connection: SocketStream): boolean {
         const player = this.players.get(ticket);
 
         this.logger.info(`Player connecting with ticket: ${ticket}`);
+        this.logger.info(`found player : ${player !== undefined}`);
 
-        if (!player || player.socket ) return false;
+        if (!player) {
+            connection.socket.close(4001, "Invalid ticket");
+            return;
+        }
+        if (player.socket) {
+            connection.socket.close(4002, "duplicate ticket");
+            return;
+        }
 
         player.socket = connection;
         this.game_engine.setConnected(player.slot, true);
-        return true;
+        connection.socket.on("close", () => {
+            this.disconnectPlayer(ticket);
+            this.last_activity = Date.now();
+        });
     }
 
     public connectViewer(connection: SocketStream): void {
+        if (this.viewers.has(connection)) {
+            connection.socket.close(4001, "viewer can connect only once on the same websocket");
+            return ;
+        }
         this.viewers.add(connection);
+        connection.socket.on("close", () => {
+            this.disconnectViewer(connection);
+            this.last_activity = Date.now();
+        });
     }
 
     public disconnectPlayer(ticket: string): void {
@@ -149,32 +172,24 @@ export class GameSession {
         this.viewers.delete(connection);
     }
 
-    public setupPlayerListeners(ticket: string, connection: SocketStream): void {
-        connection.socket.on("message", (raw: string) => {
-            try {
-                const msg = JSON.parse(raw);
-                
-                if (msg.type !== "input") {
-                    connection.socket.close(4000, "Invalid message type");
-                    return;
-                }
-                
-                const player = this.players.get(msg.ticket);
-                if (!player) {
-                    connection.socket.close(4001, "Invalid ticket");
-                    return;
-                }
-                
-                this.game_engine.movePaddle(player.slot, msg.move);
-            } catch (error) {
-                connection.socket.close(4002, "Invalid JSON");
+    public setupPlayerListeners(msg: any, connection: SocketStream): void {
+       
+        if (msg.type === "join") {
+            this.connectPlayer(msg.ticket, connection);
+        } else if (msg.type === "input") {
+            if (this.viewers.has(connection)) {
+                connection.socket.close(4001, "viewer cannot send input");
+                return;
             }
-        });
-        
-        connection.socket.on("close", () => {
-            this.disconnectPlayer(ticket);
-            this.last_activity = Date.now();
-        });
+            const player = this.players.get(msg.ticket);
+            if (!player) {
+                connection.socket.close(4001, "Invalid ticket");
+                return;
+            }                
+            this.game_engine.movePaddle(player.slot, msg.move);
+        } else {
+            connection.socket.close(4000, "Invalid message type");
+        }
     }
 
     public closeAllConnections(status: number, reason: string): void {

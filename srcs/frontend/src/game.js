@@ -65,12 +65,12 @@ const input = {
     ticket: "",
     move: ""
 }
-const join_request = {
+const join = {
     type: "join",
     ticket: ""
 }
 let ws;
-let session_ids = [
+let match_tickets = [
     "session_id_0",
     "session_id_1"
 ]
@@ -148,14 +148,17 @@ function connectWebSocket() {
 function startInputSending() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         console.log("Sending join requests for both players");
-        join_request.ticket = session_ids[0];
-        ws.send(JSON.stringify(join_request));
-        join_request.ticket = session_ids[1];
-        ws.send(JSON.stringify(join_request));
+        join.ticket = match_tickets[0];
+        console.log(join);
+        ws.send(JSON.stringify(join));
+        join.ticket = match_tickets[1];
+        console.log(join);
+        ws.send(JSON.stringify(join));
     }
 
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
+            console.log("Sending input:", keys);
             // Only send if there are active keys
             const activeKeys = Object.keys(keys).filter(key => keys[key]);
             if (activeKeys.length > 0) {
@@ -163,15 +166,15 @@ function startInputSending() {
                 const inputData = {};
                 activeKeys.forEach(key => inputData[key] = true);
                 if (inputData["w"] || inputData["s"]) {
-                    input.session_id = session_ids[0];
+                    input.ticket = match_tickets[0];
                     input.move = inputData["w"] ? "up" : "down";
-                    // console.log(input);
+                    console.log(input);
                     ws.send(JSON.stringify(input));
                 }
                 if (inputData["ArrowUp"] || inputData["ArrowDown"]) {
-                    input.session_id = session_ids[1];
+                    input.ticket = match_tickets[1];
                     input.move = inputData["ArrowUp"] ? "up" : "down";
-                    // console.log(input);
+                    console.log(input);
                     ws.send(JSON.stringify(input));
                 }
             }
@@ -220,8 +223,8 @@ async function run() {
                     {
                         type: "pvp",
                         participants: [
-                            {player_id: 0, match_ticket: session_ids[0] },
-                            {player_id: 1, match_ticket: session_ids[1] },
+                            {player_id: 0, match_ticket: match_tickets[0] },
+                            {player_id: 1, match_ticket: match_tickets[1] },
                         ]
                     })
                 });
