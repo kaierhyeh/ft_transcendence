@@ -21,20 +21,6 @@ export default async function gameRoutes(fastify: FastifyInstance) {
       reply.send(conf);
   });
 
-  fastify.post<{ Params: GameIdParams; Body: JoinGameBody}>(
-    "/:id/join",
-    { schema: joinGameSchema},
-    async (request, reply) => {
-      const { id } = request.params;
-      const { participant } = request.body;
-      
-      const result =  fastify.sessions.joinGameSession(id, participant);
-      if (result.success)
-        reply.status(result.status).send({ success: true, message: result.msg });
-      else
-        reply.status(result.status).send({ success: false, error: result.msg });
-  });
-
   // WebSocket endpoint for real-time game updates
   fastify.get<{ Params: GameIdParams }>(
     "/:id/ws",

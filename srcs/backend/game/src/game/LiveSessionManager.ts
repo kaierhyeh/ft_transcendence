@@ -22,25 +22,34 @@ export class LiveSessionManager {
     }
 
     public getGameSessionConf(id: number): GameConf | undefined {
-        return this.game_sessions.get(id)?.config();
-    }
-
-    public joinGameSession(id: number, participant: GameParticipant): Result {
-        const session = this.game_sessions.get(id);
-        if (!session)
-            return {success: false, status: 404, msg: "Game not found"};
-        if (!session.join(participant))
-            return {success: false, status: 401, msg: "Unauthorized participant"};
-        return {success: true, status: 200, msg: "Succesfully joined game"};
+        return this.game_sessions.get(id)?.config;
     }
 
     public connectToGameSession(id: number, connection: SocketStream): void {
         const session = this.game_sessions.get(id);
         if (!session) {
-            connection.socket.close(1011, "Game id doens't exist");
+            connection.socket.close(4004, "Game not found");
             return ;
         }
-        session.addConnection(id, connection);
+
+        connection.socket.once("message", (raw: string) => {
+            const msg = JSON.parse(raw);  // TODO - can fail, maybe wrap it intry catch
+
+            if (msg.type === "join") {
+                const ticket = msg.ticket;
+                const success = session.connectPlayer(ticket, connection);
+
+                if (!success) {
+                    connection.socket.close(4001, "Invalid or duplicate ticket");
+                    return ;
+                }
+                session.setupPlayerListeners(ticket, connection);
+            } else if (msg.type === "view") {
+                session.connectViewer(connection);
+            } else {
+                connection.socket.close(4000, "First message myst be join or view");
+            }
+        });
     }
 
     private saveSession_(session: GameSession): void {
@@ -59,19 +68,19 @@ export class LiveSessionManager {
 
             if (!game) continue;
 
-            if (!game.started()) {
+            if (!game.started) {
                 game.checkAndStart();
                 continue;
             }
-            if (game.timeout()) {
+            if (game.timeout) {
                 this.game_sessions.delete(id);
                 continue ;
             }
 
-            game.update();
+            game.tick();
             game.broadcastState();
 
-            if (!game.over())
+            if (!game.over)
                 this.terminateSession_(id, game);
         }
     }
