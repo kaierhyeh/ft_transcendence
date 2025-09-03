@@ -1,7 +1,7 @@
 import { SocketStream } from "@fastify/websocket";
 import { GameCreationBody, GameParticipant } from "../schemas";
-import { GameConf, Result } from "../types";
 import { GameSession } from "./GameSession";
+import { GameConf } from "./GameEngine";
 
 let next_id = 0;
 

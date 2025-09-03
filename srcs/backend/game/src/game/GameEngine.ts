@@ -1,5 +1,5 @@
 import { GameType } from "../schemas";
-import { GameConf, PlayerSlot, Team } from "../types";
+import { PlayerSlot, Team } from "../types";
 import { SessionPlayerMap } from "./GameSession";
 
 const PADDLE_STEP: number = 9;
@@ -10,6 +10,15 @@ const PADDLE_HEIGHT: number = 80;
 const WIN_POINT: number = 3;
 const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 200;
+
+export interface GameConf {
+    canvas_width: number;
+    canvas_height: number;
+    paddle_width: number;
+    paddle_height: number;
+    win_point: number;
+    ball_size: number;
+}
 
 
 interface Ball {
@@ -67,19 +76,19 @@ export class GameEngine {
         if (player) player.connected = value;
     }
 
-    static moveBall(state: GameState): void {
+    private moveBall(state: GameState): void {
 
     }
 
-    static movePaddle(slot: PlayerSlot, dir: "up" | "down", state: GameState): void {
+    public movePaddle(slot: PlayerSlot, move: "up" | "down"): void {
 
     }
 
-    static resetBall(state: GameState): void {
+    private resetBall(state: GameState): void {
 
     }
 
-    static getConf(game_type: GameType): GameConf {
+    public getConf(game_type: GameType): GameConf {
         return ({
             canvas_width: WIDTH,
             canvas_height: HEIGHT,
@@ -90,7 +99,7 @@ export class GameEngine {
         });
     }
 
-    static getPaddleFreshState(slot: PlayerSlot, type: GameType): number {
+    private getPaddleFreshState(slot: PlayerSlot, type: GameType): number {
         if (type === "multi")
             throw new Error("Multiplayer not implemented yet");
         return HEIGHT / 2 - PADDLE_HEIGHT / 2;

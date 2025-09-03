@@ -1,7 +1,7 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameType } from '../schemas';
-import { GameConf, Team, PlayerSlot, GameMessage } from '../types'
-import { GameEngine, GameState } from './GameEngine';
+import { Team, PlayerSlot, GameMessage } from '../types'
+import { GameConf, GameEngine, GameState } from './GameEngine';
 
 interface Player {
     player_id: number;
@@ -61,9 +61,9 @@ export class GameSession {
     }
 
     public get config(): GameConf {
-        return GameEngine.getConf(this.type);
+        return this.game_engine.getConf(this.type);
     }
-    
+
     public get started(): boolean {
         return this.started_at !== undefined;
     }
@@ -144,7 +144,28 @@ export class GameSession {
     }
 
     public setupPlayerListeners(ticket: string, connection: SocketStream): void {
-        connection.socket.on("message", this.handlePlayerInput);
+        connection.socket.on("message", (raw: string) => {
+            try {
+                const msg = JSON.parse(raw);
+                
+                if (msg.type !== "input") {
+                    connection.socket.close(4000, "Invalid message type");
+                    return;
+                }
+                
+                const player = this.players.get(ticket);
+                if (!player) {
+                    connection.socket.close(4001, "Invalid ticket");
+                    return;
+                }
+                
+                const move = msg.move;
+                this.game_engine.movePaddle(player.slot, move);
+            } catch (error) {
+                connection.socket.close(4002, "Invalid JSON");
+            }
+        });
+        
         connection.socket.on("close", () => {
             this.disconnectPlayer(ticket);
             this.last_activity = Date.now();
@@ -163,16 +184,4 @@ export class GameSession {
             this.disconnectViewer(connection);
         });
     }
-
-
-    private handlePlayerInput(raw: string): void {
-        const msg = JSON.parse(raw); // TODO: can fail, maybe wrap it inside a try catch
-
-        const player: PlayerState | undefined = Array.from(game_session.state.players.values())
-        .find((player) => player.session_id === input.session_id);
-        if (player === undefined) {
-        throw new Error("Invalid session id");
-        }
-    }
-   
 }
