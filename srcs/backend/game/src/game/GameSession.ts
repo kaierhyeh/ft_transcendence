@@ -98,6 +98,7 @@ export class GameSession {
         if (delta) {
             this.game_engine.update(delta);
             this.winner = this.game_engine.winner;
+            this.last_time = Date.now();
         }
     }
 
