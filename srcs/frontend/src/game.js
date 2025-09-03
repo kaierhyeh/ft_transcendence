@@ -62,8 +62,12 @@ let game_state;
 let keys = {};
 const input = {
     type: "input",
-    session_id: "",
+    ticket: "",
     move: ""
+}
+const join_request = {
+    type: "join",
+    ticket: ""
 }
 let ws;
 let session_ids = [
@@ -110,7 +114,7 @@ function connectWebSocket() {
             const message = JSON.parse(event.data);
             
             if (message.type === "game_state") {
-                game_state = message; // Your existing game_state structure is preserved
+                game_state = message.data; // Your existing game_state structure is preserved
                 draw();
             } else if (message.type === "server_message") {
                 handleServerMessage(message);
@@ -142,6 +146,13 @@ function connectWebSocket() {
 
 // Send input periodically (much less frequent than rendering)
 function startInputSending() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        join_request.ticket = session_ids[0];
+        ws.send(JSON.stringify(join_request));
+        join_request.ticket = session_ids[1];
+        ws.send(JSON.stringify(join_request));
+    }
+
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
             // Only send if there are active keys
@@ -228,27 +239,6 @@ async function run() {
             console.log("Game initialized:", game_conf);
 
         }
-        {
-            await fetch(API_GAME_ENDPOINT + `/${game_id}/join`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(
-                    { session_id: session_ids[0] }
-                )
-            });
-            await fetch(API_GAME_ENDPOINT + `/${game_id}/join`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(
-                    { session_id: session_ids[1] }
-                )
-            });
-        }
-        
         
         connectWebSocket();
         

@@ -154,14 +154,13 @@ export class GameSession {
                     return;
                 }
                 
-                const player = this.players.get(ticket);
+                const player = this.players.get(msg.ticket);
                 if (!player) {
                     connection.socket.close(4001, "Invalid ticket");
                     return;
                 }
                 
-                const move = msg.move;
-                this.game_engine.movePaddle(player.slot, move);
+                this.game_engine.movePaddle(player.slot, msg.move);
             } catch (error) {
                 connection.socket.close(4002, "Invalid JSON");
             }
