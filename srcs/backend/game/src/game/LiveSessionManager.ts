@@ -12,7 +12,7 @@ export class LiveSessionManager {
         this.game_sessions = new Map();
     }
 
-    public createGameSession(type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]): number {
+    public createGameSession(type: GameCreationBody["type"], participants: GameParticipant[]): number {
         const game_id = next_id++;
 
         const new_game = new GameSession(type, participants);

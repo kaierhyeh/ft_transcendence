@@ -1,3 +1,5 @@
+**⚠️ Disclaimer: the structure decribed below is already obselete. I will update thhat README.nd when done with the refactoring**
+
 ## Directory structure
 
 - `game/`

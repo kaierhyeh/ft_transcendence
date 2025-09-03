@@ -13,7 +13,8 @@ export class GameSession {
     private winner_: Team | undefined;
     private connections: Map<SocketStream, number>;
 
-    constructor(game_type: GameCreationBody["type"], participants: GameCreationBody["participants"][number][]) {
+    
+    constructor(game_type: GameCreationBody["type"], participants: GameParticipant[]) {
         this.type = game_type;
         this.state = {
             type: game_type,
