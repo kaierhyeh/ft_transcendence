@@ -1,7 +1,7 @@
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 50;
 const BALL_SIZE = 10;
-const WIN_SCORE = 11;
+const WIN_SCORE = 3;
 const PADDLE_SPEED = 6;
 
 interface Paddle {
@@ -37,7 +37,7 @@ class Pong4 {
         this.rightPaddle1 = { x: this.canvas.width - 30, y: this.canvas.height / 4 - PADDLE_HEIGHT / 2 };
         this.rightPaddle2 = { x: this.canvas.width - 30, y: (3 * this.canvas.height) / 4 - PADDLE_HEIGHT / 2 };
         const angle = Math.random() * (Math.PI / 2) - Math.PI / 4;
-        const speed = 5;
+        const speed = 6;
         this.ball = {
             x: this.canvas.width / 2 - BALL_SIZE / 2,
             y: this.canvas.height / 2 - BALL_SIZE / 2,

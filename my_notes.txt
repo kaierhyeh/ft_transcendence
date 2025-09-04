@@ -2,11 +2,14 @@
 ----------------TRANSCENDANCE----------------------
 ###################################################
 
-POUR LANCER MON COdE : tsc tous les fichiers.ts
+Lancer le code: tsc tous les fichiers.ts
+
+
 
 PONG :
-Direction de balle vers le gagnant
+Direction de balle vers le gagnant??? 
 reduire vitesse de balle
+partie en 10 points (11 si )
 
 MULTIJOUEUR :
 
@@ -35,7 +38,8 @@ Remove left/right paddle and create 4 with their position
 draw les 4 paddles
 add menu
 REFACTORING TO MAKE MODULAR ACHITECTURE TO IMPLEMENT REMOTE PLAYERS
-
+1- Added void at the end of function , not mandtory but more used syntax
+2- made class to merge easy and implement remote player
 
 
 Notes sur le projet en cours : 
