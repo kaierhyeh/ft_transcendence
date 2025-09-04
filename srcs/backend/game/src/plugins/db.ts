@@ -1,65 +1,54 @@
-// // src/db.ts
-// import fp from "fastify-plugin";
-// import { FastifyPluginAsync } from "fastify";
-// import Database from "better-sqlite3";
+import { FastifyPluginAsync } from "fastify";
+import Database from "better-sqlite3";
+import { CONFIG } from "../config";
+import fp from "fastify-plugin";
 
-// // Add type augmentation here - use the correct type
-// declare module "fastify" {
-//   interface FastifyInstance {
-//     db: Database.Database; // ← Use Database.Database instead of just Database
-//   }
-// }
+declare module "fastify" {
+  interface FastifyInstance {
+    db: Database.Database;
+  }
+}
 
-// export interface DbPluginOptions {
-//   dbFilePath?: string; // configurable, default below
-// }
+const dbPlugin: FastifyPluginAsync = async (fastify, opts) => {
+  const db = new Database(CONFIG.DB.PATH);
 
-// const dbConnector: FastifyPluginAsync<DbPluginOptions> = async (fastify, opts) => {
-//   const dbPath = opts.dbFilePath ?? "./sessions/sessions.db";
-//   const db = new Database(dbPath, { verbose: console.log });
+  if (CONFIG.DB.ENABLE_WAL) {
+    db.pragma("journal_mode = WAL");
+  }
+  db.pragma("foreign_keys = ON");
 
-//   // (Optional) Pragmas that are commonly useful with SQLite
-//   db.pragma("journal_mode = WAL");
-//   db.pragma("foreign_keys = ON");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK (type IN ('pvp', 'multi', 'tournament')),
+      tournament_id INTEGER DEFAULT NULL,
+      created_at DATETIME,
+      started_at DATETIME,
+      ended_at DATETIME,
+      CHECK (type != 'tournament' OR tournament_id IS NOT NULL)
+    );
 
-//   // ✅ Fixed SQL syntax (your original had a few issues)
-//   db.exec(`
-//     CREATE TABLE IF NOT EXISTS sessions (
-//       id INTEGER PRIMARY KEY AUTOINCREMENT,
-//       type TEXT NOT NULL CHECK (type IN ('pvp', 'multi', 'tournament')),
-//       tournament_id INTEGER DEFAULT NULL,
-//       created_at DATETIME,
-//       started_at DATETIME,
-//       ended_at DATETIME,
-//       CHECK (type != 'tournament' OR tournament_id IS NOT NULL)
-//     );
+    CREATE TABLE IF NOT EXISTS player_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      team TEXT NOT NULL CHECK (team IN ('left', 'right')),
+      player_slot TEXT NOT NULL CHECK (player_slot IN ('left', 'right', 'top-left', 'bottom-left', 'top-right', 'bottom-right')),
+      score INTEGER DEFAULT 0,
+      winner BOOLEAN DEFAULT 0,
+      FOREIGN KEY (session_id) REFERENCES sessions(id)
+    );
+  `);
 
-//     CREATE TABLE IF NOT EXISTS session_players {
-//       id INTEGER PRIMARY KEY AUTOINCREMENT,
-//       session_id INTEGER NOT NULL.
-//       user_id INTEGER NOT NULL.
-//       team TEXT NOT NULL CHECK (team IN 'left', 'right'),
-//       player_slot TEXT NOT NULL CHECK (player_slot IN 'left', 'right', 'top-left', 'bottom-left', 'top-right', 'bottom-right'),
-//       score INTEGER DEFAULT 0,
-//       winner BOOLEAN DEFAULT 0,
-//       FOREIGN KEY (session_id) REFERENCES sessions(id)
-//     };
-//   `);
+  fastify.decorate("db", db);
 
-//   // expose db on the fastify instance
-//   fastify.decorate("db", db);
+  // Cleanup on server shutdown
+  fastify.addHook("onClose", async () => {
+    db.close();
+  });
+};
 
-//   // graceful shutdown
-//   fastify.addHook("onClose", (instance, done) => {
-//     db.close();
-//     done();
-//   });
-
-//   fastify.log.info(`SQLite ready at ${dbPath}`);
-// };
-
-// // Export as a Fastify plugin (so decoration is visible to parent scope)
-// export default fp(dbConnector, {
-//   name: "db-connector",
-//   fastify: "4.x",
-// });
+export default fp(dbPlugin, {
+  name: "db-plugin",        // Helps with debugging and plugin dependencies
+  fastify: "4.x"           // Ensures compatibility
+});

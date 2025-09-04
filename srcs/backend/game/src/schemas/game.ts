@@ -10,8 +10,6 @@ export const playerSchema = {
   additionalProperties: false,
 } as const;
 
-export type GameParticipant = FromSchema<typeof playerSchema>;
-
 export const gameIdSchema = {
   type: "object",
     required: ["id"],
@@ -20,9 +18,6 @@ export const gameIdSchema = {
     },
     additionalProperties: false,
 } as const;
-
-export type GameIdParams = FromSchema<typeof gameIdSchema>;
-
 
 export const createGameSchema = {
   type: "object",
@@ -42,6 +37,8 @@ export const createGameSchema = {
   additionalProperties: false,
 } as const;
 
-// 👇 This automatically derives the TS type from the JSON Schema
+// 👇 Types derived from schemas
+export type GameParticipant = FromSchema<typeof playerSchema>;
+export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 export type GameType = GameCreationBody["type"];

@@ -3,6 +3,8 @@ import { GameParticipant, GameType } from '../schemas';
 import { Team, PlayerSlot, GameMessage } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
+import { CONFIG } from '../config';
+import { DbPlayerSession, DbSession } from '../db/repositories/SessionRepository';
 
 interface Player {
     player_id: number;
@@ -18,6 +20,8 @@ type PlayerMap = Map<string, Player>;
 export type SessionPlayerMap = PlayerMap;
 
 export class GameSession {
+    private id: number;
+    private tournament_id: number | undefined;
     private type: GameType;
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
@@ -30,7 +34,8 @@ export class GameSession {
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
 
-    constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
+    constructor(id: number, game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
+        this.id = id;
         this.type = game_type;
         this.players = this.loadPlayers_(participants);
         this.viewers = new Set<SocketStream>();
@@ -89,7 +94,7 @@ export class GameSession {
 
     public get timeout(): boolean {
         const no_connection: boolean = Array.from(this.players.values()).every((p) => p.socket === undefined);
-        return no_connection && ( Date.now() - this.last_activity > 5000);
+        return no_connection && ( Date.now() - this.last_activity > CONFIG.GAME.SESSION_TIMEOUT);
     }
 
     private get delta(): number | undefined {
@@ -206,4 +211,30 @@ export class GameSession {
             this.disconnectViewer(connection);
         });
     }
+
+    public toDbRecord(): DbSession | undefined {
+        const game_state = this.game_engine.state;
+        if (!this.started_at || !this.ended_at || !game_state.winner)
+            return undefined;
+        return {
+            session: {
+                type: this.type,
+                tournament_id: this.tournament_id,
+                created_at: this.created_at,
+                started_at: this.started_at,
+                ended_at: this.ended_at,
+            },
+            player_sessions: Array.from(this.players.values()).map((p) => {
+                const player_session: DbPlayerSession = {
+                    user_id: p.player_id,
+                    team: p.team,
+                    slot: p.slot,
+                    score: game_state.score[p.team],
+                    winner: game_state.winner === p.team
+                };
+                return player_session;
+            })
+        };
+    }
+
 }

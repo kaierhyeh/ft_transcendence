@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest } from "fastify";
+import { FastifyInstance } from "fastify";
 import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema } from "../schemas";
 
 export default async function gameRoutes(fastify: FastifyInstance) {

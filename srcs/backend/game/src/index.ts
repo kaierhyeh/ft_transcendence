@@ -1,30 +1,30 @@
 import Fastify from "fastify";
 import websocketPlugin from '@fastify/websocket';
 import liveSessionManagerPlugin from "./plugins/liveSessionManager";
+import dbPlugin from "./plugins/db";
 import routes from "./routes";
+import { CONFIG } from "./config";
 
 const fastify = Fastify({ logger: true });
-const UPDATE_PERIOD: number = 1000 / 30;
 
 async function run() {
   await fastify.register(websocketPlugin);
+  await fastify.register(dbPlugin);
   await fastify.register(liveSessionManagerPlugin);
   
-  // Register routes in the same context level
-  await fastify.register(async function(fastify) {
-    for (const route of routes) {
-      await fastify.register(route, { prefix: "/game" });
-    }
-  });
+  for (const route of routes) {
+    await fastify.register(route, { prefix: "/game" });
+  }
   
-  await fastify.ready();
-  
-  // Start the game loop after everything is ready
+  // Use config for update period
   setInterval(() => {
-    fastify.sessions.update()
-  }, UPDATE_PERIOD);
+    fastify.sessions.update();
+  }, CONFIG.GAME.TICK_PERIOD);
   
-  await fastify.listen({ port: 3000, host: "0.0.0.0" });
+  await fastify.listen({ 
+    port: CONFIG.SERVER.PORT, 
+    host: CONFIG.SERVER.HOST 
+  });
 }
 
 run().catch(console.error);
