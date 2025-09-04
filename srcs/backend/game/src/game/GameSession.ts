@@ -5,6 +5,7 @@ import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
 import { DbPlayerSession, DbSession } from '../db/repositories/SessionRepository';
+import { toSqlDate } from '../db/utils';
 
 interface Player {
     player_id: number;
@@ -20,7 +21,6 @@ type PlayerMap = Map<string, Player>;
 export type SessionPlayerMap = PlayerMap;
 
 export class GameSession {
-    private id: number;
     private tournament_id: number | undefined;
     private type: GameType;
     private players: PlayerMap;
@@ -34,8 +34,7 @@ export class GameSession {
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
 
-    constructor(id: number, game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
-        this.id = id;
+    constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
         this.type = game_type;
         this.players = this.loadPlayers_(participants);
         this.viewers = new Set<SocketStream>();
@@ -220,9 +219,9 @@ export class GameSession {
             session: {
                 type: this.type,
                 tournament_id: this.tournament_id,
-                created_at: this.created_at,
-                started_at: this.started_at,
-                ended_at: this.ended_at,
+                created_at: toSqlDate(this.created_at),
+                started_at: toSqlDate(this.started_at),
+                ended_at: toSqlDate(this.ended_at),
             },
             player_sessions: Array.from(this.players.values()).map((p) => {
                 const player_session: DbPlayerSession = {

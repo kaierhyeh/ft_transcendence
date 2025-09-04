@@ -2,14 +2,18 @@ import { FastifyPluginAsync } from "fastify";
 import Database from "better-sqlite3";
 import { CONFIG } from "../config";
 import fp from "fastify-plugin";
+import { SessionRepository } from "../db/repositories/SessionRepository";
 
 declare module "fastify" {
   interface FastifyInstance {
     db: Database.Database;
+    repositories: {
+      sessions: SessionRepository
+    }
   }
 }
 
-const dbPlugin: FastifyPluginAsync = async (fastify, opts) => {
+const dbPlugin: FastifyPluginAsync = async (fastify) => {
   const db = new Database(CONFIG.DB.PATH);
 
   if (CONFIG.DB.ENABLE_WAL) {
@@ -41,6 +45,9 @@ const dbPlugin: FastifyPluginAsync = async (fastify, opts) => {
   `);
 
   fastify.decorate("db", db);
+  fastify.decorate("repositories", {
+    sessions: new SessionRepository(db),
+  });
 
   // Cleanup on server shutdown
   fastify.addHook("onClose", async () => {

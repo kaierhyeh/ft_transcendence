@@ -8,7 +8,7 @@ export const CONFIG = {
   
   // Database settings
   DB: {
-    PATH: process.env.DB_PATH || "/app/data/sessions.db",
+    PATH: process.env.DB_PATH || "/app/sessions/sessions.db",
     ENABLE_WAL: true,
   },
   

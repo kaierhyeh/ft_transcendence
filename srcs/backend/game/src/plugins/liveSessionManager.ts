@@ -9,7 +9,10 @@ declare module "fastify" {
 }
 
 const liveSessionManagerPlugin: FastifyPluginAsync = async (fastify) => {
-  const manager = new LiveSessionManager(fastify.log);
+  const manager = new LiveSessionManager(
+    fastify.repositories.sessions,
+    fastify.log,
+  );
 
   fastify.decorate("sessions", manager);
 };
