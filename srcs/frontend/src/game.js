@@ -126,14 +126,14 @@ function connectWebSocket() {
     
     ws.onclose = function(event) {
         console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
-        if (game_state.ongoing) {
+        if (!game_state.winner) {
             // Try to reconnect after 3 seconds
             setTimeout(connectWebSocket, 3000);
         }
         else {
             const winner = document.getElementById("winner");
             if (winner.innerText.length == 0) {
-                winner.innerText = "Player " + game_state.score.indexOf(game_conf.win_point) + " won !";
+                winner.innerText = "Player " + game_state.winner + " won !";
             }
         }
     };
@@ -158,7 +158,7 @@ function startInputSending() {
 
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            console.log("Sending input:", keys);
+            // console.log("Sending input:", keys);
             // Only send if there are active keys
             const activeKeys = Object.keys(keys).filter(key => keys[key]);
             if (activeKeys.length > 0) {
@@ -168,13 +168,13 @@ function startInputSending() {
                 if (inputData["w"] || inputData["s"]) {
                     input.ticket = match_tickets[0];
                     input.move = inputData["w"] ? "up" : "down";
-                    console.log(input);
+                    // console.log(input);
                     ws.send(JSON.stringify(input));
                 }
                 if (inputData["ArrowUp"] || inputData["ArrowDown"]) {
                     input.ticket = match_tickets[1];
                     input.move = inputData["ArrowUp"] ? "up" : "down";
-                    console.log(input);
+                    // console.log(input);
                     ws.send(JSON.stringify(input));
                 }
             }
@@ -206,10 +206,8 @@ function draw() {
     ctx.font = "48px Courier";
     // ctx.fillStyle = "white";
     // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
-    if (left_player)
-        ctx.fillText(left_player.score, game_conf.canvas_width / 2 - 50, 50);
-    if (right_player)
-        ctx.fillText(right_player.score, game_conf.canvas_width / 2 + 50, 50);
+    ctx.fillText(game_state.score.left, game_conf.canvas_width / 2 - 50, 50);
+    ctx.fillText(game_state.score.right, game_conf.canvas_width / 2 + 50, 50);
 }
 
 async function run() {

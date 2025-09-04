@@ -39,8 +39,8 @@ type Score = Map<Team, number>;
 
 export interface GameState {
     ball: Ball;
-    players: Map<PlayerSlot, Player>;
-    score: Score;
+    players: { [key: string]: Player };
+    score: { [key: string]: number} ;
     winner: Team | undefined;
 }
 
@@ -156,8 +156,8 @@ export class GameEngine {
     public get state(): GameState {
         return {
             ball: this.ball,
-            players: this.players,
-            score: this.score,
+            players: Object.fromEntries(this.players),
+            score: Object.fromEntries(this.score),
             winner: this.winner_
         };
     }

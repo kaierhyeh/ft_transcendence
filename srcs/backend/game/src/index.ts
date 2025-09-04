@@ -4,6 +4,7 @@ import liveSessionManagerPlugin from "./plugins/liveSessionManager";
 import routes from "./routes";
 
 const fastify = Fastify({ logger: true });
+const UPDATE_PERIOD: number = 1000 / 30;
 
 async function run() {
   await fastify.register(websocketPlugin);
@@ -21,7 +22,7 @@ async function run() {
   // Start the game loop after everything is ready
   setInterval(() => {
     fastify.sessions.update()
-  }, 16); // 60 fps
+  }, UPDATE_PERIOD);
   
   await fastify.listen({ port: 3000, host: "0.0.0.0" });
 }
