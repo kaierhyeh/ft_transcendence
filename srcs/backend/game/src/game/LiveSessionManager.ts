@@ -77,7 +77,7 @@ export class LiveSessionManager {
             game.tick();
             game.broadcastState();
 
-            if (!game.over)
+            if (game.over)
                 this.terminateSession_(id, game);
         }
     }

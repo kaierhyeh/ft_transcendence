@@ -73,6 +73,7 @@ export class GameSession {
     public get over(): boolean {
         if (this.winner) {
             this.ended_at = new Date();
+            this.logger.info(`Checking if game is over. Winner: ${this.winner}, Ended at: ${this.ended_at}`);
             return true;
         }
         return false;
@@ -172,8 +173,9 @@ export class GameSession {
         this.viewers.delete(connection);
     }
 
-    public setupPlayerListeners(msg: any, connection: SocketStream): void {
-       
+    public setupPlayerListeners(raw: string, connection: SocketStream): void {
+        const msg = JSON.parse(raw);
+
         if (msg.type === "join") {
             this.connectPlayer(msg.ticket, connection);
         } else if (msg.type === "input") {

@@ -206,8 +206,10 @@ function draw() {
     ctx.font = "48px Courier";
     // ctx.fillStyle = "white";
     // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
-    ctx.fillText(left_player.score, game_conf.canvas_width / 2 - 50, 50);
-    ctx.fillText(right_player.score, game_conf.canvas_width / 2 + 50, 50);
+    if (left_player)
+        ctx.fillText(left_player.score, game_conf.canvas_width / 2 - 50, 50);
+    if (right_player)
+        ctx.fillText(right_player.score, game_conf.canvas_width / 2 + 50, 50);
 }
 
 async function run() {
