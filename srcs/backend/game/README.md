@@ -1,165 +1,190 @@
-**⚠️ Disclaimer: the structure decribed below is already obselete. I will update thhat README.nd when done with the refactoring**
+# Game Service
 
-## Directory structure
+This service manages concurrent live Pong game sessions, match history, and provides a REST API and WebSocket interface for players and viewers.
 
-- `game/`
-  - `src/`
-    - `db/`
-    - `game/`
-        - *GameSession.ts*
-        - *GameEngine.ts*
-        - *GameState.ts*
-        - *index.ts* *// re-export*
-    - `routes/`                           
-        - *sessions.ts*
-        - *game.ts*
-        - *index.ts* *// re-export*
-    - `schemas/`
-    - `types/`
-        - *game.ts*
-        - *messages.ts*
-        - *index.ts* *// re-export*
-    - `websockets/`
-        - *ConnectionManager.ts*
-        - *MessageHandler.ts*
-        - *index.ts* *// re-export*
-    - `server/`
-        - *Server.ts*
-        - *index.ts* *// re-export*
-    - *index.ts*
-  - *package-lock.json*
-  - *package.json*
-  - *tsconfig.json*
-- *README.md*
-- *.dockerignore*
-- *Dockerfile*
+## Features
 
-## Types
-*Those types mostly defines data carriers*
-- Score:
-    - left: number
-    - right: number
-- Move = "up" | "down"
-- PlayerSlot = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right"
-- PublicPlayerState:
-  - player_id: number
-  - paddle_coord: number
-- PublicGameState:
-    - ball: Ball
-    - players: Map<PlayerSlot, PublicPlayerState> // will be transformed into an object
-    - score: Score
+- Server-side Pong game logic
+- Supports multiple players (PvP, tournament, multi)
+- Real-time game updates via WebSocket
+- Player and viewer connections (local, remote, or AI)
+- Match history and session repository
+- Extensible API with pagination, filtering, and sorting
 
+---
 
-## Class structure
+## How to Connect
 
-### GameState
-*Carries live data about the game states (paddle coordinates, etc.). Provides a way to share sanitized state of the game to clients*
+All routes are prefixed by `/api/game`.  
+Example: `https://localhost:4443/api/game`
 
-**public**
-- `constructor` **GameState()**
-- **toPublic():** `PublicGameState`
-- *2 approaches*:
-    1. **timeout()**: boolean *// will use a CONNECTION_TIMEOUT static var from `Server`*
-    2. 2 getters (I think it is the best):
-        - `get` lastConnectionTime(): `number`
-        - `get` liveConnectionsCount(): `number`
-- `get` ball(): `Ball`
-- **incrementScore**(slot: "left" | "right")
-- **movePaddle**(player_slot: PlayerSlot, step: number)
+---
 
-**private**
-- **type_**: `GameType`
-- **last_connection_time_**: `number`
-- **ball_**: `Ball`
-- **websockets_**: `Set(SocketStream)`
-- **players_**: Map<PlayerSlot, PlayerState>
-- **score_**: Score
-- **ongoing**: boolean
+## API Endpoints
 
+### Live Game
 
-### GameSession
-*Carries live data about session. Can dump data into the database*
+#### `POST /game/create`
 
-**public**
-- `constructor` **GameSession**(type: GameType, participants: GameParticipants)
-- **dump**(db: Db): boolean // save sessions in db sessions
-- `get` **conf()**: `GameConf`
+Create a new game session.
 
-**private**
-- **conf_**: `GameConf` *//got from `GameEgine` via its getConf method*
-- **state_**: `GameState`
-- **created_at_**: `Date`
-- **started_at_**: `Date`
-- **ended_at_**: `Date`
-  winner_id: number | undefined;
+**Request Body:**
+```json
+{
+  "type": "pvp" | "tournament" | "multi",
+  "participants": [
+    { "player_id": number, "match_ticket": string },
+    ...
+  ]
+}
+```
+- `type`: Game mode
+- `participants`: Array of 2-4 players, each with a unique `player_id` and `match_ticket`
 
+**Response:**
+```json
+{
+  "game_id": number
+}
+```
 
-### GameEngine
-*Handles game physics. Adapts to gameplay mode (2 players, 4 players) by itself or maybe via derived class or whatever*
+---
 
-*needs its own clock*
+#### `GET /game/:id/conf`
 
-**public**
-- `constructor` **GameEngine()**
-- **moveBall**(game_state: GameState)
-- **resetBall**(game_state: GameState)
-- **movePaddle**(move: Move, player_slot: PlayerSlot, game_state: GameState)
-- **getConf**(game_type: GameType): `GameConf`
-- **toFreshState**(game_state: GameState)
+Get the configuration for a specific game session.
 
-**private**
- - *to the developer discretion...*
+**Response:**
+```json
+{
+  "canvas_height": number,
+  "canvas_width": number,
+  "paddle_height": number,
+  "paddle_width": number,
+  "win_point": number,
+  "ball_size": number
+}
+```
 
-### Server
-`Extends fastify`
+---
 
-*Iterates over live game sessions, provide endpoints to interact with live sessions, serves session history data*
+#### `GET /game/:id/ws`
 
-**public**
-- `constructor` **Server()** *// all set up before server listen happen here*
-- **run()** *// starts listening
+Establish a WebSocket connection for real-time game updates.
 
-**private**
-- *attributes*
-    - **game_engine_**: `GameEngine`
-    - **game_sessions_**: `Map<number, GameSession>`
-    - **db_**: `Db`
-- *methods*
-    - **updateLiveSessions_()**
-    - **createGameSession_**(type: GameType, participants: GameParticipants): `number` *// used by /game/create*
-    - **deleteGameSession_**(game_id: number)
-    - **saveGameSession_**(game_id: number)
-    - **joinGameSession_**(game_id: number) *// used by /game/:id/join*
-    - **getGameSessionConf_**(game_id: number) *// used by /game/:id/conf*
-    - **processPlayerInput_** (game_id: number, player_input: PlayerInput) *// usede by /game/:id/ws*
+- **Players**: Join and send input
+- **Viewers**: Subscribe to game state updates
 
-### ConnectionManager
+---
 
-**public**
+## WebSocket Protocol
 
-- **accept**(game_id: number): `boolean`
-- **setupNewConnection**(game_id: number)
-- **closeAllConnections**(code: number, reason: string)
+All messages are JSON objects.  
+Below are the supported message types:
 
-**private**
+### Client → Server
 
+#### **Join Game**
+```json
+{
+  "type": "join",
+  "ticket": "string"
+}
+```
+- Used by players to join a game session using their match ticket.
 
-### MessageHandler
+#### **Send Input**
+```json
+{
+  "type": "input",
+  "ticket": "string",
+  "move": "up" | "down"
+}
+```
+- Used by players to send paddle movement input.
 
-**public**
-- **handlePlayerInput**(input: PlayerInputMessage, game_session: GameSession)
-- **broadcastMessage**(message: OutbondMessage, game_session: GameSession)
+#### **View Game**
+```json
+{
+  "type": "view"
+}
+```
+- Used by viewers to subscribe to game state updates.
 
-**private**
+---
 
-### Db
+### Server → Client
 
-*Repository pattern*
+#### **Game State Update**
+```json
+{
+  "type": "game_state",
+  "ball": {
+    "x": number,
+    "y": number,
+    "dx": number,
+    "dy": number
+  },
+  "players": {
+    "left": {
+      "slot": "left",
+      "paddle_coord": number,
+      "connected": boolean,
+      "team": "left"
+    },
+    "right": { ... },
+    "bottom-left": { ... },
+    "bottom-right": { ... },
+    "top-left": { ... },
+    "top-right": { ... }
+  },
+  "score": {
+    "left": number,
+    "right": number
+  },
+  "winner": "left" | "right" | undefined
+}
+```
+- Sent periodically to all connected players and viewers.
 
-- save
-- findby ...
-- ...
+---
 
+## Match History & Repository Pattern
 
-// Query parameters
+The service uses a repository pattern for database access:
+
+- **SessionRepository**: Handles saving, finding, and querying game sessions and player sessions.
+
+### Example Query Parameters for History Endpoints
+
+```
 ?page=1&limit=10&sort=created_at&order=desc&type=pvp&player_id=123
+```
+- `page`, `limit`: Pagination
+- `sort`, `order`: Sorting
+- `type`: Filter by game type
+- `player_id`: Filter by player
+
+---
+
+## Database Schema
+
+- **sessions**: Stores game session metadata
+- **player_sessions**: Stores per-player session data
+
+---
+
+## Development Notes
+
+- Modular codebase: `src/db`, `src/game`, `src/routes`, `src/types`
+- Repository pattern for DB access
+- Extensible for more game modes and features
+
+---
+
+## Contributing
+
+- See `src/types/` for shared interfaces
+- See `src/routes/` for API endpoints
+- See `src/game/` for game logic and session management
+- See `src/db/` for database and repository code
