@@ -1,3 +1,80 @@
+// Type definitions
+interface Player {
+    paddle_coord: number;
+}
+
+interface Ball {
+    x: number;
+    y: number;
+}
+
+interface Score {
+    left: number;
+    right: number;
+}
+
+interface Players {
+    left: Player;
+    right: Player;
+}
+
+interface GameState {
+    players: Players;
+    ball: Ball;
+    score: Score;
+    winner?: number;
+}
+
+interface GameConfig {
+    canvas_width: number;
+    canvas_height: number;
+    paddle_width: number;
+    paddle_height: number;
+    ball_size: number;
+}
+
+interface InputMessage {
+    type: "input";
+    ticket: string;
+    move: "up" | "down" | "";
+}
+
+interface JoinMessage {
+    type: "join";
+    ticket: string;
+}
+
+interface ServerMessage {
+    level: "info" | "warning" | "error";
+    message: string;
+}
+
+interface GameStateMessage {
+    type: "game_state";
+    data: GameState;
+}
+
+interface ServerResponseMessage {
+    type: "server_message";
+    level: "info" | "warning" | "error";
+    message: string;
+}
+
+interface CreateGameResponse {
+    game_id: number;
+}
+
+interface Participant {
+    player_id: number;
+    match_ticket: string;
+}
+
+interface CreateGameRequest {
+    type: "pvp";
+    participants: Participant[];
+}
+
+export function initGame(): void {
 // var canvas = document.getElementById("game");
 // var ctx = canvas.getContext("2d");
 // var WIDTH = canvas.width;
@@ -56,31 +133,41 @@
 // Global variables
 const API_GAME_ENDPOINT = "https://localhost:4443/api/game";
 
-let canvas = document.getElementById("game");
-let ctx = canvas.getContext("2d");
-let game_state;
-let keys = {};
-const input = {
+const canvas = document.getElementById("pong") as HTMLCanvasElement;
+if (!canvas) {
+    console.error("Canvas element with id 'pong' not found");
+    return;
+}
+const ctx = canvas.getContext("2d");
+if (!ctx) {
+    console.error("Unable to get 2D context from canvas");
+    return;
+}
+
+let game_state: GameState | null = null;
+let game_conf: GameConfig | null = null;
+const keys: { [key: string]: boolean } = {};
+const input: InputMessage = {
     type: "input",
     ticket: "",
     move: ""
-}
-const join = {
+};
+const join: JoinMessage = {
     type: "join",
     ticket: ""
-}
-let ws;
-let match_tickets = [
+};
+let ws: WebSocket | null = null;
+const match_tickets: string[] = [
     "session_id_0",
     "session_id_1"
-]
-let game_id;
+];
+let game_id: number | null = null;
 
 // Event listeners
-document.addEventListener("keydown", function (e) { keys[e.key] = true; });
-document.addEventListener("keyup", function (e) { keys[e.key] = false; });
+document.addEventListener("keydown", function (e: KeyboardEvent) { keys[e.key] = true; });
+document.addEventListener("keyup", function (e: KeyboardEvent) { keys[e.key] = false; });
 
-function handleServerMessage(message) {
+function handleServerMessage(message: ServerMessage): void {
     switch (message.level) {
         case "info":
             console.info(`[Server] ${message.message}`);
@@ -97,24 +184,29 @@ function handleServerMessage(message) {
 }
 
 // WebSocket connection for real-time updates
-function connectWebSocket() {
-    const url = API_GAME_ENDPOINT + `/${game_id}/ws`;
+function connectWebSocket(id: number | undefined): void {
+    if (id === undefined) {
+        console.error("Cannot connect WebSocket: game_id is null");
+        return;
+    }
+    
+    const url = API_GAME_ENDPOINT + `/${id}/ws`;
     console.log("Attempting to connect to:", url);
     ws = new WebSocket(url);
 
-    console.log(`websocket for /game/${game_id}/ws: `, ws);
+    console.log(`websocket for /game/${id}/ws: `, ws);
     
     ws.onopen = function() {
         console.log("WebSocket connected successfully");
         startInputSending();
     };
     
-    ws.onmessage = function(event) {
+    ws.onmessage = function(event: MessageEvent) {
         try {
-            const message = JSON.parse(event.data);
+            const message: GameStateMessage | ServerResponseMessage = JSON.parse(event.data);
             
             if (message.type === "game_state") {
-                game_state = message.data; // Your existing game_state structure is preserved
+                game_state = message.data;
                 draw();
             } else if (message.type === "server_message") {
                 handleServerMessage(message);
@@ -124,28 +216,28 @@ function connectWebSocket() {
         }
     };
     
-    ws.onclose = function(event) {
+    ws.onclose = function(event: CloseEvent) {
         console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
-        if (!game_state.winner) {
+        if (!game_state?.winner) {
             // Try to reconnect after 3 seconds
             setTimeout(connectWebSocket, 3000);
         }
         else {
             const winner = document.getElementById("winner");
-            if (winner.innerText.length == 0) {
+            if (winner && winner.innerText.length === 0) {
                 winner.innerText = "Player " + game_state.winner + " won !";
             }
         }
     };
     
-    ws.onerror = function(error) {
+    ws.onerror = function(error: Event) {
         console.error("WebSocket error:", error);
     };
 }
 
 
 // Send input periodically (much less frequent than rendering)
-function startInputSending() {
+function startInputSending(): void {
     if (ws && ws.readyState === WebSocket.OPEN) {
         console.log("Sending join requests for both players");
         join.ticket = match_tickets[0];
@@ -163,7 +255,7 @@ function startInputSending() {
             const activeKeys = Object.keys(keys).filter(key => keys[key]);
             if (activeKeys.length > 0) {
                 // console.log(input);
-                const inputData = {};
+                const inputData: { [key: string]: boolean } = {};
                 activeKeys.forEach(key => inputData[key] = true);
                 if (inputData["w"] || inputData["s"]) {
                     input.ticket = match_tickets[0];
@@ -182,15 +274,15 @@ function startInputSending() {
     }, 50); // Send input 20 times per second (much better than 60!)
 }
 
-function draw() {
-    if (!game_state) return;
+function draw(): void {
+    if (!game_state || !ctx || !game_conf) return;
     //  console.log(game_state)
     
     ctx.clearRect(0, 0, game_conf.canvas_width, game_conf.canvas_height);
     ctx.fillStyle = "white";
     
-    const   left_player = game_state.players.left;
-    const   right_player = game_state.players.right;
+    const left_player = game_state.players.left;
+    const right_player = game_state.players.right;
     // Draw paddle Player 0
     if (left_player)
         ctx.fillRect(0, left_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
@@ -206,11 +298,16 @@ function draw() {
     ctx.font = "48px Courier";
     // ctx.fillStyle = "white";
     // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
-    ctx.fillText(game_state.score.left, game_conf.canvas_width / 2 - 50, 50);
-    ctx.fillText(game_state.score.right, game_conf.canvas_width / 2 + 50, 50);
+    ctx.fillText(game_state.score.left.toString(), game_conf.canvas_width / 2 - 50, 50);
+    ctx.fillText(game_state.score.right.toString(), game_conf.canvas_width / 2 + 50, 50);
 }
 
-async function run() {
+async function run(): Promise<void> {
+    if (!canvas || !ctx) {
+        console.error("Canvas or context not available");
+        return;
+    }
+    
     try {
         // Get initial game data via REST API
         {
@@ -219,32 +316,29 @@ async function run() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(
-                    {
-                        type: "pvp",
-                        participants: [
-                            {player_id: 0, match_ticket: match_tickets[0] },
-                            {player_id: 1, match_ticket: match_tickets[1] },
-                        ]
-                    })
-                });
-                data = await response.json();
-                game_id = data.game_id;
-                console.log(game_id);
-                
+                body: JSON.stringify({
+                    type: "pvp",
+                    participants: [
+                        { player_id: 0, match_ticket: match_tickets[0] },
+                        { player_id: 1, match_ticket: match_tickets[1] },
+                    ]
+                } as CreateGameRequest)
+            });
+            const data: CreateGameResponse = await response.json();
+            game_id = data.game_id;
+            console.log(game_id);
         }
         {
             const response = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
-            game_conf = await response.json();
+            game_conf = await response.json() as GameConfig;
             
             canvas.width = game_conf.canvas_width;
             canvas.height = game_conf.canvas_height;
             
             console.log("Game initialized:", game_conf);
-
         }
         
-        connectWebSocket();
+        connectWebSocket(game_id);
         
     } catch (error) {
         console.error("Failed to initialize game:", error);
@@ -252,3 +346,4 @@ async function run() {
 }
 
 run();
+}
