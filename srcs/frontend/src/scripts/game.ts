@@ -1,6 +1,11 @@
 // Type definitions
+interface Paddle {
+    x: number;
+    y: number;
+}
+
 interface Player {
-    paddle_coord: number;
+    paddle: Paddle;
 }
 
 interface Ball {
@@ -287,11 +292,11 @@ function draw(): void {
     const right_player = game_state.players.right;
     // Draw paddle Player 0
     if (left_player)
-        ctx.fillRect(0, left_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
+        ctx.fillRect(left_player.paddle.x, left_player.paddle.y, game_conf.paddle_width, game_conf.paddle_height);
     
     // Draw paddle Player 1
     if (right_player)
-        ctx.fillRect(game_conf.canvas_width - game_conf.ball_size, right_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
+        ctx.fillRect(right_player.paddle.x, right_player.paddle.y, game_conf.paddle_width, game_conf.paddle_height);
 
     // Draw ball
     ctx.fillRect(game_state.ball.x, game_state.ball.y, game_conf.ball_size, game_conf.ball_size);
