@@ -3,7 +3,7 @@ import {initStats} from "./stats.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
-const error_404_path = "404.html";
+const error_404_path = "./html/404.html";
 const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
