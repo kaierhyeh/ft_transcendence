@@ -131,7 +131,8 @@ export function initGame(): void {
 
 
 // Global variables
-const API_GAME_ENDPOINT = "https://localhost:4443/api/game";
+const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
+
 
 const canvas = document.getElementById("pong") as HTMLCanvasElement;
 if (!canvas) {
