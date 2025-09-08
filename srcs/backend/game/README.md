@@ -33,13 +33,13 @@ Create a new game session.
 {
   "type": "pvp" | "tournament" | "multi",
   "participants": [
-    { "player_id": number, "match_ticket": string },
+    { "user_id": number, "participant_id": string },
     ...
   ]
 }
 ```
 - `type`: Game mode
-- `participants`: Array of 2-4 players, each with a unique `player_id` and `match_ticket`
+- `participants`: Array of 2-4 players, each with a unique `user_id` and `participant_id`
 
 **Response:**
 ```json
@@ -88,17 +88,17 @@ Below are the supported message types:
 ```json
 {
   "type": "join",
-  "ticket": "string"
+  "participant_id": "string"
 }
 ```
-- Used by players to join a game session using their match ticket.
+- Used by players to join a game session using their participant id.
 
 #### **Send Input**
 ```json
 {
   "type": "input",
-  "ticket": "string",
-  "move": "up" | "down"
+  "participant_id": "string",
+  "move": "up" | "down" | "stop"
 }
 ```
 - Used by players to send paddle movement input.
@@ -128,7 +128,7 @@ Below are the supported message types:
   "players": {
     "left": {
       "slot": "left",
-      "paddle_coord": number,
+      "paddle": {x: number, y: number},
       "velocity": number,
       "connected": boolean,
       "team": "left"
