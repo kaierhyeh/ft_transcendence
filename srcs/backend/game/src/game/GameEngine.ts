@@ -2,7 +2,7 @@ import { GameType } from "../schemas";
 import { PlayerSlot, Team } from "../types";
 import { SessionPlayerMap } from "./GameSession";
 
-const PADDLE_STEP: number = 9;
+const PADDLE_SPEED: number = 0.25;
 const WIDTH: number = 600;
 const HEIGHT: number = 400;
 const PADDLE_WIDTH: number = 10;
@@ -31,6 +31,7 @@ interface Ball {
 interface Player {
     slot: PlayerSlot;
     paddle_coord: number;
+    velocity: number;
     connected: boolean;
     team: Team;
 }
@@ -59,6 +60,7 @@ export class GameEngine {
             this.players.set(p.slot, {
                 slot: p.slot,
                 paddle_coord: this.getPaddleFreshState(p.slot, game_type),
+                velocity: 0,
                 connected: false,
                 team: p.team
             });
@@ -89,6 +91,8 @@ export class GameEngine {
     }
 
     public update(delta: number): void {
+        this.movePaddles(delta);
+
         this.moveBall(delta);
         
         this.handleCollision();
@@ -167,15 +171,32 @@ export class GameEngine {
         if (player) player.connected = value;
     }
 
-    public movePaddle(slot: PlayerSlot, move: "up" | "down"): void {
+    private movePaddles(dt: number): void {
+          for (const player of this.players.values()) {
+            // Smooth paddle movement
+            player.paddle_coord += player.velocity * dt;
+
+            // Clamp within screen bounds
+            player.paddle_coord = Math.max(0, Math.min(HEIGHT - PADDLE_HEIGHT, player.paddle_coord));
+        }
+    }
+
+      public applyMovement(slot: PlayerSlot, move: "up" | "down" | "stop"): void {
         const player = this.players.get(slot);
         if (!player)
             return;
-        if (move === "up" && player.paddle_coord > 0) {
-            player.paddle_coord -= PADDLE_STEP;
-        }      
-        if (move === "down" && player.paddle_coord < HEIGHT - PADDLE_HEIGHT) {
-            player.paddle_coord += PADDLE_STEP;
+        switch (move) {
+            case "up":
+                player.velocity = -PADDLE_SPEED;
+                break;
+            case "down":
+                player.velocity = PADDLE_SPEED;
+                break;
+            case "stop":
+                player.velocity = 0;
+                break;
+            default:
+                break;
         }
     }
 

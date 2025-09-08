@@ -192,7 +192,7 @@ export class GameSession {
                 connection.socket.close(4001, "Invalid ticket");
                 return;
             }                
-            this.game_engine.movePaddle(player.slot, msg.move);
+            this.game_engine.applyMovement(player.slot, msg.move);
         } else {
             connection.socket.close(4000, "Invalid message type");
         }

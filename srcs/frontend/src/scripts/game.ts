@@ -36,7 +36,7 @@ interface GameConfig {
 interface InputMessage {
     type: "input";
     ticket: string;
-    move: "up" | "down" | "";
+    move: "up" | "down" | "stop" | "";
 }
 
 interface JoinMessage {
@@ -250,26 +250,27 @@ function startInputSending(): void {
 
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            // console.log("Sending input:", keys);
-            // Only send if there are active keys
-            const activeKeys = Object.keys(keys).filter(key => keys[key]);
-            if (activeKeys.length > 0) {
-                // console.log(input);
-                const inputData: { [key: string]: boolean } = {};
-                activeKeys.forEach(key => inputData[key] = true);
-                if (inputData["w"] || inputData["s"]) {
-                    input.ticket = match_tickets[0];
-                    input.move = inputData["w"] ? "up" : "down";
-                    // console.log(input);
-                    ws.send(JSON.stringify(input));
-                }
-                if (inputData["ArrowUp"] || inputData["ArrowDown"]) {
-                    input.ticket = match_tickets[1];
-                    input.move = inputData["ArrowUp"] ? "up" : "down";
-                    // console.log(input);
-                    ws.send(JSON.stringify(input));
-                }
+            // Left player (w/s)
+            input.ticket = match_tickets[0];
+            if (keys["w"]) {
+                input.move = "up";
+            } else if (keys["s"]) {
+                input.move = "down";
+            } else {
+                input.move = "stop";
             }
+            ws.send(JSON.stringify(input));
+
+            // Right player (ArrowUp/ArrowDown)
+            input.ticket = match_tickets[1];
+            if (keys["ArrowUp"]) {
+                input.move = "up";
+            } else if (keys["ArrowDown"]) {
+                input.move = "down";
+            } else {
+                input.move = "stop";
+            }
+            ws.send(JSON.stringify(input));
         }
     }, 50); // Send input 20 times per second (much better than 60!)
 }

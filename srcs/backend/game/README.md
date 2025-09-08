@@ -129,6 +129,7 @@ Below are the supported message types:
     "left": {
       "slot": "left",
       "paddle_coord": number,
+      "velocity": number,
       "connected": boolean,
       "team": "left"
     },
