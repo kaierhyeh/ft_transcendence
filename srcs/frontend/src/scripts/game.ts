@@ -276,12 +276,22 @@ function startInputSending(): void {
     }, 50); // Send input 20 times per second (much better than 60!)
 }
 
+function drawCenterLine(): void {
+    if (!ctx || !game_conf) return;
+    ctx.fillStyle = "white";
+    for (let i = 0; i < game_conf.canvas_height; i += 20) {
+        ctx.fillRect(game_conf.canvas_width / 2 - 1, i, 2, 10);
+    }
+}
+
 function draw(): void {
     if (!game_state || !ctx || !game_conf) return;
     //  console.log(game_state)
     
     ctx.clearRect(0, 0, game_conf.canvas_width, game_conf.canvas_height);
     ctx.fillStyle = "white";
+
+    drawCenterLine();
     
     const left_player = game_state.players.left;
     const right_player = game_state.players.right;
@@ -291,17 +301,16 @@ function draw(): void {
     
     // Draw paddle Player 1
     if (right_player)
-        ctx.fillRect(game_conf.canvas_width - game_conf.ball_size, right_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
+        ctx.fillRect(game_conf.canvas_width - game_conf.paddle_width, right_player.paddle_coord, game_conf.paddle_width, game_conf.paddle_height);
 
     // Draw ball
     ctx.fillRect(game_state.ball.x, game_state.ball.y, game_conf.ball_size, game_conf.ball_size);
 
-    // Display score
-    ctx.font = "48px Courier";
-    // ctx.fillStyle = "white";
-    // console.log("score: " + game_state.score[0] + " - " + game_state.score[1]);
-    ctx.fillText(game_state.score.left.toString(), game_conf.canvas_width / 2 - 50, 50);
-    ctx.fillText(game_state.score.right.toString(), game_conf.canvas_width / 2 + 50, 50);
+    // Display score with same style as pong.ts
+    ctx.font = "64px Bit5x3, monospace";
+    ctx.fillStyle = "white";
+    ctx.fillText(game_state.score.left.toString(), game_conf.canvas_width / 4, 50);
+    ctx.fillText(game_state.score.right.toString(), 3 * game_conf.canvas_width / 4, 50);
 }
 
 async function run(): Promise<void> {

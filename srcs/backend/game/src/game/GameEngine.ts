@@ -3,10 +3,10 @@ import { PlayerSlot, Team } from "../types";
 import { SessionPlayerMap } from "./GameSession";
 
 const PADDLE_SPEED: number = 0.25;
-const WIDTH: number = 600;
-const HEIGHT: number = 400;
+const WIDTH: number = 800;
+const HEIGHT: number = 750;
 const PADDLE_WIDTH: number = 10;
-const PADDLE_HEIGHT: number = 80;
+const PADDLE_HEIGHT: number = 50;
 const WIN_POINT: number = 3;
 const BALL_SIZE: number = 10;
 const BALL_SPEED: number = 200;
