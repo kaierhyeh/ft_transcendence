@@ -1,0 +1,1 @@
+// init fastify, add plugins
