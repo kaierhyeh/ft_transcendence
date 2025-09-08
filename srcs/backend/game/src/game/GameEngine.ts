@@ -5,13 +5,13 @@ import { SessionPlayerMap } from "./GameSession";
 const PADDLE_WIDTH: number = 10;
 const PADDLE_HEIGHT: number = 50;
 
-const INITIAL_BALL_SPEED: number = 200; // pixel / s
-const PADDLE_SPEED: number = 250; // pixel / s
+const INITIAL_BALL_SPEED: number = 420; // pixel / s
+const PADDLE_SPEED: number = 350; // pixel / s
 
-const WIDTH: number = 600;
-const HEIGHT: number = 400;
+const WIDTH: number = 800;
+const HEIGHT: number = 750;
 
-const WIN_POINT: number = 3;
+const WIN_POINT: number = 7;
 const BALL_SIZE: number = 10;
 
 export interface GameConf {
@@ -142,6 +142,7 @@ export class GameEngine {
     }
 
     private handleCollision(): void {
+        // Wall bouncing (this looks correct)
         if (this.ball.y <= 0 || this.ball.y + BALL_SIZE >= HEIGHT) {
             if (this.ball.y <= 0)
                 this.ball.y = 0;
@@ -150,6 +151,7 @@ export class GameEngine {
             this.ball.dy *= -1;
         }
 
+        // Left paddle collision
         const left_player = this.players.get('left');
         if (
             left_player &&
@@ -159,7 +161,7 @@ export class GameEngine {
             this.ball.y <= left_player.paddle.y + PADDLE_HEIGHT
         ) {
             const paddleCenter = left_player.paddle.y + PADDLE_HEIGHT / 2;
-            const ballCenter = left_player.paddle.y + BALL_SIZE / 2;
+            const ballCenter = this.ball.y + BALL_SIZE / 2;
             const impact = (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2);
             const angle = impact * Math.PI / 4;
             const speed = Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2) * 1.05;
@@ -167,10 +169,14 @@ export class GameEngine {
             this.ball.dx = Math.abs(Math.cos(angle) * speed);
             this.ball.dy = Math.sin(angle) * speed;
             this.ball.x = left_player.paddle.x + PADDLE_WIDTH;
-            if (this.ball.y < left_player.paddle.y) this.ball.y = left_player.paddle.y - BALL_SIZE;
-            else if (this.ball.y > left_player.paddle.y + PADDLE_HEIGHT) this.ball.y = left_player.paddle.y + PADDLE_HEIGHT;
+            
+            if (this.ball.y < left_player.paddle.y) 
+                this.ball.y = left_player.paddle.y - BALL_SIZE;
+            else if (this.ball.y > left_player.paddle.y + PADDLE_HEIGHT) 
+                this.ball.y = left_player.paddle.y + PADDLE_HEIGHT;
         }
 
+        // Right paddle collision
         const right_player = this.players.get('right');
         if (
             right_player &&
@@ -188,8 +194,11 @@ export class GameEngine {
             this.ball.dx = -Math.abs(Math.cos(angle) * speed);
             this.ball.dy = Math.sin(angle) * speed;
             this.ball.x = right_player.paddle.x - BALL_SIZE;
-            if (this.ball.y < right_player.paddle.y) this.ball.y = right_player.paddle.y - BALL_SIZE;
-            else if (this.ball.y > right_player.paddle.y + PADDLE_HEIGHT) this.ball.y = right_player.paddle.y + PADDLE_HEIGHT;
+            
+            if (this.ball.y < right_player.paddle.y) 
+                this.ball.y = right_player.paddle.y - BALL_SIZE;
+            else if (this.ball.y > right_player.paddle.y + PADDLE_HEIGHT) 
+                this.ball.y = right_player.paddle.y + PADDLE_HEIGHT;
         }
     }
 
