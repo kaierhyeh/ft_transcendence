@@ -2,10 +2,10 @@ import { FromSchema } from "json-schema-to-ts";
 
 export const playerSchema = {
   type: "object",
-  required: ["player_id", "match_ticket"],
+  required: ["user_id", "participant_id"],
   properties: {
-    player_id: { type: "number" },
-    match_ticket: { type: "string" },
+    user_id: { type: "number" },
+    participant_id: { type: "string" },
   },
   additionalProperties: false,
 } as const;

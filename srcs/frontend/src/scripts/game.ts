@@ -40,13 +40,13 @@ interface GameConfig {
 
 interface InputMessage {
     type: "input";
-    ticket: string;
+    participant_id: string;
     move: "up" | "down" | "stop" | "";
 }
 
 interface JoinMessage {
     type: "join";
-    ticket: string;
+    participant_id: string;
 }
 
 interface ServerMessage {
@@ -70,8 +70,8 @@ interface CreateGameResponse {
 }
 
 interface Participant {
-    player_id: number;
-    match_ticket: string;
+    user_id: number;
+    participant_id: string;
 }
 
 interface CreateGameRequest {
@@ -155,15 +155,15 @@ let game_conf: GameConfig | null = null;
 const keys: { [key: string]: boolean } = {};
 const input: InputMessage = {
     type: "input",
-    ticket: "",
+    participant_id: "",
     move: ""
 };
 const join: JoinMessage = {
     type: "join",
-    ticket: ""
+    participant_id: ""
 };
 let ws: WebSocket | null = null;
-const match_tickets: string[] = [
+const participant_ids: string[] = [
     "session_id_0",
     "session_id_1"
 ];
@@ -246,10 +246,10 @@ function connectWebSocket(id: number | undefined): void {
 function startInputSending(): void {
     if (ws && ws.readyState === WebSocket.OPEN) {
         console.log("Sending join requests for both players");
-        join.ticket = match_tickets[0];
+        join.participant_id = participant_ids[0];
         console.log(join);
         ws.send(JSON.stringify(join));
-        join.ticket = match_tickets[1];
+        join.participant_id = participant_ids[1];
         console.log(join);
         ws.send(JSON.stringify(join));
     }
@@ -257,7 +257,7 @@ function startInputSending(): void {
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
             // Left player (w/s)
-            input.ticket = match_tickets[0];
+            input.participant_id = participant_ids[0];
             if (keys["w"]) {
                 input.move = "up";
             } else if (keys["s"]) {
@@ -268,7 +268,7 @@ function startInputSending(): void {
             ws.send(JSON.stringify(input));
 
             // Right player (ArrowUp/ArrowDown)
-            input.ticket = match_tickets[1];
+            input.participant_id = participant_ids[1];
             if (keys["ArrowUp"]) {
                 input.move = "up";
             } else if (keys["ArrowDown"]) {
@@ -326,8 +326,8 @@ async function run(): Promise<void> {
                 body: JSON.stringify({
                     type: "pvp",
                     participants: [
-                        { player_id: 0, match_ticket: match_tickets[0] },
-                        { player_id: 1, match_ticket: match_tickets[1] },
+                        { user_id: 0, participant_id: participant_ids[0] },
+                        { user_id: 1, participant_id: participant_ids[1] },
                     ]
                 } as CreateGameRequest)
             });
