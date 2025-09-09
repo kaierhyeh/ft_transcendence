@@ -3,8 +3,8 @@
 // contains the actual handler functions (just pure functions)
 
 import	{
-		FastifyReply,
-		FastifyRequest
+		FastifyRequest,
+		FastifyReply
 		} from "fastify";
 
 import	{
@@ -13,33 +13,50 @@ import	{
 		} from "../services/chats.service";
 
 import	{
-		sendMessageService,
+		postMessageservice,
 		getMessagesService,
 		deleteMessageService
 		} from "../services/messages.service";
 		
-import { } from "../utils/errorHandler";
+import	{
+		logError,
+		getErrorCode,
+		getErrorMessage
+		} from "../utils/errorHandler";
 
-export async function sendMessagesController() {
+export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
 	try {
+		const {msgs} = req.body;
+		// check message and IDs
+		if ()
+			return (reply.code(400).send({error: "Invalid message data" }));
 
+		const newMsgs = await Promise.all(msgs.map(msg => postMessageservice(msg.fromId, msg.toId, msg.msg)));
 	} catch (e: any) {
-
+		logError(e, "postMessagesController");
+		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
 	}
 }
 
-export async function getMessagesController() {
+export async function getMessagesController(req:FastifyRequest<{Params:{userId:string}}>, reply:FastifyReply) {
 	try {
-
-	} catch (e: any) {
-
+		const userId = parseInt(req.params.userId);
+		if (isNaN(userId))
+			return (reply.status(400).send({error: "Invalid user ID"}));
+		const msgs = await getMessagesService(userId);
+		return (msgs);
+	} catch (e) {
+		logError(e, "getMessagesController");
+		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
 	}
 }
 
-export async function deleteMessageController() {
+export async function deleteMessageController(req:FastifyRequest<{Params:{msgId:string}}>, reply:FastifyReply) {
 	try {
-
-	} catch (e: any) {
-
+		await deleteMessageService(parseInt(req.params.msgId));
+		return (reply.status(200).send({message: "Message deleted successfully."}));
+	} catch (e) {
+		logError(e, "deleteMessageController");
+		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
 	}
 }

@@ -3,12 +3,12 @@
 
 import	{
 		getChatId,
-		newChat
+		postChat
 		} from "../repositories/chats.repository";
 
 import	{
 		getMessagesByUserId,
-		newMessage, 
+		postMessage, 
 		deleteMessageById
 		} from "../repositories/messages.repository";
 
@@ -22,19 +22,19 @@ import	{
 		logError
 		} from "../utils/errorHandler";
 
-export async function sendMessageService(fromId: number, toId: number, msg: string) {
+export async function postMessageservice(fromId: number, toId: number, msg: string) {
 	try {
 		if (fromId == null || toId == null || !msg?.trim())
 			throw chatValidationError("Missing required fields", { fromId, toId, msg });
 		let chatId = await getChatId(fromId, toId);
 		if (chatId === null)
-			chatId = await newChat(fromId, toId);
+			chatId = await postChat(fromId, toId);
 		if (!chatId)
 			throw chatDatabaseError("Database did not return a valid chatId", { fromId, toId });
-		const newMsg = await newMessage(chatId, fromId, toId, msg);
+		const newMsg = await postMessage(chatId, fromId, toId, msg);
 		return (newMsg);
 	} catch (e: any) {
-		logError(e, "sendMessageService");
+		logError(e, "postMessageservice");
 		throw chatDatabaseError("Failed to send message", { fromId, toId });
 	}
 }

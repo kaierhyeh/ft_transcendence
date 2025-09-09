@@ -1,35 +1,14 @@
 // the validation schema (JSON Schema)
 // Fastify uses JSON Schema for request/response validation, ensuring input/output matches what we expect
 
-// example:
-
-// export const createChatSchema = {
-//   body: {
-//     type: "object",
-//     required: ["name"],
-//     properties: {
-//       name: { type: "string", minLength: 1 }
-//     }
-//   },
-//   response: {
-//     201: {
-//       type: "object",
-//       properties: {
-//         id: { type: "number" },
-//         name: { type: "string" },
-//         createdAt: { type: "string" }
-//       }
-//     }
-//   }
-// };
-
-
 export const getChatSchema = {
+	description: "Get chat partners for a given user",
+	tags: ["chats"],
 	params: {
 		type: "object",
 		required: ["userId"],
 		properties: {
-			userId: { type: "integer", minimum: 1 },
+			userId: { type: "number", minimum: 1 },
 		},
 	},
 	response: {
@@ -43,11 +22,11 @@ export const getChatSchema = {
 				},
 			},
 		},
-		400: {
+		404: {
 			type: "object",
 			properties: {
-				error: { type: "string" },
+				e: { type: "string" },
 			},
 		},
 	},
-};
+} as const;

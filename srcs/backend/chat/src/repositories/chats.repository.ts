@@ -9,7 +9,7 @@ import { Message } from "../types/messages.type";
 
 // get chat id of two users
 // return null if no chat 
-export async function getChatId(userA:number, userB:number) {
+export async function getChatId(userA:number, userB:number):Promise<number|null> {
 	return new Promise((resolve, reject) => {
 		
 		const query = `
@@ -43,7 +43,7 @@ export async function getChatPartners(userId:number) {
 
 		database.all(query, [userId], (e:Error|null, data) => {
 			if (e) {
-				logError(e, "getMessagesByUserId");
+				logError(e, "getChatPartners");
 				return (reject(e));
 			}
 			resolve(data);
@@ -53,16 +53,16 @@ export async function getChatPartners(userId:number) {
 }
 
 // add new chat in database
-export async function newChat(userA:number, userB:number) {
+export async function postChat(userA:number, userB:number): Promise<number>{
 	return new Promise((resolve, reject) => {
 
 		const query = `
 			INSERT INTO chats (user_a_id, user_b_id)
 			VALUES (?, ?)`;
 
-		database.run(query, [userA, userB], function (e:Error|null) {
+		database.run(query, [userA, userB], function (e) {
 			if (e) {
-				logError(e, "newChat");
+				logError(e, "postChat");
 				return (reject(e));
 			}
 			// return the id of the new chat

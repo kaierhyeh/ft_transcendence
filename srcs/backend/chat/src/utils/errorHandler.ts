@@ -15,16 +15,16 @@ export function logError(e:unknown, s:string): void {
 	}
 }
 
-export function getErrorCode(e:unknown): string {
+export function getErrorCode(e:unknown): number {
+	if (e instanceof AppError)
+		return (e.errorCode);
+	return (500);
+}
+
+export function getErrorMessage(e:unknown): string {
 	if (e instanceof AppError || e instanceof Error)
 		return (e.message);
 	if (typeof e === 'string')
 		return (e);
 	return ('Unknown error');
-}
-
-export function getErrorMessage(e:unknown): number {
-	if (e instanceof AppError)
-		return (e.errorCode);
-	return (500);
 }

@@ -28,7 +28,7 @@ export async function getMessagesByUserId(userId:number) {
 }
 
 // add new mesage in database
-export async function newMessage(chatId:number, fromId:number, toId:number, msg:string) {
+export async function postMessage(chatId:number, fromId:number, toId:number, msg:string) {
 	return new Promise((resolve, reject) => {
 
 		const query = `
@@ -37,7 +37,7 @@ export async function newMessage(chatId:number, fromId:number, toId:number, msg:
 
 		database.run(query, [chatId, fromId, toId, msg], function (e:Error|null) {
 			if (e) {
-				logError(e, "newMessage");
+				logError(e, "postMessage");
 				return (reject(e));
 			}
 			// return the msg info with id

@@ -3,20 +3,14 @@
 // contains the actual handler functions (just pure functions)
 
 import	{
-		FastifyReply,
-		FastifyRequest
+		FastifyRequest,
+		FastifyReply
 		} from "fastify";
 
 import	{
 		getChatPartnersService,
 		deleteChatService
 		} from "../services/chats.service";
-
-import	{
-		sendMessageService,
-		getMessagesService,
-		deleteMessageService
-		} from "../services/messages.service";
 		
 import	{
 		logError,
@@ -24,12 +18,22 @@ import	{
 		getErrorMessage
 		} from "../utils/errorHandler";
 
-export async function getChatController(req: FastifyRequest<{ Params:{ userId:number }}>, res: FastifyReply) {
+export async function getChatPartnersController(req:FastifyRequest<{Params:{userId:string}}>, reply:FastifyReply) {
 	try {
-		const chats = await getChatPartnersService(req.params.userId);
-		return (res.send(chats));
-	} catch (e: any) {
+		const chats = await getChatPartnersService(parseInt(req.params.userId));
+		return (reply.send(chats));
+	} catch (e) {
 		logError(e, "getChatController");
-		return (res.status(getErrorCode(e)).send({ e:getErrorMessage(e) }));
+		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
+	}
+}
+
+export async function deleteChatController(req:FastifyRequest<{Params:{chatId:string}}>, reply:FastifyReply) {
+	try {
+		await deleteChatService(parseInt(req.params.chatId));
+		return (reply.status(200).send({message: "Chat deleted successfully."}));
+	} catch (e) {
+		logError(e, "deleteChatController");
+		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
 	}
 }
