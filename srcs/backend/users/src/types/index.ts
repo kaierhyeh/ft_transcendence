@@ -3,5 +3,3 @@ export interface Result {
     status: number;
     msg: string;
 }
-
-export * from './game';

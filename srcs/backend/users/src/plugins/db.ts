@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import Database from "better-sqlite3";
 import { CONFIG } from "../config";
 import fp from "fastify-plugin";
-import { SessionRepository } from "../db/repositories/SessionRepository";
+import { SessionRepository } from "../db/repositories/UserRepository";
 
 declare module "fastify" {
   interface FastifyInstance {

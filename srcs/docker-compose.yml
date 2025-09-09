@@ -52,10 +52,10 @@ services:
     # Add healthcheck if you can
     restart: unless-stopped
 
-  backend-user:
-    container_name: backend-user
+  backend-users:
+    container_name: backend-users
     build:
-      context: ./backend/user
+      context: ./backend/users
       dockerfile: Dockerfile
     networks:
       - pong_network

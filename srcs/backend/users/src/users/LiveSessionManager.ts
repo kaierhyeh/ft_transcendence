@@ -3,7 +3,7 @@ import { GameParticipant, GameType } from "../schemas";
 import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
-import { SessionRepository } from "../db/repositories/SessionRepository";
+import { SessionRepository } from "../db/repositories/UserRepository";
 
 let next_id = 0;
 

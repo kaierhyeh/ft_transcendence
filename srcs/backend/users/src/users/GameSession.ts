@@ -4,7 +4,7 @@ import { Team, PlayerSlot, GameMessage } from '../types'
 import { GameConf, GameEngine, GameMode, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
-import { DbPlayerSession, DbSession } from '../db/repositories/SessionRepository';
+import { DbPlayerSession, DbSession } from '../db/repositories/UserRepository';
 import { toSqlDate } from '../db/utils';
 
 interface Player {

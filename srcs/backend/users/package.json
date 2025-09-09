@@ -1,7 +1,7 @@
 {
-  "name": "pong-game-service",
+  "name": "users-service",
   "version": "1.0.0",
-  "description": "Server-side Pong game microservice",
+  "description": "Microservice for managing user accounts and profiles in the Pong game",
   "main": "index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
