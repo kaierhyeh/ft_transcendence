@@ -312,12 +312,12 @@ function draw(): void {
     ctx.fillRect(game_state.ball.x, game_state.ball.y, game_conf.ball_size, game_conf.ball_size);
 
     // Display score (team-based)
-    ctx.font = "48px Courier";
+    ctx.font = "64px Bit5x3, monospace";
     ctx.fillText(game_state.score.left.toString(), game_conf.canvas_width / 4, 50);
     ctx.fillText(game_state.score.right.toString(), 3 * game_conf.canvas_width / 4, 50);
     
     // Display controls
-    ctx.font = "16px Courier";
+    ctx.font = "16px Bit5x3, monospace";
     ctx.fillText("Left Team: W/S (top) A/Z (bottom)", 20, game_conf.canvas_height - 60);
     ctx.fillText("Right Team: ↑/↓ (top) O/L (bottom)", 20, game_conf.canvas_height - 40);
 }
