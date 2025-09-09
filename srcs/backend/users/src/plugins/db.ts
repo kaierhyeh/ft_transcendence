@@ -2,9 +2,9 @@ import { FastifyPluginAsync } from "fastify";
 import Database from "better-sqlite3";
 import { CONFIG } from "../config";
 import fp from "fastify-plugin";
-import { UserRepository } from "../db/repositories/UserRepository";
-import { FriendRepository } from "../db/repositories/FriendRepository";
-import { BlockRepository } from "../db/repositories/BlockRepository";
+import { join } from "path";
+import { readFileSync } from "fs";
+import { BlockRepository, FriendRepository, UserRepository } from "../db/repositories";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -25,8 +25,23 @@ const dbPlugin: FastifyPluginAsync = async (fastify) => {
   }
   db.pragma("foreign_keys = ON");
 
-  db.exec(`
-  `);
+  const sql_dir = join(__dirname, '../db/sql');
+  const sql_files = [
+    'users.sql',
+    'friendships.sql',
+    'blocked_users.sql'
+  ];
+
+  for (const file of sql_files) {
+    try {
+      const sql =readFileSync(join(sql_dir, file), 'utf8');
+      db.exec(sql);
+      fastify.log.info(`✅ Executed schema: ${file}`);
+    } catch (error) {
+      fastify.log.error(`❌ Error executing ${file}: ${error}`);
+      throw error;
+    }
+  }
 
   fastify.decorate("db", db);
   fastify.decorate("repositories", {

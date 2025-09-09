@@ -49,4 +49,23 @@ export class UserRepository {
 
         saveTransaction(session);
     }
+
+
+     createUser(data: {
+    username: string;
+    email: string;
+    passwordHash: string;
+    googleAccount?: boolean;
+    googleName?: string;
+  }): Promise<User>;
+
+  getUserById(userId: number): Promise<User | null>;
+  getUserByEmail(email: string): Promise<User | null>;
+  getUserByUsername(username: string): Promise<User | null>;
+
+  updateUserProfile(userId: number, updates: Partial<User>): Promise<User>;
+  updateStatus(userId: number, status: 'online' | 'offline' | 'away'): Promise<void>;
+  updateLastSeen(userId: number): Promise<void>;
+
+  deleteUser(userId: number): Promise<void>;
 }
