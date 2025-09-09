@@ -3,16 +3,16 @@ import { GameParticipant, GameType } from "../schemas";
 import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
-import { SessionRepository } from "../db/repositories/UserRepository";
+import { UserRepository } from "../db/repositories/UserRepository";
 
 let next_id = 0;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
     private logger: FastifyBaseLogger;
-    private session_repo: SessionRepository;
+    private session_repo: UserRepository;
 
-    constructor(session_repo: SessionRepository, logger: FastifyBaseLogger) {
+    constructor(session_repo: UserRepository, logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
         this.logger = logger;
         this.session_repo = session_repo;

@@ -1,14 +1,6 @@
 import { GameType } from "../../schemas";
-import { PlayerSlot, Team } from "../../types";
 import { Database } from "better-sqlite3";
 
-export interface DbPlayerSession {
-    user_id: number,
-    team: Team,
-    slot: PlayerSlot,
-    score: number,
-    winner: boolean
-}
 
 export interface DbSession {
     session: {
@@ -18,10 +10,9 @@ export interface DbSession {
         started_at: string,
         ended_at: string,
     },
-    player_sessions: DbPlayerSession[]
 }
 
-export class SessionRepository {
+export class UserRepository {
     private db: Database;
 
     constructor(db: Database) {
