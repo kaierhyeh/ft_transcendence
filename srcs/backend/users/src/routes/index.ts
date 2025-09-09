@@ -1,4 +1,3 @@
-import gameRoutes from "./users";
-import sessionRoutes from "./friends";
-
-export default [gameRoutes, sessionRoutes];
+export * from "./users";
+export * from "./friends";
+export * from "./blocks";

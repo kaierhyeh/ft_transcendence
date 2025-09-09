@@ -1,14 +1,8 @@
 export const CONFIG = {
-  // Game settings
-  GAME: {
-    TICK_PERIOD: 1000 / 30, // <=> 30 FPS
-    SESSION_TIMEOUT: 5000, // 5s
-    MAX_SESSIONS: 100,
-  },
   
   // Database settings
   DB: {
-    PATH: process.env.DB_PATH || "/app/sessions/sessions.db",
+    PATH: process.env.DB_PATH || "/app/data/users.db",
     ENABLE_WAL: true,
   },
   
