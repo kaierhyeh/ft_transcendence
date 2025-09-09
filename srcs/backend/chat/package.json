@@ -1,18 +1,21 @@
 {
 	"name": "my-fastify-app",
 	"version": "1.0.0",
-	"type": "module",
+	"main": "index.ts",
 	"scripts": {
-		"build": "tsc",
 		"start": "ts-node src/index.ts",
 		"dev": "ts-node --watch index.ts",
-		"serve": "node dist/index.js"
+		"build": "tsc",
+		"serve": "node ./dist/index.js"
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.2.0",
 		"fastify": "^5.6.0",
 		"fs": "^0.0.1-security",
+		"node": "^20.19.5",
 		"path": "^0.12.7",
+		"sqlite3": "^5.1.7",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.9.2"
 	},
 	"devDependencies": {
