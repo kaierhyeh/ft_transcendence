@@ -1,27 +1,42 @@
--- users table
 CREATE TABLE IF NOT EXISTS users (
-    user_id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    username      TEXT NOT NULL UNIQUE,
-    email         TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    alias         TEXT,
-    avatar_url    TEXT,
+  user_id         INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    two_fa_enabled INTEGER NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0,1)),
-    two_fa_secret  TEXT,
+  -- login identity (case-insensitive uniqueness)
+  username        TEXT NOT NULL COLLATE NOCASE UNIQUE,
+  email           TEXT NOT NULL COLLATE NOCASE UNIQUE,
 
-    google_account INTEGER NOT NULL DEFAULT 0 CHECK (google_account IN (0,1)),
-    google_name    TEXT,
+  -- local auth (nullable if SSO-only account)
+  password_hash   TEXT,
 
-    settings      TEXT DEFAULT '{}',                -- JSON string
+  -- display + profile
+  alias           TEXT,                 -- display name; NOT unique here (see note below)
+  avatar_url      TEXT,
 
-    created_at    DATETIME DEFAULT (datetime('now')),
-    updated_at    DATETIME DEFAULT (datetime('now')),
-    last_seen     DATETIME,
-    status        TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('online','offline','away')),
+  -- 2FA (TOTP)
+  two_fa_enabled  INTEGER NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0,1)),
+  two_fa_secret   TEXT,                 -- base32; required iff two_fa_enabled = 1
 
-    CONSTRAINT username_min_len CHECK (length(username) >= 3)
+  -- [OPTIONAL] Email verification
+  -- email_verified  INTEGER NOT NULL DEFAULT 0 CHECK (email_verified IN (0,1)),
+
+  -- Google SSO (OpenID Connect "sub" — stable, opaque, globally unique)
+  google_sub      TEXT UNIQUE,
+
+  -- misc
+  settings        TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(settings)),
+  status          TEXT NOT NULL DEFAULT 'offline'
+                  CHECK (status IN ('online','offline','away')),
+  last_seen       DATETIME,
+  created_at      DATETIME NOT NULL DEFAULT (datetime('now')),
+  updated_at      DATETIME NOT NULL DEFAULT (datetime('now')),
+
+  -- integrity rules inside this row
+  CHECK (two_fa_enabled = 0 OR two_fa_secret IS NOT NULL),
+  CHECK (password_hash IS NOT NULL OR google_sub IS NOT NULL)
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
-CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen);
+-- Index to efficiently query users by their status (e.g., online/offline/away)
+CREATE INDEX IF NOT EXISTS idx_users_status   ON users(status);
+
+-- Index to speed up queries that sort or filter users by their last activity time
+CREATE INDEX IF NOT EXISTS idx_users_lastseen ON users(last_seen);

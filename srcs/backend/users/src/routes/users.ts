@@ -1,7 +1,19 @@
 import { FastifyInstance } from "fastify";
-import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema } from "../schemas";
+import { AccountCreationData, createAccountSchema } from "../schemas";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
+  // CREATE
+  fastify.post<{ Body: AccountCreationData }>(
+    "/",
+    { schema: { body: createAccountSchema} },
+    async (request, reply) => {
+
+      const data = request.body;
+      fastify.repositories.users.createLocalUser(data);
+      reply.status(201).send({ success: true });
+  });
+
+  // READ
   fastify.get<{ Body: GameCreationBody }>(
     "/:id",
     { schema: { body: createGameSchema } },
@@ -13,6 +25,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
       // reply.status(201).send({game_id: game_id});
   });
 
+  // UPDATE
   fastify.put<{ Params: GameIdParams }>(
     "/me",
     { schema: { params: gameIdSchema } },
@@ -24,6 +37,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     }
   );
 
+  // CREATE
   fastify.post(
     "/me/avatar",
     async (request, reply) => {
@@ -31,6 +45,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
     });
 
+  // READ
   fastify.get<{ Params: GameIdParams }>(
     "/me", 
     { schema: { params: gameIdSchema } },
@@ -43,6 +58,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
       // reply.send(conf);
   });
 
+  // READ
   fastify.get(
     "/",
     async (request, reply) => {

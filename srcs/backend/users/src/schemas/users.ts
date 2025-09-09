@@ -1,44 +1,46 @@
 import { FromSchema } from "json-schema-to-ts";
 
-export const playerSchema = {
-  type: "object",
-  required: ["user_id", "participant_id"],
-  properties: {
-    user_id: { type: "number" },
-    participant_id: { type: "string" },
-  },
-  additionalProperties: false,
-} as const;
+// export const playerSchema = {
+//   type: "object",
+//   required: ["user_id", "participant_id"],
+//   properties: {
+//     user_id: { type: "number" },
+//     participant_id: { type: "string" },
+//   },
+//   additionalProperties: false,
+// } as const;
 
-export const gameIdSchema = {
-  type: "object",
-    required: ["id"],
-    properties: {
-      id: { type: "number" },
-    },
-    additionalProperties: false,
-} as const;
+// export const gameIdSchema = {
+//   type: "object",
+//     required: ["id"],
+//     properties: {
+//       id: { type: "number" },
+//     },
+//     additionalProperties: false,
+// } as const;
 
-export const createGameSchema = {
+export const createAccountSchema = {
   type: "object",
-  required: ["type", "participants"],
+  required: ["username", "email", "password_hash"],
   properties: {
-    type: {
+    username: {
       type: "string",
-      enum: ["solo", "pvp", "multi", "tournament"],
     },
-    participants: {
-      type: "array",
-      minItems: 2,
-      maxItems: 4,
-      items: playerSchema,
+    email: {
+      type: "string",
     },
+    password_hash: {
+      type: "string",
+    },
+    alias: {
+      type: "string",
+    },
+    avatar_url: {
+      type: "string"
+    }
   },
   additionalProperties: false,
 } as const;
 
 // 👇 Types derived from schemas
-export type GameParticipant = FromSchema<typeof playerSchema>;
-export type GameIdParams = FromSchema<typeof gameIdSchema>;
-export type GameCreationBody = FromSchema<typeof createGameSchema>;
-export type GameType = GameCreationBody["type"];
+export type AccountCreationData = FromSchema<typeof createAccountSchema>;

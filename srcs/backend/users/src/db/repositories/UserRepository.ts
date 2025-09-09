@@ -1,15 +1,18 @@
-import { GameType } from "../../schemas";
 import { Database } from "better-sqlite3";
+import { AccountCreationData } from "../../schemas";
 
-
-export interface DbSession {
-    session: {
-        type: GameType,
-        tournament_id: number | undefined,
-        created_at: string,
-        started_at: string,
-        ended_at: string,
-    },
+export interface UserRow {
+    id: number;
+    username: string;
+    email: string;
+    alias: string | null;
+    avatar_url: string | null;
+    two_fa_enabled: 0 | 1;
+    two_fa_secret: string | null;
+    google_sub: string | null;
+    status: "online" | "offline" | "away";
+    created_at: string;
+    updated_at: string;
 }
 
 export class UserRepository {
@@ -19,53 +22,48 @@ export class UserRepository {
         this.db = db;
     }
 
-    public saveSession(session: DbSession): void {
-        const insertSession = this.db.prepare(`
-            INSERT INTO sessions (type, tournament_id, created_at, started_at, ended_at)
-            VALUES (@type, @tournament_id, @created_at, @started_at, @ended_at)
+    public createLocalUser(data: AccountCreationData): number {
+        const stmt = this.db.prepare(`
+            INSERT INTO users (username, email, password_hash, alias, avatar_url)
+            VALUES (?, ?, ?, ?, ?)
         `);
-
-        const insertPlayerSession = this.db.prepare(`
-            INSERT INTO player_sessions (session_id, user_id, team, player_slot, score, winner)
-            VALUES (@session_id, @user_id, @team, @player_slot, @score, @winner)
-        `);
-
-        // Start a transaction so both inserts happen atomically
-        const saveTransaction = this.db.transaction((sessionData: DbSession) => {
-            const result = insertSession.run(sessionData.session);
-            const session_id = result.lastInsertRowid as number;
-
-            for (const player of sessionData.player_sessions) {
-                insertPlayerSession.run({
-                    session_id,
-                    user_id: player.user_id,
-                    team: player.team,
-                    player_slot: player.slot,
-                    score: player.score,
-                    winner: player.winner ? 1 : 0,
-                });
-            }
-        });
-
-        saveTransaction(session);
+        const result = stmt.run(
+            data.username,
+            data.email,
+            data.password_hash,
+            data.alias || null,
+            data.avatar_url || null
+        );
+        return result.lastInsertRowid as number;
     }
 
-
-     createUser(data: {
+    createLocalUser(input: {
     username: string;
     email: string;
-    passwordHash: string;
-    googleAccount?: boolean;
-    googleName?: string;
-  }): Promise<User>;
+    passwordHash: string; // already hashed
+    alias?: string;
+    avatarUrl?: string;
+  }): number; // returns user_id
 
-  getUserById(userId: number): Promise<User | null>;
-  getUserByEmail(email: string): Promise<User | null>;
-  getUserByUsername(username: string): Promise<User | null>;
+  linkGoogle(userId: number, googleSub: string): void;
 
-  updateUserProfile(userId: number, updates: Partial<User>): Promise<User>;
-  updateStatus(userId: number, status: 'online' | 'offline' | 'away'): Promise<void>;
-  updateLastSeen(userId: number): Promise<void>;
+  enable2FA(userId: number, totpSecret: string): void;
+  disable2FA(userId: number): void;
 
-  deleteUser(userId: number): Promise<void>;
+  getById(userId: number): UserRow | null;
+  getByUsername(username: string): UserRow | null;
+  getByEmail(email: string): UserRow | null;
+  getByGoogleSub(googleSub: string): UserRow | null;
+
+  setPasswordHash(userId: number, passwordHash: string): void;
+  setEmailVerified(userId: number, verified: boolean): void;
+
+  updateProfile(userId: number, patch: {
+    alias?: string;
+    avatarUrl?: string;
+    settingsJson?: string;
+  }): void;
+
+  bumpPresence(userId: number, status: 'online'|'offline'|'away', when?: string): void; // updates last_seen & status
+
 }
