@@ -52,16 +52,16 @@ services:
     # Add healthcheck if you can
     restart: unless-stopped
 
-  # backend-user:
-  #   container_name: backend-user
-  #   build:
-  #     context: ./backend/user
-  #     dockerfile: Dockerfile
-  #   networks:
-  #     - pong_network
-  #   init: true
-  #   # Add healthcheck if you can
-  #   restart: unless-stopped
+  backend-user:
+    container_name: backend-user
+    build:
+      context: ./backend/user
+      dockerfile: Dockerfile
+    networks:
+      - pong_network
+    init: true
+    # Add healthcheck if you can
+    restart: unless-stopped
 
   #   auth:
   #     build:
