@@ -25,7 +25,7 @@ export const createGameSchema = {
   properties: {
     type: {
       type: "string",
-      enum: ["pvp", "multi", "tournament"],
+      enum: ["solo", "pvp", "multi", "tournament"],
     },
     participants: {
       type: "array",

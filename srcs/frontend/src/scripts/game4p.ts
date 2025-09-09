@@ -1,4 +1,4 @@
-// Type definitions
+// Type definitions for 4-player game
 interface Paddle {
     x: number;
     y: number;
@@ -19,15 +19,17 @@ interface Score {
 }
 
 interface Players {
-    left: Player;
-    right: Player;
+    "top-left"?: Player;
+    "bottom-left"?: Player;
+    "top-right"?: Player;
+    "bottom-right"?: Player;
 }
 
 interface GameState {
     players: Players;
     ball: Ball;
     score: Score;
-    winner?: number;
+    winner?: string;
 }
 
 interface GameConfig {
@@ -75,15 +77,14 @@ interface Participant {
 }
 
 interface CreateGameRequest {
-    type: "pvp";
+    type: "multi"; // Changed from "pvp" to "multi"
     participants: Participant[];
 }
 
-export function initGame(): void {
+export function initGame4p(): void {
 
 // Global variables
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
-
 
 const canvas = document.getElementById("pong") as HTMLCanvasElement;
 if (!canvas) {
@@ -109,9 +110,13 @@ const join: JoinMessage = {
     participant_id: ""
 };
 let ws: WebSocket | null = null;
+
+// 4-player participant IDs
 const participant_ids: string[] = [
-    "session_id_0",
-    "session_id_1"
+    "session_id_0", // top-left
+    "session_id_1", // bottom-left  
+    "session_id_2", // top-right
+    "session_id_3"  // bottom-right
 ];
 let game_id: number | null = null;
 
@@ -126,11 +131,9 @@ function handleServerMessage(message: ServerMessage): void {
             break;
         case "warning":
             console.warn(`[Server Warning] ${message.message}`);
-            // You could show a subtle notification here
             break;
         case "error":
             console.error(`[Server Error] ${message.message}`);
-            // You could show an error notification here
             break;
     }
 }
@@ -172,12 +175,12 @@ function connectWebSocket(id: number | undefined): void {
         console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
         if (!game_state?.winner) {
             // Try to reconnect after 3 seconds
-            setTimeout(connectWebSocket, 3000);
+            setTimeout(() => connectWebSocket(id), 3000);
         }
         else {
             const winner = document.getElementById("winner");
             if (winner && winner.innerText.length === 0) {
-                winner.innerText = "Player " + game_state.winner + " won !";
+                winner.innerText = game_state.winner + " team won !";
             }
         }
     };
@@ -187,22 +190,21 @@ function connectWebSocket(id: number | undefined): void {
     };
 }
 
-
 // Send input periodically (much less frequent than rendering)
 function startInputSending(): void {
     if (ws && ws.readyState === WebSocket.OPEN) {
-        console.log("Sending join requests for both players");
-        join.participant_id = participant_ids[0];
-        console.log(join);
-        ws.send(JSON.stringify(join));
-        join.participant_id = participant_ids[1];
-        console.log(join);
-        ws.send(JSON.stringify(join));
+        console.log("Sending join requests for all 4 players");
+        // Send join requests for all players
+        participant_ids.forEach((id, index) => {
+            join.participant_id = id;
+            console.log(`Joining player ${index + 1}:`, join);
+            ws!.send(JSON.stringify(join));
+        });
     }
 
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            // Left player (w/s)
+            // Top-left player (w/s)
             input.participant_id = participant_ids[0];
             if (keys["w"]) {
                 input.move = "up";
@@ -213,8 +215,19 @@ function startInputSending(): void {
             }
             ws.send(JSON.stringify(input));
 
-            // Right player (ArrowUp/ArrowDown)
+            // Bottom-left player (a/z) 
             input.participant_id = participant_ids[1];
+            if (keys["a"]) {
+                input.move = "up";
+            } else if (keys["z"]) {
+                input.move = "down";
+            } else {
+                input.move = "stop";
+            }
+            ws.send(JSON.stringify(input));
+
+            // Top-right player (ArrowUp/ArrowDown)
+            input.participant_id = participant_ids[2];
             if (keys["ArrowUp"]) {
                 input.move = "up";
             } else if (keys["ArrowDown"]) {
@@ -223,12 +236,24 @@ function startInputSending(): void {
                 input.move = "stop";
             }
             ws.send(JSON.stringify(input));
+
+            // Bottom-right player (o/l)
+            input.participant_id = participant_ids[3];
+            if (keys["o"]) {
+                input.move = "up";
+            } else if (keys["l"]) {
+                input.move = "down";
+            } else {
+                input.move = "stop";
+            }
+            ws.send(JSON.stringify(input));
         }
-    }, 50); // Send input 20 times per second (much better than 60!)
+    }, 50); // Send input 20 times per second
 }
 
 function drawCenterLine(): void {
     if (!ctx || !game_conf) return;
+    
     ctx.fillStyle = "white";
     for (let i = 0; i < game_conf.canvas_height; i += 20) {
         ctx.fillRect(game_conf.canvas_width / 2 - 1, i, 2, 10);
@@ -237,31 +262,64 @@ function drawCenterLine(): void {
 
 function draw(): void {
     if (!game_state || !ctx || !game_conf) return;
-    //  console.log(game_state)
     
     ctx.clearRect(0, 0, game_conf.canvas_width, game_conf.canvas_height);
     ctx.fillStyle = "white";
-
+    
+    // Draw center line
     drawCenterLine();
     
-    const left_player = game_state.players.left;
-    const right_player = game_state.players.right;
-    // Draw paddle Player 0
-    if (left_player)
-        ctx.fillRect(left_player.paddle.x, left_player.paddle.y, game_conf.paddle_width, game_conf.paddle_height);
+    // Draw all paddles
+    const players = game_state.players;
     
-    // Draw paddle Player 1
-    if (right_player)
-        ctx.fillRect(right_player.paddle.x, right_player.paddle.y, game_conf.paddle_width, game_conf.paddle_height);
+    if (players["top-left"]) {
+        ctx.fillRect(
+            players["top-left"].paddle.x, 
+            players["top-left"].paddle.y, 
+            game_conf.paddle_width, 
+            game_conf.paddle_height
+        );
+    }
+    
+    if (players["bottom-left"]) {
+        ctx.fillRect(
+            players["bottom-left"].paddle.x, 
+            players["bottom-left"].paddle.y, 
+            game_conf.paddle_width, 
+            game_conf.paddle_height
+        );
+    }
+    
+    if (players["top-right"]) {
+        ctx.fillRect(
+            players["top-right"].paddle.x, 
+            players["top-right"].paddle.y, 
+            game_conf.paddle_width, 
+            game_conf.paddle_height
+        );
+    }
+    
+    if (players["bottom-right"]) {
+        ctx.fillRect(
+            players["bottom-right"].paddle.x, 
+            players["bottom-right"].paddle.y, 
+            game_conf.paddle_width, 
+            game_conf.paddle_height
+        );
+    }
 
     // Draw ball
     ctx.fillRect(game_state.ball.x, game_state.ball.y, game_conf.ball_size, game_conf.ball_size);
 
-    // Display score with same style as pong.ts
-    ctx.font = "64px Bit5x3, monospace";
-    ctx.fillStyle = "white";
+    // Display score (team-based)
+    ctx.font = "48px Courier";
     ctx.fillText(game_state.score.left.toString(), game_conf.canvas_width / 4, 50);
     ctx.fillText(game_state.score.right.toString(), 3 * game_conf.canvas_width / 4, 50);
+    
+    // Display controls
+    ctx.font = "16px Courier";
+    ctx.fillText("Left Team: W/S (top) A/Z (bottom)", 20, game_conf.canvas_height - 60);
+    ctx.fillText("Right Team: ↑/↓ (top) O/L (bottom)", 20, game_conf.canvas_height - 40);
 }
 
 async function run(): Promise<void> {
@@ -271,7 +329,7 @@ async function run(): Promise<void> {
     }
     
     try {
-        // Get initial game data via REST API
+        // Create 4-player game via REST API
         {
             const response = await fetch(API_GAME_ENDPOINT + "/create", {
                 method: "POST",
@@ -279,17 +337,21 @@ async function run(): Promise<void> {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    type: "pvp",
+                    type: "multi", // Changed to "multi" for 4-player
                     participants: [
-                        { user_id: 0, participant_id: participant_ids[0] },
-                        { user_id: 1, participant_id: participant_ids[1] },
+                        { user_id: 0, participant_id: participant_ids[0] }, // top-left
+                        { user_id: 1, participant_id: participant_ids[1] }, // bottom-left
+                        { user_id: 2, participant_id: participant_ids[2] }, // top-right
+                        { user_id: 3, participant_id: participant_ids[3] }  // bottom-right
                     ]
                 } as CreateGameRequest)
             });
             const data: CreateGameResponse = await response.json();
             game_id = data.game_id;
-            console.log(game_id);
+            console.log("4-player game created with ID:", game_id);
         }
+        
+        // Get game configuration
         {
             const response = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
             game_conf = await response.json() as GameConfig;
@@ -297,13 +359,13 @@ async function run(): Promise<void> {
             canvas.width = game_conf.canvas_width;
             canvas.height = game_conf.canvas_height;
             
-            console.log("Game initialized:", game_conf);
+            console.log("4-player game initialized:", game_conf);
         }
         
         connectWebSocket(game_id);
         
     } catch (error) {
-        console.error("Failed to initialize game:", error);
+        console.error("Failed to initialize 4-player game:", error);
     }
 }
 

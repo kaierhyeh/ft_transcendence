@@ -1,7 +1,7 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameType } from '../schemas';
 import { Team, PlayerSlot, GameMessage } from '../types'
-import { GameConf, GameEngine, GameState } from './GameEngine';
+import { GameConf, GameEngine, GameMode, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
 import { DbPlayerSession, DbSession } from '../db/repositories/SessionRepository';
@@ -23,6 +23,7 @@ export type SessionPlayerMap = PlayerMap;
 export class GameSession {
     private tournament_id: number | undefined;
     private type: GameType;
+    private game_mode: GameMode;
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
     private game_engine: GameEngine;
@@ -36,24 +37,22 @@ export class GameSession {
 
     constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
         this.type = game_type;
+        this.game_mode = game_type === "multi" ? "multi" : "pvp";
         this.players = this.loadPlayers_(participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.last_activity = Date.now();
-        this.game_engine = new GameEngine(game_type, this.players);
+        this.game_engine = new GameEngine(this.game_mode, this.players);
         this.logger = logger;
     }
 
     private loadPlayers_(participants: GameParticipant[]): PlayerMap {
-        const game_type = this.type;
-        const players: PlayerMap = new Map;
+        const players: PlayerMap = new Map();
+        const slots = this.game_mode === "pvp" ? ["left", "right"] : ["top-left", "bottom-left", "top-right", "bottom-right"];
 
         participants.forEach((p, idx) => {
-            if (game_type === 'multi')
-                throw new Error("Multiplayer not implemented yet");
-            
-            const slot: PlayerSlot = idx === 0 ? "left" : "right";
-            const team: Team = idx === 0 ? "left" : "right";
+            const slot = slots[idx] as PlayerSlot;
+            const team = slot.includes("left") ? "left" : "right";
 
             players.set(p.participant_id, {
                 user_id: p.user_id,
@@ -67,7 +66,7 @@ export class GameSession {
     }
 
     public get config(): GameConf {
-        return this.game_engine.getConf(this.type);
+        return this.game_engine.conf;
     }
 
     public get started(): boolean {
