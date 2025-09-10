@@ -114,7 +114,18 @@ export const emailSchema = {
   }
 } as const;
 
+export const subSchema = {
+  type: "object",
+  required: ["sub"],
+  properties: { 
+    sub: {type: "string" },
+  },
+  additionalProperties: false
+} as const;
+
+
 export type AccountCreationData = FromSchema<typeof createAccountSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
 export type EmailParams = FromSchema<typeof emailSchema>;
+export type SubParams = FromSchema<typeof subSchema>;

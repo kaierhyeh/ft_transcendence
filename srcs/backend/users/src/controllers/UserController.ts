@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { AccountCreationData, EmailParams } from '../schemas';
+import { AccountCreationData, EmailParams, SubParams } from '../schemas';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -28,6 +28,18 @@ export class UserController {
   ) {
     try {
       const user = await this.userService.getUserByEmail(request.params.email);
+      reply.send(user);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  async getUserByGoogleSub(
+    request: FastifyRequest<{ Params: SubParams }>, 
+    reply: FastifyReply
+  ) {
+    try {
+      const user = await this.userService.getUserByGoogleSub(request.params.sub);
       reply.send(user);
     } catch (error) {
       this.handleError(error, reply);

@@ -59,6 +59,14 @@ export class UserRepository {
         return result || null;
     }
 
+    public findByGoogleSub(goolge_sub: string): UserRow | null{
+        const stmt = this.db.prepare(`
+            SELECT * FROM users WHERE google_sub = ?  
+        `);
+        const result = stmt.get(goolge_sub) as UserRow | undefined;
+        return result || null;
+    }
+
 //     createLocalUser(input: {
 //     username: string;
 //     email: string;
