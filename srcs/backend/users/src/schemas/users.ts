@@ -3,7 +3,7 @@ import { FromSchema } from "json-schema-to-ts";
 // For local account creation
 export const createLocalAccountSchema = {
   type: "object",
-  required: ["username", "email", "password"],
+  required: ["username", "email", "password_hash"],
   properties: {
     username: {
       type: "string",
@@ -15,7 +15,7 @@ export const createLocalAccountSchema = {
       type: "string",
       format: "email"
     },
-    password: {
+    password_hash: {
       type: "string",
       minLength: 8 // You'll hash this before storing
     },
@@ -93,6 +93,28 @@ export const createAccountSchema = {
   ]
 } as const;
 
+export const emailSchema = {
+  type: "object",
+  required: ["email"],
+  properties: {
+    email: { 
+      type: "string",
+      format: "email",
+      minLength: 5,
+      maxLength: 254,
+      pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+      description: "Valid email address"
+    },
+  },
+  additionalProperties: false,
+  errorMessage: {
+    properties: {
+      email: "Must be a valid email address (e.g., user@example.com)"
+    }
+  }
+} as const;
+
 export type AccountCreationData = FromSchema<typeof createAccountSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
+export type EmailParams = FromSchema<typeof emailSchema>;

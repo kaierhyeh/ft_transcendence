@@ -4,7 +4,6 @@ import fp from "fastify-plugin";
 import { UserService } from "../services/UserService";
 import { BlockService } from "../services/BlockService";
 import { FriendService } from "../services/FriendService";
-import { AuthClient } from "../clients/AuthClient";
 
 declare module "fastify" {
   interface FastifyInstance {

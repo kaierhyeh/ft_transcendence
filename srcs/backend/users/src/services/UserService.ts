@@ -1,17 +1,12 @@
-import { UserRepository } from '../repositories/UserRepository';
-import { AuthClient } from '../clients/AuthClient';
+import { UserRepository, UserRow } from '../repositories/UserRepository';
 import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData } from '../schemas';
 
 export class UserService {
-  private authClient: AuthClient;
-
   constructor(
     private userRepository: UserRepository,
-  ) {
-    this.authClient = new AuthClient();
-  }
+  ) {}
 
-  async createAccount(data: AccountCreationData): Promise<{ user_id: number }> {
+  public async createAccount(data: AccountCreationData): Promise<{ user_id: number }> {
     if (data.type === "local") {
       return this.createLocalAccount(data);
     } else if (data.type === "google") {
@@ -21,14 +16,11 @@ export class UserService {
     throw new Error('Invalid account type');
   }
 
-  private async createLocalAccount(data: LocalUserCreationData) {
-    // Use auth service to hash password
-    const password_hash = await this.authClient.hashPassword(data.password);
-    
+  private async createLocalAccount(data: LocalUserCreationData) {    
     const user_id = this.userRepository.createLocalUser({
       username: data.username,
       email: data.email,
-      password: password_hash,
+      password_hash: data.password_hash,
       alias: data.alias,
       avatar_url: data.avatar_url
     });
@@ -46,6 +38,16 @@ export class UserService {
     });
 
     return { user_id };
+  }
+
+  public async getUserByEmail(email: string): Promise<UserRow> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      const error = new Error('User not found');
+      (error as any).code = 'USER_NOT_FOUND';
+      throw error;
+    }
+    return user;
   }
 
   // async getUserById(id: number) {

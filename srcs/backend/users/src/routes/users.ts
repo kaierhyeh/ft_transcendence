@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { AccountCreationData, createAccountSchema } from "../schemas";
+import { AccountCreationData, createAccountSchema, EmailParams, emailSchema } from "../schemas";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
@@ -10,6 +10,12 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     "/",
     { schema: { body: createAccountSchema} },
     userController.createAccount.bind(userController)
+  );
+
+  fastify.get<{ Params: EmailParams }>(
+    "/email/:email",
+    { schema: { params: emailSchema} },
+    userController.getUserByEmail.bind(userController)
   );
 
   // READ

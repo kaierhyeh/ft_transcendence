@@ -5,6 +5,7 @@ export interface UserRow {
     id: number;
     username: string;
     email: string;
+    password_hash?: string;  // Add this field
     alias: string | null;
     avatar_url: string | null;
     two_fa_enabled: 0 | 1;
@@ -28,7 +29,7 @@ export class UserRepository {
         const result = stmt.run(
             data.username,
             data.email,
-            data.password,
+            data.password_hash,
             data.alias || null,
             data.avatar_url || null
         );
@@ -48,7 +49,15 @@ export class UserRepository {
             data.avatar_url || null
         );
         return result.lastInsertRowid as number;
-    } 
+    }
+
+    public findByEmail(email: string): UserRow | null{
+        const stmt = this.db.prepare(`
+            SELECT * FROM users WHERE email = ?  
+        `);
+        const result = stmt.get(email) as UserRow | undefined;
+        return result || null;
+    }
 
 //     createLocalUser(input: {
 //     username: string;

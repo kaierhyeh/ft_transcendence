@@ -40,3 +40,6 @@ CREATE INDEX IF NOT EXISTS idx_users_status   ON users(status);
 
 -- Index to speed up queries that sort or filter users by their last activity time
 CREATE INDEX IF NOT EXISTS idx_users_lastseen ON users(last_seen);
+
+-- CREATE UNIQUE INDEX idx_users_email ON users(email);
+-- CREATE UNIQUE INDEX idx_users_username ON users(username);
