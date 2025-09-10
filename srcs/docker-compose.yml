@@ -65,10 +65,17 @@ services:
     # Add healthcheck if you can
     restart: unless-stopped
 
-  #   auth:
-  #     build:
-  #       context: ./backend/auth
-  #     dockerfile: Dockerfile
+  backend-auth:
+    container_name: backend-auth
+    build:
+      context: ./backend/auth
+      dockerfile: Dockerfile
+    networks:
+      - pong_network
+    init: true
+    # Add healthcheck if you can
+    restart: unless-stopped
+
   #   chat:
   #     build:
   #       context: ./backend/chat
