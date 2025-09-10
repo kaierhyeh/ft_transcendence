@@ -3,7 +3,7 @@ import { FromSchema } from "json-schema-to-ts";
 // For local account creation
 export const createLocalAccountSchema = {
   type: "object",
-  required: ["username", "email", "password_hash"],
+  required: ["username", "email", "password"],
   properties: {
     username: {
       type: "string",
@@ -15,7 +15,7 @@ export const createLocalAccountSchema = {
       type: "string",
       format: "email"
     },
-    password_hash: {
+    password: {
       type: "string",
       minLength: 8 // You'll hash this before storing
     },

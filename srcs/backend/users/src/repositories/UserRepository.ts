@@ -28,7 +28,7 @@ export class UserRepository {
         const result = stmt.run(
             data.username,
             data.email,
-            data.password_hash,
+            data.password,
             data.alias || null,
             data.avatar_url || null
         );

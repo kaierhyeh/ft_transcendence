@@ -1,9 +1,15 @@
 import { UserRepository } from '../repositories/UserRepository';
-// import bcrypt from 'bcrypt';
+import { AuthClient } from '../clients/AuthClient';
 import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData } from '../schemas';
 
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  private authClient: AuthClient;
+
+  constructor(
+    private userRepository: UserRepository,
+  ) {
+    this.authClient = new AuthClient();
+  }
 
   async createAccount(data: AccountCreationData): Promise<{ user_id: number }> {
     if (data.type === "local") {
@@ -16,14 +22,13 @@ export class UserService {
   }
 
   private async createLocalAccount(data: LocalUserCreationData) {
-    // Hash password
-    // const password_hash = await bcrypt.hash(data.password, 10);
+    // Use auth service to hash password
+    const password_hash = await this.authClient.hashPassword(data.password);
     
-    // Create user
-    const user_id = await this.userRepository.createLocalUser({
+    const user_id = this.userRepository.createLocalUser({
       username: data.username,
       email: data.email,
-      password_hash: data.password_hash,
+      password: password_hash,
       alias: data.alias,
       avatar_url: data.avatar_url
     });
@@ -32,7 +37,7 @@ export class UserService {
   }
 
   private async createGoogleAccount(data: GoogleUserCreationData) {
-    const user_id = await this.userRepository.createGoogleUser({
+    const user_id = this.userRepository.createGoogleUser({
       google_sub: data.google_sub,
       username: data.username,
       email: data.email,
