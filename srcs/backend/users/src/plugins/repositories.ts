@@ -8,7 +8,6 @@ import { BlockRepository, FriendRepository, UserRepository } from "../db/reposit
 
 declare module "fastify" {
   interface FastifyInstance {
-    db: Database.Database;
     repositories: {
       users: UserRepository;
       friends: FriendRepository;
@@ -17,7 +16,7 @@ declare module "fastify" {
   }
 }
 
-const dbPlugin: FastifyPluginAsync = async (fastify) => {
+const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
   const db = new Database(CONFIG.DB.PATH);
 
   if (CONFIG.DB.ENABLE_WAL) {
@@ -34,7 +33,7 @@ const dbPlugin: FastifyPluginAsync = async (fastify) => {
 
   for (const file of sql_files) {
     try {
-      const sql =readFileSync(join(sql_dir, file), 'utf8');
+      const sql = readFileSync(join(sql_dir, file), 'utf8');
       db.exec(sql);
       fastify.log.info(`✅ Executed schema: ${file}`);
     } catch (error) {
@@ -43,20 +42,18 @@ const dbPlugin: FastifyPluginAsync = async (fastify) => {
     }
   }
 
-  fastify.decorate("db", db);
   fastify.decorate("repositories", {
     users: new UserRepository(db),
     friends: new FriendRepository(db),
     blocks: new BlockRepository(db)
   });
 
-  // Cleanup on server shutdown
   fastify.addHook("onClose", async () => {
     db.close();
   });
 };
 
-export default fp(dbPlugin, {
-  name: "db-plugin",        // Helps with debugging and plugin dependencies
-  fastify: "4.x"           // Ensures compatibility
+export default fp(repositoriesPlugin, {
+  name: "repositories-plugin",
+  fastify: "4.x"
 });
