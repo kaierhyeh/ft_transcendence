@@ -4,7 +4,7 @@ import { CONFIG } from "../config";
 import fp from "fastify-plugin";
 import { join } from "path";
 import { readFileSync } from "fs";
-import { BlockRepository, FriendRepository, UserRepository } from "../db/repositories";
+import { BlockRepository, FriendRepository, UserRepository } from "../repositories";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -24,7 +24,7 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
   }
   db.pragma("foreign_keys = ON");
 
-  const sql_dir = join(__dirname, '../db/sql');
+  const sql_dir = join(__dirname, '../sql');
   const sql_files = [
     'users.sql',
     'friendships.sql',
