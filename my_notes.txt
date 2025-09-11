@@ -4,14 +4,16 @@
 
 Lancer le code: tsc tous les fichiers.ts
 
-
+Check comment cmmuniquer avec le serveur. 
+Steven : "Dans ma fonction start(), j'ai besoin d'appeler quoi pour me connecter au serveur ?"
+Alex : "Comment je récupère l'ID de l'utilisateur connecté dans mon constructeur ?"
 
 PONG :
 Direction de balle vers le gagnant??? 
 reduire vitesse de balle
 partie en 10 points (11 si )
 
-MULTIJOUEUR :
+MULTIJOUEUR :   
 
 Ajouter que le dernier joueur qui a touche la balle a le point ? ou teamplay
 
@@ -75,49 +77,3 @@ const ctx (variable conventionelle mais peu avoir nimporte quel nom) = canvas.ge
 ctx.fillRect();  Dessiner un rectangle (appel dle fonction fillrect() venant de 2d) assigné a const ctx.
 ctx.arc();        Dessiner un cercle  
 ctx.moveTo();     Tracer une ligne
-
-
-    ┌─────rebond─────┐
-50 % J1             50% j2
-    |                |
-    -                -
-    |                |
-50 % J3           J4 50%
-    └─────rebond─────┘
-
-    ┌───J3 (50%)───┐ 
-100%│J1          J2│  100%
-    └───J4 (50%)───┘ 
-
-       25%        25%
-   ┌───-J3-──┬───-J4-──┐
-50%│J1←      │      →J2│ 50%
-   └───-J5-─ ┴───-J6-──┘ 
-      25%           25%
-
- GPT NOTES IDEA OF FINAL ARCHITECTURE VISUAL : 
-
-      projet/
-├── frontend/
-│   ├── src/
-│   │   ├── marine/                 ← VOS FICHIERS
-│   │   │   ├── GameEngine.js
-│   │   │   ├── NetworkManager.js
-│   │   │   └── GameController.js
-│   │   ├── aleksei/               ← FICHIERS ALEKSEI
-│   │   │   └── ChatManager.js
-│   │   ├── kilfen/                ← FICHIERS KILFEN  
-│   │   │   ├── AIPlayer.js
-│   │   │   └── StatsManager.js
-│   │   ├── alex/                  ← FICHIERS ALEX
-│   │   │   └── AuthManager.js
-│   │   └── shared/                ← PARTAGÉ
-│   │       └── types.ts
-│   └── index.html
-├── backend/                       ← STEVEN
-│   ├── src/
-│   │   ├── api/
-│   │   ├── websockets/
-│   │   └── database/
-│   └── package.json
-└── docker-compose.yml            ← TOUT L'ÉQUIPE
