@@ -12,6 +12,7 @@ const HEIGHT: number = 750;
 
 const WIN_POINT: number = 7;
 const BALL_SIZE: number = 10;
+const MAX_BALL_SPEED: number = PADDLE_SPEED * 2; // pixel/s
 
 export interface GameConf {
     canvas_width: number;
@@ -70,7 +71,7 @@ const GAME_MODE_CONFIGS: Record<GameMode, GameModeConfig> = {
 export interface GameState {
     ball: Ball;
     players: { [key: string]: Player };
-    score: { [key: string]: number} ;
+    score: { [key: string]: number };
     winner: Team | undefined;
 }
 
@@ -83,7 +84,7 @@ export class GameEngine {
     private winner_: Team | undefined;
     private score: Score;
     private paused: boolean;
-    
+
     constructor(game_mode: GameMode, session_players: SessionPlayerMap) {
         this.game_mode = game_mode;
         this.mode_config = GAME_MODE_CONFIGS[game_mode];
@@ -102,7 +103,7 @@ export class GameEngine {
             if (!paddle) {
                 throw new Error(`No paddle position configured for slot: ${p.slot} in mode: ${game_mode}`);
             }
-            
+
             this.players.set(p.slot, {
                 slot: p.slot,
                 paddle: paddle,
@@ -114,7 +115,7 @@ export class GameEngine {
         const angle = Math.random() * (Math.PI / 2) - Math.PI / 4;
 
         this.ball = {
-            x: WIDTH / 2, 
+            x: WIDTH / 2,
             y: HEIGHT / 2,
             dx: Math.cos(angle) * INITIAL_BALL_SPEED,
             dy: Math.sin(angle) * INITIAL_BALL_SPEED
@@ -128,10 +129,10 @@ export class GameEngine {
     public update(delta: number): void {
 
         this.movePaddles(delta);
-        
+
         if (!this.paused)
             this.moveBall(delta);
-        
+
         this.handleCollision();
 
         this.checkScoring();
@@ -145,7 +146,7 @@ export class GameEngine {
 
     private checkScoring(): void {
         let scoringTeam: Team | null = null;
-        
+
         if (this.ball.x < 0) {
             scoringTeam = "right";
             this.resetBall("right");
@@ -159,7 +160,7 @@ export class GameEngine {
 
         const currentScore = this.score.get(scoringTeam)! + 1;
         this.score.set(scoringTeam, currentScore);
-        
+
         if (currentScore >= WIN_POINT) {
             this.winner_ = scoringTeam;
         }
@@ -180,13 +181,13 @@ export class GameEngine {
     }
 
     private checkPaddleCollision(player: Player): void {
-        const isMovingTowardsPaddle = 
+        const isMovingTowardsPaddle =
             (player.team === "left" && this.ball.dx < 0) ||
             (player.team === "right" && this.ball.dx > 0);
 
         if (!isMovingTowardsPaddle) return;
 
-        const collision = 
+        const collision =
             this.ball.x + BALL_SIZE >= player.paddle.x &&
             this.ball.x <= player.paddle.x + PADDLE_WIDTH &&
             this.ball.y + BALL_SIZE >= player.paddle.y &&
@@ -199,7 +200,7 @@ export class GameEngine {
         const ballCenter = this.ball.y + BALL_SIZE / 2;
         const impact = (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2);
         const angle = impact * Math.PI / 4;
-        const speed = Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2) * 1.05;
+        const speed = Math.min(Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2) * 1.05, MAX_BALL_SPEED);
 
         if (player.team === "left") {
             this.ball.dx = Math.abs(Math.cos(angle) * speed);
@@ -208,7 +209,7 @@ export class GameEngine {
             this.ball.dx = -Math.abs(Math.cos(angle) * speed);
             this.ball.x = player.paddle.x - BALL_SIZE;
         }
-        
+
         this.ball.dy = Math.sin(angle) * speed;
 
         // Position adjustment
@@ -238,11 +239,11 @@ export class GameEngine {
     }
 
     private movePaddles(dt: number): void {
-          for (const player of this.players.values()) {
+        for (const player of this.players.values()) {
             // Smooth paddle movement
             player.paddle.y += player.velocity * (dt / 1000);
 
-              // Mode-specific boundary constraints
+            // Mode-specific boundary constraints
             const bounds = this.getPaddleBounds(player.slot);
             player.paddle.y = Math.max(bounds.min, Math.min(bounds.max, player.paddle.y));
         }
@@ -261,7 +262,7 @@ export class GameEngine {
         }
     }
 
-      public applyMovement(slot: PlayerSlot, move: "up" | "down" | "stop"): void {
+    public applyMovement(slot: PlayerSlot, move: "up" | "down" | "stop"): void {
         const player = this.players.get(slot);
         if (!player)
             return;
@@ -295,7 +296,7 @@ export class GameEngine {
         this.paused = true;
         setTimeout(() => {
             this.paused = false;
-        }, 1000);        
+        }, 1000);
     }
 
     public get conf(): GameConf {

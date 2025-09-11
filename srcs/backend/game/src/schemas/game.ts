@@ -6,6 +6,7 @@ export const playerSchema = {
   properties: {
     user_id: { type: "number" },
     participant_id: { type: "string" },
+    is_ai: { type: "boolean" },
   },
   additionalProperties: false,
 } as const;

@@ -74,6 +74,7 @@ interface CreateGameResponse {
 interface Participant {
     user_id: number;
     participant_id: string;
+    is_ai: boolean;
 }
 
 interface CreateGameRequest {
@@ -462,10 +463,9 @@ export function initGame(): void {
                     body: JSON.stringify({
                         type: "pvp",
                         participants: [
-                            { user_id: 0, participant_id: participant_ids[0] },
-                            { user_id: 1, participant_id: participant_ids[1] },
+                            { user_id: 0, participant_id: participant_ids[0], is_ai: false },
+                            { user_id: 1, participant_id: participant_ids[1], is_ai: isAI},
                         ],
-                        is_ai: isAI
                     } as CreateGameRequest)
                 });
                 const data: CreateGameResponse = await response.json();

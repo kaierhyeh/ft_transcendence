@@ -12,6 +12,7 @@ interface Player {
     participant_id: string;
     slot: PlayerSlot; // assigned by matchmaking or default order
     team: Team;
+    is_ai: boolean;
 
     socket?: SocketStream;
 }
@@ -59,6 +60,7 @@ export class GameSession {
                 participant_id: p.participant_id,
                 slot: slot,
                 team: team,
+                is_ai: p.is_ai || false,
                 socket: undefined
             });
         });
@@ -214,6 +216,13 @@ export class GameSession {
         const game_state = this.game_engine.state;
         if (!this.started_at || !this.ended_at || !game_state.winner)
             return undefined;
+        
+        const humanPlayers = Array.from(this.players.values()).filter(p => !p.is_ai);
+        
+        if (humanPlayers.length === 0) {
+            return undefined;
+        }
+        
         return {
             session: {
                 type: this.type,
@@ -222,7 +231,7 @@ export class GameSession {
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),
             },
-            player_sessions: Array.from(this.players.values()).map((p) => {
+            player_sessions: humanPlayers.map((p) => {
                 const player_session: DbPlayerSession = {
                     user_id: p.user_id,
                     team: p.team,
