@@ -107,11 +107,11 @@ export const emailSchema = {
     },
   },
   additionalProperties: false,
-  errorMessage: {
-    properties: {
-      email: "Must be a valid email address (e.g., user@example.com)"
-    }
-  }
+  // errorMessage: {
+  //   properties: {
+  //     email: "Must be a valid email address (e.g., user@example.com)"
+  //   }
+  // }
 } as const;
 
 export const subSchema = {

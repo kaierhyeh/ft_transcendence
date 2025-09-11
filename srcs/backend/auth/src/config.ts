@@ -1,13 +1,16 @@
 export const CONFIG = {
   
-  // Database settings
-  DB: {
-    PATH: process.env.DB_PATH || "/app/data/users.db",
-    ENABLE_WAL: true,
+  JWT: {
+    PRIVATE_KEY_PATH: process.env.JWT_PRIVATE_KEY_PATH || "/run/secrets/jwt_private_key",
+    PUBLIC_KEY_PATH: process.env.JWT_PUBLIC_KEY_PATH || "/run/secrets/jwt_public_key",
+    ALGORITHM: "RS256",
+    EXPIRES_IN: "15m",
+    ISSUER: "ft_transcendence",
+    AUDIENCE: "ft_transcendence_users",
   },
 
-  AUTH_SERVICE: {
-    BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000"
+  USER_SERVICE: {
+    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-users:3000"
   },
   
   // Server settings

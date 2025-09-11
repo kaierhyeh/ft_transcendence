@@ -5,7 +5,6 @@ import { AccountCreationData, createAccountSchema, EmailParams, emailSchema, sub
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
 
-  // CREATE
   fastify.post<{ Body: AccountCreationData }>(
     "/",
     { schema: { body: createAccountSchema} },
@@ -24,13 +23,11 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByGoogleSub.bind(userController)
   );
 
-  // READ
   // fastify.get(
   //   "/:id",
   //    userController.getUserProfile.bind(userController)
   // );
 
-  // UPDATE
   fastify.put(
     "/me",
     (request, reply) => {
@@ -39,7 +36,6 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // CREATE
   fastify.post(
     "/me/avatar",
     async (request, reply) => {
@@ -47,7 +43,6 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
     });
 
-  // READ
   fastify.get(
     "/me", 
     async (request, reply) => {
@@ -55,7 +50,6 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   });
 
-  // READ
   fastify.get(
     "/",
     async (request, reply) => {

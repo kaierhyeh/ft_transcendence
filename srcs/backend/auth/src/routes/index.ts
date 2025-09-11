@@ -1,9 +1,14 @@
-import usersRoutes from "./users";
-import friendsRoutes from "./friends";
-import blocksRoutes from "./blocks";
+import { FastifyInstance } from "fastify";
+import { AuthController } from '../controllers/AuthController';
+import { SignupFormData, signupFormSchema } from "../schemas";
 
-export default [
-    { route: usersRoutes, prefix: "/users" },
-    { route: friendsRoutes, prefix: "/friends" },
-    { route: blocksRoutes, prefix: "/blocks" },
-];
+export default async function authRoutes(fastify: FastifyInstance) {
+  const userController = new AuthController();
+
+  fastify.post<{ Body: SignupFormData }>(
+    "/signup",
+    { schema: { body: signupFormSchema} },
+    userController.signup.bind(userController)
+  );
+
+}

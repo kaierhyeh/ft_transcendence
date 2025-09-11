@@ -1,21 +1,28 @@
 import Fastify from "fastify";
-import websocketPlugin from '@fastify/websocket';
 import { CONFIG } from "./config";
-import routes from "./routes"
-import repositoriesPlugin from "./plugins/repositories";
-import servicesPlugin from "./plugins/services";
+import authRoutes from "./routes"
+import fastifyJwt from "@fastify/jwt";
+import fs from 'fs';
 
 const fastify = Fastify({ logger: true });
 
 async function run() {
   
-  await fastify.register(websocketPlugin);
-  await fastify.register(repositoriesPlugin);
-  await fastify.register(servicesPlugin);
-
-  for (const { route, prefix } of routes) {
-    await fastify.register(route, { prefix });
-  }
+  await fastify.register(authRoutes, {prefix: "/auth"} );
+  
+  await fastify.register(fastifyJwt, {
+    secret: {
+      private: fs.readFileSync(CONFIG.JWT.PRIVATE_KEY_PATH, 'utf8'),
+      public: fs.readFileSync(CONFIG.JWT.PUBLIC_KEY_PATH, 'utf8')
+    },
+    sign: {
+      algorithm: CONFIG.JWT.ALGORITHM,
+      expiresIn: CONFIG.JWT.EXPIRES_IN,
+    },
+    verify: {
+      algorithms: [CONFIG.JWT.ALGORITHM]
+    }
+  });
   
   await fastify.listen({ 
     port: CONFIG.SERVER.PORT, 
