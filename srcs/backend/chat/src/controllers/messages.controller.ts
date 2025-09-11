@@ -13,7 +13,7 @@ import	{
 		} from "../services/chats.service";
 
 import	{
-		postMessageservice,
+		postMessageService,
 		getMessagesService,
 		deleteMessageService
 		} from "../services/messages.service";
@@ -24,14 +24,25 @@ import	{
 		getErrorMessage
 		} from "../utils/errorHandler";
 
+export async function postMessageController(fromId:number, toId:number, msg:string) {
+	try {
+		if (!fromId || !toId || !msg)
+			throw new Error("Invalid message data");
+		const newMsg = await postMessageService(fromId, toId, msg);
+		return (newMsg);
+	} catch (e) {
+		logError(e, "postMessageController");
+		throw e;
+	}	
+}
+
 export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
 	try {
 		const {msgs} = req.body;
-		// check message and IDs
-		if ()
+		if (!Array.isArray(msgs) || msgs.length === 0 || msgs.find(msg => !msg.fromId || !msg.toId || !msg.msg))
 			return (reply.code(400).send({error: "Invalid message data" }));
-
-		const newMsgs = await Promise.all(msgs.map(msg => postMessageservice(msg.fromId, msg.toId, msg.msg)));
+		const newMsgs = await Promise.all(msgs.map(msg => postMessageService(msg.fromId, msg.toId, msg.msg)));
+		return (reply.status(201).send(newMsgs));
 	} catch (e: any) {
 		logError(e, "postMessagesController");
 		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));

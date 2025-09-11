@@ -22,7 +22,7 @@ import	{
 		logError
 		} from "../utils/errorHandler";
 
-export async function postMessageservice(fromId: number, toId: number, msg: string) {
+export async function postMessageService(fromId: number, toId: number, msg: string) {
 	try {
 		if (fromId == null || toId == null || !msg?.trim())
 			throw chatValidationError("Missing required fields", { fromId, toId, msg });
@@ -34,7 +34,7 @@ export async function postMessageservice(fromId: number, toId: number, msg: stri
 		const newMsg = await postMessage(chatId, fromId, toId, msg);
 		return (newMsg);
 	} catch (e: any) {
-		logError(e, "postMessageservice");
+		logError(e, "postMessageService");
 		throw chatDatabaseError("Failed to send message", { fromId, toId });
 	}
 }

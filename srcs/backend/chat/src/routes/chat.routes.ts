@@ -15,14 +15,14 @@ import	{
 // 		deleteMessageController
 // 		} from "../controllers/messages.controller";
 
-// export async function routes(fastify: FastifyInstance) {
+// export async function chatRoutes(fastify: FastifyInstance) {
 // 	fastify.post("/messages", postMessagesController);
 // 	fastify.get("/messages/:userId", getMessagesController);
 // 	fastify.delete("/messages/:id", deleteMessageController);
 // 	fastify.get("/chats/:userId", getChatPartnersController);
 // }
 
-export const routes: FastifyPluginAsync = async (fastify:FastifyInstance): Promise<void> => {
+export const chatRoutes: FastifyPluginAsync = async (fastify:FastifyInstance): Promise<void> => {
 
 	fastify.get('/', async () => {
 		return { message: 'Hello from Fastify 🚀' };
