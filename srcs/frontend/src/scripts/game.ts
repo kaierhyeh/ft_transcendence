@@ -371,9 +371,9 @@ export function initGame(): void {
         input.participant_id = participant_ids[1];
 
         if (AITarg == -1) {
-            if (rightPaddle.paddle.y > game_conf.canvas_height / 2 + 3) {
+            if (rightPaddle.paddle.y > game_conf.canvas_height / 2 + 15) {
                 input.move = "up";
-            } else if (rightPaddle.paddle.y < game_conf.canvas_height / 2 - 3) {
+            } else if (rightPaddle.paddle.y < game_conf.canvas_height / 2 - 15) {
                 input.move = "down";
             } else {
                 input.move = "stop";
