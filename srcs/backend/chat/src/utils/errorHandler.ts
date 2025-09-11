@@ -3,15 +3,16 @@
 import	{
 		AppError
 		} from "./errors";
+import { redLogError } from "./logger";
 
 // e - for error, s - for function name or custom message
 export function logError(e:unknown, s:string): void {
 	if (e instanceof AppError) {
-		console.error(`${e.type} [${s}]: ${e.message}`, e.extra ? { details: e.extra } : '');
+		redLogError(`${e.type} [${s}]: ${e.message}`, e.extra ? { details: e.extra } : '');
 	} else if (e instanceof Error) {
-		console.error(`${e.name} [${s}]: ${e.message}`, e.stack);
+		redLogError(`${e.name} [${s}]: ${e.message}`, e.stack);
 	} else {
-		console.error(`Unknown error [${s}]:`, e)
+		redLogError(`Unknown error [${s}]: `, e)
 	}
 }
 

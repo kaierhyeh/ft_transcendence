@@ -23,8 +23,10 @@ import	{
 		getErrorCode,
 		getErrorMessage
 		} from "../utils/errorHandler";
+import { colorLog } from "../utils/logger";
 
 export async function postMessageController(fromId:number, toId:number, msg:string) {
+	colorLog("cyan", "postMessageController: ", fromId, toId, msg);
 	try {
 		if (!fromId || !toId || !msg)
 			throw new Error("Invalid message data");
@@ -37,6 +39,7 @@ export async function postMessageController(fromId:number, toId:number, msg:stri
 }
 
 export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
+	colorLog("cyan", "postMessagesController: ", req.method, req.url);
 	try {
 		const {msgs} = req.body;
 		if (!Array.isArray(msgs) || msgs.length === 0 || msgs.find(msg => !msg.fromId || !msg.toId || !msg.msg))
@@ -50,6 +53,7 @@ export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fro
 }
 
 export async function getMessagesController(req:FastifyRequest<{Params:{userId:string}}>, reply:FastifyReply) {
+	colorLog("cyan", "getMessagesController: ", req.method, req.url);
 	try {
 		const userId = parseInt(req.params.userId);
 		if (isNaN(userId))
@@ -63,6 +67,7 @@ export async function getMessagesController(req:FastifyRequest<{Params:{userId:s
 }
 
 export async function deleteMessageController(req:FastifyRequest<{Params:{msgId:string}}>, reply:FastifyReply) {
+	colorLog("cyan", "deleteMessageController: ", req.method, req.url);
 	try {
 		await deleteMessageService(parseInt(req.params.msgId));
 		return (reply.status(200).send({message: "Message deleted successfully."}));

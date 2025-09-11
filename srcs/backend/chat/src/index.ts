@@ -5,6 +5,7 @@ import FastifyWebsocket from "@fastify/websocket";
 import { chatRoutes } from "./routes/chat.routes";
 import { wsRoutes } from "./routes/ws.routes";
 import { logError } from "./utils/errorHandler";
+import { colorLog, redLogError } from "./utils/logger";
 import { CONFIG } from "./config";
 
 import "./db/database";
@@ -13,7 +14,7 @@ const chatServer: FastifyInstance = fastify({ logger: true });
 
 chatServer.setErrorHandler((error, request, reply) => {
 	logError(error, "Chat server");
-	console.error("Handling error:", error);
+	redLogError("Handling error:", error);
 	reply
 		.status(error.statusCode || 500)
 		.send({
@@ -29,11 +30,12 @@ chatServer.register(FastifyWebsocket);
 
 const run = async () => {
 	try {
+		colorLog("cyan", "Start Chat service");
 		await chatServer.listen({ port: CONFIG.SERVER.PORT, host: CONFIG.SERVER.HOST });
-		console.log("Chat server was run successfully");
+		colorLog("green", "Chat service is ready");
 	} catch (e) {
 		logError(e, "Can not run chat server");
-		console.error("Chat server error:", e);
+		redLogError("Chat server error:", e);
 		process.exit(1);
 	}
 };

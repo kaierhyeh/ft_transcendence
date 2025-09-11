@@ -1,4 +1,5 @@
 import { dataDTO } from "../types/dto.type";
+import { redLogError } from "../utils/logger";
 
 export const clients = new Map<number, WebSocket>();
 
@@ -10,6 +11,6 @@ export function sendMessageViaWebSocket(toId: number, data: dataDTO) {
 		client.send(JSON.stringify(data));
 	} catch {
 		clients.delete(toId);
-		console.error("Cant send msg");
+		redLogError("Cant send msg");
 	}
 }

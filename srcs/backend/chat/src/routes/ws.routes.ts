@@ -2,7 +2,9 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { postMessageController } from "../controllers/messages.controller";
 import { dataDTO, jwtDTO } from "../types/dto.type";
 import { sendMessageViaWebSocket, clients } from "../ws/clients";
+import { colorLog } from "../utils/logger";
 
+// routes, controller, service - all in one place
 export async function wsRoutes(fastify: FastifyInstance) {
 	fastify.get("/ws", { websocket: true }, async (inConnection: any, req: FastifyRequest<{ Querystring: { token: string } }>) => {
 			const tok = req.query.token;
@@ -27,7 +29,7 @@ export async function wsRoutes(fastify: FastifyInstance) {
 
 			// save connection
 			clients.set(userId, inConnection);
-			console.log("Connected via WebSocket userId=", userId);
+			colorLog("cyan", "Connected via WebSocket userId=", userId);
 
 			// handle message
 			inConnection.on("message", async (msg: string) => {
@@ -59,7 +61,7 @@ export async function wsRoutes(fastify: FastifyInstance) {
 					return;
 				}
 
-				console.log("No rules to handle type=", data.type);
+				colorLog("yellow", "No rules to handle type=", data.type);
 			});
 
 			// if close

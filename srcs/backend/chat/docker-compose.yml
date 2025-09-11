@@ -1,0 +1,106 @@
+services:
+
+  ###########
+  ## Frontend
+  ###########
+  # frontend:
+  #   container_name: frontend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "4443:443"
+  #   volumes:
+  #     - ssl:/etc/ssl/
+  #   networks:
+  #     - pong_network
+  #   init: true
+  #   # Add healthcheck if you can
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - api-gateway
+
+  ##############
+  ## API Gateway
+  ##############
+  # api-gateway:
+  #   container_name: api-gateway
+  #   build:
+  #     context: ./api-gateway
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - pong_network
+  #   init: true
+  #   # Add healthcheck if you can
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - backend-game
+
+  ###################
+  ## Backend Services
+  ###################
+  # backend-game:
+  #   container_name: backend-game
+  #   build:
+  #     context: ./backend/game
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - game_sessions:/app/sessions
+  #   networks:
+  #     - pong_network
+  #   init: true
+  #   # Add healthcheck if you can
+  #   restart: unless-stopped
+
+  # backend-user:
+  #   container_name: backend-user
+  #   build:
+  #     context: ./backend/user
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - pong_network
+  #   init: true
+  #   # Add healthcheck if you can
+  #   restart: unless-stopped
+
+  #   auth:
+  #     build:
+  #       context: ./backend/auth
+  #     dockerfile: Dockerfile
+  #   chat:
+  #     build:
+  #       context: ./backend/chat
+  #     dockerfile: Dockerfile
+  #   stats:
+  #     build:
+  #       context: ./backend/stats
+  #     dockerfile: Dockerfile
+
+  backend-chat:
+    container_name: backend-chat
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - /app/node_modules
+      - ./:/app
+      - db-data:/db
+    networks:
+      - pong_network
+    ports:
+      - "3001:3001"
+    init: true
+    # Add healthcheck if you can
+    restart: unless-stopped
+    working_dir: /app
+
+
+networks:
+  pong_network:
+    driver: bridge
+
+volumes:
+  # ssl:
+  # game_sessions:
+  db-data:
+    driver: local

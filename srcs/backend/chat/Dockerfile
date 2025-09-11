@@ -14,7 +14,7 @@ RUN npm install
 # Copy the rest of application
 COPY . .
 
-EXPOSE 3000
+# EXPOSE 3000
 
 # Start app
 CMD [ "npm", "start" ]
