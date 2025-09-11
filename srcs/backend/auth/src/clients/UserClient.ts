@@ -1,10 +1,17 @@
 import { CONFIG } from "../config";
+import { LoginData } from "../schemas";
 import { LocalUserCreationData } from "../services/AuthService";
 
 interface ErrorResponse {
   message?: string;
   error?: string;
   validation?: any[];
+}
+
+export interface User {
+  id: number;
+  username: string;
+  password_hash: string;
 }
 
 export class UserClient {
@@ -32,4 +39,29 @@ export class UserClient {
 
     return await response.json() as { user_id: number };
   }
+
+  async getUser(
+    identifier: string,
+    identifier_type: 'email' | 'username'
+  ): Promise< User > {
+      let request_url: string;
+      if (identifier === 'email')
+        request_url = `${this.base_url}/users/email/${identifier}`;
+      else
+        request_url = `${this.base_url}/users/username/${identifier}`;
+
+      const response = await fetch(request_url);
+
+      if (!response.ok) {
+        const errorBody = await response.json() as ErrorResponse;
+        const errorMessage = errorBody.message || errorBody.error || `User login failed: ${response.status}`;
+        
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        (error as any).details = errorBody;
+        throw error;
+      }
+
+      return await response.json() as User;
+    }
 }

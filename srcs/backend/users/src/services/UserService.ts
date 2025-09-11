@@ -50,6 +50,17 @@ export class UserService {
     return user;
   }
 
+  public async getUserByUsername(username: string): Promise<UserRow> {
+    const user = await this.userRepository.findByUsername(username);
+    if (!user) {
+      const error = new Error('User not found');
+      (error as any).code = 'USER_NOT_FOUND';
+      throw error;
+    }
+    return user;
+  }
+
+
   public async getUserByGoogleSub(sub: string): Promise<UserRow> {
     const user = await this.userRepository.findByGoogleSub(sub);
     if (!user) {

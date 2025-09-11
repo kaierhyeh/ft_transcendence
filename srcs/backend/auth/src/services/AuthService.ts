@@ -1,6 +1,7 @@
 import { UserClient } from '../clients/UserClient';
-import { SignupFormData } from '../schemas';
+import { LoginData, SignupFormData } from '../schemas';
 import hashPassword from '../utils/crypto';
+import { isValidPassword } from '../utils/validation';
 
 export type LocalUserCreationData = Omit<SignupFormData, "password"> & {
   type: "local";
@@ -27,6 +28,24 @@ export class AuthService {
     });
   
     return { user_id };
+  }
+
+  async validateUser(data: LoginData): Promise<{ user_id: number, username: string }> {
+    // Determine if logging in with email or username
+    const identifier = data.email || data.username;
+    if (!identifier)
+      throw new Error("Error in schemas setup");
+    const identifierType = data.email ? 'email' : 'username';
+    
+    const { id, username, password_hash } = await this.userClient.getUser(identifier, identifierType);
+
+    const valid = await isValidPassword(data.password, password_hash);
+    if (!valid) {
+      const error = new Error('Invalid credentials');
+      (error as any).code = 'INVALID_CREDENTIALS';
+      throw error;
+    }
+    return {user_id: id, username};
   }
 
   // private async createGoogleAccount(data: GoogleUserCreationData) {

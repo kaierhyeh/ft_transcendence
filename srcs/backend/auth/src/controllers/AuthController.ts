@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { AuthService } from '../services/AuthService';
 import { CONFIG } from '../config';
-import { SignupFormData } from '../schemas';
+import { LoginData, SignupFormData } from '../schemas';
 
 export class AuthController {
   private authService: AuthService;
@@ -45,36 +45,27 @@ export class AuthController {
     }
   }
 
-  // async login(
-  //   request: FastifyRequest<{ Body: LoginData }>, 
-  //   reply: FastifyReply
-  // ) {
-  //   try {
-  //     const { username, password } = request.body;
-  //     const user = await this.authService.validateUser(username, password);
+  async login(
+    request: FastifyRequest<{ Body: LoginData }>, 
+    reply: FastifyReply
+  ) {
+    try {
+      const data = request.body;
+      const user = await this.authService.validateUser(data);
       
-  //     if (!user) {
-  //       return reply.status(401).send({
-  //         success: false,
-  //         error: "Invalid credentials"
-  //       });
-  //     }
-
-  //     // Generate token using Fastify's JWT
-  //     const token = this.issueToken(request.server, user.user_id, user.username);
+      // Generate token using Fastify's JWT
+      const token = this.issueToken(request.server, user.user_id, user.username);
       
-  //     reply.send({
-  //       success: true,
-  //       token,
-  //       user: {
-  //         user_id: user.user_id,
-  //         username: user.username
-  //       }
-  //     });
-  //   } catch (error) {
-  //     this.handleError(error, reply);
-  //   }
-  // }
+      reply.send({
+        succes: true,
+        user_id: user.user_id,
+        access_token: token,
+        message: "Login successful"
+      });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
 
   private handleError(error: any, reply: FastifyReply) {
     // Handle validation errors from user service
@@ -100,6 +91,13 @@ export class AuthController {
     if (error.status === 409) {
       reply.status(409).send({ 
         error: "Username or email already exists" 
+      });
+      return;
+    }
+
+    if (error.code === 'INVALID_CREDENTIALS') {
+      reply.status(401).send({
+        error: "Invalid credentials"
       });
       return;
     }

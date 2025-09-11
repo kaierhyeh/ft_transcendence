@@ -114,6 +114,20 @@ export const emailSchema = {
   // }
 } as const;
 
+export const usernameSchema = {
+  type: "object",
+  required: ["username"],
+  properties: { 
+    username: {
+      type: "string",
+      minLength: 3,
+      maxLength: 30,
+      pattern: "^[a-zA-Z0-9_-]+$"
+    },
+  },
+  additionalProperties: false
+} as const;
+
 export const subSchema = {
   type: "object",
   required: ["sub"],
@@ -129,3 +143,4 @@ export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
 export type EmailParams = FromSchema<typeof emailSchema>;
 export type SubParams = FromSchema<typeof subSchema>;
+export type UsernameParams = FromSchema<typeof usernameSchema>;
