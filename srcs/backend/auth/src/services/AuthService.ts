@@ -32,12 +32,9 @@ export class AuthService {
 
   async validateUser(data: LoginData): Promise<{ user_id: number, username: string }> {
     // Determine if logging in with email or username
-    const identifier = data.email || data.username;
-    if (!identifier)
-      throw new Error("Error in schemas setup");
-    const identifierType = data.email ? 'email' : 'username';
+    const email = data.email;
     
-    const { id, username, password_hash } = await this.userClient.getUser(identifier, identifierType);
+    const { id, username, password_hash } = await this.userClient.getUserByEmail(email);
 
     const valid = await isValidPassword(data.password, password_hash);
     if (!valid) {

@@ -33,35 +33,18 @@ export const signupFormSchema = {
 
 export const loginSchema = {
   type: "object",
-  required: ["password"],
+  required: ["email", "password"],
   properties: {
     email: {
       type: "string",
       format: "email"
     },
-    username: {
-      type: "string",
-      minLength: 3,
-      maxLength: 30,
-      pattern: "^[a-zA-Z0-9_-]+$"
-    },
     password: {
       type: "string",
       minLength: 8
-    },
+    }
   },
   additionalProperties: false,
-  // Require either email OR username (but not both)
-  oneOf: [
-    {
-      required: ["email", "password"],
-      not: { required: ["username"] }
-    },
-    {
-      required: ["username", "password"],
-      not: { required: ["email"] }
-    }
-  ]
 } as const;
 
 export type SignupFormData = FromSchema<typeof signupFormSchema>;

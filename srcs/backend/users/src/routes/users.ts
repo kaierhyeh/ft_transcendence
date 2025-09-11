@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { AccountCreationData, createAccountSchema, EmailParams, emailSchema, subSchema, SubParams, UsernameParams, usernameSchema } from "../schemas";
+import { AccountCreationData, createAccountSchema, EmailParams, emailSchema, subSchema, SubParams } from "../schemas";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
@@ -17,11 +17,6 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByEmail.bind(userController)
   );
 
-  fastify.get<{ Params: UsernameParams }>(
-    "/username/:username",
-    { schema: { params: usernameSchema} },
-    userController.getUserByUsername.bind(userController)
-  );
 
   fastify.get<{ Params: SubParams }>(
     "/google/:sub",

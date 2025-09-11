@@ -59,15 +59,6 @@ export class UserRepository {
         return result || null;
     }
 
-    public findByUsername(username: string): UserRow | null{
-        const stmt = this.db.prepare(`
-            SELECT * FROM users WHERE username = ?  
-        `);
-        const result = stmt.get(username) as UserRow | undefined;
-        return result || null;
-    }
-
-
     public findByGoogleSub(goolge_sub: string): UserRow | null{
         const stmt = this.db.prepare(`
             SELECT * FROM users WHERE google_sub = ?  

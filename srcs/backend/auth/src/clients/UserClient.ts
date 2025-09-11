@@ -40,17 +40,11 @@ export class UserClient {
     return await response.json() as { user_id: number };
   }
 
-  async getUser(
-    identifier: string,
-    identifier_type: 'email' | 'username'
+  async getUserByEmail(
+    email: string
   ): Promise< User > {
-      let request_url: string;
-      if (identifier === 'email')
-        request_url = `${this.base_url}/users/email/${identifier}`;
-      else
-        request_url = `${this.base_url}/users/username/${identifier}`;
 
-      const response = await fetch(request_url);
+      const response = await fetch(`${this.base_url}/users/email/${email}`);
 
       if (!response.ok) {
         const errorBody = await response.json() as ErrorResponse;
