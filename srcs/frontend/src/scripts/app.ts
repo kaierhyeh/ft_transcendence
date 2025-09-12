@@ -1,6 +1,7 @@
 import {initGame} from "./game.js";
 import {initGame4p} from "./game4p.js";
 import {initStats} from "./stats.js";
+import {initProfile, handleOAuthCallback} from "./profile.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -12,7 +13,8 @@ const routes: Record<string, string> = {
 	"/pong/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
-	"/profile": "./html/profile.html"
+	"/profile": "./html/profile.html",
+	"/oauth-callback": "./html/profile.html"
 };
 
 const initScripts: Record<string, () => void> = {
@@ -27,6 +29,14 @@ const initScripts: Record<string, () => void> = {
 	"/stats": () => {
 		if (typeof initStats === "function")
 			initStats();
+	},
+	"/profile": () => {
+		if (typeof initProfile === "function")
+			initProfile();
+	},
+	"/oauth-callback": () => {
+		if (typeof handleOAuthCallback === "function")
+			handleOAuthCallback();
 	}
 }
 

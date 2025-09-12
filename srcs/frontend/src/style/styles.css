@@ -6,11 +6,15 @@
 @import "profile.css";
 @import "tournament.css";
 
+/* Import Google Fonts for specific pages */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @font-face {
 	font-family: 'Bit5x3';
 	src: url('../fonts/bit5x3.otf') format('opentype');
 }
 
+/* Default pixelated font for all elements */
 html, body, div, span, p, h1, h2, h3, h4, h5, h6,
 button, input, select, textarea, main {
   font-family: 'Bit5x3', monospace;
@@ -19,6 +23,13 @@ button, input, select, textarea, main {
   box-sizing: border-box;
 }
 
+/* Clean font class for specific pages */
+.clean-font, .clean-font * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 body {
 	margin: 0;
 	background-color: #000;

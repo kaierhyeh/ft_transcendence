@@ -1,1 +1,38 @@
-<div class="profile-title">My profile</div>
+<div class="profile-container clean-font">
+	<!-- Logged Out View -->
+	<div id="auth-form" class="auth-container">
+		<div class="profile-title">Login / Register</div>
+		
+		<div class="form-group">
+			<label for="username">Username or Email:</label>
+			<input type="text" id="username" placeholder="Enter username or email">
+		</div>
+		
+		<div class="form-group">
+			<label for="password">Password:</label>
+			<input type="password" id="password" placeholder="Enter password">
+		</div>
+		
+		<div class="button-group">
+			<button id="register-btn" class="auth-btn">Register</button>
+			<button id="google-login-btn" class="auth-btn google-btn">Login with Google</button>
+			<button id="login-btn" class="auth-btn">Login</button>
+		</div>
+	</div>
+
+	<!-- Logged In View -->
+	<div id="profile-info" class="profile-info" style="display: none;">
+		<div class="profile-title">My Profile</div>
+		
+		<div class="profile-details">
+			<img id="profile-avatar" class="profile-avatar" src="" alt="Profile Avatar">
+			<div class="profile-username" id="profile-username"></div>
+		</div>
+		
+		<div class="button-group">
+			<button id="settings-btn" class="profile-btn">Settings</button>
+			<button id="2fa-btn" class="profile-btn">Enable 2FA</button>
+			<button id="logout-btn" class="profile-btn">Logout</button>
+		</div>
+	</div>
+</div>
