@@ -40,8 +40,8 @@ export class UserService {
     return { user_id };
   }
 
-  public async getUserByEmail(email: string): Promise<UserRow> {
-    const user = await this.userRepository.findByEmail(email);
+  public async getUserByLogin(login: string): Promise<UserRow> {
+    const user = await this.userRepository.findByLogin(login);
     if (!user) {
       const error = new Error('User not found');
       (error as any).code = 'USER_NOT_FOUND';

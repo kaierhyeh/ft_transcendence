@@ -1,5 +1,4 @@
 import { CONFIG } from "../config";
-import { LoginData } from "../schemas";
 import { LocalUserCreationData } from "../services/AuthService";
 
 interface ErrorResponse {
@@ -9,7 +8,7 @@ interface ErrorResponse {
 }
 
 export interface User {
-  id: number;
+  user_id: number;
   username: string;
   password_hash: string;
 }
@@ -40,11 +39,11 @@ export class UserClient {
     return await response.json() as { user_id: number };
   }
 
-  async getUserByEmail(
-    email: string
+  async getUserByLogin(
+    login: string
   ): Promise< User > {
 
-      const response = await fetch(`${this.base_url}/users/email/${email}`);
+      const response = await fetch(`${this.base_url}/users/${login}`);
 
       if (!response.ok) {
         const errorBody = await response.json() as ErrorResponse;

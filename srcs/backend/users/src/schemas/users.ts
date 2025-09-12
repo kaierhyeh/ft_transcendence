@@ -93,25 +93,18 @@ export const createAccountSchema = {
   ]
 } as const;
 
-export const emailSchema = {
+export const loginSchema = {
   type: "object",
-  required: ["email"],
+  required: ["login"],
   properties: {
-    email: { 
+    login: { 
       type: "string",
-      format: "email",
-      minLength: 5,
-      maxLength: 254,
-      pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-      description: "Valid email address"
+      minLength: 3,      // Shortest username
+      maxLength: 254,    // Longest email
+      description: "Username or email address"
     },
   },
-  additionalProperties: false,
-  // errorMessage: {
-  //   properties: {
-  //     email: "Must be a valid email address (e.g., user@example.com)"
-  //   }
-  // }
+  additionalProperties: false
 } as const;
 
 
@@ -128,5 +121,5 @@ export const subSchema = {
 export type AccountCreationData = FromSchema<typeof createAccountSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
-export type EmailParams = FromSchema<typeof emailSchema>;
+export type LoginParams = FromSchema<typeof loginSchema>;
 export type SubParams = FromSchema<typeof subSchema>;

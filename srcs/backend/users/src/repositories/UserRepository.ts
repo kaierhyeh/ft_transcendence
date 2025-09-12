@@ -2,10 +2,11 @@ import { Database } from "better-sqlite3";
 import { GoogleUserCreationData, LocalUserCreationData } from "../schemas";
 
 export interface UserRow {
-    id: number;
-    username: string;
-    email: string;
-    password_hash?: string;  // Add this field
+    user_id: number;
+    user_type: "registered" | "guest" | "deleted" | "expired";
+    username: string | null;
+    email: string | null;
+    password_hash: string | null;
     alias: string | null;
     avatar_url: string | null;
     two_fa_enabled: 0 | 1;
@@ -14,6 +15,7 @@ export interface UserRow {
     status: "online" | "offline" | "away";
     created_at: string;
     updated_at: string;
+    last_seen: string | null;
 }
 
 export class UserRepository {
@@ -51,17 +53,21 @@ export class UserRepository {
         return result.lastInsertRowid as number;
     }
 
-    public findByEmail(email: string): UserRow | null{
+    public findByLogin(login: string): UserRow | null {
         const stmt = this.db.prepare(`
-            SELECT * FROM users WHERE email = ?  
+            SELECT * FROM users 
+            WHERE (username = ? OR email = ?) 
+              AND user_type = 'registered'
         `);
-        const result = stmt.get(email) as UserRow | undefined;
+        const result = stmt.get(login, login) as UserRow | undefined;
         return result || null;
     }
 
     public findByGoogleSub(goolge_sub: string): UserRow | null{
         const stmt = this.db.prepare(`
-            SELECT * FROM users WHERE google_sub = ?  
+            SELECT * FROM users
+            WHERE google_sub = ?
+              AND user_type = 'registered'
         `);
         const result = stmt.get(goolge_sub) as UserRow | undefined;
         return result || null;

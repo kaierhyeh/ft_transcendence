@@ -31,10 +31,8 @@ export class AuthService {
   }
 
   async validateUser(data: LoginData): Promise<{ user_id: number, username: string }> {
-    // Determine if logging in with email or username
-    const email = data.email;
-    
-    const { id, username, password_hash } = await this.userClient.getUserByEmail(email);
+
+    const { user_id, username, password_hash } = await this.userClient.getUserByLogin(data.login);
 
     const valid = await isValidPassword(data.password, password_hash);
     if (!valid) {
@@ -42,7 +40,7 @@ export class AuthService {
       (error as any).code = 'INVALID_CREDENTIALS';
       throw error;
     }
-    return {user_id: id, username};
+    return {user_id, username};
   }
 
   // private async createGoogleAccount(data: GoogleUserCreationData) {

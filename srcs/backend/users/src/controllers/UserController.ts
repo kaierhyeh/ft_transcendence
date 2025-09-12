@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { AccountCreationData, EmailParams, SubParams } from '../schemas';
+import { AccountCreationData, LoginParams, SubParams } from '../schemas';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -22,12 +22,12 @@ export class UserController {
     }
   }
 
-  async getUserByEmail(
-    request: FastifyRequest<{ Params: EmailParams }>, 
+  async getUserByLogin(
+    request: FastifyRequest<{ Params: LoginParams }>, 
     reply: FastifyReply
   ) {
     try {
-      const user = await this.userService.getUserByEmail(request.params.email);
+      const user = await this.userService.getUserByLogin(request.params.login);
       reply.send(user);
     } catch (error) {
       this.handleError(error, reply);

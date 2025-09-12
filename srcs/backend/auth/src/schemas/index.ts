@@ -33,11 +33,13 @@ export const signupFormSchema = {
 
 export const loginSchema = {
   type: "object",
-  required: ["email", "password"],
+  required: ["login", "password"],
   properties: {
-    email: {
+    login: {
       type: "string",
-      format: "email"
+      minLength: 3,      // Shortest username
+      maxLength: 254,    // Longest email
+      description: "Username or email address"
     },
     password: {
       type: "string",
