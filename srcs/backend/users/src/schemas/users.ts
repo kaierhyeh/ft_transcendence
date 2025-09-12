@@ -99,27 +99,17 @@ export const loginSchema = {
   properties: {
     login: { 
       type: "string",
-      minLength: 3,      // Shortest username
-      maxLength: 254,    // Longest email
-      description: "Username or email address"
+      minLength: 1,      // Allow any identifier length
+      maxLength: 254,    // Max email length
+      description: "Username, email address, or Google sub"
     },
   },
   additionalProperties: false
 } as const;
 
 
-export const subSchema = {
-  type: "object",
-  required: ["sub"],
-  properties: { 
-    sub: {type: "string" },
-  },
-  additionalProperties: false
-} as const;
-
 
 export type AccountCreationData = FromSchema<typeof createAccountSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
-export type SubParams = FromSchema<typeof subSchema>;

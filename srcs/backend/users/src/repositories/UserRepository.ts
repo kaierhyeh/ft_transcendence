@@ -56,20 +56,10 @@ export class UserRepository {
     public findByLogin(login: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE (username = ? OR email = ?) 
+            WHERE (username = ? OR email = ? OR google_sub = ?) 
               AND user_type = 'registered'
         `);
-        const result = stmt.get(login, login) as UserRow | undefined;
-        return result || null;
-    }
-
-    public findByGoogleSub(goolge_sub: string): UserRow | null{
-        const stmt = this.db.prepare(`
-            SELECT * FROM users
-            WHERE google_sub = ?
-              AND user_type = 'registered'
-        `);
-        const result = stmt.get(goolge_sub) as UserRow | undefined;
+        const result = stmt.get(login, login, login) as UserRow | undefined;
         return result || null;
     }
 

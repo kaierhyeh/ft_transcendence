@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { AccountCreationData, createAccountSchema, LoginParams, loginSchema, subSchema, SubParams } from "../schemas";
+import { AccountCreationData, createAccountSchema, LoginParams, loginSchema } from "../schemas";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
@@ -17,43 +17,19 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByLogin.bind(userController)
   );
 
-
-  fastify.get<{ Params: SubParams }>(
-    "/google/:sub",
-    { schema: { params: subSchema} },
-    userController.getUserByGoogleSub.bind(userController)
-  );
-
-  // fastify.get(
-  //   "/:id",
-  //    userController.getUserProfile.bind(userController)
-  // );
-
-  fastify.put(
-    "/me",
-    (request, reply) => {
-      // (authenticated) -> update profile (display_name, avatar, settings)
-
-    }
-  );
-
-  fastify.post(
-    "/me/avatar",
-    async (request, reply) => {
-      // uplaod avatar (multipart) -> returns `avatar_url`?
-
-    });
-
-  fastify.get(
-    "/me", 
-    async (request, reply) => {
-      // retrieve current user profile
-
+  fastify.put("/me", (request, reply) => {
+    // (authenticated) -> update profile
   });
 
-  fastify.get(
-    "/",
-    async (request, reply) => {
-      // search user
-    });
+  fastify.post("/me/avatar", async (request, reply) => {
+    // upload avatar
+  });
+
+  fastify.get("/me", async (request, reply) => {
+    // retrieve current user profile
+  });
+
+  fastify.get("/", async (request, reply) => {
+    // search users
+  });
 }
