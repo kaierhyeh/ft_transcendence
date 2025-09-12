@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { AccountCreationData, createAccountSchema, LoginParams, loginSchema } from "../schemas";
+import { AccountCreationData, createAccountSchema, LoginParams, loginSchema, UpdateData, updateSchema } from "../schemas";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
@@ -17,12 +17,10 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByLogin.bind(userController)
   );
 
-  fastify.put("/me", (request, reply) => {
-    // (authenticated) -> update profile
-  });
-
-  fastify.post("/me/avatar", async (request, reply) => {
-    // upload avatar
+  fastify.put<{ Body: UpdateData }>(
+    "/me",
+    { schema: { body: updateSchema } }), {
+    userController.
   });
 
   fastify.get("/me", async (request, reply) => {
