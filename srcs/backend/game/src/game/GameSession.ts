@@ -1,17 +1,18 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameType } from '../schemas';
 import { Team, PlayerSlot, GameMessage } from '../types'
-import { GameConf, GameEngine, GameState } from './GameEngine';
+import { GameConf, GameEngine, GameMode, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
 import { DbPlayerSession, DbSession } from '../db/repositories/SessionRepository';
 import { toSqlDate } from '../db/utils';
 
 interface Player {
-    player_id: number;
-    match_ticket: string;
+    user_id: number;
+    participant_id: string;
     slot: PlayerSlot; // assigned by matchmaking or default order
     team: Team;
+    is_ai: boolean;
 
     socket?: SocketStream;
 }
@@ -23,6 +24,7 @@ export type SessionPlayerMap = PlayerMap;
 export class GameSession {
     private tournament_id: number | undefined;
     private type: GameType;
+    private game_mode: GameMode;
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
     private game_engine: GameEngine;
@@ -36,30 +38,29 @@ export class GameSession {
 
     constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
         this.type = game_type;
+        this.game_mode = game_type === "multi" ? "multi" : "pvp";
         this.players = this.loadPlayers_(participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.last_activity = Date.now();
-        this.game_engine = new GameEngine(game_type, this.players);
+        this.game_engine = new GameEngine(this.game_mode, this.players);
         this.logger = logger;
     }
 
     private loadPlayers_(participants: GameParticipant[]): PlayerMap {
-        const game_type = this.type;
-        const players: PlayerMap = new Map;
+        const players: PlayerMap = new Map();
+        const slots = this.game_mode === "pvp" ? ["left", "right"] : ["top-left", "bottom-left", "top-right", "bottom-right"];
 
         participants.forEach((p, idx) => {
-            if (game_type === 'multi')
-                throw new Error("Multiplayer not implemented yet");
-            
-            const slot: PlayerSlot = idx === 0 ? "left" : "right";
-            const team: Team = idx === 0 ? "left" : "right";
+            const slot = slots[idx] as PlayerSlot;
+            const team = slot.includes("left") ? "left" : "right";
 
-            players.set(p.match_ticket, {
-                player_id: p.player_id,
-                match_ticket: p.match_ticket,
+            players.set(p.participant_id, {
+                user_id: p.user_id,
+                participant_id: p.participant_id,
                 slot: slot,
                 team: team,
+                is_ai: p.is_ai || false,
                 socket: undefined
             });
         });
@@ -67,7 +68,7 @@ export class GameSession {
     }
 
     public get config(): GameConf {
-        return this.game_engine.getConf(this.type);
+        return this.game_engine.conf;
     }
 
     public get started(): boolean {
@@ -126,30 +127,30 @@ export class GameSession {
         });
     }
     
-    public connectPlayer(ticket: string, connection: SocketStream): void {
+    public connectPlayer(participant_id: string, connection: SocketStream): void {
         if (this.viewers.has(connection)) {
             connection.socket.close(4001, "viewer cannot become a player");
             return;
         }
 
-        const player = this.players.get(ticket);
+        const player = this.players.get(participant_id);
 
-        this.logger.info(`Player connecting with ticket: ${ticket}`);
+        this.logger.info(`Player connecting with participant_id: ${participant_id}`);
         this.logger.info(`found player : ${player !== undefined}`);
 
         if (!player) {
-            connection.socket.close(4001, "Invalid ticket");
+            connection.socket.close(4001, "Invalid participant_id");
             return;
         }
         if (player.socket) {
-            connection.socket.close(4002, "duplicate ticket");
+            connection.socket.close(4002, "duplicate participant_id");
             return;
         }
 
         player.socket = connection;
         this.game_engine.setConnected(player.slot, true);
         connection.socket.on("close", () => {
-            this.disconnectPlayer(ticket);
+            this.disconnectPlayer(participant_id);
             this.last_activity = Date.now();
         });
     }
@@ -166,8 +167,8 @@ export class GameSession {
         });
     }
 
-    public disconnectPlayer(ticket: string): void {
-        const player = this.players.get(ticket);
+    public disconnectPlayer(participant_id: string): void {
+        const player = this.players.get(participant_id);
         if (!player) return; // TODO - or throw an exception
         player.socket = undefined;
         this.game_engine.setConnected(player.slot, false);
@@ -181,28 +182,28 @@ export class GameSession {
         const msg = JSON.parse(raw);
 
         if (msg.type === "join") {
-            this.connectPlayer(msg.ticket, connection);
+            this.connectPlayer(msg.participant_id, connection);
         } else if (msg.type === "input") {
             if (this.viewers.has(connection)) {
                 connection.socket.close(4001, "viewer cannot send input");
                 return;
             }
-            const player = this.players.get(msg.ticket);
+            const player = this.players.get(msg.participant_id);
             if (!player) {
-                connection.socket.close(4001, "Invalid ticket");
+                connection.socket.close(4001, "Invalid participant_id");
                 return;
             }                
-            this.game_engine.movePaddle(player.slot, msg.move);
+            this.game_engine.applyMovement(player.slot, msg.move);
         } else {
             connection.socket.close(4000, "Invalid message type");
         }
     }
 
     public closeAllConnections(status: number, reason: string): void {
-        this.players.forEach(({ socket: connection }, ticket) => {
+        this.players.forEach(({ socket: connection }, participant_id) => {
             if (connection) {
                 connection.socket.close(status, reason);
-                this.disconnectPlayer(ticket);
+                this.disconnectPlayer(participant_id);
             }
         });
         this.viewers.forEach( connection => {
@@ -215,6 +216,13 @@ export class GameSession {
         const game_state = this.game_engine.state;
         if (!this.started_at || !this.ended_at || !game_state.winner)
             return undefined;
+        
+        const humanPlayers = Array.from(this.players.values()).filter(p => !p.is_ai);
+        
+        if (humanPlayers.length === 0) {
+            return undefined;
+        }
+        
         return {
             session: {
                 type: this.type,
@@ -223,9 +231,9 @@ export class GameSession {
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),
             },
-            player_sessions: Array.from(this.players.values()).map((p) => {
+            player_sessions: humanPlayers.map((p) => {
                 const player_session: DbPlayerSession = {
-                    user_id: p.player_id,
+                    user_id: p.user_id,
                     team: p.team,
                     slot: p.slot,
                     score: game_state.score[p.team],

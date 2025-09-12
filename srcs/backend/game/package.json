@@ -12,7 +12,6 @@
   "dependencies": {
     "fastify": "^4.0.0",
     "@fastify/websocket": "^8.0.0",
-    "@fastify/cors": "^8.0.0",
     "better-sqlite3": "12.2.0",
     "json-schema-to-ts": "^3.0.0"
   },

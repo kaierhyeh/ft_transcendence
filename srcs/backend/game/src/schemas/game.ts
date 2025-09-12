@@ -2,10 +2,11 @@ import { FromSchema } from "json-schema-to-ts";
 
 export const playerSchema = {
   type: "object",
-  required: ["player_id", "match_ticket"],
+  required: ["user_id", "participant_id"],
   properties: {
-    player_id: { type: "number" },
-    match_ticket: { type: "string" },
+    user_id: { type: "number" },
+    participant_id: { type: "string" },
+    is_ai: { type: "boolean" },
   },
   additionalProperties: false,
 } as const;
@@ -25,7 +26,7 @@ export const createGameSchema = {
   properties: {
     type: {
       type: "string",
-      enum: ["pvp", "multi", "tournament"],
+      enum: ["solo", "pvp", "multi", "tournament"],
     },
     participants: {
       type: "array",

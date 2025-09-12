@@ -1,15 +1,18 @@
-import { GameType } from "../schemas";
 import { PlayerSlot, Team } from "../types";
 import { SessionPlayerMap } from "./GameSession";
 
-const PADDLE_STEP: number = 9;
-const WIDTH: number = 600;
-const HEIGHT: number = 400;
 const PADDLE_WIDTH: number = 10;
-const PADDLE_HEIGHT: number = 80;
-const WIN_POINT: number = 3;
+const PADDLE_HEIGHT: number = 50;
+
+const INITIAL_BALL_SPEED: number = 420; // pixel / s
+const PADDLE_SPEED: number = 350; // pixel / s
+
+const WIDTH: number = 800;
+const HEIGHT: number = 750;
+
+const WIN_POINT: number = 7;
 const BALL_SIZE: number = 10;
-const BALL_SPEED: number = 200;
+const MAX_BALL_SPEED: number = PADDLE_SPEED * 2; // pixel/s
 
 export interface GameConf {
     canvas_width: number;
@@ -20,6 +23,10 @@ export interface GameConf {
     ball_size: number;
 }
 
+interface Paddle {
+    x: number;
+    y: number;
+}
 
 interface Ball {
     x: number;
@@ -30,55 +37,59 @@ interface Ball {
 
 interface Player {
     slot: PlayerSlot;
-    paddle_coord: number;
+    paddle: Paddle;
+    velocity: number;
     connected: boolean;
     team: Team;
 }
 
 type Score = Map<Team, number>;
 
+export type GameMode = "pvp" | "multi";
+
+interface GameModeConfig {
+    paddlePositions: Partial<Record<PlayerSlot, Paddle>>;
+}
+
+const GAME_MODE_CONFIGS: Record<GameMode, GameModeConfig> = {
+    pvp: {
+        paddlePositions: {
+            left: { x: 20, y: HEIGHT / 2 - PADDLE_HEIGHT / 2 },
+            right: { x: WIDTH - 30, y: HEIGHT / 2 - PADDLE_HEIGHT / 2 }
+        }
+    },
+    multi: {
+        paddlePositions: {
+            "top-left": { x: 20, y: HEIGHT / 4 - PADDLE_HEIGHT / 2 },
+            "bottom-left": { x: 20, y: (3 * HEIGHT) / 4 - PADDLE_HEIGHT / 2 },
+            "top-right": { x: WIDTH - 30, y: HEIGHT / 4 - PADDLE_HEIGHT / 2 },
+            "bottom-right": { x: WIDTH - 30, y: (3 * HEIGHT) / 4 - PADDLE_HEIGHT / 2 }
+        }
+    }
+}
+
 export interface GameState {
     ball: Ball;
     players: { [key: string]: Player };
-    score: { [key: string]: number} ;
+    score: { [key: string]: number };
     winner: Team | undefined;
 }
 
 export class GameEngine {
-    private game_type: GameType;
-    private conf: GameConf;
+    private game_mode: GameMode;
+    private mode_config: GameModeConfig;
+    private conf_: GameConf;
     private ball: Ball;
     private players: Map<PlayerSlot, Player>;
     private winner_: Team | undefined;
     private score: Score;
-    
-    constructor(game_type: GameType, session_players: SessionPlayerMap) {
-        this.game_type = game_type;
-        this.players = new Map();
-        session_players.forEach(p => {
-            this.players.set(p.slot, {
-                slot: p.slot,
-                paddle_coord: this.getPaddleFreshState(p.slot, game_type),
-                connected: false,
-                team: p.team
-            });
-        });
-        this.ball = {
-             x: WIDTH / 2, 
-            y: HEIGHT / 2, 
-            dx: BALL_SPEED, 
-            dy: BALL_SPEED / 2 
-        };
-        this.score = new Map();
-        this.score.set("left", 0);
-        this.score.set("right", 0);
-        this.conf = this.setupConf();
-    }
-    
-    private setupConf(): GameConf {
-        if (this.game_type === "multi")
-            throw new Error("Multiplayer not handled yet");
-        return {
+    private paused: boolean;
+    private lastDelta: number = 16.67;
+
+    constructor(game_mode: GameMode, session_players: SessionPlayerMap) {
+        this.game_mode = game_mode;
+        this.mode_config = GAME_MODE_CONFIGS[game_mode];
+        this.conf_ = {
             canvas_width: WIDTH,
             canvas_height: HEIGHT,
             paddle_height: PADDLE_HEIGHT,
@@ -86,11 +97,49 @@ export class GameEngine {
             win_point: WIN_POINT,
             ball_size: BALL_SIZE
         };
+
+        this.players = new Map();
+        session_players.forEach(p => {
+            const paddle = this.mode_config.paddlePositions[p.slot];
+            if (!paddle) {
+                throw new Error(`No paddle position configured for slot: ${p.slot} in mode: ${game_mode}`);
+            }
+
+            this.players.set(p.slot, {
+                slot: p.slot,
+                paddle: { x: paddle.x, y: paddle.y },
+                velocity: 0,
+                connected: false,
+                team: p.team
+            });
+        });
+        const maxAngle = Math.atan2((HEIGHT * 2) / 3, WIDTH / 2);
+        const angle = (Math.random() * 2 - 1) * maxAngle;
+
+        this.ball = {
+            x: WIDTH / 2,
+            y: HEIGHT / 2,
+            dx: Math.cos(angle) * INITIAL_BALL_SPEED,
+            dy: Math.sin(angle) * INITIAL_BALL_SPEED
+        };
+        this.score = new Map();
+        this.score.set("left", 0);
+        this.score.set("right", 0);
+        this.paused = true;
+        
+        setTimeout(() => {
+            this.paused = false;
+        }, 1000);
     }
 
     public update(delta: number): void {
-        this.moveBall(delta);
-        
+        this.lastDelta = delta;
+
+        this.movePaddles(delta);
+
+        if (!this.paused)
+            this.moveBall(delta);
+
         this.handleCollision();
 
         this.checkScoring();
@@ -104,48 +153,114 @@ export class GameEngine {
 
     private checkScoring(): void {
         let scoringTeam: Team | null = null;
-        
-        if (this.ball.x <= 0) {
+
+        if (this.ball.x < 0) {
             scoringTeam = "right";
-        } else if (this.ball.x + BALL_SIZE >= WIDTH) {
+            this.resetBall("right");
+        } else if (this.ball.x > WIDTH) {
             scoringTeam = "left";
+            this.resetBall("left");
         }
-        
-        if (scoringTeam) {
-            const currentScore = this.score.get(scoringTeam)! + 1;
-            this.score.set(scoringTeam, currentScore);
-            
-            if (currentScore >= WIN_POINT) {
-                this.winner_ = scoringTeam;
-            }
-            
-            this.resetBall();
+
+        if (!scoringTeam)
+            return;
+
+        const currentScore = this.score.get(scoringTeam)! + 1;
+        this.score.set(scoringTeam, currentScore);
+
+        if (currentScore >= WIN_POINT) {
+            this.winner_ = scoringTeam;
         }
     }
 
     private handleCollision(): void {
         if (this.ball.y <= 0 || this.ball.y + BALL_SIZE >= HEIGHT) {
-            this.ball.dy = -this.ball.dy;
+            if (this.ball.y <= 0) this.ball.y = 0;
+            else this.ball.y = HEIGHT - BALL_SIZE;
+            this.ball.dy *= -1;
         }
 
-        const left_player = this.players.get('left');
-        if (
-            left_player &&
-            this.ball.x <= PADDLE_WIDTH &&
-            this.ball.y >= left_player.paddle_coord &&
-            this.ball.y <= left_player.paddle_coord + PADDLE_HEIGHT
-        ) {
-            this.ball.dx = -this.ball.dx;
+        for (const player of this.players.values()) {
+            this.checkPaddleCollision(player);
         }
 
-        const right_player = this.players.get('right');
-        if (
-            right_player &&
-            this.ball.x + BALL_SIZE >= WIDTH - PADDLE_WIDTH &&
-            this.ball.y >= right_player.paddle_coord &&
-            this.ball.y <= right_player.paddle_coord + PADDLE_HEIGHT
-        ) {
-            this.ball.dx = -this.ball.dx;
+    }
+
+    private checkPaddleCollision(player: Player): void {
+        const isMovingTowardsPaddle =
+            (player.team === "left" && this.ball.dx < 0) ||
+            (player.team === "right" && this.ball.dx > 0);
+
+        if (!isMovingTowardsPaddle) return;
+
+        const deltaSeconds = this.lastDelta / 1000;
+        const prevBallX = this.ball.x - this.ball.dx * deltaSeconds;
+        const prevBallY = this.ball.y - this.ball.dy * deltaSeconds;
+
+        const collision =
+            this.ball.x + BALL_SIZE >= player.paddle.x &&
+            this.ball.x <= player.paddle.x + PADDLE_WIDTH &&
+            this.ball.y + BALL_SIZE >= player.paddle.y &&
+            this.ball.y <= player.paddle.y + PADDLE_HEIGHT;
+
+        let continuousCollision = false;
+        if (!collision) {
+            if (player.team === "left") {
+                const ballCrossedPaddleX = 
+                    prevBallX > player.paddle.x + PADDLE_WIDTH &&
+                    this.ball.x <= player.paddle.x + PADDLE_WIDTH;
+                
+                if (ballCrossedPaddleX) {
+                    const t = (player.paddle.x + PADDLE_WIDTH - prevBallX) / (this.ball.x - prevBallX);
+                    const intersectY = prevBallY + t * (this.ball.y - prevBallY);
+                    
+                    continuousCollision = 
+                        intersectY + BALL_SIZE >= player.paddle.y &&
+                        intersectY <= player.paddle.y + PADDLE_HEIGHT;
+                }
+            } else {
+                const ballCrossedPaddleX = 
+                    prevBallX + BALL_SIZE < player.paddle.x &&
+                    this.ball.x + BALL_SIZE >= player.paddle.x;
+                
+                if (ballCrossedPaddleX) {
+                    const t = (player.paddle.x - (prevBallX + BALL_SIZE)) / ((this.ball.x + BALL_SIZE) - (prevBallX + BALL_SIZE));
+                    const intersectY = prevBallY + t * (this.ball.y - prevBallY);
+                    
+                    continuousCollision = 
+                        intersectY + BALL_SIZE >= player.paddle.y &&
+                        intersectY <= player.paddle.y + PADDLE_HEIGHT;
+                }
+            }
+        }
+
+        if (!collision && !continuousCollision) return;
+
+        const paddleCenter = player.paddle.y + PADDLE_HEIGHT / 2;
+        const ballCenter = this.ball.y + BALL_SIZE / 2;
+        const impact = Math.max(-1, Math.min(1, (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2)));
+        const angle = impact * Math.PI / 4;
+        const currentSpeed = Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2);
+        
+        let speed: number;
+        if (this.game_mode === "multi")
+            speed = currentSpeed * 1.05;
+        else
+            speed = Math.min(currentSpeed * 1.05, MAX_BALL_SPEED);
+
+        if (player.team === "left") {
+            this.ball.dx = Math.abs(Math.cos(angle) * speed);
+            this.ball.x = player.paddle.x + PADDLE_WIDTH;
+        } else {
+            this.ball.dx = -Math.abs(Math.cos(angle) * speed);
+            this.ball.x = player.paddle.x - BALL_SIZE;
+        }
+
+        this.ball.dy = Math.sin(angle) * speed;
+        if (this.ball.y < player.paddle.y) {
+            this.ball.y = player.paddle.y - BALL_SIZE;
+        } else if (this.ball.y + BALL_SIZE > player.paddle.y + PADDLE_HEIGHT) {
+            this.ball.y = player.paddle.y + PADDLE_HEIGHT;
         }
     }
 
@@ -167,38 +282,66 @@ export class GameEngine {
         if (player) player.connected = value;
     }
 
-    public movePaddle(slot: PlayerSlot, move: "up" | "down"): void {
-        const player = this.players.get(slot);
-        if (!player)
-            return;
-        if (move === "up" && player.paddle_coord > 0) {
-            player.paddle_coord -= PADDLE_STEP;
-        }      
-        if (move === "down" && player.paddle_coord < HEIGHT - PADDLE_HEIGHT) {
-            player.paddle_coord += PADDLE_STEP;
+    private movePaddles(dt: number): void {
+        for (const player of this.players.values()) {
+            player.paddle.y += player.velocity * (dt / 1000);
+
+            const bounds = this.getPaddleBounds(player.slot);
+            player.paddle.y = Math.max(bounds.min, Math.min(bounds.max, player.paddle.y));
         }
     }
 
-    private resetBall(): void {
-        this.ball.x = WIDTH / 2;
-        this.ball.y = HEIGHT / 2;
-        this.ball.dx = -this.ball.dx;
+    private getPaddleBounds(slot: PlayerSlot): { min: number; max: number } {
+        if (this.game_mode === "pvp") {
+            return { min: 0, max: HEIGHT - PADDLE_HEIGHT };
+        } else {
+            if (slot === "top-left" || slot === "top-right") {
+                return { min: 0, max: HEIGHT / 2 - PADDLE_HEIGHT };
+            } else {
+                return { min: HEIGHT / 2, max: HEIGHT - PADDLE_HEIGHT };
+            }
+        }
     }
 
-    public getConf(game_type: GameType): GameConf {
-        return ({
-            canvas_width: WIDTH,
-            canvas_height: HEIGHT,
-            paddle_width: PADDLE_WIDTH,
-            paddle_height: PADDLE_HEIGHT,
-            win_point: WIN_POINT,
-            ball_size: BALL_SIZE,
-        });
+    public applyMovement(slot: PlayerSlot, move: "up" | "down" | "stop"): void {
+        const player = this.players.get(slot);
+        if (!player)
+            return;
+        switch (move) {
+            case "up":
+                player.velocity = -PADDLE_SPEED;
+                break;
+            case "down":
+                player.velocity = PADDLE_SPEED;
+                break;
+            case "stop":
+                player.velocity = 0;
+                break;
+            default:
+                break;
+        }
     }
 
-    private getPaddleFreshState(slot: PlayerSlot, type: GameType): number {
-        if (type === "multi")
-            throw new Error("Multiplayer not implemented yet");
-        return HEIGHT / 2 - PADDLE_HEIGHT / 2;
+    private resetBall(to: "left" | "right"): void {
+        const angle = Math.atan2(this.ball.dy, this.ball.dx);
+
+        this.ball.y = Math.max(0, Math.min(HEIGHT - BALL_SIZE, this.ball.y));
+        this.ball.x = WIDTH / 2 - BALL_SIZE / 2;
+
+        if (to === "right") {
+            this.ball.dx = -Math.abs(Math.cos(angle) * INITIAL_BALL_SPEED);
+        } else {
+            this.ball.dx = Math.abs(Math.cos(angle) * INITIAL_BALL_SPEED);
+        }
+        this.ball.dy = Math.sin(angle) * INITIAL_BALL_SPEED;
+        this.paused = true;
+        setTimeout(() => {
+            this.paused = false;
+        }, 1000);
     }
+
+    public get conf(): GameConf {
+        return this.conf_;
+    }
+
 }
