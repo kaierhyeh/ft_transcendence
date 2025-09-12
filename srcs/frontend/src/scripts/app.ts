@@ -9,6 +9,7 @@ const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
 	"/pong/four-players": "./html/pong.html",
+	"/pong/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/profile": "./html/profile.html"

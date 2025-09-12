@@ -12,15 +12,17 @@
 }
 
 html, body, div, span, p, h1, h2, h3, h4, h5, h6,
-button, input, select, textarea {
+button, input, select, textarea, main {
   font-family: 'Bit5x3', monospace;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-
 
 body {
 	margin: 0;
-	padding: 20px;
 	background-color: #000;
 	color: #fff;
-	min-height: 100vh;
+	height: 100vh;
+	overflow: hidden;
 }
