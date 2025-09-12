@@ -5,6 +5,7 @@
 @import "pong.css";
 @import "profile.css";
 @import "tournament.css";
+@import "chat.css";
 
 @font-face {
 	font-family: 'Bit5x3';
