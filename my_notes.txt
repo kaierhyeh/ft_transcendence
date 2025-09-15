@@ -4,44 +4,12 @@
 
 Lancer le code: tsc tous les fichiers.ts
 
-Check comment cmmuniquer avec le serveur. 
-Steven : "Dans ma fonction start(), j'ai besoin d'appeler quoi pour me connecter au serveur ?"
-Alex : "Comment je récupère l'ID de l'utilisateur connecté dans mon constructeur ?"
 
 PONG :
 Direction de balle vers le gagnant??? 
 reduire vitesse de balle
 partie en 10 points (11 si )
 
-MULTIJOUEUR :   
-
-Ajouter que le dernier joueur qui a touche la balle a le point ? ou teamplay
-
-TO OPEN PONG ATM : python -m http.server 8000 then open http://localhost:8000/pong.html in browser
-
-Suivi des étapes : 
-Afficher une page html
-Ajouter un titre d'onglet
-Ajouter du texte / manier les positions de texte
-Creer lelement pongBorad ( Style , id et size)
-Dessiner dans le pongboard avec (ctx2d)
-creer une fonction de dessin (pour apeller ensuite en boucle en update la position)
-REFACTORING , creation pong.js , use global variable to share with mates
-Faire bouger la balle(chemin aleatoire pour debuter avant implementer chemin par position de raquette);
-Rebonds sur chaque murs
-creer paddle
-Faire bouger paddle
-update collision, si la balle touche le mur droit ou gauche alors elle revient au centre
-ajouter ecouteur de touche pour pouvoir bouger les raquettes
-ajouter collisions avec raquettes
-_____________________________________
-REFACTORING CODE IN TYPECRIPT ADDAPTING KILFENN PONG TO MULTIPLAYER
-Remove left/right paddle and create 4 with their position
-draw les 4 paddles
-add menu
-REFACTORING TO MAKE MODULAR ACHITECTURE TO IMPLEMENT REMOTE PLAYERS
-1- Added void at the end of function , not mandtory but more used syntax
-2- made class to merge easy and implement remote player
 
 
 Notes sur le projet en cours : 

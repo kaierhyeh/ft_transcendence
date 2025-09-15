@@ -1,0 +1,51 @@
+<div class="stats-container">
+	<div id="loading" class="stats-loading">
+		Loading users...
+	</div>
+
+	<div id="error" class="stats-error" style="display: none;">
+		Error while loading users
+	</div>
+
+	<div id="content" style="display: none;">
+		<div class="stats-user-selector">
+			<div class="stats-user-selector-title">Select an user: </div>
+			<div class="user-list" id="userList">
+			</div>
+		</div>
+
+		<div class="profile-section" id="profileSection">
+			<div class="profile-header">
+				<div class="username" id="profileUsername"></div>
+				<div class="email" id="profileEmail"></div>
+				<div class="join-date" id="profileJoinDate"></div>
+			</div>
+
+			<div class="stats-grid">
+				<div class="stat-card current-streak">
+					<div class="stat-title">Current Winstreak</div>
+					<div class="stat-value" id="statsCurrentStreak">0</div>
+				</div>
+
+				<div class="stat-card best-streak">
+					<div class="stat-title">Best Winstreak</div>
+					<div class="stat-value" id="statsBestStreak">0</div>
+				</div>
+			</div>
+
+			<div class="player-charts">
+				<div class="charts-grid">
+					<div class="chart-container">
+						<div class="chart-title">Wins / Losses</div>
+						<canvas id="playerChart" width="300" height="300"></canvas>
+					</div>
+					<div class="chart-container">
+						<div class="chart-title">Scored points ranking</div>
+						<div class="ranking-container" id="playerRanking">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

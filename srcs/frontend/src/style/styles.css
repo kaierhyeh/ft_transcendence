@@ -1,0 +1,26 @@
+
+@import "stats.css";
+@import "homepage.css";
+@import "error404.css";
+@import "pong.css";
+@import "profile.css";
+@import "tournament.css";
+
+@font-face {
+	font-family: 'Bit5x3';
+	src: url('../fonts/bit5x3.otf') format('opentype');
+}
+
+html, body, div, span, p, h1, h2, h3, h4, h5, h6,
+button, input, select, textarea {
+  font-family: 'Bit5x3', monospace;
+}
+
+
+body {
+	margin: 0;
+	padding: 20px;
+	background-color: #000;
+	color: #fff;
+	min-height: 100vh;
+}
