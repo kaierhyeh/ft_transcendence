@@ -6,6 +6,7 @@ import { logError } from "../utils/errorHandler";
 // to use as type for data
 // data:Message[] - if its list of messages
 import { Message } from "../types/messages.type";
+import { colorLog } from "../utils/logger";
 
 // get chat id of two users
 // return null if no chat 
@@ -30,6 +31,7 @@ export async function getChatId(userA:number, userB:number):Promise<number|null>
 
 // get users with whom user has chats
 export async function getChatPartners(userId:number) {
+	colorLog("cyan", `getChatPartners for userId=${userId}`);
 	return new Promise((resolve, reject) => {
 
 		// this query collect chat partners IDs and usernames

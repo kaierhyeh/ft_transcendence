@@ -76,6 +76,24 @@ services:
   #       context: ./backend/stats
   #     dockerfile: Dockerfile
 
+  backend-chat:
+    container_name: backend-chat
+    build:
+      context: ./backend/chat
+      dockerfile: Dockerfile
+    volumes:
+      # - /app/node_modules
+      # - ./:/app
+      - db-data:/db
+    networks:
+      - pong_network
+    ports:
+      - "3001:3001"
+    init: true
+      # Add healthcheck if you can
+    restart: unless-stopped
+    working_dir: /app
+
 
 networks:
   pong_network:
@@ -83,3 +101,5 @@ networks:
 volumes:
   ssl:
   game_sessions:
+  db-data:
+    driver: local

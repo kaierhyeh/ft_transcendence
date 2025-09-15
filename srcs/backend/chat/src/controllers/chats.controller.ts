@@ -17,8 +17,10 @@ import	{
 		getErrorCode,
 		getErrorMessage
 		} from "../utils/errorHandler";
+import { colorLog } from "../utils/logger";
 
 export async function getChatPartnersController(req:FastifyRequest<{Params:{userId:string}}>, reply:FastifyReply) {
+	colorLog("cyan", "getChatPartnersController");
 	try {
 		const chats = await getChatPartnersService(parseInt(req.params.userId));
 		return (reply.send(chats));

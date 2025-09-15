@@ -14,10 +14,12 @@ import	{
 import	{
 		logError
 		} from "../utils/errorHandler";
+import { colorLog } from "../utils/logger";
 
 // Det users with whom user has chats
 // !!! In DAL need to JOIN correctly with table "users" 
 export async function getChatPartnersService(userId: number) {
+	colorLog("cyan", `getChatPartnersService for userId=${userId}`);
 	try {
 		const users = await getChatPartners(userId);
 		if (!users)
