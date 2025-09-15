@@ -2,10 +2,10 @@
 
 # Cleanup function
 cleanup() {
-    echo "Stopping services..."
-    kill $(jobs -p)
-    wait
-    exit 0
+	echo "Stopping services..."
+	kill $(jobs -p)
+	wait
+	exit 0
 }
 
 # Signal capture

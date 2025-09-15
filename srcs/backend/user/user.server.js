@@ -1,13 +1,9 @@
 import fastify from "fastify";
-import redis from './redis/redisClient.js';
-import { initializeDatabase } from './db/schema.js';
-import { authMiddleware } from './auth.middleware.js';
-import { oauthRoutes } from './routes/oauth.routes.js';
-import { twofaRoutes } from './routes/twofa.routes.js';
-import { authRoutes } from './routes/auth.routes.js';
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import multipart from '@fastify/multipart';
+import { initializeDatabase } from "../shared/db/schema.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -55,12 +51,6 @@ try {
 
 // Public routes that don't need authentication
 const publicRoutes = [
-	'/auth/google',
-	'/auth/google/username',
-	'/auth/login',
-	'/auth/register',
-	'/auth/refresh',
-	'/2fa/verify',
 	'/health'
 ];
 
@@ -73,19 +63,17 @@ app.addHook('onRequest', (request, reply, done) => {
 	authMiddleware(app, request, reply, done);
 });
 
-// Register routes
-await app.register(oauthRoutes);
-await app.register(twofaRoutes);
-await app.register(authRoutes);
+// TODO: Register user routes here when they exist
+// await app.register(userRoutes);
 
 // Health check endpoint
 app.get('/health', async (request, reply) => {
-	return { status: 'ok', service: 'auth', timestamp: new Date().toISOString() };
+	return { status: 'ok', service: 'user', timestamp: new Date().toISOString() };
 });
 
 // Graceful shutdown
 const cleanup = async (signal) => {
-	app.log.info(`${signal} received. Cleaning up auth service...`);
+	app.log.info(`${signal} received. Cleaning up user service...`);
 	try {
 		await app.close();
 		process.exit(0);
@@ -102,12 +90,12 @@ process.on('SIGTERM', cleanup);
 const start = async () => {
 	try {
 		await app.listen({ 
-			port: process.env.PORT || 3000, 
+			port: process.env.PORT || 3002, 
 			host: '0.0.0.0' 
 		});
-		app.log.info('Auth service started successfully');
+		app.log.info('User service started successfully');
 	} catch (error) {
-		app.log.error('Error starting auth service:', error);
+		app.log.error('Error starting user service:', error);
 		process.exit(1);
 	}
 };

@@ -45,7 +45,7 @@ async function load404(push: boolean)
 	const res = await fetch(error_404_path);
 	app.innerHTML = await res.text();
 	if (push)
-		history.pushState({path: "404"}, "", "/404");
+		history.pushState({path: "404"}, "", "/404.");
 	update_event();
 }
 
@@ -72,7 +72,7 @@ async function navigate(path: string, push: boolean = true)
 		try {
 			const res = await fetch(file);
 			if (!res.ok)
-				throw new Error("File not found");
+				throw new Error("File not found.");
 			app.innerHTML = await res.text();
 			if (push)
 				history.pushState({path}, "", path);

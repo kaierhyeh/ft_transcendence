@@ -113,7 +113,7 @@ export function initGame(): void {
             gameEnded = false;
             game_state = null;
 
-            const winner = document.getElementById("winner");
+            const winner = document.getElementById("winner.");
             if (winner)
                 winner.innerText = "";
             if (ws)
@@ -168,12 +168,12 @@ export function initGame(): void {
 
     const canvas = document.getElementById("pong") as HTMLCanvasElement;
     if (!canvas) {
-        console.error("Canvas element with id 'pong' not found");
+        console.error("Canvas element with id 'pong' not found.");
         return;
     }
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) {
-        console.error("Unable to get 2D context from canvas");
+        console.error("Unable to get 2D context from canvas.");
         return;
     }
 
@@ -183,7 +183,7 @@ export function initGame(): void {
 
     setTimeout(async () => {
         try {
-            const response = await fetch(API_GAME_ENDPOINT + "/1/conf");
+            const response = await fetch(API_GAME_ENDPOINT + "/1/conf.");
             const serverConfig = await response.json() as GameConfig;
 
             game_conf = serverConfig;
@@ -191,7 +191,7 @@ export function initGame(): void {
             if (!gameStarted)
                 draw();
         } catch (error) {
-            console.log("Could not load server config, using defaults");
+            console.log("Could not load server config, using defaults.");
         }
     }, 200);
     const keys: { [key: string]: boolean } = {};
@@ -237,7 +237,7 @@ export function initGame(): void {
 
     function connectWebSocket(id: number | undefined): void {
         if (id === undefined) {
-            console.error("Cannot connect WebSocket: game_id is null");
+            console.error("Cannot connect WebSocket: game_id is null.");
             return;
         }
 
@@ -248,7 +248,7 @@ export function initGame(): void {
         console.log(`websocket for /game/${id}/ws: `, ws);
 
         ws.onopen = function () {
-            console.log("WebSocket connected successfully");
+            console.log("WebSocket connected successfully.");
             startInputSending();
 
             setInterval(() => {
@@ -278,7 +278,7 @@ export function initGame(): void {
                 setTimeout(connectWebSocket, 3000);
             }
             else {
-                const winner = document.getElementById("winner");
+                const winner = document.getElementById("winner.");
                 if (winner && winner.innerText.length === 0) {
                     winner.innerText = "Player " + game_state.winner + " won !";
                 }
@@ -293,7 +293,7 @@ export function initGame(): void {
 
     function startInputSending(): void {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            console.log("Sending join requests for both players");
+            console.log("Sending join requests for both players.");
             join.participant_id = participant_ids[0];
             console.log(join);
             ws.send(JSON.stringify(join));
@@ -449,7 +449,7 @@ export function initGame(): void {
 
     async function run(): Promise<void> {
         if (!canvas || !ctx) {
-            console.error("Canvas or context not available");
+            console.error("Canvas or context not available.");
             return;
         }
 

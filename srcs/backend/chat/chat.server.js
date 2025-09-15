@@ -1,13 +1,9 @@
 import fastify from "fastify";
-import redis from './redis/redisClient.js';
-import { initializeDatabase } from './db/schema.js';
-import { authMiddleware } from './auth.middleware.js';
-import { oauthRoutes } from './routes/oauth.routes.js';
-import { twofaRoutes } from './routes/twofa.routes.js';
-import { authRoutes } from './routes/auth.routes.js';
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
-import multipart from '@fastify/multipart';
+import WebSocket from "@fastify/websocket";
+import { initializeDatabase } from "../shared/db/schema.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -29,12 +25,16 @@ await app.register(cors, {
 
 await app.register(cookie);
 
-await app.register(multipart, {
-	attachFieldsToBody: 'auto',
-	limits: {
-		fileSize: 2 * 1024 * 1024 // 2MB
+// Configure WebSocket
+await app.register(WebSocket, {
+	options: { 
+		maxPayload: 1048576,
+		clientTracking: true
 	}
 });
+
+// Store active WebSocket connections
+app.decorate('connections', new Map());
 
 // Initialize database
 try {
@@ -47,7 +47,7 @@ try {
 	`).run();
 
 	app.decorate('db', db);
-	app.log.info('Database initialized successfully');
+	app.log.info('Database initialized successfully.');
 } catch (error) {
 	app.log.error(error, 'Database initialization error:');
 	process.exit(1);
@@ -55,12 +55,7 @@ try {
 
 // Public routes that don't need authentication
 const publicRoutes = [
-	'/auth/google',
-	'/auth/google/username',
-	'/auth/login',
-	'/auth/register',
-	'/auth/refresh',
-	'/2fa/verify',
+	'/ws',
 	'/health'
 ];
 
@@ -73,20 +68,28 @@ app.addHook('onRequest', (request, reply, done) => {
 	authMiddleware(app, request, reply, done);
 });
 
-// Register routes
-await app.register(oauthRoutes);
-await app.register(twofaRoutes);
-await app.register(authRoutes);
+// TODO: Register WebSocket routes here when they exist
+// await app.register(wsRoutes);
 
 // Health check endpoint
 app.get('/health', async (request, reply) => {
-	return { status: 'ok', service: 'auth', timestamp: new Date().toISOString() };
+	return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
 });
 
 // Graceful shutdown
 const cleanup = async (signal) => {
-	app.log.info(`${signal} received. Cleaning up auth service...`);
+	app.log.info(`${signal} received. Cleaning up chat service...`);
 	try {
+		// Close all WebSocket connections
+		if (app.connections && app.connections.size > 0) {
+			app.connections.forEach((connection, userId) => {
+				if (connection.readyState === connection.OPEN) {
+					connection.close();
+				}
+			});
+			app.connections.clear();
+		}
+		
 		await app.close();
 		process.exit(0);
 	} catch (error) {
@@ -102,12 +105,12 @@ process.on('SIGTERM', cleanup);
 const start = async () => {
 	try {
 		await app.listen({ 
-			port: process.env.PORT || 3000, 
+			port: process.env.PORT || 3003, 
 			host: '0.0.0.0' 
 		});
-		app.log.info('Auth service started successfully');
+		app.log.info('Chat service started successfully.');
 	} catch (error) {
-		app.log.error('Error starting auth service:', error);
+		app.log.error('Error starting chat service:', error);
 		process.exit(1);
 	}
 };
