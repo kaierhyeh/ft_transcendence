@@ -1,5 +1,5 @@
 import { Database } from "better-sqlite3";
-import { GoogleUserCreationData, LocalUserCreationData } from "../schemas";
+import { GoogleUserCreationData, LocalUserCreationData, UpdateData } from "../schemas";
 
 export interface UserRow {
     user_id: number;
@@ -32,8 +32,8 @@ export class UserRepository {
             data.username,
             data.email,
             data.password_hash,
-            data.alias || null,
-            data.avatar_url || null
+            data.alias ?? null,  // Use nullish coalescing for more explicit null handling
+            data.avatar_url ?? null
         );
         return result.lastInsertRowid as number;
     }
@@ -47,8 +47,8 @@ export class UserRepository {
             data.google_sub,
             data.username,
             data.email,
-            data.alias || null,
-            data.avatar_url || null
+            data.alias ?? null,  // Use nullish coalescing for more explicit null handling
+            data.avatar_url ?? null
         );
         return result.lastInsertRowid as number;
     }
@@ -60,6 +60,91 @@ export class UserRepository {
               AND user_type = 'registered'
         `);
         const result = stmt.get(login, login, login) as UserRow | undefined;
+        return result || null;
+    }
+
+    public updateById(user_id: number, data: UpdateData): number {
+        // Build dynamic SQL query only for fields that are provided
+        const set_clauses: string[] = [];
+        const params: Record<string, any> = { user_id };
+
+        // Handle regular fields
+        if (data.email !== undefined) {
+            set_clauses.push("email = @email");
+            params.email = data.email;
+        }
+        if (data.password_hash !== undefined) {
+            set_clauses.push("password_hash = @password_hash");
+            params.password_hash = data.password_hash;
+        }
+        if (data.alias !== undefined) {
+            set_clauses.push("alias = @alias");
+            params.alias = data.alias;
+        }
+        if (data.avatar_url !== undefined) {
+            set_clauses.push("avatar_url = @avatar_url");
+            params.avatar_url = data.avatar_url;
+        }
+        if (data.settings !== undefined) {
+            set_clauses.push("settings = @settings");
+            params.settings = data.settings;
+        }
+
+        // Handle 2FA nested object
+        if (data.two_fa !== undefined) {
+            if (data.two_fa.two_fa_enabled !== undefined) {
+                set_clauses.push("two_fa_enabled = @two_fa_enabled");
+                params.two_fa_enabled = data.two_fa.two_fa_enabled ? 1 : 0;
+            }
+            if (data.two_fa.two_fa_secret !== undefined) {
+                set_clauses.push("two_fa_secret = @two_fa_secret");
+                params.two_fa_secret = data.two_fa.two_fa_secret;
+            }
+        }
+
+        // If no fields to update, return 0
+        if (set_clauses.length === 0) {
+            return 0;
+        }
+
+        // Always update the timestamp
+        set_clauses.push("updated_at = datetime('now')");
+
+        const sql = `
+            UPDATE users
+            SET ${set_clauses.join(', ')}
+            WHERE user_id = @user_id
+        `;
+
+        const stmt = this.db.prepare(sql);
+        const result = stmt.run(params);
+        return result.changes as number;
+    }
+
+    public findById(user_id: number): UserRow | null {
+        const stmt = this.db.prepare(`
+            SELECT * FROM users 
+            WHERE user_id = ? AND user_type = 'registered'
+        `);
+        const result = stmt.get(user_id) as UserRow | undefined;
+        return result || null;
+    }
+
+    public findByEmail(email: string): UserRow | null {
+        const stmt = this.db.prepare(`
+            SELECT * FROM users 
+            WHERE email = ? AND user_type = 'registered'
+        `);
+        const result = stmt.get(email) as UserRow | undefined;
+        return result || null;
+    }
+
+    public findByGoogleSub(google_sub: string): UserRow | null {
+        const stmt = this.db.prepare(`
+            SELECT * FROM users 
+            WHERE google_sub = ? AND user_type = 'registered'
+        `);
+        const result = stmt.get(google_sub) as UserRow | undefined;
         return result || null;
     }
 

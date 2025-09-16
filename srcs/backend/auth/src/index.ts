@@ -10,17 +10,11 @@ async function run() {
   
   await fastify.register(authRoutes, {prefix: "/auth"} );
   
+  // Simple JWT configuration that works
   await fastify.register(fastifyJwt, {
     secret: {
       private: fs.readFileSync(CONFIG.JWT.PRIVATE_KEY_PATH, 'utf8'),
       public: fs.readFileSync(CONFIG.JWT.PUBLIC_KEY_PATH, 'utf8')
-    },
-    sign: {
-      algorithm: CONFIG.JWT.ALGORITHM,
-      expiresIn: CONFIG.JWT.EXPIRES_IN,
-    },
-    verify: {
-      algorithms: [CONFIG.JWT.ALGORITHM]
     }
   });
   

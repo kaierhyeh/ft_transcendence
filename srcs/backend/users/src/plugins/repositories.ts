@@ -55,5 +55,5 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(repositoriesPlugin, {
   name: "repositories-plugin",
-  fastify: "4.x"
+  fastify: "5.x"
 });

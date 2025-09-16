@@ -122,6 +122,7 @@ export const loginSchema = {
 
 export const twoFASchema = {
   type: "object",
+  required: ["two_fa_enabled", "two_fa_secret"],
   properties: {
     two_fa_enabled: twoFAEnabledSchema,
     two_fa_secret: twoFASecretSchema

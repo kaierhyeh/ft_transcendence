@@ -10,17 +10,19 @@
     "serve": "node dist/index.js"
   },
   "dependencies": {
-    "fastify": "^4.0.0",
+    "@fastify/jwt": "^10.0.0",
     "@fastify/websocket": "^8.0.0",
-    "@fastify/jwt": "^8.0.0",
     "better-sqlite3": "12.2.0",
-    "json-schema-to-ts": "^3.0.0"
+    "fastify": "^5.0.0",
+    "json-schema-to-ts": "^3.0.0",
+    "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@types/better-sqlite3": "^7.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.18.1",
-    "@types/better-sqlite3": "^7.0.0",
-    "ts-node": "^10.0.0"
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
   }
 }

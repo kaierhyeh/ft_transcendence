@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
 import { AccountCreationData, createAccountSchema, LoginParams, loginSchema, UpdateData, updateSchema } from "../schemas";
+import { verifyJWT } from "../middleware/veryfyJWT";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
@@ -19,9 +20,11 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   fastify.put<{ Body: UpdateData }>(
     "/me",
-    { schema: { body: updateSchema } }), {
-    userController.
-  });
+    { schema: { body: updateSchema },
+      preHandler: verifyJWT
+    }, 
+    userController.updateMe.bind(userController)
+  );
 
   fastify.get("/me", async (request, reply) => {
     // retrieve current user profile

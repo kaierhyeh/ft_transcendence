@@ -1,15 +1,16 @@
 import Fastify from "fastify";
-import websocketPlugin from '@fastify/websocket';
 import { CONFIG } from "./config";
 import routes from "./routes"
 import repositoriesPlugin from "./plugins/repositories";
 import servicesPlugin from "./plugins/services";
+import jwtPlugin from "./plugins/jwt"
+
 
 const fastify = Fastify({ logger: true });
 
 async function run() {
   
-  await fastify.register(websocketPlugin);
+  fastify.register(jwtPlugin);
   await fastify.register(repositoriesPlugin);
   await fastify.register(servicesPlugin);
 

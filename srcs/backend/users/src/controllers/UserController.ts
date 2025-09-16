@@ -1,11 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { AccountCreationData, LoginParams } from '../schemas';
+import { AccountCreationData, LoginParams, UpdateData } from '../schemas';
 
 export class UserController {
   constructor(private userService: UserService) {}
 
-  async createAccount(
+  public async createAccount(
     request: FastifyRequest<{ Body: AccountCreationData }>, 
     reply: FastifyReply
   ) {
@@ -22,7 +22,7 @@ export class UserController {
     }
   }
 
-  async getUserByLogin(
+  public async getUserByLogin(
     request: FastifyRequest<{ Params: LoginParams }>, 
     reply: FastifyReply
   ) {
@@ -34,17 +34,40 @@ export class UserController {
     }
   }
 
-  // async getUserProfile(
-  //   request: FastifyRequest<{ Params: { id: string } }>, 
-  //   reply: FastifyReply
-  // ) {
-  //   try {
-  //     const user = await this.userService.getUserById(parseInt(request.params.id));
-  //     reply.send(user);
-  //   } catch (error) {
-  //     this.handleError(error, reply);
-  //   }
-  // }
+  public async updateMe(
+    request: FastifyRequest<{ Body: UpdateData }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const user_id = request.user?.sub; // `sub` is the user ID in the JWT payload
+      
+      if (!user_id) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      
+      const updateData = request.body;
+      const changes = await this.userService.updateUser(user_id, updateData);
+      
+      return reply.send({ changes });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async getMe(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = request.user?.sub;
+      
+      if (!userId) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      
+      const user = await this.userService.getUserById(userId);
+      return reply.send(user);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
 
   private handleError(error: any, reply: FastifyReply) {
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {

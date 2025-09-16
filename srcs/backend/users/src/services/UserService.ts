@@ -1,5 +1,5 @@
 import { UserRepository, UserRow } from '../repositories/UserRepository';
-import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData } from '../schemas';
+import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData, UpdateData } from '../schemas';
 
 export class UserService {
   constructor(
@@ -50,13 +50,20 @@ export class UserService {
     return user;
   }
 
-  // async getUserById(id: number) {
-  //   const user = await this.userRepository.findById(id);
-  //   if (!user) {
-  //     const error = new Error('User not found');
-  //     (error as any).code = 'USER_NOT_FOUND';
-  //     throw error;
-  //   }
-  //   return user;
-  // }
+  public async updateUser(user_id: number, data: UpdateData): Promise<number> {
+    // Implementation will be added later
+    const changes = this.userRepository.updateById(user_id, data);
+
+    return changes;
+  }
+
+  public async getUserById(id: number): Promise<UserRow> {
+    const user = this.userRepository.findById(id);
+    if (!user) {
+      const error = new Error('User not found');
+      (error as any).code = 'USER_NOT_FOUND';
+      throw error;
+    }
+    return user;
+  }
 }

@@ -20,6 +20,7 @@ export class AuthController {
         aud: CONFIG.JWT.AUDIENCE
       },
       { 
+        algorithm: CONFIG.JWT.ALGORITHM as any,
         expiresIn: CONFIG.JWT.EXPIRES_IN
       }
     );
