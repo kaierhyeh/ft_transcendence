@@ -23,5 +23,7 @@ CREATE TABLE IF NOT EXISTS messages (
 -- add as an example for getChatPartners() from chat.repository.ts
 CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,							-- user id
-	nickname TEXT NOT NULL											-- user nickname
+	username TEXT NOT NULL,											-- user username
+	wins INTEGER DEFAULT 0,											-- user wins
+	losses INTEGER DEFAULT 0										-- user losses
 );

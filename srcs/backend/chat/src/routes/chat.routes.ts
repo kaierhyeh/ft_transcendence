@@ -25,7 +25,7 @@ export const chatRoutes: FastifyPluginAsync = async (fastify:FastifyInstance): P
 	// chat routes
 	colorLog("cyan", fastify)
 	fastify.post("/messages", postMessagesController);
-	fastify.get("/messages/:userId", getMessagesController);
+	fastify.get("/messages/:chatId/:userId", getMessagesController);
 	fastify.delete("/messages/:id", deleteMessageController);
 	fastify.get("/chats/:userId", getChatPartnersController);
 

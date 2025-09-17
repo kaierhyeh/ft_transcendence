@@ -21,6 +21,7 @@ import	{
 import	{
 		logError
 		} from "../utils/errorHandler";
+import { colorLog } from "../utils/logger";
 
 export async function postMessageService(fromId: number, toId: number, msg: string) {
 	try {
@@ -39,9 +40,10 @@ export async function postMessageService(fromId: number, toId: number, msg: stri
 	}
 }
 
-export async function getMessagesService(userId: number) {
+export async function getMessagesService(chatId: number, userId: number) {
+	colorLog("cyan", "getMessagesService: chatId=", chatId, " userId=", userId);
 	try {
-		const msgs = await getMessagesByUserId(userId);
+		const msgs = await getMessagesByUserId(chatId, userId);
 		if (!msgs)
 			throw chatNotFoundError("Messages for user not found");
 		return (msgs);

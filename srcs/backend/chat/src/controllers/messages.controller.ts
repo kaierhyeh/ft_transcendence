@@ -52,13 +52,14 @@ export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fro
 	}
 }
 
-export async function getMessagesController(req:FastifyRequest<{Params:{userId:string}}>, reply:FastifyReply) {
+export async function getMessagesController(req:FastifyRequest<{Params:{chatId:string, userId:string}}>, reply:FastifyReply) {
 	colorLog("cyan", "getMessagesController: ", req.method, req.url);
 	try {
 		const userId = parseInt(req.params.userId);
-		if (isNaN(userId))
-			return (reply.status(400).send({error: "Invalid user ID"}));
-		const msgs = await getMessagesService(userId);
+		const chatId = parseInt(req.params.chatId);
+		if (isNaN(chatId) || isNaN(userId) || chatId < 0 || userId < 0)
+			return (reply.status(400).send({error: "Invalid chat ID or user ID"}));
+		const msgs = await getMessagesService(chatId, userId);
 		return (msgs);
 	} catch (e) {
 		logError(e, "getMessagesController");

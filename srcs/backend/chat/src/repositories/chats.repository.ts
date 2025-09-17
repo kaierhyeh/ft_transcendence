@@ -37,13 +37,14 @@ export async function getChatPartners(userId:number) {
 		// this query collect chat partners IDs and usernames
 
 		const query = `
-			SELECT u.id, u.username
-			FROM users u
-			JOIN messages m ON u.id = m.from_id OR u.id = m.to_id
-			WHERE u.id = ?
+			SELECT DISTINCT u.id AS userId, c.id AS chatId, u.username, u.wins, u.losses
+			FROM chats c
+			JOIN users u
+				ON (u.id = c.user_id_a AND c.user_id_b = ?)
+				OR (u.id = c.user_id_b AND c.user_id_a = ?)
 			ORDER BY u.username ASC`;
 
-		database.all(query, [userId], (e:Error|null, data) => {
+		database.all(query, [userId, userId], (e:Error|null, data) => {
 			if (e) {
 				logError(e, "getChatPartners");
 				return (reject(e));

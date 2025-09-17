@@ -6,17 +6,19 @@ import { logError } from "../utils/errorHandler";
 // to use as type for data
 // data:Message[] - if its list of messages
 import { Message } from "../types/messages.type";
+import { colorLog } from "../utils/logger";
 
 // get all messages from/to user with userId
-export async function getMessagesByUserId(userId:number) {
+export async function getMessagesByUserId(chatId:number, userId:number) {
+	colorLog("cyan", "getMessagesByUserId: chatId=", chatId, " userId=", userId);
 	return new Promise((resolve, reject) => {
 
 		const query = `
-			SELECT * FROM messages
-			WHERE (from_id = ? OR to_id = ?)
+			SELECT id AS id, chat_id AS chatId, from_id AS fromId, to_id AS toId, msg AS msg FROM messages
+			WHERE chat_id = ? AND (from_id = ? OR to_id = ?)
 			ORDER BY id ASC`;
 
-		database.all(query, [userId, userId], (e:Error|null, data) => {
+		database.all(query, [chatId, userId, userId], (e:Error|null, data) => {
 			if (e) {
 				logError(e, "getMessagesByUserId");
 				return (reject(e));

@@ -20,12 +20,23 @@ export interface NewMessageResponse {
 	msg: string;
 }
 
+/*
+ * A user in a chat
+ * @chatId - the ID of the chat
+ * @userId - the ID of the user
+ * @username - the username of the user
+ * @avatar - the avatar URL of the user
+ * @wins - number of wins
+ * @losses - number of losses
+ * @isBlockedByThis - whether this user is blocked by the current user
+ */
 export interface ChatUser {
-	id: number;
+	chatId: number;
+	userId: number;
 	username: string;
 	avatar: string;
-	win: number;
-	loses: number;
+	wins: number;
+	losses: number;
 	isBlockedByThis: boolean;
 }
 
@@ -135,34 +146,42 @@ export async function initChat(currentUserId: number): Promise<void> {
 
 	function renderChatList(users: ChatUser[]): void {
 		console.log("CHAT: renderChatList");
+		users.map(user => {
+			console.log(`User: ${user.userId} (${user.username}), chatId: ${user.chatId}, avatar: ${user.avatar}, W:${user.wins} L:${user.losses}`);
+		});
 		chatUsersList.innerHTML = users.map(user => `
-			<div class="chatConv" data-user-id="${user.id}">
-				<img src="${user.avatar}" class="chat-avatar" />
-				<span>${user.username} (${user.win}W / ${user.loses}L)</span>
+			<div class="chat-with" data-chat-id="${user.chatId}" data-user-id="${user.userId}">
+				<img class="chat-avatar" src="$${user.avatar || '/images/image.png'}">
+					<span>
+						${user.username} ( <span class="green-text">${user.wins}:W</span> / <span class="red-text">${user.losses}:L</span> )
+					</span>
 			</div>
 		`).join("");
 
-		document.querySelectorAll(".chatConv").forEach(conv => {
+		document.querySelectorAll(".chat-with").forEach(conv => {
 			conv.addEventListener("click", () => {
 				const userId = (conv as HTMLElement).dataset.userId;
-				if (userId) openChatWindow(parseInt(userId));
+				const chatId = (conv as HTMLElement).dataset.chatId;
+				console.log("CHAT: Clicked on chatId:", chatId, " userId:", userId);
+				if (chatId && userId) openChatWindow(parseInt(chatId), users.find(u => u.userId === parseInt(userId))!);
 			});
 		});
 	}
 
-	async function openChatWindow(withUserId: number): Promise<void> {
+	async function openChatWindow(chatId: number, withUser: ChatUser): Promise<void> {
 		try {
 			console.log("CHAT: openChatWindow");
-			const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${withUserId}`);
+			const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${chatId}/${withUser.userId}`);
 			if (!res.ok) throw new Error("Failed to load messages");
 			const messages: Message[] = await res.json();
-			renderMessages(messages, withUserId);
+			console.log("CHAT: Loaded messages:", messages);
+			renderMessages(messages, withUser);
 		} catch (err) {
 			console.error("Error loading messages:", err);
 		}
 	}
 
-	function renderMessages(messages: Message[], withUserId: number): void {
+	function renderMessages(messages: Message[], withUser: ChatUser): void {
 		console.log("CHAT: renderMessages");
 
 		chatUsersList.classList.add("hidden");
@@ -170,8 +189,15 @@ export async function initChat(currentUserId: number): Promise<void> {
 		chatBlock.classList.remove("hidden");
 		backChatBtn?.classList.remove("hidden");
 
+		const thisUser = "You: ";
+
+
+
 		chatMessages.innerHTML = messages.map(msg => `
-			<div class="chat-msg ${msg.fromId === currentUserId ? "from-me" : "from-them"}">
+			<div class="chat-msg ${msg.fromId === withUser.userId ? withUser.username : "from-them"}">
+				${msg.fromId !== withUser.userId
+					? `<span class="green-text">You: </span>`
+					: `<span class="blue-text">${withUser.username}: </span>`}
 				${msg.msg}
 			</div>
 		`).join("");
@@ -182,15 +208,15 @@ export async function initChat(currentUserId: number): Promise<void> {
 		if (sendBtn && input) {
 			sendBtn.onclick = async () => {
 				if (input.value.trim()) {
-					await sendMessage(withUserId, input.value.trim());
+					const newMsg: NewMessageResponse = await sendMessage(withUser.userId, input.value.trim());
 					input.value = "";
-					await openChatWindow(withUserId);
+					if (newMsg) await openChatWindow(newMsg.chatId, withUser);
 				}
 			};
 		}
 	}
 
-	async function sendMessage(toId: number, msg: string): Promise<void> {
+	async function sendMessage(toId: number, msg: string): Promise<NewMessageResponse> {
 		console.log("CHAT: sendMessage");
 		const payload: NewMessageRequest = { fromId: currentUserId, toId, msg };
 
@@ -203,8 +229,10 @@ export async function initChat(currentUserId: number): Promise<void> {
 			if (!res.ok) throw new Error("Failed to send message");
 			const data: NewMessageResponse = await res.json();
 			console.log("Message sent:", data);
+			return data;
 		} catch (err) {
 			console.error("Error sending message:", err);
+			throw err;
 		}
 	}
 
