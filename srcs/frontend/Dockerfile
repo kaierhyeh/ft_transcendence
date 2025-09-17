@@ -9,8 +9,8 @@ RUN npm install -g typescript
 
 RUN tsc
 
-RUN cp dist/*.js dist/*.js.map ./scripts
-RUN rm -rf dist node_modules scripts/*.ts
+RUN cp -r dist/* ./scripts/
+RUN rm -rf dist node_modules scripts/*.ts scripts/**/*.ts
 
 FROM nginx:stable-alpine
 

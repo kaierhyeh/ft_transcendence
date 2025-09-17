@@ -2,6 +2,7 @@ import {initGame} from "./game.js";
 import {initGame4p} from "./game4p.js";
 import {initStats} from "./stats.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
+import {initTournament} from "./tournament.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -33,6 +34,10 @@ const initScripts: Record<string, () => void> = {
 	"/profile": () => {
 		if (typeof initProfile === "function")
 			initProfile();
+	},
+	"/tournament": () => {
+		if (typeof initTournament === "function")
+			initTournament();
 	},
 	"/oauth-callback": () => {
 		if (typeof handleOAuthCallback === "function")

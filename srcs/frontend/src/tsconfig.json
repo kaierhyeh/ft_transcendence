@@ -12,5 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": false,
     "sourceMap": true
-  }
+  },
+  "include": [
+    "scripts/**/*"
+  ]
 }

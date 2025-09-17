@@ -10,7 +10,7 @@ const PADDLE_SPEED: number = 350; // pixel / s
 const WIDTH: number = 800;
 const HEIGHT: number = 750;
 
-const WIN_POINT: number = 7;
+const WIN_POINT: number = 1;
 const BALL_SIZE: number = 10;
 const MAX_BALL_SPEED: number = PADDLE_SPEED * 2; // pixel/s
 

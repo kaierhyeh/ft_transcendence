@@ -144,6 +144,16 @@ export function initGame(): void {
 
     (window as any).setAIMode = setAIMode;
 
+    (window as any).gameSystem = {
+        draw: draw,
+        gameState: () => game_state,
+        gameConfig: () => game_conf,
+        setGameState: (state: any) => { game_state = state; },
+        setGameConfig: (config: any) => { game_conf = config; },
+        setGameStarted: (started: boolean) => { gameStarted = started; },
+        startGame: startGame
+    };
+
     function setupGameButtons(): void {
         const onePlayerBtn = document.getElementById('one-player-btn') as HTMLButtonElement;
         if (onePlayerBtn) {
