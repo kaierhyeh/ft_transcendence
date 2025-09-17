@@ -1,6 +1,6 @@
 import { AuthClient } from '../clients/AuthClient';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
-import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData, UpdateRawData } from '../schemas';
+import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
 
 export class UserService {
   private authClient: AuthClient;
@@ -63,7 +63,7 @@ export class UserService {
       avatar_url: raw_data.avatar_url,
       settings: raw_data.settings,
       // Extract just the hash string from the auth service response
-      password_hash: raw_data.password ? (await this.authClient.hashPassword(raw_data.password)).password_hash : undefined,
+      password_hash: raw_data.password ? await this.updatePassword(user_id, raw_data.password) : undefined,
       // Extract the TwoFa object from the auth service response
       two_fa: raw_data.two_fa_enabled !== undefined ? await this.authClient.set2fa(raw_data.two_fa_enabled) : undefined
     };
@@ -72,6 +72,18 @@ export class UserService {
 
     return changes;
   }
+
+  private async updatePassword(user_id: number, update_data: PasswordUpdateData): Promise<string> {
+
+    const user = await this.getUserById(user_id);
+    if (!user.password_hash) {
+      const error = new Error('Forbidden operation: No existing password to update');
+      (error as any).code = 'FORBIDDEN_OPERATION';
+      throw error;
+    }
+    const { password_hash } = await this.authClient.updatePasswordHash(update_data, user.password_hash);
+    return password_hash;
+  } 
 
   public async getUserById(id: number): Promise<UserRow> {
     const user = this.userRepository.findById(id);

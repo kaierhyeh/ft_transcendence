@@ -55,5 +55,28 @@ export const passwordSchema = {
   description: "Password to be hashed"
 } as const;
 
+export const passwordUpdateSchema = {
+  type: "object",
+  required: ["old_hash", "old_password", "new_password"],
+  properties: {
+    old_hash: {
+      type: "string",
+      description: "Current password hash from database"
+    },
+    old_password: {
+      type: "string",
+      minLength: 8,
+      description: "Current password provided by user"
+    },
+    new_password: {
+      type: "string", 
+      minLength: 8,
+      description: "New password to be hashed"
+    }
+  },
+  additionalProperties: false
+} as const;
+
 export type SignupFormData = FromSchema<typeof signupFormSchema>;
 export type LoginData = FromSchema<typeof loginSchema>;
+export type PasswordUpdateData = FromSchema<typeof passwordUpdateSchema>;

@@ -121,11 +121,21 @@ export const loginSchema = {
   additionalProperties: false
 } as const;
 
+export const updatePasswordSchema = {
+  type: "object",
+  required: ["old", "new"],
+  properties: {
+    old: passwordSchema,
+    new: passwordSchema
+  },
+  additionalProperties: false
+} as const;
+
 export const updateSchema = {
   type: "object", 
   properties: {
     email: emailSchema,
-    password: passwordSchema,
+    password: updatePasswordSchema,
     alias: aliasSchema,
     avatar_url: avatarUrlSchema,
     settings: settingsSchema,
@@ -140,3 +150,4 @@ export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
+export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;

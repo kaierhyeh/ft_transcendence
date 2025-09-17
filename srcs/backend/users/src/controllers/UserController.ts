@@ -78,6 +78,14 @@ export class UserController {
       reply.status(404).send({ 
         error: "User not found" 
       });
+    } else if (error.code === 'FORBIDDEN_OPERATION') {
+      reply.status(403).send({ 
+        error: error.message || "Forbidden operation" 
+      });
+    } else if (error.status === 401 ) {
+      reply.status(401).send({ 
+        error: error.message || "Unauthorized" 
+      });
     } else {
       reply.log.error(error);
       reply.status(500).send({ 

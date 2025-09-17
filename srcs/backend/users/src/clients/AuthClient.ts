@@ -1,4 +1,5 @@
 import { CONFIG } from "../config";
+import { PasswordUpdateData } from "../schemas";
 import { TwoFa } from "../types";
 
 interface ErrorResponse {
@@ -11,13 +12,19 @@ interface ErrorResponse {
 export class AuthClient {
   private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
 
-  async hashPassword(password: string): Promise<{ password_hash: string }> {
+  async updatePasswordHash(update_data: PasswordUpdateData, old_hash: string): Promise<{ password_hash: string }> {
     const response = await fetch(`${this.base_url}/auth/hash-password`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(password)
+      body: JSON.stringify(
+        {
+          old_hash,
+          old_password: update_data.old,
+          new_password: update_data.new
+        }
+      )
     });
 
     if (!response.ok) {

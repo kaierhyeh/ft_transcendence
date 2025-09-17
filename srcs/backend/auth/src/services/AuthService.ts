@@ -43,8 +43,18 @@ export class AuthService {
     return {user_id, username};
   }
 
-  async hashPassword(password: string): Promise<string> {
-    return await hashPassword(password);
+  async updatePasswordHash(old_hash: string, old_password: string, new_password: string): Promise<string> {
+    // First verify the old password matches the old hash
+    const valid = await isValidPassword(old_password, old_hash);
+    if (!valid) {
+      const error = new Error('Invalid current password');
+      (error as any).code = 'INVALID_CURRENT_PASSWORD';
+      (error as any).status = 401;
+      throw error;
+    }
+
+    // If verification passes, hash the new password
+    return await hashPassword(new_password);
   }
 
   // private async createGoogleAccount(data: GoogleUserCreationData) {

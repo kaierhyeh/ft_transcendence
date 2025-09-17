@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { AuthService } from '../services/AuthService';
 import { CONFIG } from '../config';
-import { LoginData, SignupFormData } from '../schemas';
+import { LoginData, PasswordUpdateData, SignupFormData } from '../schemas';
 
 export class AuthController {
   private authService: AuthService;
@@ -68,13 +68,17 @@ export class AuthController {
     }
   }
 
-  async hashPassword(
-    request: FastifyRequest<{ Body: string }>, 
+  async updatePasswordHash(
+    request: FastifyRequest<{ Body: PasswordUpdateData }>, 
     reply: FastifyReply
   ) {
     try {
-      const password = request.body;
-      const password_hash = await this.authService.hashPassword(password);
+      const data = request.body;
+      const password_hash = await this.authService.updatePasswordHash(
+        data.old_hash,
+        data.old_password,
+        data.new_password
+      );
       
       reply.send({ password_hash });
     } catch (error) {
@@ -113,6 +117,13 @@ export class AuthController {
     if (error.code === 'INVALID_CREDENTIALS') {
       reply.status(401).send({
         error: "Invalid credentials"
+      });
+      return;
+    }
+
+    if (error.code === 'INVALID_CURRENT_PASSWORD') {
+      reply.status(401).send({
+        error: "Invalid current password"
       });
       return;
     }
