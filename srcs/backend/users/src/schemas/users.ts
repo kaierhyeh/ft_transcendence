@@ -15,6 +15,11 @@ const emailSchema = {
   maxLength: 254
 } as const;
 
+const passwordSchema = {
+  type: "string",
+  minLength: 8
+} as const;
+
 const passwordHashSchema = {
   type: "string",
   minLength: 8
@@ -41,10 +46,6 @@ const settingsSchema = {
 
 const twoFAEnabledSchema = {
   type: "boolean"
-} as const;
-
-const twoFASecretSchema = {
-  type: "string"
 } as const;
 
 
@@ -120,35 +121,22 @@ export const loginSchema = {
   additionalProperties: false
 } as const;
 
-export const twoFASchema = {
-  type: "object",
-  required: ["two_fa_enabled", "two_fa_secret"],
-  properties: {
-    two_fa_enabled: twoFAEnabledSchema,
-    two_fa_secret: twoFASecretSchema
-  },
-  additionalProperties: false
-} as const;
-
 export const updateSchema = {
   type: "object", 
   properties: {
     email: emailSchema,
-    password_hash: passwordHashSchema,
+    password: passwordSchema,
     alias: aliasSchema,
     avatar_url: avatarUrlSchema,
     settings: settingsSchema,
-    two_fa: twoFASchema
+    two_fa_enabled: twoFAEnabledSchema
   },
   additionalProperties: false
 } as const;
-
-
 
 
 export type AccountCreationData = FromSchema<typeof createAccountSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
-export type UpdateData = FromSchema<typeof updateSchema>;
-export type TwoFAData = FromSchema<typeof twoFASchema>;
+export type UpdateRawData = FromSchema<typeof updateSchema>;

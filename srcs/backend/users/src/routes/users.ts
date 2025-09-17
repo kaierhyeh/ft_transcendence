@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { AccountCreationData, createAccountSchema, LoginParams, loginSchema, UpdateData, updateSchema } from "../schemas";
+import { AccountCreationData, createAccountSchema, LoginParams, loginSchema, UpdateRawData, updateSchema } from "../schemas";
 import { verifyJWT } from "../middleware/veryfyJWT";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
@@ -18,7 +18,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByLogin.bind(userController)
   );
 
-  fastify.put<{ Body: UpdateData }>(
+  fastify.put<{ Body: UpdateRawData }>(
     "/me",
     { schema: { body: updateSchema },
       preHandler: verifyJWT

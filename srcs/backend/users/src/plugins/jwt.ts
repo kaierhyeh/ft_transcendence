@@ -19,7 +19,7 @@ const jwtPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate("verifyToken", async (token: string): Promise<JwtPayload> => {
     return new Promise((resolve, reject) => {
       verify(token, publicKey, {
-        algorithms: ['RS256'],
+        algorithms: [CONFIG.JWT.ALGORITHM as any],
         issuer: CONFIG.JWT.ISSUER,
         audience: CONFIG.JWT.AUDIENCE,
       }, (err: any, payload: any) => {

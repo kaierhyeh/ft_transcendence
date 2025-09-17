@@ -43,6 +43,10 @@ export class AuthService {
     return {user_id, username};
   }
 
+  async hashPassword(password: string): Promise<string> {
+    return await hashPassword(password);
+  }
+
   // private async createGoogleAccount(data: GoogleUserCreationData) {
   //   const user_id = this.userRepository.createGoogleUser({
   //     google_sub: data.google_sub,

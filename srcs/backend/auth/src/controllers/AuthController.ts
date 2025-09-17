@@ -68,6 +68,20 @@ export class AuthController {
     }
   }
 
+  async hashPassword(
+    request: FastifyRequest<{ Body: string }>, 
+    reply: FastifyReply
+  ) {
+    try {
+      const password = request.body;
+      const password_hash = await this.authService.hashPassword(password);
+      
+      reply.send({ password_hash });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
   private handleError(error: any, reply: FastifyReply) {
     // Handle validation errors from user service
     if (error.status === 400 && error.details) {

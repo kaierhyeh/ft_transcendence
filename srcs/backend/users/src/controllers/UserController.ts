@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { AccountCreationData, LoginParams, UpdateData } from '../schemas';
+import { AccountCreationData, LoginParams, UpdateRawData } from '../schemas';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -35,7 +35,7 @@ export class UserController {
   }
 
   public async updateMe(
-    request: FastifyRequest<{ Body: UpdateData }>,
+    request: FastifyRequest<{ Body: UpdateRawData }>,
     reply: FastifyReply
   ) {
     try {
@@ -45,8 +45,8 @@ export class UserController {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
       
-      const updateData = request.body;
-      const changes = await this.userService.updateUser(user_id, updateData);
+      const raw_data = request.body;
+      const changes = await this.userService.updateUser(user_id, raw_data);
       
       return reply.send({ changes });
     } catch (error) {

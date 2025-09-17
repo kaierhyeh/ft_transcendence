@@ -1,10 +1,15 @@
-import { UserRepository, UserRow } from '../repositories/UserRepository';
-import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData, UpdateData } from '../schemas';
+import { AuthClient } from '../clients/AuthClient';
+import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
+import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData, UpdateRawData } from '../schemas';
 
 export class UserService {
+  private authClient: AuthClient;
+
   constructor(
     private userRepository: UserRepository,
-  ) {}
+  ) {
+    this.authClient = new AuthClient();
+  }
 
   public async createAccount(data: AccountCreationData): Promise<{ user_id: number }> {
     if (data.type === "local") {
@@ -50,8 +55,19 @@ export class UserService {
     return user;
   }
 
-  public async updateUser(user_id: number, data: UpdateData): Promise<number> {
-    // Implementation will be added later
+  public async updateUser(user_id: number, raw_data: UpdateRawData): Promise<number> {
+    // Transform raw user input to database format
+    const data: UpdateData = {
+      email: raw_data.email,
+      alias: raw_data.alias,
+      avatar_url: raw_data.avatar_url,
+      settings: raw_data.settings,
+      // Extract just the hash string from the auth service response
+      password_hash: raw_data.password ? (await this.authClient.hashPassword(raw_data.password)).password_hash : undefined,
+      // Extract the TwoFa object from the auth service response
+      two_fa: raw_data.two_fa_enabled !== undefined ? await this.authClient.set2fa(raw_data.two_fa_enabled) : undefined
+    };
+
     const changes = this.userRepository.updateById(user_id, data);
 
     return changes;

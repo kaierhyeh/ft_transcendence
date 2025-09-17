@@ -1,5 +1,6 @@
 import { Database } from "better-sqlite3";
-import { GoogleUserCreationData, LocalUserCreationData, UpdateData } from "../schemas";
+import { GoogleUserCreationData, LocalUserCreationData } from "../schemas";
+import { TwoFa } from "../types";
 
 export interface UserRow {
     user_id: number;
@@ -16,6 +17,15 @@ export interface UserRow {
     created_at: string;
     updated_at: string;
     last_seen: string | null;
+}
+
+export interface UpdateData {
+    email: string | undefined;
+    password_hash: string | undefined;
+    alias: string | undefined;
+    avatar_url: string | undefined;
+    settings: string | undefined;
+    two_fa: TwoFa | undefined;
 }
 
 export class UserRepository {

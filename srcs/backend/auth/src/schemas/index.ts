@@ -49,5 +49,11 @@ export const loginSchema = {
   additionalProperties: false,
 } as const;
 
+export const passwordSchema = {
+  type: "string",
+  minLength: 8,
+  description: "Password to be hashed"
+} as const;
+
 export type SignupFormData = FromSchema<typeof signupFormSchema>;
 export type LoginData = FromSchema<typeof loginSchema>;

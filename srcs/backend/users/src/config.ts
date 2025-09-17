@@ -13,6 +13,12 @@ export const CONFIG = {
     AUDIENCE: process.env.JWT_AUDIENCE || "ft_transcendence_users",
   },
 
+
+  AUTH_SERVICE: {
+    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-auth:3000"
+  },
+  
+
   // Server settings
   SERVER: {
     PORT: parseInt(process.env.PORT || "3000"),
