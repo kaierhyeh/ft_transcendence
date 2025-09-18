@@ -1,0 +1,25 @@
+{
+	"name": "transcendence-user-service",
+	"version": "1.0.0",
+	"description": "User management microservice for transcendence project",
+	"main": "server.js",
+	"type": "module",
+	"scripts": {
+		"start": "node server.js | pino-pretty",
+		"dev": "nodemon server.js | pino-pretty"
+	},
+	"dependencies": {
+		"fastify": "^4.17.0",
+		"@fastify/cookie": "^8.3.0",
+		"@fastify/cors": "^8.3.0",
+		"@fastify/multipart": "^7.6.0",
+		"better-sqlite3": "^8.4.0",
+		"ioredis": "^5.3.2",
+		"sharp": "^0.34.1",
+		"dotenv": "^16.0.3",
+		"pino-pretty": "^10.2.0"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.9"
+	}
+}

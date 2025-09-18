@@ -1,0 +1,51 @@
+package.json is makefile for Node.js:
+
+[scripts]
+test:auth:
+	執行測試腳本 tools/auth_tester.js（驗證登入或 JWT 等功能）
+start:
+	正式啟動伺服器 ../server.js，並透過 pino-pretty 美化輸出
+dev:
+	開發模式，使用 nodemon 自動重啟伺服器（當檔案變動）
+clean:
+	清空 public/ 資料夾，可能是重新編譯前的準備動作
+
+[dependencies]
+fastify:
+	輕量、高效能的 Web 框架（類似 Express）
+@fastify/cookie, cors, multipart, websocket:
+	Fastify 的擴充功能（cookies、跨域、檔案上傳、WebSocket）
+better-sqlite3:
+	較快的 SQLite 套件（用來處理本地資料庫）
+bcrypt:
+	密碼加密
+dotenv:
+	讀取 .env 環境變數檔案
+googleapis:
+	與 Google API 溝通（OAuth、Gmail、Drive 等）
+ioredis:
+	使用 Redis 快取或佇列
+jsonwebtoken:
+	處理 JWT 登入驗證
+pino-pretty:
+	讓 Fastify 使用的 pino logger 有漂亮的輸出格式
+qrcode:
+	產生 QR code（可能是登入或 2FA）
+sharp:
+	處理圖片（裁切、縮放、轉格式）
+speakeasy:
+	建立與驗證 2FA 的一次性密碼（TOTP）
+ws:
+	原生 WebSocket 支援（低階）
+@types/ws:
+	TypeScript 用的型別支援（即使主專案是 JS）
+babylonjs, babylonjs-loaders:
+	可能是前端也會渲染 3D 场景，這邊包含支援
+
+[devDependencies]
+nodemon:
+	檔案變動時自動重啟 server
+chalk:
+	CLI 輸出顏色化
+axios:
+	HTTP 請求（可用於測試其他 API）
