@@ -145,7 +145,7 @@ export class UserRepository {
     public findById(user_id: number): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE user_id = ? AND user_type = 'registered'
+            WHERE user_id = ?
         `);
         const result = stmt.get(user_id) as UserRow | undefined;
         return result || null;

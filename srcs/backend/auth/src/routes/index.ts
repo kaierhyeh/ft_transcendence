@@ -1,13 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { AuthController } from '../controllers/AuthController';
-import { LoginData, loginSchema, passwordUpdateSchema, PasswordUpdateData, SignupFormData, signupFormSchema } from "../schemas";
+import { LoginData, loginSchema, passwordUpdateSchema, PasswordUpdateData, SignupFormData, signupFormSchema, createGuestSchema, GuestRawData } from "../schemas";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const userController = new AuthController();
 
   fastify.post<{ Body: SignupFormData }>(
     "/signup",
-    { schema: { body: signupFormSchema} },
+    { schema: { body: signupFormSchema } },
     userController.signup.bind(userController)
   );
 
@@ -21,5 +21,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
     "/hash-password",
     { schema: { body: passwordUpdateSchema } },
     userController.updatePasswordHash.bind(userController)
+  );
+
+  fastify.post<{ Body: GuestRawData }>(
+    "/guest",
+    { schema: { body: createGuestSchema } },
+    userController.createGuest.bind(userController)
   );
 }

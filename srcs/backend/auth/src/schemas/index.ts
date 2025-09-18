@@ -1,5 +1,12 @@
 import { FromSchema } from "json-schema-to-ts";
 
+const aliasSchema = {
+  type: "string",
+  minLength: 1,
+  maxLength: 50
+} as const;
+
+
 export const signupFormSchema = {
   type: "object",
   required: ["username", "email", "password"],
@@ -18,15 +25,19 @@ export const signupFormSchema = {
       type: "string",
       minLength: 8 // You'll hash this before storing
     },
-    alias: {
-      type: "string",
-      minLength: 1,
-      maxLength: 50
-    },
+    alias: aliasSchema,
     avatar_url: {
       type: "string",
       format: "uri"
     }
+  },
+  additionalProperties: false,
+} as const;
+
+export const createGuestSchema = {
+  type: "object",
+  properties: {
+    alias: aliasSchema,
   },
   additionalProperties: false,
 } as const;
@@ -80,3 +91,4 @@ export const passwordUpdateSchema = {
 export type SignupFormData = FromSchema<typeof signupFormSchema>;
 export type LoginData = FromSchema<typeof loginSchema>;
 export type PasswordUpdateData = FromSchema<typeof passwordUpdateSchema>;
+export type GuestRawData = FromSchema<typeof createGuestSchema>;
