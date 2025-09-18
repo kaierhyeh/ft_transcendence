@@ -1,14 +1,14 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { AccountCreationData, createAccountSchema, LoginParams, loginSchema, UpdateRawData, updateSchema } from "../schemas";
+import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema } from "../schemas";
 import { verifyJWT } from "../middleware/veryfyJWT";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
 
-  fastify.post<{ Body: AccountCreationData }>(
+  fastify.post<{ Body: UserCreationData }>(
     "/",
-    { schema: { body: createAccountSchema} },
+    { schema: { body: createUserSchema} },
     userController.createAccount.bind(userController)
   );
 

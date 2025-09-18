@@ -1,6 +1,6 @@
 import { AuthClient } from '../clients/AuthClient';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
-import { AccountCreationData, GoogleUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
+import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData, UserCreationData } from '../schemas';
 
 export class UserService {
   private authClient: AuthClient;
@@ -11,37 +11,50 @@ export class UserService {
     this.authClient = new AuthClient();
   }
 
-  public async createAccount(data: AccountCreationData): Promise<{ user_id: number }> {
+  public async createUser(data: UserCreationData): Promise<{ user_id: number }> {
     if (data.type === "local") {
-      return this.createLocalAccount(data);
+      return this.createLocalUser(data);
     } else if (data.type === "google") {
-      return this.createGoogleAccount(data);
+      return this.createGoogleUser(data);
+    } else if (data.type === "guest") {
+      return this.createGuestUser(data);
     }
     
     throw new Error('Invalid account type');
   }
 
-  private async createLocalAccount(data: LocalUserCreationData) {    
-    const user_id = this.userRepository.createLocalUser({
+  private async createLocalUser(data: LocalUserCreationData) {
+    const user_data = {
       username: data.username,
       email: data.email,
       password_hash: data.password_hash,
-      alias: data.alias,
+      alias: data.alias ?? data.username,
       avatar_url: data.avatar_url
-    });
+    };
 
+    const user_id = this.userRepository.createLocalUser(user_data);
     return { user_id };
   }
 
-  private async createGoogleAccount(data: GoogleUserCreationData) {
-    const user_id = this.userRepository.createGoogleUser({
+  private async createGoogleUser(data: GoogleUserCreationData) {
+    const user_data = {
       google_sub: data.google_sub,
       username: data.username,
       email: data.email,
-      alias: data.alias,
+      alias: data.alias ?? data.username,
       avatar_url: data.avatar_url
-    });
+    };
 
+    const user_id = this.userRepository.createGoogleUser(user_data);
+    return { user_id };
+  }
+
+  private async createGuestUser(data: GuestUserCreationData) {
+    const user_data = {
+      alias: data.alias ?? "Guest" 
+    };
+
+    const user_id = this.userRepository.createGuestUser(user_data);
     return { user_id };
   }
 

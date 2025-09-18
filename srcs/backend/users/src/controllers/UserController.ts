@@ -1,21 +1,21 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { AccountCreationData, LoginParams, UpdateRawData } from '../schemas';
+import { UserCreationData, LoginParams, UpdateRawData } from '../schemas';
 
 export class UserController {
   constructor(private userService: UserService) {}
 
   public async createAccount(
-    request: FastifyRequest<{ Body: AccountCreationData }>, 
+    request: FastifyRequest<{ Body: UserCreationData }>, 
     reply: FastifyReply
   ) {
     try {
-      const result = await this.userService.createAccount(request.body);
+      const result = await this.userService.createUser(request.body);
       
       reply.status(201).send({
         success: true,
         user_id: result.user_id,
-        message: "Account created successfully"
+        message: "User created successfully"
       });
     } catch (error) {
       this.handleError(error, reply);

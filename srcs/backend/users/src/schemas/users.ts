@@ -49,8 +49,8 @@ const twoFAEnabledSchema = {
 } as const;
 
 
-// For local account creation
-export const createLocalAccountSchema = {
+// For local user creation
+export const createLocalUserSchema = {
   type: "object",
   required: ["username", "email", "password_hash"],
   properties: {
@@ -63,8 +63,17 @@ export const createLocalAccountSchema = {
   additionalProperties: false,
 } as const;
 
+// For guest users
+export const createGuestSchema = {
+  type: "object",
+  properties: {
+    alias: aliasSchema,
+  },
+  additionalProperties: false,
+} as const;
+
 // For Google OAuth account creation
-export const createGoogleAccountSchema = {
+export const createGoogleUserSchema = {
   type: "object",
   required: ["google_sub", "email", "username"],
   properties: {
@@ -78,30 +87,38 @@ export const createGoogleAccountSchema = {
 } as const;
 
 // Union type for the API
-export const createAccountSchema = {
+export const createUserSchema = {
   type: "object",
   required: ["type"],
   properties: {
     type: {
       type: "string",
-      enum: ["local", "google"]
+      enum: ["local", "google", "guest"]
     }
   },
   oneOf: [
     {
       properties: {
         type: { const: "local" },
-        ...createLocalAccountSchema.properties
+        ...createLocalUserSchema.properties
       },
-      required: ["type", ...createLocalAccountSchema.required],
+      required: ["type", ...createLocalUserSchema.required],
       additionalProperties: false
     },
     {
       properties: {
         type: { const: "google" },
-        ...createGoogleAccountSchema.properties
+        ...createGoogleUserSchema.properties
       },
-      required: ["type", ...createGoogleAccountSchema.required],
+      required: ["type", ...createGoogleUserSchema.required],
+      additionalProperties: false
+    },
+    {
+      properties: {
+        type: { const: "guest"},
+        ...createGuestSchema.properties
+      },
+      required: ["type"],
       additionalProperties: false
     }
   ]
@@ -145,9 +162,10 @@ export const updateSchema = {
 } as const;
 
 
-export type AccountCreationData = FromSchema<typeof createAccountSchema>;
-export type LocalUserCreationData = FromSchema<typeof createLocalAccountSchema>;
-export type GoogleUserCreationData = FromSchema<typeof createGoogleAccountSchema>;
+export type UserCreationData = FromSchema<typeof createUserSchema>;
+export type LocalUserCreationData = FromSchema<typeof createLocalUserSchema>;
+export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
+export type GuestUserCreationData = FromSchema<typeof createGuestSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;

@@ -1,5 +1,5 @@
 import { Database } from "better-sqlite3";
-import { GoogleUserCreationData, LocalUserCreationData } from "../schemas";
+import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData } from "../schemas";
 import { TwoFa } from "../types";
 
 export interface UserRow {
@@ -59,6 +59,17 @@ export class UserRepository {
             data.email,
             data.alias ?? null,  // Use nullish coalescing for more explicit null handling
             data.avatar_url ?? null
+        );
+        return result.lastInsertRowid as number;
+    }
+
+    public createGuestUser(data: GuestUserCreationData): number {
+        const stmt = this.db.prepare(`
+            INSERT INTO users (user_type, alias)
+            VALUES ('guest', ?)
+        `);
+        const result = stmt.run(
+            data.alias
         );
         return result.lastInsertRowid as number;
     }
