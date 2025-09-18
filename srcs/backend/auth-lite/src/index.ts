@@ -8,7 +8,7 @@ const fastify = Fastify({ logger: true });
 
 async function run() {
   
-  await fastify.register(authRoutes, {prefix: "/auth"} );
+  await fastify.register(authRoutes, {prefix: "/auth-lite"} );
   
   // Simple JWT configuration that works
   await fastify.register(fastifyJwt, {

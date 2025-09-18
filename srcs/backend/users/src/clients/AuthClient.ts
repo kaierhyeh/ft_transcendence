@@ -10,10 +10,10 @@ interface ErrorResponse {
 
 
 export class AuthClient {
-  private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
+  private base_url = CONFIG.AUTH_LITE_SERVICE.BASE_URL;
 
   async updatePasswordHash(update_data: PasswordUpdateData, old_hash: string): Promise<{ password_hash: string }> {
-    const response = await fetch(`${this.base_url}/auth/hash-password`, {
+    const response = await fetch(`${this.base_url}/auth-lite/hash-password`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export class AuthClient {
     two_fa_enabled: boolean
   ): Promise< TwoFa > {
 
-      // const response = await fetch(`${this.base_url}/auth/2fa`, {
+      // const response = await fetch(`${this.base_url}/auth-lite/2fa`, {
       //   method: "PUT",
       //   headers: {
       //     "Content-Type": "application/json",

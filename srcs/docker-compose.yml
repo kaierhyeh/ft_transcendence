@@ -74,10 +74,10 @@ services:
     # Add healthcheck if you can
     restart: unless-stopped
 
-  backend-auth:
-    container_name: backend-auth
+  backend-auth-lite:
+    container_name: backend-auth-lite
     build:
-      context: ./backend/auth
+      context: ./backend/auth-lite
       dockerfile: Dockerfile
     networks:
       - pong_network
