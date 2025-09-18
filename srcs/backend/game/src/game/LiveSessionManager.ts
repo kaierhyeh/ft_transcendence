@@ -3,7 +3,7 @@ import { GameParticipant, GameType } from "../schemas";
 import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
-import { SessionRepository } from "../db/repositories/SessionRepository";
+import { SessionRepository } from "../repositories/SessionRepository"
 
 let next_id = 0;
 
@@ -37,25 +37,34 @@ export class LiveSessionManager {
             connection.socket.close(4004, "Game not found");
             return;
         }
-         connection.socket.on("message", (raw: string) => {
-            try {
-                const msg = JSON.parse(raw);
+        connection.socket.once("message", (raw: string) => {
+            let msg;
 
-                if (msg.type === "view") {
-                    session.connectViewer(connection);
-                } else {
-                    session.setupPlayerListeners(raw, connection);
-                } 
-            } catch(err) {
-                connection.socket.close(4002, "Invalid JSON");
-            }
+            try { msg = JSON.parse(raw); }
+            catch(err) { connection.socket.close(4002, "Invalid JSON"); }
+
+            if (msg.type === "view") {
+                session.connectViewer(connection);
+            } else if (msg.type === "join") {
+                const ticket = msg.ticket as string | undefined;
+                if (!ticket) { connection.socket.close(4001, "Missing ticket"); return; }
+                try {
+                    const payload = verifyJwt(ticket); // throws on invalid
+                    if (!payload.game_id || payload.game_id !== id)
+                        throw new Error;
+                    const player_id = payload.sub;
+                    session.connectPlayer(player_id, connection);
+                } catch (err) {
+                    connection.socket.close(4001, "Invalid or expired token");
+                }
+            } 
         });
     }
 
     private saveSession(game_id: number, session: GameSession): void {
         try {
             const dto = session.toDbRecord();
-            if (dto) this.session_repo.saveSession(dto); // save in db with db plugin I guess, taking dto: DbSession as argument
+            if (dto) this.session_repo.save(dto); // save in db with db plugin I guess, taking dto: DbSession as argument
         } catch(err) {
             this.logger.warn({ game_id: game_id, error: err instanceof Error ? err.message : String(err) }, "Failed to save game session");
         }

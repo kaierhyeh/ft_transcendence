@@ -2,11 +2,22 @@ import { FromSchema } from "json-schema-to-ts";
 
 export const playerSchema = {
   type: "object",
-  required: ["user_id", "participant_id"],
+  required: ["player_id", "type", "team", "slot"],
   properties: {
+    player_id: { type: "number" },
+    type: {
+      type: "string",
+      enum: ["registered", "guest", "ai"],
+    },
+    team: {
+      type: "string",
+      enum: ["left", "right"],
+    },
+    slot: {
+      type: "string",
+      enum: ["left", "right", "top-left", "bottom-left", "top-right", "bottom-right"],
+    },
     user_id: { type: "number" },
-    participant_id: { type: "string" },
-    is_ai: { type: "boolean" },
   },
   additionalProperties: false,
 } as const;

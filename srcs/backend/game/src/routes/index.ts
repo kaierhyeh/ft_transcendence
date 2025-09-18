@@ -1,4 +1,7 @@
 import gameRoutes from "./game";
 import sessionRoutes from "./sessions";
 
-export default [gameRoutes, sessionRoutes];
+export default [
+    { route: gameRoutes, prefix: "/users" },
+    { route: sessionRoutes, prefix: "/friends" }
+];

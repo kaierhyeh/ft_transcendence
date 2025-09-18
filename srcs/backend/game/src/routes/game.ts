@@ -7,7 +7,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     { schema: { body: createGameSchema } },
     async (request, reply) => {
       const { type, participants } = request.body;
-      const game_id = fastify.sessions.createGameSession(type, participants);
+      const game_id = fastify.live_sessions.createGameSession(type, participants);
       reply.status(201).send({game_id: game_id});
   });
 
@@ -16,7 +16,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     { schema: { params: gameIdSchema } },
     async (request, reply) => {
       const { id } = request.params;
-      const conf = fastify.sessions.getGameSessionConf(id);
+      const conf = fastify.live_sessions.getGameSessionConf(id);
       if (!conf) return reply.status(404).send({ error: "Game not found"});
       reply.send(conf);
   });
@@ -27,7 +27,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     { schema: { params: gameIdSchema }, websocket: true },
     (connection, request) => {
       const { id } = request.params;
-      fastify.sessions.connectToGameSession(id, connection);
+      fastify.live_sessions.connectToGameSession(id, connection);
     }
   );
 }

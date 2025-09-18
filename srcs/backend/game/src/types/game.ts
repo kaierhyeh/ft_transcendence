@@ -12,3 +12,5 @@ export interface GameMessage {
     type: string;
     data: object;
 }
+
+export type PlayerType = "registered" | "guest" | "ai";

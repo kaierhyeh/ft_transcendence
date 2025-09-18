@@ -1,11 +1,11 @@
-import { GameType } from "../../schemas";
-import { PlayerSlot, Team } from "../../types";
+import { GameType } from "../schemas";
+import { Team, PlayerType } from "../types";
 import { Database } from "better-sqlite3";
 
 export interface DbPlayerSession {
-    user_id: number,
+    user_id: number | null,
+    type: PlayerType,
     team: Team,
-    slot: PlayerSlot,
     score: number,
     winner: boolean
 }
@@ -28,7 +28,7 @@ export class SessionRepository {
         this.db = db;
     }
 
-    public saveSession(session: DbSession): void {
+    public save(session: DbSession): void {
         const insertSession = this.db.prepare(`
             INSERT INTO sessions (type, tournament_id, created_at, started_at, ended_at)
             VALUES (@type, @tournament_id, @created_at, @started_at, @ended_at)
@@ -49,7 +49,6 @@ export class SessionRepository {
                     session_id,
                     user_id: player.user_id,
                     team: player.team,
-                    player_slot: player.slot,
                     score: player.score,
                     winner: player.winner ? 1 : 0,
                 });

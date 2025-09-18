@@ -1,23 +1,17 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameType } from '../schemas';
-import { Team, PlayerSlot, GameMessage } from '../types'
+import { Team, GameMessage } from '../types'
 import { GameConf, GameEngine, GameMode, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
-import { DbPlayerSession, DbSession } from '../db/repositories/SessionRepository';
-import { toSqlDate } from '../db/utils';
+import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
+import { toSqlDate } from '../utils/db';
 
-interface Player {
-    user_id: number;
-    participant_id: string;
-    slot: PlayerSlot; // assigned by matchmaking or default order
-    team: Team;
-    is_ai: boolean;
-
+type Player = GameParticipant & {
     socket?: SocketStream;
 }
 
-type PlayerMap = Map<string, Player>;
+type PlayerMap = Map<number, Player>;
 
 export type SessionPlayerMap = PlayerMap;
 
@@ -39,7 +33,7 @@ export class GameSession {
     constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
         this.type = game_type;
         this.game_mode = game_type === "multi" ? "multi" : "pvp";
-        this.players = this.loadPlayers_(participants);
+        this.players = this.initPlayers_(participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.last_activity = Date.now();
@@ -47,21 +41,16 @@ export class GameSession {
         this.logger = logger;
     }
 
-    private loadPlayers_(participants: GameParticipant[]): PlayerMap {
+    private initPlayers_(participants: GameParticipant[]): PlayerMap {
         const players: PlayerMap = new Map();
-        const slots = this.game_mode === "pvp" ? ["left", "right"] : ["top-left", "bottom-left", "top-right", "bottom-right"];
-
         participants.forEach((p, idx) => {
-            const slot = slots[idx] as PlayerSlot;
-            const team = slot.includes("left") ? "left" : "right";
-
-            players.set(p.participant_id, {
+            players.set(p.player_id, {
+                player_id: p.player_id,
+                type: p.type,
+                team: p.team,
+                slot: p.slot,
                 user_id: p.user_id,
-                participant_id: p.participant_id,
-                slot: slot,
-                team: team,
-                is_ai: p.is_ai || false,
-                socket: undefined
+                socket: undefined,
             });
         });
         return players;
@@ -127,39 +116,36 @@ export class GameSession {
         });
     }
     
-    public connectPlayer(participant_id: string, connection: SocketStream): void {
-        if (this.viewers.has(connection)) {
-            connection.socket.close(4001, "viewer cannot become a player");
-            return;
-        }
+    public connectPlayer(player_id: number, connection: SocketStream): void {
+        const player = this.players.get(player_id);
 
-        const player = this.players.get(participant_id);
-
-        this.logger.info(`Player connecting with participant_id: ${participant_id}`);
+        this.logger.info(`Player connecting with player_id: ${player_id}`);
         this.logger.info(`found player : ${player !== undefined}`);
 
         if (!player) {
-            connection.socket.close(4001, "Invalid participant_id");
-            return;
-        }
-        if (player.socket) {
-            connection.socket.close(4002, "duplicate participant_id");
+            connection.socket.close(4001, "Invalid player_id");
             return;
         }
 
         player.socket = connection;
         this.game_engine.setConnected(player.slot, true);
+
+        connection.socket.on("message", (raw: string) => {
+            const msg = JSON.parse(raw);
+            if (msg.type === "input") {          
+                this.game_engine.applyMovement(player.slot, msg.move);
+            } else {
+                connection.socket.close(4000, "Invalid message type");
+            }
+        });
+
         connection.socket.on("close", () => {
-            this.disconnectPlayer(participant_id);
+            this.disconnectPlayer(player_id);
             this.last_activity = Date.now();
         });
     }
 
     public connectViewer(connection: SocketStream): void {
-        if (this.viewers.has(connection)) {
-            connection.socket.close(4001, "viewer can connect only once on the same websocket");
-            return ;
-        }
         this.viewers.add(connection);
         connection.socket.on("close", () => {
             this.disconnectViewer(connection);
@@ -167,8 +153,8 @@ export class GameSession {
         });
     }
 
-    public disconnectPlayer(participant_id: string): void {
-        const player = this.players.get(participant_id);
+    public disconnectPlayer(player_id: number): void {
+        const player = this.players.get(player_id);
         if (!player) return; // TODO - or throw an exception
         player.socket = undefined;
         this.game_engine.setConnected(player.slot, false);
@@ -176,27 +162,6 @@ export class GameSession {
    
     public disconnectViewer(connection: SocketStream): void {
         this.viewers.delete(connection);
-    }
-
-    public setupPlayerListeners(raw: string, connection: SocketStream): void {
-        const msg = JSON.parse(raw);
-
-        if (msg.type === "join") {
-            this.connectPlayer(msg.participant_id, connection);
-        } else if (msg.type === "input") {
-            if (this.viewers.has(connection)) {
-                connection.socket.close(4001, "viewer cannot send input");
-                return;
-            }
-            const player = this.players.get(msg.participant_id);
-            if (!player) {
-                connection.socket.close(4001, "Invalid participant_id");
-                return;
-            }                
-            this.game_engine.applyMovement(player.slot, msg.move);
-        } else {
-            connection.socket.close(4000, "Invalid message type");
-        }
     }
 
     public closeAllConnections(status: number, reason: string): void {
@@ -214,14 +179,18 @@ export class GameSession {
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (!this.started_at || !this.ended_at || !game_state.winner)
+        if (this.type === "multi" || !this.started_at || !this.ended_at || !game_state.winner)
             return undefined;
         
-        const humanPlayers = Array.from(this.players.values()).filter(p => !p.is_ai);
+        // Check if there's at least one registered (non-guest) user to view session history
+        const hasRegisteredUser = Array.from(this.players.values()).some(p => p.type !== "guest");
         
-        if (humanPlayers.length === 0) {
+        if (!hasRegisteredUser) {
             return undefined;
         }
+        
+        // Include all players (including AI and guests) in the stored session
+        const players = Array.from(this.players.values());
         
         return {
             session: {
@@ -231,11 +200,11 @@ export class GameSession {
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),
             },
-            player_sessions: humanPlayers.map((p) => {
+            player_sessions: players.map((p) => {
                 const player_session: DbPlayerSession = {
-                    user_id: p.user_id,
+                    user_id: p.user_id ?? null,
+                    type: p.type,
                     team: p.team,
-                    slot: p.slot,
                     score: game_state.score[p.team],
                     winner: game_state.winner === p.team
                 };
