@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema } from "../schemas";
+import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema, UserIdParams, userIdSchema } from "../schemas";
 import { verifyJWT } from "../middleware/veryfyJWT";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
@@ -26,11 +26,19 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.updateMe.bind(userController)
   );
 
-  fastify.get("/me", async (request, reply) => {
-    // retrieve current user profile
-  });
+  fastify.get(
+    "/me",
+    { preHandler: verifyJWT},
+    userController.getMe.bind(userController)
+  );
 
-  fastify.get("/", async (request, reply) => {
-    // search users
+  fastify.get<{ Params: UserIdParams }>(
+    "/id/:id",
+    { schema: { params: userIdSchema } },
+    userController.getPublicProfile.bind(userController)
+  );
+
+  fastify.get("/match-history", async (request, reply) => {
+    // get match-history aka game sessions via game service
   });
 }

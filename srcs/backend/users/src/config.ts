@@ -18,6 +18,9 @@ export const CONFIG = {
     BASE_URL: process.env.USER_SERVICE_URL || "http://backend-auth:3000"
   },
   
+  STATS_SERVICE: {
+    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-stats:3000"
+  },
 
   // Server settings
   SERVER: {

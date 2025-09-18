@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { UserCreationData, LoginParams, UpdateRawData } from '../schemas';
+import { UserCreationData, LoginParams, UpdateRawData, UserIdParams } from '../schemas';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -62,8 +62,22 @@ export class UserController {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
       
-      const user = await this.userService.getUserById(userId);
-      return reply.send(user);
+      const profile = await this.userService.getProfile(userId);
+      return reply.send(profile);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async getPublicProfile(
+    request: FastifyRequest<{ Params: UserIdParams }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const user_id = request.params.id;
+      
+      const publicProfile = await this.userService.getPublicProfile(user_id);
+      return reply.send(publicProfile);
     } catch (error) {
       this.handleError(error, reply);
     }
@@ -77,6 +91,10 @@ export class UserController {
     } else if (error.code === 'USER_NOT_FOUND') {
       reply.status(404).send({ 
         error: "User not found" 
+      });
+    } else if (error.code === 'LITE_STATS_NOT_FOUND') {
+      reply.status(503).send({ 
+        error: "Statistics service unavailable" 
       });
     } else if (error.code === 'FORBIDDEN_OPERATION') {
       reply.status(403).send({ 

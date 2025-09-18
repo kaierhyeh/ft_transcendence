@@ -161,6 +161,15 @@ export const updateSchema = {
   additionalProperties: false
 } as const;
 
+export const userIdSchema = {
+  type: "object",
+    required: ["id"],
+    properties: {
+      id: { type: "number" },
+    },
+    additionalProperties: false,
+} as const;
+
 
 export type UserCreationData = FromSchema<typeof createUserSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalUserSchema>;
@@ -169,3 +178,4 @@ export type GuestUserCreationData = FromSchema<typeof createGuestSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
+export type UserIdParams = FromSchema<typeof userIdSchema>;

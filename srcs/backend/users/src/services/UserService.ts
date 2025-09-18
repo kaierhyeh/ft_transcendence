@@ -1,14 +1,21 @@
 import { AuthClient } from '../clients/AuthClient';
+import { LiteStats, StatsClient } from '../clients/StatsClient';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
 import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData, UserCreationData } from '../schemas';
 
+export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub"> & LiteStats;
+
+export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "updated_at">;
+
 export class UserService {
   private authClient: AuthClient;
+  private statsClient: StatsClient;
 
   constructor(
     private userRepository: UserRepository,
   ) {
     this.authClient = new AuthClient();
+    this.statsClient = new StatsClient();
   }
 
   public async createUser(data: UserCreationData): Promise<{ user_id: number }> {
@@ -66,6 +73,31 @@ export class UserService {
       throw error;
     }
     return user;
+  }
+
+  public async getProfile(user_id: number): Promise<UserProfile> {
+    const user = await this.getUserById(user_id);
+    const lite_stats = await this.statsClient.getLiteStats(user_id);
+    
+    if (!lite_stats) {
+      const error = new Error('Lite stats not found');
+      (error as any).code = 'LITE_STATS_NOT_FOUND';
+      throw error;
+    }
+
+    const { password_hash, two_fa_secret, google_sub, ...cleanUser } = user;
+    
+    return {
+      ...cleanUser,
+      ...lite_stats
+    };
+  }
+
+  public async getPublicProfile(user_id: number): Promise<PublicProfile> {
+    const userProfile = await this.getProfile(user_id);
+    const { email, two_fa_enabled, updated_at, ...publicProfile } = userProfile;
+    
+    return publicProfile;
   }
 
   public async updateUser(user_id: number, raw_data: UpdateRawData): Promise<number> {
