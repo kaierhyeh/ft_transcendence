@@ -38,13 +38,20 @@ export async function postMessageController(fromId:number, toId:number, msg:stri
 	}	
 }
 
-export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
+export async function postMessagesController(req:FastifyRequest<{Body:{msg:{fromId:number, toId:number, msg:string}}}>, reply:FastifyReply) {
+// export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
 	colorLog("cyan", "postMessagesController: ", req.method, req.url);
 	try {
-		const {msgs} = req.body;
-		if (!Array.isArray(msgs) || msgs.length === 0 || msgs.find(msg => !msg.fromId || !msg.toId || !msg.msg))
-			return (reply.code(400).send({error: "Invalid message data" }));
-		const newMsgs = await Promise.all(msgs.map(msg => postMessageService(msg.fromId, msg.toId, msg.msg)));
+		colorLog("cyan", "postMessagesController: body=", req.body);
+		// const {msgs} = req.body;
+		// if (!Array.isArray(msgs) || msgs.length === 0 || msgs.find(msg => !msg.fromId || !msg.toId || !msg.msg))
+		// 	return (reply.code(400).send({error: "Invalid message data" }));
+		// const newMsgs = await Promise.all(msgs.map(msg => postMessageService(msg.fromId, msg.toId, msg.msg)));
+		const {msg} = req.body
+		if (msg.fromId === undefined || msg.toId === undefined || msg.msg === undefined)
+			return (reply.status(400).send({error: "Invalid message data" }));
+		const newMsgs = await postMessageService(msg.fromId, msg.toId, msg.msg);
+		colorLog("cyan", "postMessagesController: newMsgs=", newMsgs);
 		return (reply.status(201).send(newMsgs));
 	} catch (e: any) {
 		logError(e, "postMessagesController");
