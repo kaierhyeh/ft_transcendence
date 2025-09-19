@@ -1,7 +1,7 @@
 import {initGame} from "./game.js";
 import {initGame4p} from "./game4p.js";
 import {initStats} from "./stats.js";
-import {initChat} from "./chat.js";
+import {initMenu} from "./menu.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -18,8 +18,8 @@ const routes: Record<string, string> = {
 
 const initScripts: Record<string, () => void> = {
 	"/": () => {
-		if (typeof initChat === "function")
-			initChat(1);
+		if (typeof initMenu === "function")
+			initMenu();
 	},
 	"/pong": () => {
 		if (typeof initGame === "function")
