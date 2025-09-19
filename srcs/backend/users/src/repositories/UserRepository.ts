@@ -113,13 +113,13 @@ export class UserRepository {
 
         // Handle 2FA nested object
         if (data.two_fa !== undefined) {
-            if (data.two_fa.two_fa_enabled !== undefined) {
+            if (data.two_fa.enabled !== undefined) {
                 set_clauses.push("two_fa_enabled = @two_fa_enabled");
-                params.two_fa_enabled = data.two_fa.two_fa_enabled ? 1 : 0;
+                params.two_fa_enabled = data.two_fa.enabled ? 1 : 0;
             }
-            if (data.two_fa.two_fa_secret !== undefined) {
+            if (data.two_fa.secret !== undefined) {
                 set_clauses.push("two_fa_secret = @two_fa_secret");
-                params.two_fa_secret = data.two_fa.two_fa_secret;
+                params.two_fa_secret = data.two_fa.secret;
             }
         }
 
@@ -151,6 +151,7 @@ export class UserRepository {
         return result || null;
     }
 
+    // TODO - remove findByEmail because not used
     public findByEmail(email: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 

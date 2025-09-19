@@ -11,6 +11,6 @@ export interface JwtPayload {
 }
 
 export interface TwoFa {
-    two_fa_enabled: 0 | 1;
-    two_fa_secret: string | null;
+    enabled: 0 | 1;
+    secret: string | null;
 }

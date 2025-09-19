@@ -28,7 +28,7 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
   const sql_files = [
     'users.sql',
     'friendships.sql',
-    'blocked_users.sql'
+    'user_blocks.sql'
   ];
 
   for (const file of sql_files) {

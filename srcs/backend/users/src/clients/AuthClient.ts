@@ -68,8 +68,8 @@ export class AuthClient {
       // Simple fake 2FA implementation for now
       // This will be replaced by your teammate's implementation
       return {
-        two_fa_enabled: two_fa_enabled ? 1 : 0,
-        two_fa_secret: two_fa_enabled ? "fake_secret_12345" : null
+        enabled: two_fa_enabled ? 1 : 0,
+        secret: two_fa_enabled ? "fake_secret_12345" : null
       };
     }
 }
