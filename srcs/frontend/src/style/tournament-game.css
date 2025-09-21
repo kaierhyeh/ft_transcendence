@@ -1,0 +1,90 @@
+#bracket-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.match-display {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.player-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 15px;
+}
+
+.player-name {
+    color: #4ade80;
+    font-size: 24px;
+    font-weight: bold;
+    min-width: 150px;
+    padding: 10px 20px;
+    background: rgba(74, 222, 128, 0.1);
+    border: 2px solid #4ade80;
+    border-radius: 10px;
+}
+
+.vs-text {
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.pong-game-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: auto;
+}
+
+#tournament-game {
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.tournament-pong-canvas {
+    border: 3px solid #4ade80;
+    border-radius: 10px;
+    background: #000;
+    box-shadow: 
+        0 0 20px rgba(74, 222, 128, 0.5),
+        inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.game-instructions {
+    margin-top: 20px;
+    text-align: center;
+    color: #fff;
+    background: rgba(30, 30, 30, 0.8);
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid #666;
+}
+
+.game-instructions p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.game-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: center;
+}

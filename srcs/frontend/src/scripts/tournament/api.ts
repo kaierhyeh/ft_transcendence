@@ -1,7 +1,7 @@
 export class TournamentApiService {
     private readonly API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
-    async createGameSession(player1: string, player2: string): Promise<number> {
+    async createGameSession(player1: string, player2: string, tournamentId?: number): Promise<number> {
         try {
             const response = await fetch('/api/game/create', {
                 method: 'POST',
@@ -9,7 +9,8 @@ export class TournamentApiService {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    type: 'pvp',
+                    type: 'tournament',
+                    tournament_id: tournamentId || Math.floor(Math.random() * 1000000),
                     participants: [
                         { 
                             user_id: 1, 

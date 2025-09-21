@@ -112,56 +112,16 @@ export class TournamentUIManager {
         const bracketContainer = document.getElementById('bracket-container');
         if (!bracketContainer) return;
 
+        // S'assurer que le container a la bonne structure
         bracketContainer.innerHTML = '';
+        
+        // Ajouter les classes CSS nécessaires
+        bracketContainer.classList.add('jquery-bracket');
 
-        this.displayTournamentTree(bracketContainer, bracketData.tree);
-    }
-
-    displayTournamentTree(container: HTMLElement, tree: TournamentTree): void {
-        const treeHTML = `
-            <div class="tournament-tree">
-                ${tree.rounds.map((round: any, roundIndex: number) => `
-                    <div class="tournament-round" data-round="${roundIndex}">
-                        <h4 class="round-title">${this.bracketManager.getRoundName(roundIndex, tree.totalRounds)}</h4>
-                        <div class="round-matches">
-                            ${round.map((match: any) => `
-                                <div class="match ${match.status}" data-match-id="${match.id}">
-                                    <div class="match-players">
-                                        <div class="player ${match.winner === match.player1 ? 'winner' : ''}" data-player="1">
-                                            ${match.player1 || 'TBD'}
-                                        </div>
-                                        <div class="vs">vs</div>
-                                        <div class="player ${match.winner === match.player2 ? 'winner' : ''}" data-player="2">
-                                            ${match.player2 || 'TBD'}
-                                        </div>
-                                    </div>
-                                    ${match.status === 'completed' ? `
-                                        <div class="match-result">
-                                            Winner: ${match.winner}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `).join('')}
-                <div class="tournament-winner-section">
-                    <div class="winner-box" id="tournament-winner-box" style="display: none;">
-                        <div class="winner-title">🏆 CHAMPION 🏆</div>
-                        <div class="winner-name" id="winner-name"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.innerHTML = treeHTML;
-    }
-
-    refreshBracketDisplay(): void {
-        const bracketContainer = document.getElementById('bracket-container');
-        const tree = this.bracketManager.getTournamentTree();
-        if (bracketContainer && tree) {
-            this.displayTournamentTree(bracketContainer, tree);
-        }
+        // Initialiser le bracket jQuery
+        this.bracketManager.initializeJQueryBracket('bracket-container');
+        
+        console.log('Bracket displayed with jQuery Bracket library');
     }
 
     showCurrentMatch(player1: string, player2: string): void {
@@ -210,10 +170,23 @@ export class TournamentUIManager {
     }
 
     showGameControls(): void {
+        console.log('showGameControls called');
         const validateBtn = document.getElementById('validate-result');
         const resetBtn = document.getElementById('reset-score');
-        if (validateBtn) validateBtn.style.display = 'block';
-        if (resetBtn) resetBtn.style.display = 'block';
+        
+        if (validateBtn) {
+            console.log('Validate button found, showing it (onclick in HTML)');
+            validateBtn.style.display = 'block';
+        } else {
+            console.log('Validate button not found!');
+        }
+        
+        if (resetBtn) {
+            console.log('Reset button found, showing it (onclick in HTML)');
+            resetBtn.style.display = 'block';
+        } else {
+            console.log('Reset button not found!');
+        }
     }
 
     hideGameControls(): void {
@@ -237,17 +210,49 @@ export class TournamentUIManager {
         const bracketDiv = document.getElementById('tournament-bracket');
         const currentMatch = document.getElementById('current-match');
         const tournamentGame = document.getElementById('tournament-game');
+        const tournamentComplete = document.getElementById('tournament-complete');
         
         if (bracketDiv) bracketDiv.style.display = 'block';
         if (currentMatch) currentMatch.style.display = 'none';
         if (tournamentGame) tournamentGame.style.display = 'none';
+        if (tournamentComplete) tournamentComplete.style.display = 'block';
         
-        const winnerBox = document.getElementById('tournament-winner-box');
-        const winnerName = document.getElementById('winner-name');
-        if (winnerBox && winnerName) {
-            winnerName.textContent = winner;
-            winnerBox.style.display = 'block';
+        const championName = document.getElementById('champion-name');
+        if (championName)
+            championName.textContent = winner;
+        this.setupTournamentEndButtons();
+    }
+
+    private setupTournamentEndButtons(): void {
+        const goHomeBtn = document.getElementById('go-home') as HTMLButtonElement;
+        const newTournamentBtn = document.getElementById('new-tournament') as HTMLButtonElement;
+        
+        if (goHomeBtn) {
+            goHomeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.goToHomePage();
+            });
         }
+        
+        if (newTournamentBtn) {
+            newTournamentBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.startNewTournament();
+            });
+        }
+    }
+
+    private goToHomePage(): void {
+        if ((window as any).navigate)
+            (window as any).navigate('/');
+        else
+            window.location.href = '/';
+    }
+
+    private startNewTournament(): void {
+        window.location.reload();
     }
 
     prepareCanvas(): HTMLCanvasElement | null {
@@ -265,5 +270,9 @@ export class TournamentUIManager {
             console.error('Tournament canvas not found!');
             return null;
         }
+    }
+
+    refreshBracketDisplay(): void {
+        this.bracketManager.refreshBracket();
     }
 }

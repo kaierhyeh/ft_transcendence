@@ -1,9 +1,153 @@
 import { TournamentMatch, BracketMatch, TournamentTree, TournamentBracket } from './types.js';
 
-export class TournamentBracketManager {
-    private tournamentTree: TournamentTree | null = null;
+declare var $: any;
 
-    shuffleArray<T>(array: T[]): T[] {
+interface JQueryBracketData {
+    teams: (string | null)[][];
+    results: (number | null)[][][];
+}
+
+export class TournamentBracketManager {
+    private currentMatches: TournamentMatch[] = [];
+    private allMatches: TournamentMatch[] = [];
+    private currentRound: number = 0;
+    private tournamentTree: TournamentTree | null = null;
+    private bracketData: JQueryBracketData | null = null;
+    private players: string[] = [];
+    private currentContainerId: string | null = null;
+
+    createTournamentBracket(players: string[]): TournamentBracket {
+        this.players = [...players];
+        const shuffledPlayers = this.shuffleArray(players);
+        const firstRoundMatches = this.createFirstRoundMatches(shuffledPlayers);
+        this.currentMatches = firstRoundMatches;
+        this.allMatches = [...firstRoundMatches];
+        this.currentRound = 0;
+        this.tournamentTree = this.createSimpleTournamentTree(shuffledPlayers);
+        
+        this.createJQueryBracketData(shuffledPlayers);
+
+        return {
+            tree: this.tournamentTree,
+            matches: firstRoundMatches
+        };
+    }
+
+    private createFirstRoundMatches(players: string[]): TournamentMatch[] {
+        const matches: TournamentMatch[] = [];
+        for (let i = 0; i < players.length; i += 2) {
+            if (i + 1 < players.length) {
+                matches.push({
+                    player1: players[i],
+                    player2: players[i + 1],
+                    winner: null,
+                    score1: 0,
+                    score2: 0
+                });
+            }
+        }
+        return matches;
+    }
+
+    createJQueryBracketData(players: string[]): any {
+        const teams = [];
+        for (let i = 0; i < players.length; i += 2) {
+            if (i + 1 < players.length) {
+                teams.push([players[i], players[i + 1]]);
+            }
+        }
+
+        const totalRounds = Math.ceil(Math.log2(players.length));
+        const results = [];
+        for (let round = 0; round < totalRounds; round++) {
+            results.push([]);
+        }
+
+        this.bracketData = {
+            teams: teams,
+            results: [results]
+        };
+
+        return this.bracketData;
+    }
+
+    initializeBracket(containerId: string): void {
+        this.currentContainerId = containerId;
+        if (!this.bracketData) {
+            console.warn('No bracket data available - creating empty bracket data');
+            if (this.players.length > 0) {
+                this.createJQueryBracketData(this.players);
+            } else {
+                console.error('No players available to create bracket data');
+                return;
+            }
+        }
+
+        const container = $(`#${containerId}`);
+        if (container.length === 0) {
+            console.error(`Container #${containerId} not found`);
+            return;
+        }
+
+        container.empty();
+
+        const bracketConfig = {
+            init: this.bracketData,
+            skipConsolationRound: true,
+            teamWidth: 120,
+            scoreWidth: 30,
+            matchMargin: 20,
+            roundMargin: 40
+        };
+
+        container.bracket(bracketConfig);
+    }
+
+    updateMatchResult(player1: string, player2: string, winner: string, score1: number, score2: number): void {
+        const match = this.findCurrentMatch(player1, player2);
+        if (match) {
+            match.winner = winner;
+            match.score1 = score1;
+            match.score2 = score2;
+        }
+        
+        this.updateScoresInDOM(player1, player2, score1, score2, winner);
+    }
+
+    private updateScoresInDOM(player1: string, player2: string, score1: number, score2: number, winner: string): void {
+        if (!this.currentContainerId) return;
+        
+        const container = $(`#${this.currentContainerId}`);
+        const teams = container.find('.team');
+        
+        teams.each((index: number, teamElement: any) => {
+            const $team = $(teamElement);
+            const labelElement = $team.find('.label');
+            const scoreElement = $team.find('.score');
+            
+            if (labelElement.length > 0 && scoreElement.length > 0) {
+                const teamName = labelElement.text().trim();
+                
+                if (teamName === player1) {
+                    scoreElement.text(score1.toString());
+                    if (winner === player1) {
+                        scoreElement.css('color', '#4ade80').css('font-weight', 'bold');
+                    } else {
+                        scoreElement.css('color', '#ef4444').css('font-weight', 'bold');
+                    }
+                } else if (teamName === player2) {
+                    scoreElement.text(score2.toString());
+                    if (winner === player2) {
+                        scoreElement.css('color', '#4ade80').css('font-weight', 'bold');
+                    } else {
+                        scoreElement.css('color', '#ef4444').css('font-weight', 'bold');
+                    }
+                }
+            }
+        });
+    }
+
+    private shuffleArray<T>(array: T[]): T[] {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -12,128 +156,140 @@ export class TournamentBracketManager {
         return shuffled;
     }
 
-    createTournamentBracket(players: string[]): TournamentBracket {
-        const shuffledPlayers = this.shuffleArray(players);
-        
-        const tree = this.createTournamentTree(shuffledPlayers);
-        this.tournamentTree = tree;
-        
-        const firstRoundMatches: TournamentMatch[] = [];
-        for (let i = 0; i < shuffledPlayers.length; i += 2) {
-            firstRoundMatches.push({
-                player1: shuffledPlayers[i],
-                player2: shuffledPlayers[i + 1],
-                winner: null,
-                score1: 0,
-                score2: 0
-            });
-        }
-
-        return { tree, matches: firstRoundMatches };
+    findCurrentMatch(player1: string, player2: string): TournamentMatch | null {
+        return this.currentMatches.find(match => 
+            (match.player1 === player1 && match.player2 === player2) ||
+            (match.player1 === player2 && match.player2 === player1)
+        ) || null;
     }
 
-    createTournamentTree(players: string[]): TournamentTree {
-        const rounds = Math.log2(players.length);
-        const tree: TournamentTree = {
-            rounds: [],
-            totalRounds: rounds
-        };
-
-        const firstRound: BracketMatch[] = [];
-        for (let i = 0; i < players.length; i += 2) {
-            firstRound.push({
-                id: `r0-m${i/2}`,
-                player1: players[i],
-                player2: players[i + 1],
-                winner: null,
-                status: 'pending'
-            });
-        }
-        tree.rounds.push(firstRound);
-
-        let previousMatches = firstRound.length;
-        for (let round = 1; round < rounds; round++) {
-            const currentRound: BracketMatch[] = [];
-            for (let match = 0; match < previousMatches / 2; match++) {
-                currentRound.push({
-                    id: `r${round}-m${match}`,
-                    player1: null,
-                    player2: null,
-                    winner: null,
-                    status: 'waiting'
-                });
-            }
-            tree.rounds.push(currentRound);
-            previousMatches = currentRound.length;
-        }
-
-        return tree;
+    setCurrentRound(round: number): void {
+        this.currentRound = round;
     }
 
-    updateTournamentTree(matchId: string, winner: string): void {
-        if (!this.tournamentTree) return;
-
-        for (let roundIndex = 0; roundIndex < this.tournamentTree.rounds.length; roundIndex++) {
-            const round = this.tournamentTree.rounds[roundIndex];
-            const match = round.find((m: BracketMatch) => m.id === matchId);
-            if (match) {
-                match.winner = winner;
-                match.status = 'completed';
-
-                if (roundIndex < this.tournamentTree.rounds.length - 1) {
-                    const nextRound = this.tournamentTree.rounds[roundIndex + 1];
-                    const nextMatchIndex = Math.floor(round.indexOf(match) / 2);
-                    const nextMatch = nextRound[nextMatchIndex];
-                    
-                    if (!nextMatch.player1)
-                        nextMatch.player1 = winner;
-                    else {
-                        nextMatch.player2 = winner;
-                        nextMatch.status = 'pending';
-                    }
-                }
-                break;
-            }
-        }
+    getCurrentRound(): number {
+        return this.currentRound;
     }
 
-    getTournamentTree(): TournamentTree | null {
-        return this.tournamentTree;
+    getCurrentMatches(): TournamentMatch[] {
+        return this.currentMatches;
     }
 
-    getRoundName(roundIndex: number, totalRounds: number): string {
-        const roundsFromEnd = totalRounds - roundIndex;
-        switch (roundsFromEnd) {
-            case 1: return 'Final';
-            case 2: return 'Semi-Final';
-            case 3: return 'Quarter-Final';
-            default: return `Round ${roundIndex + 1}`;
-        }
+    setCurrentMatches(matches: TournamentMatch[]): void {
+        this.currentMatches = matches;
+        this.allMatches.push(...matches);
     }
 
-    getNextRoundMatches(currentRound: number): TournamentMatch[] {
-        if (!this.tournamentTree || currentRound + 1 >= this.tournamentTree.totalRounds)
+    getAllMatches(): TournamentMatch[] {
+        return this.allMatches;
+    }
+
+    createNextRoundMatches(): TournamentMatch[] {
+        const winners = this.currentMatches
+            .filter(match => match.winner)
+            .map(match => match.winner!);
+
+        if (winners.length <= 1) {
             return [];
+        }
 
         const nextRoundMatches: TournamentMatch[] = [];
-        const nextRound = this.tournamentTree.rounds[currentRound + 1];
-        
-        for (const match of nextRound) {
-            if (match.player1 && match.player2) {
+        for (let i = 0; i < winners.length; i += 2) {
+            if (i + 1 < winners.length) {
                 nextRoundMatches.push({
-                    player1: match.player1,
-                    player2: match.player2,
+                    player1: winners[i],
+                    player2: winners[i + 1],
                     winner: null,
                     score1: 0,
                     score2: 0
                 });
             }
         }
-        
+
         return nextRoundMatches;
     }
 
-    isLastRound(currentRound: number): boolean {
-        return this.tournamentTree ? currentRound + 1 >= this.tournamentTree.totalRounds : true;
+    isRoundComplete(): boolean {
+        return this.currentMatches.every(match => match.winner !== null);
+    }
+
+    getTournamentTree(): TournamentTree | null {
+        return this.tournamentTree;
+    }
+
+    updateTournamentTree(matchId: string, winner: string): void {
+        
+    }
+
+    private createSimpleTournamentTree(players: string[]): TournamentTree {
+        const rounds: BracketMatch[][] = [];
+        let currentPlayerCount = players.length;
+        let roundIndex = 0;
+
+        while (currentPlayerCount > 1) {
+            const round: BracketMatch[] = [];
+            const matchesInRound = currentPlayerCount / 2;
+
+            for (let i = 0; i < matchesInRound; i++) {
+                round.push({
+                    id: `round-${roundIndex}-match-${i}`,
+                    player1: roundIndex === 0 ? players[i * 2] : null,
+                    player2: roundIndex === 0 ? players[i * 2 + 1] : null,
+                    winner: null,
+                    status: 'pending'
+                });
+            }
+
+            rounds.push(round);
+            currentPlayerCount = matchesInRound;
+            roundIndex++;
+        }
+
+        return {
+            rounds: rounds,
+            totalRounds: rounds.length
+        };
+    }
+
+    getDebugInfo(): any {
+        return {
+            currentRound: this.currentRound,
+            currentMatches: this.currentMatches,
+            totalRounds: this.tournamentTree?.totalRounds || 0,
+            playersCount: this.players.length,
+            bracketData: this.bracketData
+        };
+    }
+
+    isCurrentRoundComplete(): boolean {
+        return this.isRoundComplete();
+    }
+
+    getTournamentWinner(): string | null {
+        if (this.currentMatches.length === 1 && this.currentMatches[0].winner) {
+            return this.currentMatches[0].winner;
+        }
+        return null;
+    }
+
+    initializeJQueryBracket(containerId: string): void {
+        this.initializeBracket(containerId);
+    }
+
+    refreshBracket(): void {
+        if (this.currentContainerId && this.bracketData) {
+            const container = $(`#${this.currentContainerId}`);
+            if (container.length > 0) {
+                container.empty();
+                container.bracket({
+                    init: this.bracketData,
+                    skipConsolationRound: true,
+                    teamWidth: 120,
+                    scoreWidth: 30,
+                    matchMargin: 20,
+                    roundMargin: 40
+                });
+            }
+        }
     }
 }
