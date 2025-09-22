@@ -13,6 +13,9 @@ export class TournamentGameManager {
     
     private onGameEndCallback: ((winner: string) => void) | null = null;
 
+    private inputInterval: any = null;
+    private keys: { [key: string]: boolean } = {};
+
     constructor() {
         this.apiService = new TournamentApiService();
     }
@@ -83,22 +86,20 @@ export class TournamentGameManager {
     private setupTournamentControls(): void {
         if (!this.currentMatch) return;
 
-        const keys: { [key: string]: boolean } = {};
-        
+        this.keys = {};
         const keyDownHandler = (e: KeyboardEvent) => {
-            keys[e.key] = true;
-            this.sendPlayerInput(e.key, true);
+            this.keys[e.key] = true;
         };
-        
         const keyUpHandler = (e: KeyboardEvent) => {
-            keys[e.key] = false;
-            this.sendPlayerInput(e.key, false);
+            this.keys[e.key] = false;
         };
-
         document.addEventListener('keydown', keyDownHandler);
         document.addEventListener('keyup', keyUpHandler);
-
         (window as any).tournamentKeyHandlers = { keyDownHandler, keyUpHandler } as TournamentKeyHandlers;
+
+        this.inputInterval = setInterval(() => {
+            this.sendCurrentInputs();
+        }, 50);
     }
 
     private cleanupControls(): void {
@@ -108,36 +109,30 @@ export class TournamentGameManager {
             document.removeEventListener('keyup', handlers.keyUpHandler);
             (window as any).tournamentKeyHandlers = null;
         }
+        if (this.inputInterval) {
+            clearInterval(this.inputInterval);
+            this.inputInterval = null;
+        }
     }
 
-    private sendPlayerInput(key: string, isPressed: boolean): void {
+    private sendCurrentInputs(): void {
         if (!this.gameWebSocket || this.gameWebSocket.readyState !== WebSocket.OPEN || !this.currentMatch) return;
-
-        let move = 'stop';
-        let participantId = '';
-
-        if (key === 'w' || key === 'W') {
-            move = isPressed ? 'up' : 'stop';
-            participantId = `player_${this.currentMatch.player1}`;
-        } else if (key === 's' || key === 'S') {
-            move = isPressed ? 'down' : 'stop';
-            participantId = `player_${this.currentMatch.player1}`;
-        }
-        else if (key === 'ArrowUp') {
-            move = isPressed ? 'up' : 'stop';
-            participantId = `player_${this.currentMatch.player2}`;
-        } else if (key === 'ArrowDown') {
-            move = isPressed ? 'down' : 'stop';
-            participantId = `player_${this.currentMatch.player2}`;
-        }
-
-        if (participantId) {
-            this.gameWebSocket.send(JSON.stringify({
-                type: 'input',
-                participant_id: participantId,
-                move: move
-            }));
-        }
+        let move1 = 'stop';
+        if (this.keys['w'] || this.keys['W']) move1 = 'up';
+        else if (this.keys['s'] || this.keys['S']) move1 = 'down';
+        this.gameWebSocket.send(JSON.stringify({
+            type: 'input',
+            participant_id: `player_${this.currentMatch.player1}`,
+            move: move1
+        }));
+        let move2 = 'stop';
+        if (this.keys['ArrowUp']) move2 = 'up';
+        else if (this.keys['ArrowDown']) move2 = 'down';
+        this.gameWebSocket.send(JSON.stringify({
+            type: 'input',
+            participant_id: `player_${this.currentMatch.player2}`,
+            move: move2
+        }));
     }
 
     private connectTournamentWebSocket(id: number): void {

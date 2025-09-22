@@ -3,20 +3,10 @@ body.tournament-page {
     height: 100vh !important;
 }
 
-body.tournamen.tournament-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 20px;
-}
-
 .match-controls {
     display: flex;
     justify-content: center;
     margin-top: 20px;
-} .pong-header,
-body.tournament-page .pong-icons {
-    display: none !important;
 }
 
 .tournament-container {
@@ -119,7 +109,7 @@ body.tournament-page .pong-icons {
     margin-top: 20px;
 }
 
-.btn {
+.tournament-btn {
     padding: 15px 30px;
     border: 2px solid #4ade80;
     border-radius: 10px;
@@ -130,18 +120,18 @@ body.tournament-page .pong-icons {
     text-transform: uppercase;
 }
 
-.btn-primary {
+.tournament-btn-primary {
     background-color: transparent;
     color: #4ade80;
 }
 
-.btn-primary:hover {
+.tournament-btn-primary:hover {
     background-color: #4ade80;
     color: #000;
     box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
 }
 
-.btn-primary.active {
+.tournament-btn-primary.active {
     background-color: #4ade80;
     color: #000;
     border-color: #4ade80;
@@ -149,25 +139,25 @@ body.tournament-page .pong-icons {
     box-shadow: 0 0 20px rgba(74, 222, 128, 0.8);
 }
 
-.btn-success {
+.tournament-btn-success {
     background-color: #22c55e;
     color: #000;
     border: 2px solid #22c55e;
 }
 
-.btn-success:hover {
+.tournament-btn-success:hover {
     background-color: #16a34a;
     border-color: #16a34a;
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
 }
 
-.btn-secondary {
+.tournament-btn-secondary {
     background-color: transparent;
     color: #666;
     border: 2px solid #666;
 }
 
-.btn-secondary:hover {
+.tournament-btn-secondary:hover {
     background-color: #666;
     color: #fff;
     box-shadow: 0 0 20px rgba(102, 102, 102, 0.3);
@@ -241,7 +231,7 @@ body.tournament-page .pong-icons {
         align-items: center;
     }
 
-    .btn {
+    .tournament-btn {
         width: 100%;
         max-width: 200px;
     }
@@ -270,7 +260,7 @@ body.tournament-page .pong-icons {
 }
 
 .jquery-bracket-container {
-    min-height: 300px;
+    min-height: 100px;
     width: 100%;
     overflow-x: auto;
     overflow-y: visible;
@@ -388,10 +378,10 @@ body.tournament-page .pong-icons {
 
 @keyframes championGlow {
     from {
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
     }
     to {
-        text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 25px rgba(255, 215, 0, 0.5);
+        text-shadow: 0 0 10px rgba(255, 215, 0, 1), 0 0 20px rgba(255, 215, 0, 0.5);
     }
 }
 
@@ -400,91 +390,6 @@ body.tournament-page .pong-icons {
     text-shadow: none !important;
 }
 
-.match-editor {
-    background: rgba(30, 30, 30, 0.95);
-    border: 2px solid #4ade80;
-    border-radius: 10px;
-    padding: 15px;
-    min-width: 250px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-}
-
-.match-editor .player-score {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.match-editor .player-name {
-    color: #fff;
-    font-weight: bold;
-    min-width: 80px;
-    font-size: 14px;
-}
-
-.match-editor .score-input {
-    background: rgba(45, 45, 45, 0.9);
-    border: 1px solid #666;
-    border-radius: 5px;
-    color: #fff;
-    padding: 5px 8px;
-    width: 60px;
-    text-align: center;
-    font-weight: bold;
-}
-
-.match-editor .score-input:focus {
-    border-color: #4ade80;
-    outline: none;
-    box-shadow: 0 0 5px rgba(74, 222, 128, 0.3);
-}
-
-.match-editor .vs-separator {
-    color: #4ade80;
-    font-weight: bold;
-    text-align: center;
-    margin: 5px 0;
-    font-size: 16px;
-}
-
-.match-editor .editor-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 15px;
-}
-
-.match-editor .btn {
-    padding: 8px 16px;
-    font-size: 12px;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
-}
-
-.match-editor .btn-success {
-    background: linear-gradient(135deg, #4ade80, #22c55e);
-    color: #000;
-}
-
-.match-editor .btn-success:hover {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    transform: translateY(-1px);
-}
-
-.match-editor .btn-secondary {
-    background: rgba(75, 75, 75, 0.9);
-    color: #fff;
-    border: 1px solid #666;
-}
-
-.match-editor .btn-secondary:hover {
-    background: rgba(100, 100, 100, 0.9);
-    border-color: #888;
-}
 
 @media (max-width: 768px) {
     .jquery-bracket-container {
@@ -495,21 +400,6 @@ body.tournament-page .pong-icons {
     .jQBracket .team {
         font-size: 12px !important;
         padding: 6px 8px !important;
-    }
-    
-    .match-editor {
-        min-width: 200px;
-        padding: 10px;
-    }
-    
-    .match-editor .player-name {
-        min-width: 60px;
-        font-size: 12px;
-    }
-    
-    .match-editor .score-input {
-        width: 50px;
-        padding: 4px 6px;
     }
 }
 
@@ -558,7 +448,7 @@ body.tournament-page .pong-icons {
     flex-wrap: wrap;
 }
 
-.tournament-end-actions .btn {
+.tournament-end-actions .tournament-btn {
     min-width: 200px;
     padding: 20px 40px;
     font-size: 20px;
@@ -578,7 +468,7 @@ body.tournament-page .pong-icons {
         align-items: center;
     }
     
-    .tournament-end-actions .btn {
+    .tournament-end-actions .tournament-btn {
         min-width: 250px;
     }
 }

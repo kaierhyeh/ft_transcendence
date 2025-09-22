@@ -63,13 +63,13 @@ export class TournamentUIManager {
             playerNames.style.display = 'none';
             playerSelection.style.display = 'block';
             
-            const allButtons = document.querySelectorAll('.player-count-buttons .btn');
+            const allButtons = document.querySelectorAll('.player-count-buttons .tournament-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));
         }
     }
 
     updatePlayerCountSelection(count: number): void {
-        const allButtons = document.querySelectorAll('.player-count-buttons .btn');
+        const allButtons = document.querySelectorAll('.player-count-buttons .tournament-btn');
         allButtons.forEach(btn => btn.classList.remove('active'));
         
         const selectedBtn = document.getElementById(`players-${count}`);

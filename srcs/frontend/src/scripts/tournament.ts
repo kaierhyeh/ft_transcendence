@@ -1,6 +1,6 @@
 import { TournamentMatch } from './tournament/types.js';
 import { TournamentBracketManager } from './tournament/bracket.js';
-import { TournamentGameManager } from './tournament/initGameTournament.js';
+import { TournamentGameManager } from './tournament/gameTournament.js';
 import { TournamentUIManager } from './tournament/ui.js';
 
 export function initTournament(): void {
@@ -161,8 +161,6 @@ export function initTournament(): void {
             }
         }
     }
-
-
 
     function resetMatch(): void {
         gameManager.resetGame();

@@ -191,19 +191,6 @@ export function initGame(): void {
     let game_conf: GameConfig | null = null;
     draw();
 
-    setTimeout(async () => {
-        try {
-            const response = await fetch(API_GAME_ENDPOINT + "/1/conf.");
-            const serverConfig = await response.json() as GameConfig;
-
-            game_conf = serverConfig;
-
-            if (!gameStarted)
-                draw();
-        } catch (error) {
-            console.log("Could not load server config, using defaults.");
-        }
-    }, 200);
     const keys: { [key: string]: boolean } = {};
     const input: InputMessage = {
         type: "input",
