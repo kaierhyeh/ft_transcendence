@@ -4,7 +4,7 @@ declare var $: any;
 
 interface JQueryBracketData {
     teams: (string | null)[][];
-    results: (number | null)[][][];
+    results: (number[] | null)[][][];
 }
 
 export class TournamentBracketManager {
@@ -60,7 +60,12 @@ export class TournamentBracketManager {
         const totalRounds = Math.ceil(Math.log2(players.length));
         const results = [];
         for (let round = 0; round < totalRounds; round++) {
-            results.push([]);
+            const roundResults = [];
+            const matchesInRound = Math.ceil(teams.length / Math.pow(2, round));
+            for (let match = 0; match < matchesInRound; match++) {
+                roundResults.push(null);
+            }
+            results.push(roundResults);
         }
 
         this.bracketData = {
@@ -74,10 +79,9 @@ export class TournamentBracketManager {
     initializeBracket(containerId: string): void {
         this.currentContainerId = containerId;
         if (!this.bracketData) {
-            console.warn('No bracket data available - creating empty bracket data');
-            if (this.players.length > 0) {
+            if (this.players.length > 0)
                 this.createJQueryBracketData(this.players);
-            } else {
+            else {
                 console.error('No players available to create bracket data');
                 return;
             }
@@ -103,7 +107,7 @@ export class TournamentBracketManager {
         container.bracket(bracketConfig);
     }
 
-    updateMatchResult(player1: string, player2: string, winner: string, score1: number, score2: number): void {
+    updateMatchResult(player1: string, player2: string, winner: string, score1: number, score2: number, matchRound?: number): void {
         const match = this.findCurrentMatch(player1, player2);
         if (match) {
             match.winner = winner;
@@ -111,39 +115,120 @@ export class TournamentBracketManager {
             match.score2 = score2;
         }
         
-        this.updateScoresInDOM(player1, player2, score1, score2, winner);
+        const roundToUse = matchRound !== undefined ? matchRound : this.currentRound;
+        
+        this.updateScoresInDOM(player1, player2, score1, score2, winner, roundToUse);
+        this.updateBracketDataResults(player1, player2, score1, score2, roundToUse);
+        this.advanceWinnerToNextRound(winner, roundToUse);
     }
 
-    private updateScoresInDOM(player1: string, player2: string, score1: number, score2: number, winner: string): void {
+    private updateScoresInDOM(player1: string, player2: string, score1: number, score2: number, winner: string, matchRound: number): void {
         if (!this.currentContainerId) return;
         
         const container = $(`#${this.currentContainerId}`);
-        const teams = container.find('.team');
+        const rounds = container.find('.round');
         
-        teams.each((index: number, teamElement: any) => {
-            const $team = $(teamElement);
-            const labelElement = $team.find('.label');
-            const scoreElement = $team.find('.score');
+        if (rounds.length > matchRound) {
+            const targetRoundElement = $(rounds[matchRound]);
+            const teams = targetRoundElement.find('.team');
             
-            if (labelElement.length > 0 && scoreElement.length > 0) {
-                const teamName = labelElement.text().trim();
+            teams.each((index: number, teamElement: any) => {
+                const $team = $(teamElement);
+                const labelElement = $team.find('.label');
+                const scoreElement = $team.find('.score');
                 
-                if (teamName === player1) {
-                    scoreElement.text(score1.toString());
-                    if (winner === player1) {
-                        scoreElement.css('color', '#4ade80').css('font-weight', 'bold');
-                    } else {
-                        scoreElement.css('color', '#ef4444').css('font-weight', 'bold');
-                    }
-                } else if (teamName === player2) {
-                    scoreElement.text(score2.toString());
-                    if (winner === player2) {
-                        scoreElement.css('color', '#4ade80').css('font-weight', 'bold');
-                    } else {
-                        scoreElement.css('color', '#ef4444').css('font-weight', 'bold');
-                    }
+                if (labelElement.length > 0 && scoreElement.length > 0) {
+                    const teamName = labelElement.text().trim();
+                    
+                    if (scoreElement.attr('data-final-score') === 'true')
+                        return;
+                    
+                    if (teamName === player1)
+                        this.updateTeamScore($team, labelElement, scoreElement, score1, winner === player1);
+                    else if (teamName === player2)
+                        this.updateTeamScore($team, labelElement, scoreElement, score2, winner === player2);
                 }
-            }
+            });
+        }
+    }
+
+    private updateTeamScore($team: any, labelElement: any, scoreElement: any, score: number, isWinner: boolean): void {
+        scoreElement.text(score.toString());
+        $team.attr('data-match-completed', 'true');
+        scoreElement.attr('data-final-score', 'true');
+        $team.removeClass('winner loser');
+        
+        if (isWinner)
+            $team.addClass('winner');
+        else
+            $team.addClass('loser');
+        
+        labelElement.addClass('advanced-winner');
+    }
+
+    private updateBracketDataResults(player1: string, player2: string, score1: number, score2: number, matchRound: number): void {
+        if (!this.bracketData) return;
+
+        const teamIndex = this.bracketData.teams.findIndex(team => 
+            (team[0] === player1 && team[1] === player2) ||
+            (team[0] === player2 && team[1] === player1)
+        );
+
+        if (teamIndex !== -1 && this.bracketData.results[0][matchRound])
+            this.bracketData.results[0][matchRound][teamIndex] = [score1, score2];
+    }
+
+    private advanceWinnerToNextRound(winner: string, matchRound: number): void {
+        if (!this.currentContainerId) return;
+
+        setTimeout(() => {
+            this.replaceNextTBDWithWinner(winner, matchRound);
+        }, 150);
+    }
+
+    private replaceNextTBDWithWinner(winner: string, matchRound: number): void {
+        if (!this.currentContainerId) return;
+        
+        const container = $(`#${this.currentContainerId}`);
+        const rounds = container.find('.round');
+        const targetRoundIndex = matchRound + 1;
+        
+        if (targetRoundIndex >= rounds.length) {
+            if (matchRound === rounds.length - 1)
+                this.highlightTournamentChampion(winner, rounds);
+            return;
+        }
+        
+        const targetRound = $(rounds[targetRoundIndex]);
+        const existingWinner = targetRound.find('.team .label').filter(function(this: any) {
+            return $(this).text().trim() === winner;
+        });
+        
+        if (existingWinner.length > 0)
+            return;
+        
+        const tbdElements = targetRound.find('.team .label').filter(function(this: any) {
+            const text = $(this).text().trim();
+            return text === 'TBD';
+        });
+        
+        if (tbdElements.length > 0) {
+            const firstTbd = $(tbdElements[0]);
+            firstTbd.text(winner);
+            
+            const teamElement = firstTbd.closest('.team');
+            firstTbd.addClass('replaced-tbd');
+        }
+    }
+
+    private highlightTournamentChampion(winner: string, rounds: any): void {
+        const finalRound = $(rounds[rounds.length - 1]);
+        const finalTeams = finalRound.find('.team .label');
+        
+        finalTeams.each((_: number, element: any) => {
+            const $label = $(element);
+            if ($label.text().trim() === winner)
+                $label.closest('.team').addClass('tournament-champion');
         });
     }
 
@@ -189,9 +274,8 @@ export class TournamentBracketManager {
             .filter(match => match.winner)
             .map(match => match.winner!);
 
-        if (winners.length <= 1) {
+        if (winners.length <= 1)
             return [];
-        }
 
         const nextRoundMatches: TournamentMatch[] = [];
         for (let i = 0; i < winners.length; i += 2) {
@@ -213,12 +297,18 @@ export class TournamentBracketManager {
         return this.currentMatches.every(match => match.winner !== null);
     }
 
-    getTournamentTree(): TournamentTree | null {
-        return this.tournamentTree;
+    isCurrentRoundComplete(): boolean {
+        return this.isRoundComplete();
     }
 
-    updateTournamentTree(matchId: string, winner: string): void {
-        
+    getTournamentWinner(): string | null {
+        if (this.currentMatches.length === 1 && this.currentMatches[0].winner)
+            return this.currentMatches[0].winner;
+        return null;
+    }
+
+    getTournamentTree(): TournamentTree | null {
+        return this.tournamentTree;
     }
 
     private createSimpleTournamentTree(players: string[]): TournamentTree {
@@ -261,35 +351,7 @@ export class TournamentBracketManager {
         };
     }
 
-    isCurrentRoundComplete(): boolean {
-        return this.isRoundComplete();
-    }
-
-    getTournamentWinner(): string | null {
-        if (this.currentMatches.length === 1 && this.currentMatches[0].winner) {
-            return this.currentMatches[0].winner;
-        }
-        return null;
-    }
-
     initializeJQueryBracket(containerId: string): void {
         this.initializeBracket(containerId);
-    }
-
-    refreshBracket(): void {
-        if (this.currentContainerId && this.bracketData) {
-            const container = $(`#${this.currentContainerId}`);
-            if (container.length > 0) {
-                container.empty();
-                container.bracket({
-                    init: this.bracketData,
-                    skipConsolationRound: true,
-                    teamWidth: 120,
-                    scoreWidth: 30,
-                    matchMargin: 20,
-                    roundMargin: 40
-                });
-            }
-        }
     }
 }

@@ -1,6 +1,6 @@
 import { TournamentMatch } from './tournament/types.js';
 import { TournamentBracketManager } from './tournament/bracket.js';
-import { TournamentGameManager } from './tournament/game.js';
+import { TournamentGameManager } from './tournament/initGameTournament.js';
 import { TournamentUIManager } from './tournament/ui.js';
 
 export function initTournament(): void {
@@ -25,12 +25,8 @@ export function initTournament(): void {
 
     gameManager.setOnGameEndCallback(onGameEnd);
 
-    // Exposer les fonctions globalement pour les boutons HTML onclick
     (window as any).tournamentValidateResult = () => {
-        console.log('tournamentValidateResult called from HTML onclick');
-        
         const winner = gameManager.getCurrentGameWinner();
-        console.log('Current winner:', winner);
         
         if (winner) {
             const gameState = (window as any).gameSystem?.gameState();
@@ -46,40 +42,32 @@ export function initTournament(): void {
                 score2 = winner === currentMatch.player2 ? 7 : 0;
             }
             
-            console.log('Scores:', score1, score2);
-            
             const currentMatch = matches[currentMatchIndex];
             currentMatch.winner = winner;
             currentMatch.score1 = score1;
             currentMatch.score2 = score2;
             
-            console.log('Match result saved in data (trying partial refresh for scores only)');
+            const matchRound = bracketManager.getCurrentRound();
+            
             bracketManager.updateMatchResult(
                 currentMatch.player1,
                 currentMatch.player2,
                 winner,
                 score1,
-                score2
+                score2,
+                matchRound
             );
-            
-            // bracketManager.updateTournamentTree(`r${currentRound}-m${currentMatchIndex}`, winner);
-            console.log('Skipping tournament tree update to prevent bracket displacement');
             
             uiManager.hideGameInterface();
             uiManager.hideGameControls();
-            
-            console.log('Advancing to next match...');
             advanceToNextMatch();
-        } else {
-            console.log('No winner found, cannot validate result');
-        }
+        } else
+            console.error('No winner found, cannot validate result');
     };
 
     (window as any).tournamentResetScore = () => {
-        console.log('tournamentResetScore called from HTML onclick');
-        if (typeof resetMatch === 'function') {
+        if (typeof resetMatch === 'function')
             resetMatch();
-        }
     };
 
     function setupTournamentButtons(): void {
@@ -174,52 +162,7 @@ export function initTournament(): void {
         }
     }
 
-    function validateResult(): void {
-        console.log('validateResult called');
-        const winner = gameManager.getCurrentGameWinner();
-        console.log('Current winner:', winner);
-        
-        if (winner) {
-            const gameState = (window as any).gameSystem?.gameState();
-            let score1 = 0;
-            let score2 = 0;
-            
-            if (gameState && gameState.score) {
-                score1 = gameState.score.left;
-                score2 = gameState.score.right;
-            } else {
-                const currentMatch = matches[currentMatchIndex];
-                score1 = winner === currentMatch.player1 ? 7 : 0;
-                score2 = winner === currentMatch.player2 ? 7 : 0;
-            }
-            
-            console.log('Scores:', score1, score2);
-            
-            const currentMatch = matches[currentMatchIndex];
-            currentMatch.winner = winner;
-            currentMatch.score1 = score1;
-            currentMatch.score2 = score2;
-            
-            console.log('Updating match result...');
-            bracketManager.updateMatchResult(
-                currentMatch.player1,
-                currentMatch.player2,
-                winner,
-                score1,
-                score2
-            );
-            
-            bracketManager.updateTournamentTree(`r${currentRound}-m${currentMatchIndex}`, winner);
-            
-            uiManager.hideGameInterface();
-            uiManager.hideGameControls();
-            
-            console.log('Advancing to next match...');
-            advanceToNextMatch();
-        } else {
-            console.log('No winner found, cannot validate result');
-        }
-    }
+
 
     function resetMatch(): void {
         gameManager.resetGame();
@@ -238,47 +181,31 @@ export function initTournament(): void {
 
     function advanceToNextMatch(): void {
         if (currentMatchIndex + 1 < matches.length) {
-            // Il y a encore des matchs dans le round actuel
             currentMatchIndex++;
             showNextMatch();
         } else {
-            // Round actuel terminé, vérifier s'il faut passer au round suivant
-            console.log('Current round completed, checking for next round...');
-            console.log('Bracket debug info:', bracketManager.getDebugInfo());
-            
             if (bracketManager.isCurrentRoundComplete()) {
                 const nextRoundMatches = bracketManager.createNextRoundMatches();
                 
                 if (nextRoundMatches.length > 0) {
-                    // Il y a un round suivant
+                    
+                    bracketManager.setCurrentMatches(nextRoundMatches);
+                    bracketManager.setCurrentRound(currentRound + 1);
+                    
                     matches = nextRoundMatches;
                     currentMatchIndex = 0;
                     currentRound++;
                     
-                    console.log(`Starting round ${currentRound + 1} with ${nextRoundMatches.length} matches:`, nextRoundMatches);
-                    
-                    // Ne pas actualiser l'affichage du bracket pour éviter les décalages
-                    // uiManager.refreshBracketDisplay();
-                    console.log('Skipping bracket refresh to prevent displacement');
-                    
-                    // Afficher le prochain match
                     showNextMatch();
                 } else {
-                    // Tournoi terminé
                     const winner = bracketManager.getTournamentWinner();
-                    if (winner) {
-                        console.log('Tournament completed! Winner:', winner);
+                    if (winner)
                         uiManager.showTournamentComplete(winner);
-                    } else {
-                        console.error('Tournament completed but no winner found');
+                    else
                         alert('Tournament completed but there was an error determining the winner');
-                    }
                 }
-            } else {
-                console.error('Round not complete, cannot advance');
-                console.log('Current matches state:', bracketManager.getCurrentMatches());
+            } else
                 alert('Current round is not complete');
-            }
         }
     }
 

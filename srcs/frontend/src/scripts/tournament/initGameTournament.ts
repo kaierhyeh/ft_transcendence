@@ -51,7 +51,6 @@ export class TournamentGameManager {
                         ball_size: 10
                     });
                     gameSystem.setGameStarted?.(true);
-                    console.log('Tournament: Configured real game system');
                 }
             }, 300);
 
@@ -175,8 +174,6 @@ export class TournamentGameManager {
                 
                 if (message.type === 'game_state')
                     this.handleTournamentGameState(message.data);
-                else
-                    console.log('Unknown message type:', message.type);
             } catch (error) {
                 console.error('Error parsing tournament game data:', error);
             }
@@ -220,7 +217,6 @@ export class TournamentGameManager {
     }
 
     private onTournamentGameEnd(winner: string): void {
-        console.log('Tournament game ended, winner:', winner);
         this.currentGameWinner = winner;
         
         this.cleanupControls();

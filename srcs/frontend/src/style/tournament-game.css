@@ -67,21 +67,6 @@
         inset 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
-.game-instructions {
-    margin-top: 20px;
-    text-align: center;
-    color: #fff;
-    background: rgba(30, 30, 30, 0.8);
-    padding: 15px 20px;
-    border-radius: 10px;
-    border: 1px solid #666;
-}
-
-.game-instructions p {
-    margin: 5px 0;
-    font-size: 14px;
-}
-
 .game-controls {
     display: flex;
     gap: 15px;

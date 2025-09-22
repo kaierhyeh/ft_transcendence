@@ -269,20 +269,18 @@ body.tournament-page .pong-icons {
     }
 }
 
-/* jQuery Bracket Integration Styles */
 .jquery-bracket-container {
-    min-height: 500px;  /* Augmenté pour plus d'espace */
+    min-height: 300px;
     width: 100%;
     overflow-x: auto;
     overflow-y: visible;
-    padding: 30px 20px;  /* Plus de padding vertical */
+    padding: 30px 20px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     border: 1px solid #444;
-    position: relative;  /* Aider au positionnement stable */
+    position: relative;
 }
 
-/* Forcer la stabilité des connexions jQuery Bracket */
 .jquery-bracket-container .jQBracket {
     position: relative !important;
     transform: none !important;
@@ -297,7 +295,6 @@ body.tournament-page .pong-icons {
     position: absolute !important;
 }
 
-/* Améliorer la lisibilité du texte avec un fond par défaut */
 .jquery-bracket-container .team {
     background-color: rgba(30, 30, 30, 0.8) !important;
     border: 1px solid #444 !important;
@@ -311,9 +308,14 @@ body.tournament-page .pong-icons {
 .jquery-bracket-container .team .score {
     color: #fff !important;
     font-weight: bold !important;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 3px;
+    min-width: 20px;
+    text-align: center;
+    display: inline-block;
 }
 
-/* Protéger les scores finaux contre l'effacement */
 .jquery-bracket-container .team[data-match-completed="true"] .score[data-final-score="true"] {
     font-weight: bold !important;
     opacity: 1 !important;
@@ -324,7 +326,80 @@ body.tournament-page .pong-icons {
     opacity: 0.9 !important;
 }
 
-/* Match editor styles for score input */
+.jquery-bracket-container .team.winner {
+    background-color: rgba(34, 197, 94, 0.15) !important;
+    border-color: #22c55e !important;
+}
+
+.jquery-bracket-container .team.winner .score {
+    color: #22c55e !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 5px rgba(34, 197, 94, 0.5) !important;
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    border: 1px solid #22c55e !important;
+}
+
+.jquery-bracket-container .team.loser {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: #ef4444 !important;
+}
+
+.jquery-bracket-container .team.loser .score {
+    color: #ef4444 !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 5px rgba(239, 68, 68, 0.5) !important;
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border: 1px solid #ef4444 !important;
+}
+
+.jquery-bracket-container .team .score[style*="color: rgb(34, 197, 94)"],
+.jquery-bracket-container .team .score[style*="color:#22c55e"] {
+    background-color: rgba(34, 197, 94, 0.25) !important;
+    border: 1px solid #22c55e !important;
+    color: #22c55e !important;
+}
+
+.jquery-bracket-container .team .score[style*="color: rgb(239, 68, 68)"],
+.jquery-bracket-container .team .score[style*="color:#ef4444"] {
+    background-color: rgba(239, 68, 68, 0.25) !important;
+    border: 1px solid #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.jquery-bracket-container .team .label.advanced-winner,
+.jquery-bracket-container .team .label.replaced-tbd {
+    color: #fff !important;
+    font-weight: normal !important;
+    text-shadow: none !important;
+}
+
+.jquery-bracket-container .team.tournament-champion {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    border-color: #ffd700 !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;
+}
+
+.jquery-bracket-container .team.tournament-champion .label {
+    color: #ffd700 !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8) !important;
+    animation: championGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes championGlow {
+    from {
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    }
+    to {
+        text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 25px rgba(255, 215, 0, 0.5);
+    }
+}
+
+.jquery-bracket-container .team .label {
+    color: #fff !important;
+    text-shadow: none !important;
+}
+
 .match-editor {
     background: rgba(30, 30, 30, 0.95);
     border: 2px solid #4ade80;
@@ -411,7 +486,6 @@ body.tournament-page .pong-icons {
     border-color: #888;
 }
 
-/* Responsive jQuery Bracket */
 @media (max-width: 768px) {
     .jquery-bracket-container {
         padding: 10px 5px;
@@ -439,7 +513,6 @@ body.tournament-page .pong-icons {
     }
 }
 
-/* Tournament completion styles */
 #tournament-complete {
     text-align: center;
     margin-top: 40px;

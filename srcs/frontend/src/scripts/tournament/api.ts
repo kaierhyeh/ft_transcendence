@@ -33,10 +33,8 @@ export class TournamentApiService {
             }
 
             const gameData = await response.json();
-            console.log('Raw API response:', gameData);
             const gameId = gameData.game_id;
             console.log('Created game session with ID:', gameId);
-            console.log('Type of gameId:', typeof gameId);
 
             await this.validateGameSession(gameId);
             

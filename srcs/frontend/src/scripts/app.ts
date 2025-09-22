@@ -93,8 +93,6 @@ async function navigate(path: string, push: boolean = true)
 		load404(push);
 }
 
-(window as any).navigate = navigate;
-
 window.onpopstate = (e) => {
 	const path = e.state?.path || location.pathname;
 	navigate(path, false);

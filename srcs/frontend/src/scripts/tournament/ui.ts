@@ -30,7 +30,7 @@ export class TournamentUIManager {
                 input.id = `player-${i}`;
                 input.name = `player-${i}`;
                 input.placeholder = `Enter name`;
-                input.maxLength = 20;
+                input.maxLength = 16;
                 input.required = true;
                 
                 input.addEventListener('keypress', (e) => {
@@ -112,16 +112,10 @@ export class TournamentUIManager {
         const bracketContainer = document.getElementById('bracket-container');
         if (!bracketContainer) return;
 
-        // S'assurer que le container a la bonne structure
         bracketContainer.innerHTML = '';
-        
-        // Ajouter les classes CSS nécessaires
         bracketContainer.classList.add('jquery-bracket');
-
-        // Initialiser le bracket jQuery
         this.bracketManager.initializeJQueryBracket('bracket-container');
         
-        console.log('Bracket displayed with jQuery Bracket library');
     }
 
     showCurrentMatch(player1: string, player2: string): void {
@@ -170,23 +164,14 @@ export class TournamentUIManager {
     }
 
     showGameControls(): void {
-        console.log('showGameControls called');
         const validateBtn = document.getElementById('validate-result');
         const resetBtn = document.getElementById('reset-score');
         
-        if (validateBtn) {
-            console.log('Validate button found, showing it (onclick in HTML)');
+        if (validateBtn)
             validateBtn.style.display = 'block';
-        } else {
-            console.log('Validate button not found!');
-        }
         
-        if (resetBtn) {
-            console.log('Reset button found, showing it (onclick in HTML)');
+        if (resetBtn)
             resetBtn.style.display = 'block';
-        } else {
-            console.log('Reset button not found!');
-        }
     }
 
     hideGameControls(): void {
@@ -259,7 +244,6 @@ export class TournamentUIManager {
         const canvas = document.getElementById("tournament-pong") as HTMLCanvasElement || 
                       document.getElementById("pong") as HTMLCanvasElement;
         if (canvas) {
-            console.log('Starting match with canvas:', canvas);
             canvas.id = 'tournament-pong';
             
             const ctx = canvas.getContext('2d');
@@ -270,9 +254,5 @@ export class TournamentUIManager {
             console.error('Tournament canvas not found!');
             return null;
         }
-    }
-
-    refreshBracketDisplay(): void {
-        this.bracketManager.refreshBracket();
     }
 }
