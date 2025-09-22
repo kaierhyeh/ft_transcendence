@@ -1,4 +1,5 @@
 import { FromSchema } from "json-schema-to-ts";
+import { CONFIG } from "../config";
 
 // Elementary field schemas (reusable building blocks)
 const usernameSchema = {
@@ -154,7 +155,6 @@ export const updateSchema = {
     email: emailSchema,
     password: updatePasswordSchema,
     alias: aliasSchema,
-    avatar_url: avatarUrlSchema,
     settings: settingsSchema,
     two_fa_enabled: twoFAEnabledSchema
   },
@@ -170,6 +170,35 @@ export const userIdSchema = {
     additionalProperties: false,
 } as const;
 
+export const avatarDataSchema = {
+  consumes: ['multipart/form-data'],
+  body: {
+    type: 'object',
+    properties: {
+      avatar: { 
+        type: 'object',
+        properties: {
+          filename: { type: 'string' },
+          mimetype: { type: 'string', pattern: '^image/(jpeg|png|gif|webp)$' },
+          size: { type: 'number', maximum: CONFIG.AVATAR.MAX_SIZE } 
+        }
+      }
+    }
+  }
+} as const;
+
+export const avatarFilenameSchema = {
+  type: 'object',
+  required: ['filename'],
+  properties: {
+    filename: {
+      type: 'string',
+      pattern: '^user_\\d+_\\d+\\.(jpg|jpeg|png|gif|webp)$',
+      description: 'Filename of the avatar image in the format user_<userId>_<timestamp>.<extension>'
+    },
+  },
+  additionalProperties: false,
+} as const;
 
 export type UserCreationData = FromSchema<typeof createUserSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalUserSchema>;
@@ -179,3 +208,4 @@ export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
+export type AvatarParams = FromSchema<typeof avatarFilenameSchema>;

@@ -1,6 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { UserCreationData, LoginParams, UpdateRawData, UserIdParams } from '../schemas';
+import { UserCreationData, LoginParams, UpdateRawData, UserIdParams, AvatarParams } from '../schemas';
+import fs from 'fs';
+import path from 'path';
+import { CONFIG } from '../config';
+import { request } from 'http';
+import { pipeline } from 'stream';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -54,6 +59,47 @@ export class UserController {
     }
   }
 
+  public async updateAvatar(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    try {
+      const user_id = request.user?.sub;
+      if (!user_id)
+        return reply.status(401).send({ error: "Unauthorized" });
+
+      const data = await request.file();
+      if (!data)
+        return reply.status(400).send({ error: "No file uploaded" });
+      
+      if (!CONFIG.AVATAR.ALLOWED_TYPE.includes(data.mimetype))
+        return reply.status(400).send({ error: "Invalid file type" });
+
+      const timestamp = Date.now();
+      const extension = path.extname(data.fieldname || '') || '.jpg';
+      const filename = `user_${user_id}_${timestamp}${extension}`;
+      const filepath = path.join(CONFIG.AVATAR.BASE_URL, filename);
+
+      await fs.promises.mkdir(CONFIG.AVATAR.BASE_URL, {recursive: true});
+
+      await pipeline(data.file, fs.createWriteStream(filepath));
+
+      const old_user = await this.userService.getUserById(user_id);
+      const old_avatar_filename = old_user.avatar_filename;
+
+      if (old_avatar_filename && old_avatar_filename !== filename) {
+        const old_path = path.join(CONFIG.AVATAR.BASE_URL, old_avatar_filename);
+        try {
+          await fs.promises.unlink(old_path);
+        } catch (err) {
+          console.warn(`Could not delete old avatar: ${old_path}`);
+        }
+      }
+
+      const { changes } = await this.userService.updateUser(user_id, { avatar_})
+    }
+  }
+
   public async getMe(request: FastifyRequest, reply: FastifyReply) {
     try {
       const userId = request.user?.sub;
@@ -64,6 +110,42 @@ export class UserController {
       
       const profile = await this.userService.getProfile(userId);
       return reply.send(profile);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async getAvatar(
+    request: FastifyRequest<{ Params: AvatarParams }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const { filename } = request.params;
+      const filepath = path.join(CONFIG.AVATAR.BASE_URL, filename);
+
+      if (!fs.existsSync(filepath) || !filepath.startsWith(CONFIG.AVATAR.BASE_URL)) {
+        return reply.status(404).send({ error: 'Avatar not found' });
+      }
+
+      const stats = await fs.promises.stat(filepath);
+      const ext = path.extname(filename).toLowerCase();
+
+      const mime_types = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp'
+      };
+
+      reply
+        .header('Content-Type', mime_types[ext] || 'application/octet-stream')
+        .header('Content-Length', stats.size)
+        .header('Cache-control', 'public, max-age=31536000') // 1 year cache
+        .header('Etag', `"${stats.mtime.getTime()}-${stats.size}`);
+
+        const stream = fs.createReadStream(filepath);
+        return reply.send(stream);
     } catch (error) {
       this.handleError(error, reply);
     }

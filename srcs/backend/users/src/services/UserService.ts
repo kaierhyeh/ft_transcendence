@@ -105,7 +105,7 @@ export class UserService {
     const data: UpdateData = {
       email: raw_data.email,
       alias: raw_data.alias,
-      avatar_url: raw_data.avatar_url,
+      avatar_filename: raw_data.avatar_url,
       settings: raw_data.settings,
       // Extract just the hash string from the auth service response
       password_hash: raw_data.password ? await this.updatePassword(user_id, raw_data.password) : undefined,

@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema, UserIdParams, userIdSchema } from "../schemas";
+import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema, UserIdParams, userIdSchema, AvatarParams, avatarFilenameSchema } from "../schemas";
 import { verifyJWT } from "../middleware/verifyJWT";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
@@ -20,20 +20,38 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByLogin.bind(userController)
   );
 
-  // update some user data (email, password, 2fa, alias, settings, avatar) [Requires user authentication]
+  // update some user data (email, password, 2fa, alias, settings) [Requires user authentication]
   fastify.put<{ Body: UpdateRawData }>(
     "/me",
-    { schema: { body: updateSchema },
+    {
+      schema: { body: updateSchema },
       preHandler: verifyJWT
     }, 
     userController.updateMe.bind(userController)
   );
 
+  // update avatar [Requires user authentication]
+  fastify.put<{  }>(
+    "/me/avatar",
+    {
+      schema: { },
+      preHandler: verifyJWT
+    },
+    userController.updateAvatar.bind(userController)
+  );
+
   // get user profile (most of user data + stats summary) [Requires user authentication]
   fastify.get(
     "/me",
-    { preHandler: verifyJWT},
+    { preHandler: verifyJWT },
     userController.getMe.bind(userController)
+  );
+
+  // Retrieve avatar image file
+  fastify.get<{ Params: AvatarParams }> (
+    "/avatar/:filename",
+    { schema: { params: avatarFilenameSchema }  },
+    userController.getAvatar.bind(userController)
   );
 
   // get public user profile (no sensisitive data + stats summary)

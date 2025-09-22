@@ -9,7 +9,7 @@ export interface UserRow {
     email: string | null;
     password_hash: string | null;
     alias: string | null;
-    avatar_url: string | null;
+    avatar_filename: string | null;
     two_fa_enabled: 0 | 1;
     two_fa_secret: string | null;
     google_sub: string | null;
@@ -23,7 +23,7 @@ export interface UpdateData {
     email: string | undefined;
     password_hash: string | undefined;
     alias: string | undefined;
-    avatar_url: string | undefined;
+    avatar_filename: string | undefined;
     settings: string | undefined;
     two_fa: TwoFa | undefined;
 }
@@ -102,9 +102,9 @@ export class UserRepository {
             set_clauses.push("alias = @alias");
             params.alias = data.alias;
         }
-        if (data.avatar_url !== undefined) {
+        if (data.avatar_filename !== undefined) {
             set_clauses.push("avatar_url = @avatar_url");
-            params.avatar_url = data.avatar_url;
+            params.avatar_url = data.avatar_filename;
         }
         if (data.settings !== undefined) {
             set_clauses.push("settings = @settings");
