@@ -1,5 +1,5 @@
 *.pdf
-.env
+# .env # Temporarily enabled .env tracking for development purposes
 node_modules
 secrets
 srcs/backend/auth/.env

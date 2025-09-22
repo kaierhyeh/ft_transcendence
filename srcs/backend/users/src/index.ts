@@ -10,7 +10,7 @@ const fastify = Fastify({ logger: true });
 
 async function run() {
   
-  fastify.register(jwtPlugin);
+  await fastify.register(jwtPlugin);
   await fastify.register(repositoriesPlugin);
   await fastify.register(servicesPlugin);
 

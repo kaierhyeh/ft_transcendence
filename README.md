@@ -5,7 +5,7 @@
 ### JWT Configuration
 
 1. Ensure that `openssl` is installed on your host machine. This is required for the Makefile to generate the public and private keys used for JWT authentication.
-2. Verify that a `.env` file exists in the same directory as `docker-compose.yml`, and that it defines the following environment variables:
+2. Verify that a `.env` file exists (⚠️ current file will soon be removed from tracking) in the same directory as `docker-compose.yml`, and that it defines the following environment variables:
    - `JWT_ALGORITHM`
    - `JWT_ISSUER`
    - `JWT_AUDIENCE`
