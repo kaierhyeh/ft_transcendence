@@ -3,12 +3,11 @@ import { LiveSessionManager } from './LiveSessionManager.js';
 
 interface QueueEntry {
   participant: GameParticipant;
-  joined_at: Date;
 }
 
 export class MatchmakingManager {
-  private queues: Map<MatchmakingMode, QueueEntry[]>;
-  private sessionManager: LiveSessionManager;
+  queues: Map<MatchmakingMode, QueueEntry[]>;
+  sessionManager: LiveSessionManager;
 
   constructor(sessionManager: LiveSessionManager) {
     this.queues = new Map();
@@ -17,7 +16,7 @@ export class MatchmakingManager {
     this.sessionManager = sessionManager;
   }
 
-  async joinQueue(participant: GameParticipant, mode: MatchmakingMode): Promise<MatchmakingResponse> {
+  joinQueue(participant: GameParticipant, mode: MatchmakingMode): MatchmakingResponse {
     if (this.isPlayerAlreadyInQueue(participant.participant_id)) {
       return {
         type: "error",
@@ -27,8 +26,7 @@ export class MatchmakingManager {
 
     const queue = this.queues.get(mode)!;
     const entry: QueueEntry = {
-      participant,
-      joined_at: new Date()
+      participant
     };
     
     queue.push(entry);
@@ -36,7 +34,7 @@ export class MatchmakingManager {
     const playersNeeded = mode === "2p" ? 2 : 4;
     
     if (queue.length >= playersNeeded) {
-      return await this.createGameFromQueue(mode);
+      return this.createGameFromQueue(mode);
     }
 
     return {
@@ -47,7 +45,7 @@ export class MatchmakingManager {
     };
   }
 
-  private async createGameFromQueue(mode: MatchmakingMode): Promise<MatchmakingResponse> {
+  createGameFromQueue(mode: MatchmakingMode): MatchmakingResponse {
     const queue = this.queues.get(mode)!;
     const playersNeeded = mode === "2p" ? 2 : 4;
     const selectedEntries = queue.splice(0, playersNeeded);
@@ -59,7 +57,7 @@ export class MatchmakingManager {
     }
     
     const gameType = mode === "2p" ? "pvp" : "multi";
-    const gameId = await this.sessionManager.createGameSession(gameType, participants);
+    const gameId = this.sessionManager.createGameSession(gameType, participants);
     
     return {
       type: "game_ready",
@@ -68,7 +66,7 @@ export class MatchmakingManager {
     };
   }
 
-  private isPlayerAlreadyInQueue(participantId: string): boolean {
+private isPlayerAlreadyInQueue(participantId: string): boolean {
     const queue2p = this.queues.get("2p")!;
     for (let i = 0; i < queue2p.length; i++) {
       const entry = queue2p[i];
@@ -85,27 +83,6 @@ export class MatchmakingManager {
     }
     return false;
   }
-
-  removePlayerFromQueues(participantId: string): void {
-    const queue2p = this.queues.get("2p")!;
-    for (let i = 0; i < queue2p.length; i++) {
-      const entry = queue2p[i];
-      if (entry.participant.participant_id === participantId) {
-        queue2p.splice(i, 1);
-        return;
-      }
-    }
-
-    const queue4p = this.queues.get("4p")!;
-    for (let i = 0; i < queue4p.length; i++) {
-      const entry = queue4p[i];
-      if (entry.participant.participant_id === participantId) {
-        queue4p.splice(i, 1);
-        return;
-      }
-    }
-  }
-
   getQueueStatus(mode: MatchmakingMode): MatchmakingResponse {
     const queue = this.queues.get(mode)!;
     const playersNeeded = mode === "2p" ? 2 : 4;
