@@ -35,10 +35,27 @@ services:
     restart: unless-stopped
     depends_on:
       - backend-game
+      - backend-auth
 
   ###################
   ## Backend Services
   ###################
+
+  # Auth service (with built-in Redis)
+  backend-auth:
+    container_name: backend-auth
+    build:
+      context: ./backend/auth
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=/app/data/database.db
+    volumes:
+      - auth_data:/app/data
+    networks:
+      - pong_network
+    init: true
+    restart: unless-stopped
+
   backend-game:
     container_name: backend-game
     build:
@@ -103,3 +120,4 @@ volumes:
   game_sessions:
   db-data:
     driver: local
+  auth_data:

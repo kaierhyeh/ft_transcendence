@@ -2,6 +2,7 @@ import {initGame} from "./game.js";
 import {initGame4p} from "./game4p.js";
 import {initStats} from "./stats.js";
 import {initMenu} from "./menu.js";
+import {initProfile, handleOAuthCallback} from "./profile.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -13,7 +14,8 @@ const routes: Record<string, string> = {
 	"/pong/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
-	"/profile": "./html/profile.html"
+	"/profile": "./html/profile.html",
+	"/oauth-callback": "./html/profile.html"
 };
 
 const initScripts: Record<string, () => void> = {
@@ -32,6 +34,14 @@ const initScripts: Record<string, () => void> = {
 	"/stats": () => {
 		if (typeof initStats === "function")
 			initStats();
+	},
+	"/profile": () => {
+		if (typeof initProfile === "function")
+			initProfile();
+	},
+	"/oauth-callback": () => {
+		if (typeof handleOAuthCallback === "function")
+			handleOAuthCallback();
 	}
 }
 
@@ -40,7 +50,7 @@ async function load404(push: boolean)
 	const res = await fetch(error_404_path);
 	app.innerHTML = await res.text();
 	if (push)
-		history.pushState({path: "404"}, "", "/404");
+		history.pushState({path: "404"}, "", "/404.");
 	update_event();
 }
 
@@ -67,7 +77,7 @@ async function navigate(path: string, push: boolean = true)
 		try {
 			const res = await fetch(file);
 			if (!res.ok)
-				throw new Error("File not found");
+				throw new Error("File not found.");
 			app.innerHTML = await res.text();
 			if (push)
 				history.pushState({path}, "", path);
