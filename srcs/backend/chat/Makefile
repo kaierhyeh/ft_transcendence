@@ -1,4 +1,4 @@
-COMPOSE_FILE := srcs/docker-compose.yml
+COMPOSE_FILE := ./docker-compose.yml
 
 all: up
 
@@ -12,7 +12,7 @@ stop:
 down:
 	docker compose -f $(COMPOSE_FILE) down
 
-fclean:
+del:
 	docker stop $$(docker ps -aq) 2>/dev/null || true
 	docker rm $$(docker ps -aq) 2>/dev/null || true
 	docker rmi $$(docker images -aq) 2>/dev/null || true
@@ -21,6 +21,6 @@ fclean:
 	docker system prune --all --force --volumes
 	docker volume rm -f $$(docker volume ls | grep -v DRIVER | tr -s " " | cut -d " " -f 2 | tr "\n" " ") 2>/dev/null || true
 
-re: fclean all
+re: del up
 
-.PHONY: up prepare stop down fclean re
+.PHONY: up prepare stop down del re
