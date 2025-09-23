@@ -45,7 +45,7 @@ interface Player {
 
 type Score = Map<Team, number>;
 
-export type GameMode = "pvp" | "multi"; // Keep your existing naming
+export type GameMode = "pvp" | "multi";
 
 interface GameModeConfig {
     paddlePositions: Partial<Record<PlayerSlot, Paddle>>;
@@ -84,6 +84,7 @@ export class GameEngine {
     private winner_: Team | undefined;
     private score: Score;
     private paused: boolean;
+    private lastDelta: number = 16.67;
 
     constructor(game_mode: GameMode, session_players: SessionPlayerMap) {
         this.game_mode = game_mode;
@@ -106,13 +107,14 @@ export class GameEngine {
 
             this.players.set(p.slot, {
                 slot: p.slot,
-                paddle: paddle,
+                paddle: { x: paddle.x, y: paddle.y },
                 velocity: 0,
                 connected: false,
                 team: p.team
             });
         });
-        const angle = Math.random() * (Math.PI / 2) - Math.PI / 4;
+        const maxAngle = Math.atan2((HEIGHT * 2) / 3, WIDTH / 2);
+        const angle = (Math.random() * 2 - 1) * maxAngle;
 
         this.ball = {
             x: WIDTH / 2,
@@ -123,10 +125,15 @@ export class GameEngine {
         this.score = new Map();
         this.score.set("left", 0);
         this.score.set("right", 0);
-        this.paused = false;
+        this.paused = true;
+        
+        setTimeout(() => {
+            this.paused = false;
+        }, 1000);
     }
 
     public update(delta: number): void {
+        this.lastDelta = delta;
 
         this.movePaddles(delta);
 
@@ -167,7 +174,6 @@ export class GameEngine {
     }
 
     private handleCollision(): void {
-        // Wall bouncing (this looks correct)
         if (this.ball.y <= 0 || this.ball.y + BALL_SIZE >= HEIGHT) {
             if (this.ball.y <= 0) this.ball.y = 0;
             else this.ball.y = HEIGHT - BALL_SIZE;
@@ -187,20 +193,60 @@ export class GameEngine {
 
         if (!isMovingTowardsPaddle) return;
 
+        const deltaSeconds = this.lastDelta / 1000;
+        const prevBallX = this.ball.x - this.ball.dx * deltaSeconds;
+        const prevBallY = this.ball.y - this.ball.dy * deltaSeconds;
+
         const collision =
             this.ball.x + BALL_SIZE >= player.paddle.x &&
             this.ball.x <= player.paddle.x + PADDLE_WIDTH &&
             this.ball.y + BALL_SIZE >= player.paddle.y &&
             this.ball.y <= player.paddle.y + PADDLE_HEIGHT;
 
-        if (!collision) return;
+        let continuousCollision = false;
+        if (!collision) {
+            if (player.team === "left") {
+                const ballCrossedPaddleX = 
+                    prevBallX > player.paddle.x + PADDLE_WIDTH &&
+                    this.ball.x <= player.paddle.x + PADDLE_WIDTH;
+                
+                if (ballCrossedPaddleX) {
+                    const t = (player.paddle.x + PADDLE_WIDTH - prevBallX) / (this.ball.x - prevBallX);
+                    const intersectY = prevBallY + t * (this.ball.y - prevBallY);
+                    
+                    continuousCollision = 
+                        intersectY + BALL_SIZE >= player.paddle.y &&
+                        intersectY <= player.paddle.y + PADDLE_HEIGHT;
+                }
+            } else {
+                const ballCrossedPaddleX = 
+                    prevBallX + BALL_SIZE < player.paddle.x &&
+                    this.ball.x + BALL_SIZE >= player.paddle.x;
+                
+                if (ballCrossedPaddleX) {
+                    const t = (player.paddle.x - (prevBallX + BALL_SIZE)) / ((this.ball.x + BALL_SIZE) - (prevBallX + BALL_SIZE));
+                    const intersectY = prevBallY + t * (this.ball.y - prevBallY);
+                    
+                    continuousCollision = 
+                        intersectY + BALL_SIZE >= player.paddle.y &&
+                        intersectY <= player.paddle.y + PADDLE_HEIGHT;
+                }
+            }
+        }
 
-        // Handle collision (same logic for all paddles)
+        if (!collision && !continuousCollision) return;
+
         const paddleCenter = player.paddle.y + PADDLE_HEIGHT / 2;
         const ballCenter = this.ball.y + BALL_SIZE / 2;
-        const impact = (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2);
+        const impact = Math.max(-1, Math.min(1, (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2)));
         const angle = impact * Math.PI / 4;
-        const speed = Math.min(Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2) * 1.05, MAX_BALL_SPEED);
+        const currentSpeed = Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2);
+        
+        let speed: number;
+        if (this.game_mode === "multi")
+            speed = currentSpeed * 1.05;
+        else
+            speed = Math.min(currentSpeed * 1.05, MAX_BALL_SPEED);
 
         if (player.team === "left") {
             this.ball.dx = Math.abs(Math.cos(angle) * speed);
@@ -211,11 +257,9 @@ export class GameEngine {
         }
 
         this.ball.dy = Math.sin(angle) * speed;
-
-        // Position adjustment
         if (this.ball.y < player.paddle.y) {
             this.ball.y = player.paddle.y - BALL_SIZE;
-        } else if (this.ball.y > player.paddle.y + PADDLE_HEIGHT) {
+        } else if (this.ball.y + BALL_SIZE > player.paddle.y + PADDLE_HEIGHT) {
             this.ball.y = player.paddle.y + PADDLE_HEIGHT;
         }
     }
@@ -240,10 +284,8 @@ export class GameEngine {
 
     private movePaddles(dt: number): void {
         for (const player of this.players.values()) {
-            // Smooth paddle movement
             player.paddle.y += player.velocity * (dt / 1000);
 
-            // Mode-specific boundary constraints
             const bounds = this.getPaddleBounds(player.slot);
             player.paddle.y = Math.max(bounds.min, Math.min(bounds.max, player.paddle.y));
         }
@@ -253,7 +295,6 @@ export class GameEngine {
         if (this.game_mode === "pvp") {
             return { min: 0, max: HEIGHT - PADDLE_HEIGHT };
         } else {
-            // 4-player mode: restrict paddle movement to their half
             if (slot === "top-left" || slot === "top-right") {
                 return { min: 0, max: HEIGHT / 2 - PADDLE_HEIGHT };
             } else {

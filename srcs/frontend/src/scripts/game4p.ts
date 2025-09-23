@@ -88,12 +88,12 @@ const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
 const canvas = document.getElementById("pong") as HTMLCanvasElement;
 if (!canvas) {
-    console.error("Canvas element with id 'pong' not found");
+    console.error("Canvas element with id 'pong' not found.");
     return;
 }
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 if (!ctx) {
-    console.error("Unable to get 2D context from canvas");
+    console.error("Unable to get 2D context from canvas.");
     return;
 }
 
@@ -141,7 +141,7 @@ function handleServerMessage(message: ServerMessage): void {
 // WebSocket connection for real-time updates
 function connectWebSocket(id: number | undefined): void {
     if (id === undefined) {
-        console.error("Cannot connect WebSocket: game_id is null");
+        console.error("Cannot connect WebSocket: game_id is null.");
         return;
     }
     
@@ -152,7 +152,7 @@ function connectWebSocket(id: number | undefined): void {
     console.log(`websocket for /game/${id}/ws: `, ws);
     
     ws.onopen = function() {
-        console.log("WebSocket connected successfully");
+        console.log("WebSocket connected successfully.");
         startInputSending();
     };
     
@@ -178,7 +178,7 @@ function connectWebSocket(id: number | undefined): void {
             setTimeout(() => connectWebSocket(id), 3000);
         }
         else {
-            const winner = document.getElementById("winner");
+            const winner = document.getElementById("winner.");
             if (winner && winner.innerText.length === 0) {
                 winner.innerText = game_state.winner + " team won !";
             }
@@ -193,7 +193,7 @@ function connectWebSocket(id: number | undefined): void {
 // Send input periodically (much less frequent than rendering)
 function startInputSending(): void {
     if (ws && ws.readyState === WebSocket.OPEN) {
-        console.log("Sending join requests for all 4 players");
+        console.log("Sending join requests for all 4 players.");
         // Send join requests for all players
         participant_ids.forEach((id, index) => {
             join.participant_id = id;
@@ -324,7 +324,7 @@ function draw(): void {
 
 async function run(): Promise<void> {
     if (!canvas || !ctx) {
-        console.error("Canvas or context not available");
+        console.error("Canvas or context not available.");
         return;
     }
     

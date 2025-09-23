@@ -1,7 +1,8 @@
 import {initGame} from "./game.js";
 import {initGame4p} from "./game4p.js";
 import {initStats} from "./stats.js";
-import initRemoteGame from "./gameRemote.js";
+import {initProfile, handleOAuthCallback} from "./profile.js";
+import initRemoteGame from "./remoteGame.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -10,10 +11,11 @@ const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
 	"/pong/four-players": "./html/pong.html",
-	"/pong/remote-players": "./html/pong.html",
+	"/pong/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
-	"/profile": "./html/profile.html"
+	"/profile": "./html/profile.html",
+	"/oauth-callback": "./html/profile.html"
 };
 
 const initScripts: Record<string, () => void> = {
@@ -25,14 +27,21 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initGame4p === "function")
 			initGame4p();
 	},
-	//marine
-	"/pong/remote-players": () => {
-		if (typeof initRemoteGame === "function")
-			initRemoteGame();
-	},
 	"/stats": () => {
 		if (typeof initStats === "function")
 			initStats();
+	},
+	"/profile": () => {
+		if (typeof initProfile === "function")
+			initProfile();
+	},
+	"/oauth-callback": () => {
+		if (typeof handleOAuthCallback === "function")
+			handleOAuthCallback();
+	},
+	"/pong/online": () => {
+		if (typeof initRemoteGame === "function")
+			initRemoteGame();
 	}
 }
 
@@ -41,7 +50,7 @@ async function load404(push: boolean)
 	const res = await fetch(error_404_path);
 	app.innerHTML = await res.text();
 	if (push)
-		history.pushState({path: "404"}, "", "/404");
+		history.pushState({path: "404"}, "", "/404.");
 	update_event();
 }
 
@@ -68,7 +77,7 @@ async function navigate(path: string, push: boolean = true)
 		try {
 			const res = await fetch(file);
 			if (!res.ok)
-				throw new Error("File not found");
+				throw new Error("File not found.");
 			app.innerHTML = await res.text();
 			if (push)
 				history.pushState({path}, "", path);
