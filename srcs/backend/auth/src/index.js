@@ -1,16 +1,13 @@
 import fastify from "fastify";
-import redis from './redis/redisClient.js';
-import { initializeDatabase } from './db/schema.js';
-import { authMiddleware } from './auth.middleware.js';
+import { initializeDatabase } from '../db/schema.js';
+import { authMiddleware } from './middleware/auth.middleware.js';
 import { oauthRoutes } from './routes/oauth.routes.js';
 import { twofaRoutes } from './routes/twofa.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import multipart from '@fastify/multipart';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { CONFIG } from './config.js';
 
 const app = fastify({ 
 	logger: {
@@ -32,13 +29,13 @@ await app.register(cookie);
 await app.register(multipart, {
 	attachFieldsToBody: 'auto',
 	limits: {
-		fileSize: 2 * 1024 * 1024 // 2MB
+		fileSize: CONFIG.UPLOAD.MAX_FILE_SIZE
 	}
 });
 
 // Initialize database
 try {
-	const db = initializeDatabase(process.env.DATABASE_URL || './data/database.db');
+	const db = initializeDatabase(CONFIG.DB.URL);
 	
 	// Create default deleted user
 	db.prepare(`
@@ -102,8 +99,8 @@ process.on('SIGTERM', cleanup);
 const start = async () => {
 	try {
 		await app.listen({ 
-			port: process.env.PORT || 3000, 
-			host: '0.0.0.0' 
+			port: CONFIG.SERVER.PORT, 
+			host: CONFIG.SERVER.HOST
 		});
 		app.log.info('Auth service started successfully');
 	} catch (error) {

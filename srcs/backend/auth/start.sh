@@ -15,7 +15,7 @@ trap cleanup SIGTERM SIGINT
 redis-server --daemonize yes
 
 # Start Node application
-node server.js &
+node src/index.js &
 
 # Wait for background processes
 wait

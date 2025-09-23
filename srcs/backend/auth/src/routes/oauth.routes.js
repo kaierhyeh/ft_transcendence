@@ -1,13 +1,14 @@
 import { google } from 'googleapis';
-import authService from '../auth.service.js';
-import authUtils from '../auth.utils.js';
+import authService from '../services/auth.service.js';
+import authUtils from '../utils/auth.utils.js';
+import { CONFIG } from '../config.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 const oauth2Client = new google.auth.OAuth2(
-	process.env.GOOGLE_CLIENT_ID,
-	process.env.GOOGLE_CLIENT_SECRET,
-	process.env.GOOGLE_REDIRECT_URI
+	CONFIG.OAUTH.GOOGLE_CLIENT_ID,
+	CONFIG.OAUTH.GOOGLE_CLIENT_SECRET,
+	CONFIG.OAUTH.GOOGLE_REDIRECT_URI
 );
 
 /*** 📌 Route: google/token ***/

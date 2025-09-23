@@ -1,6 +1,6 @@
-import authService from './auth.service.js';
-import authUtils from './auth.utils.js';
-import jwt from 'jsonwebtoken';
+import authService from '../services/auth.service.js';
+import authUtils from '../utils/auth.utils.js';
+import { CONFIG } from '../config.js';
 
 // Fastify middleware handles authentication, checking valid JWT tokens b4 accessing API routes.
 // It verifies if the token is valid and not expired.
@@ -16,14 +16,6 @@ export async function authMiddleware(fastify, request, reply, done) {
 		return reply.code(401).send({ error: "No token provided." });
 	}
 
-	// Set cookie options.
-	const cookieOptions = {
-		path: '/',
-		secure: true,
-		httpOnly: true,
-		sameSite: 'none'
-	};
-
 	try {
 		// Check if the access token is valid, otherwise try to refresh it.
 		const result = await authService.validate_and_refresh_Tokens(fastify, accessToken, refreshToken);
@@ -33,8 +25,8 @@ export async function authMiddleware(fastify, request, reply, done) {
 			request.log.warn('Invalid or expired tokens.');
 			return reply
 				.code(401)
-				.clearCookie('accessToken', cookieOptions)
-				.clearCookie('refreshToken', cookieOptions)
+				.clearCookie('accessToken', CONFIG.COOKIE.OPTIONS)
+				.clearCookie('refreshToken', CONFIG.COOKIE.OPTIONS)
 				.send({ error: 'Invalid or expired tokens.' });
 		}
 

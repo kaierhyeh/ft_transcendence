@@ -1,5 +1,5 @@
-import authService from '../auth.service.js';
-import authUtils from '../auth.utils.js';
+import authService from '../services/auth.service.js';
+import authUtils from '../utils/auth.utils.js';
 
 export async function authRoutes(fastify, options) {
 	const { db } = fastify;

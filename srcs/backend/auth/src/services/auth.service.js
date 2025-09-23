@@ -1,14 +1,8 @@
 import jwt from 'jsonwebtoken';
-import redis from './redis/redisClient.js';
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_TEMP_SECRET = process.env.JWT_TEMP_SECRET || 'your-secret-key';
-
-const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 minutes
-const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7 days
-// const DEBUG_TOKEN_EXPIRY = 1 * 60; // 1 minute (for debug purposes)
+import redis from '../../redis/redisClient.js';
+import { CONFIG } from '../config.js';
 
 export class AuthService {
-
 	// Generate a new access token and refresh token for the user using the userId and JWT manager
 	// The access token is valid for 15 minutes and the refresh token for 7 days
 	// The tokens are stored in Redis with the userId as key
@@ -26,8 +20,8 @@ export class AuthService {
 		// Handle existing access token
 		if (existingAccessToken) {
 			try {
-				// Verify if the token is still valid
-				jwt.verify(existingAccessToken, JWT_SECRET);
+				// Verify if the token is still valid using RSA public key
+				jwt.verify(existingAccessToken, CONFIG.JWT.PUBLIC_KEY, { algorithms: [CONFIG.JWT.ALGORITHM] });
 				accessToken = existingAccessToken;
 			} catch (error) {
 				// If invalid, blacklist it and prepare to generate a new one
@@ -38,8 +32,8 @@ export class AuthService {
 		// Handle existing refresh token
 		if (existingRefreshToken) {
 			try {
-				// Verify the token is still valid
-				jwt.verify(existingRefreshToken, JWT_SECRET);
+				// Verify the token is still valid using RSA public key
+				jwt.verify(existingRefreshToken, CONFIG.JWT.PUBLIC_KEY, { algorithms: [CONFIG.JWT.ALGORITHM] });
 				refreshToken = existingRefreshToken;
 			} catch (error) {
 				// If invalid, blacklist it and prepare to generate a new one
@@ -49,23 +43,29 @@ export class AuthService {
 
 		// Generate new access token if needed
 		if (!accessToken) {
-			accessToken = jwt.sign({ userId, type: 'access' }, JWT_SECRET, {
-				expiresIn: ACCESS_TOKEN_EXPIRY
+			accessToken = jwt.sign({ userId, type: 'access' }, CONFIG.JWT.PRIVATE_KEY, {
+				algorithm: CONFIG.JWT.ALGORITHM,
+				expiresIn: CONFIG.JWT.ACCESS_TOKEN_EXPIRY
 			});
-			await redis.setex(`access_${userId}`, ACCESS_TOKEN_EXPIRY, accessToken);
+			// Convert expiry to seconds for Redis
+			const expiryInSeconds = CONFIG.JWT.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.ACCESS_TOKEN_EXPIRY);
+			await redis.setex(`access_${userId}`, expiryInSeconds, accessToken);
 		}
 
 		// Generate new refresh token if needed
 		if (!refreshToken) {
-			refreshToken = jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
-			await redis.setex(`refresh_${userId}`, REFRESH_TOKEN_EXPIRY, refreshToken);
-		}
-
-		return { accessToken, refreshToken };
+			refreshToken = jwt.sign({ userId, type: 'refresh' }, CONFIG.JWT.PRIVATE_KEY, { 
+				algorithm: CONFIG.JWT.ALGORITHM,
+				expiresIn: CONFIG.JWT.REFRESH_TOKEN_EXPIRY
+			});
+			// Convert expiry to seconds for Redis
+			const expiryInSeconds = CONFIG.JWT.REFRESH_TOKEN_EXPIRY === '7d' ? 7 * 24 * 60 * 60 : parseInt(CONFIG.JWT.REFRESH_TOKEN_EXPIRY);
+			await redis.setex(`refresh_${userId}`, expiryInSeconds, refreshToken);
+		}		return { accessToken, refreshToken };
 	}
 
 	async generateTempToken(payload, type = "generic", expiresInSeconds = 300) {
-		const token = jwt.sign({ ...payload, type }, JWT_TEMP_SECRET, {
+		const token = jwt.sign({ ...payload, type }, CONFIG.JWT.TEMP_SECRET, {
 			expiresIn: expiresInSeconds
 		});
 
@@ -74,25 +74,18 @@ export class AuthService {
 		return token;
 	}
 
-	// Verify the 2FA token and use the 2FA secret
-	async verifyTempToken(token, expectedType) {
+		// Verify temporary token (OAuth state, email verification, etc.)
+	async verifyTempToken(token) {
 		try {
-			const isValid = await redis.get(`temp_${token}`);
-			if (!isValid)
-				throw new Error("Temp token is expired or already used.");
-
-			const payload = jwt.verify(token, JWT_TEMP_SECRET);
-			if (payload.type !== expectedType)
-				throw new Error("Invalid token type.");
-
-			// Delete the token from Redis after verification
+			const payload = jwt.verify(token, CONFIG.JWT.TEMP_SECRET); // Keep using symmetric for temp tokens
+			return { valid: true, payload };
+		} catch (error) {
+			return { valid: false, error: error.message };
+		} finally {
+			// Always delete the temp token after verification (single use)
 			await redis.del(`temp_${token}`);
-			return payload;
-
-		} catch (e) { throw new Error("Invalid temp token."); }
+		}
 	}
-
-
 
 	// Verify if the access token is valid (not blacklisted, user exists, in redis, not expired)
 	// If the token is expired, it tries to refresh it using the refresh token
@@ -105,8 +98,8 @@ export class AuthService {
 			}
 			fastify.log.info('ACCESS TOKEN CHECK...');
 
-			// Check if the token is valid
-			const decoded = jwt.verify(accessToken, JWT_SECRET);
+			// Check if the token is valid using RSA public key
+			const decoded = jwt.verify(accessToken, CONFIG.JWT.PUBLIC_KEY, { algorithms: [CONFIG.JWT.ALGORITHM] });
 
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${accessToken}`);
@@ -129,8 +122,6 @@ export class AuthService {
 			// Verify if the token is the latest
 			const currentAccessToken = await redis.get(`access_${decoded.userId}`);
 			if (accessToken !== currentAccessToken) {
-				// fastify.log.info(`Token cookies: ${accessToken}`);
-				// fastify.log.info(`Token Back: ${currentAccessToken}`);
 				fastify.log.warn(`Token is not the latest one.`);
 				throw new Error('Token is not the latest one.');
 			}
@@ -169,16 +160,11 @@ export class AuthService {
 		}
 	}
 
-
 	// Refresh the access token using the refresh token
-	// The refresh token is verified and if valid, a new access token is generated
-	// The refresh token is also verified to ensure it's the current one
-	// The new access token is stored in Redis with the userId as key
-	// If the refresh token is invalid, it returns null
 	async refreshAccessToken(fastify, refreshToken, oldAccessToken) {
 		try {
-			// Check if the token is valid
-			const decoded = jwt.verify(refreshToken, JWT_SECRET);
+			// Check if the token is valid using RSA public key
+			const decoded = jwt.verify(refreshToken, CONFIG.JWT.PUBLIC_KEY, { algorithms: [CONFIG.JWT.ALGORITHM] });
 
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${refreshToken}`);
@@ -207,19 +193,23 @@ export class AuthService {
 
 			// Blacklist the old access token (if provided)
 			if (oldAccessToken) {
-				blacklistToken(oldAccessToken);
+				await this.blacklistToken(oldAccessToken);
 				fastify.log.info('Old access token has been blacklisted.');
 			}
 
-			// Create a new access token
+			// Create a new access token using RSA private key
 			const newAccessToken = jwt.sign(
 				{ userId: decoded.userId, type: 'access' },
-				JWT_SECRET,
-				{ expiresIn: ACCESS_TOKEN_EXPIRY }
+				CONFIG.JWT.PRIVATE_KEY,
+				{ 
+					algorithm: CONFIG.JWT.ALGORITHM,
+					expiresIn: CONFIG.JWT.ACCESS_TOKEN_EXPIRY 
+				}
 			);
 
 			// Store the new token
-			await redis.setex(`access_${decoded.userId}`, ACCESS_TOKEN_EXPIRY, newAccessToken);
+			const expiryInSeconds = CONFIG.JWT.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.ACCESS_TOKEN_EXPIRY);
+			await redis.setex(`access_${decoded.userId}`, expiryInSeconds, newAccessToken);
 
 			return {
 				success: true,
@@ -233,12 +223,6 @@ export class AuthService {
 	}
 
 	// Revoke tokens for a user by userId
-	// This function retrieves the current access and refresh tokens from Redis
-	// and blacklists them. It also removes the Redis references for both tokens.
-	// The blacklisting process involves adding the tokens to a blacklist with their
-	// remaining duration, ensuring they cannot be used again.
-	// The Redis references are removed to clean up any stored tokens.
-	// If the process is successful, it returns true; otherwise, it returns false.
 	async revokeTokens(userId) {
 		try {
 			// Retrieve the current access and refresh tokens from Redis
@@ -263,16 +247,12 @@ export class AuthService {
 			await Promise.all([...blacklistPromises, ...cleanupPromises]);
 			return true;
 		} catch (error) {
-			fastify.log.error(error, 'Token revocation error:');
+			console.error('Token revocation error:', error);
 			return false;
 		}
 	}
 
 	// Blacklist a token by adding it to the Redis blacklist with its remaining duration
-	// The token is decoded to get its expiry time, and the remaining duration is calculated
-	// The token is then added to the blacklist with the exact remaining duration
-	// If the token is already expired, it returns false
-	// If the token is successfully blacklisted, it returns true
 	async blacklistToken(token) {
 		try {
 			// Get the decoded token to check its expiry time
@@ -292,7 +272,7 @@ export class AuthService {
 
 			return false;
 		} catch (error) {
-			fastify.log.error(error, 'Token blacklisting error:');
+			console.error('Token blacklisting error:', error);
 			return false;
 		}
 	}

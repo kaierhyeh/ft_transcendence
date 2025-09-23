@@ -1,9 +1,9 @@
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import bcrypt from 'bcrypt';
-import redis from '../redis/redisClient.js';
-import authService from '../auth.service.js';
-import authUtils from '../auth.utils.js';
+import redis from '../../redis/redisClient.js';
+import authService from '../services/auth.service.js';
+import authUtils from '../utils/auth.utils.js';
 
 export async function twofaRoutes(fastify, options) {
 	const { db } = fastify;
