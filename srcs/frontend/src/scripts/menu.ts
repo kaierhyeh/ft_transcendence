@@ -1,15 +1,28 @@
 import {openChatsSection} from "./menu.chat.js";
-// import {openUsersSection} from "./menu.users.js";
-// import {openFriendsSection} from "./menu.friends.js";
+import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
+import {openUsersSection} from "./menu.users.js";
+import {openFriendsSection} from "./menu.friends.js";
 
+/* ============================================ GLOBALS ===================================== */
 
-// for tests
-function openUsersSection(): void {
-	console.log("MENU: Users Section opened (test function)");
-}
+let menuWindow: HTMLElement;
+let menuCloseButton: HTMLElement;
+let menuButton: HTMLElement;
+let usersButton: HTMLElement;
+let friendsButton: HTMLElement;
+let chatsButton: HTMLElement;
 
-function openFriendsSection(): void {
-	console.log("MENU: Friends Section opened (test function)");
+function initializeGlobals(): boolean {
+	menuWindow = document.getElementById("menuWindow")!;
+	menuCloseButton = document.getElementById("menuCloseButton")!;
+	menuButton = document.getElementById("menuButton")!;
+	usersButton = document.getElementById("usersSectionButton")!;
+	friendsButton = document.getElementById("friendsSectionButton")!;
+	chatsButton = document.getElementById("chatsSectionButton")!;
+	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !friendsButton || !chatsButton) {
+		return false;
+	}
+	return true;
 }
 
 /* ============================================ EVENTS ====================================== */
@@ -22,7 +35,7 @@ function openMenuWindow(): void {
 	clearEventsInSections();
 	hideSectionsElements();
 	showElementById("menuWindow");
-	hideElementById("menuOpenButton");
+	hideElementById("menuButton");
 	openUsers();
 }
 
@@ -31,13 +44,22 @@ function closeMenuWindow(): void {
 	clearEventsInSections();
 	hideSectionsElements();
 	hideElementById("menuWindow");
-	showElementById("menuOpenButton");
+	showElementById("menuButton");
 }
 
 function openUsers(): void {
 	console.log("MENU: button Users pressed");
 	clearEventsInSections();
 	hideSectionsElements();
+
+	setElementActive("usersSectionButton", true);
+	setElementActive("friendsSectionButton", false);
+	setElementActive("chatsSectionButton", false);
+
+	clearEvents("#menuControlPanel");
+	document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
+	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
+
 	openUsersSection();
 }
 
@@ -45,6 +67,15 @@ function openFriends(): void {
 	console.log("MENU: button Friends pressed");
 	clearEventsInSections();
 	hideSectionsElements();
+
+	setElementActive("usersSectionButton", false);
+	setElementActive("friendsSectionButton", true);
+	setElementActive("chatsSectionButton", false);
+
+	clearEvents("#menuControlPanel");
+	document.getElementById("usersSectionButton")!.addEventListener("click", openUsers);
+	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
+
 	openFriendsSection();
 }
 
@@ -52,19 +83,19 @@ function openChats(): void {
 	console.log("MENU: button Chats pressed");
 	clearEventsInSections();
 	hideSectionsElements();
+
+	setElementActive("usersSectionButton", false);
+	setElementActive("friendsSectionButton", false);
+	setElementActive("chatsSectionButton", true);
+
+	clearEvents("#menuControlPanel");
+	document.getElementById("usersSectionButton")!.addEventListener("click", openUsers);
+	document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
+
 	openChatsSection(1); // Replace 1 with actual current user ID
 }
 
 /* ============================================ UTILS ======================================= */
-
-// To remove all event listeners from an element and its children
-function clearEvents(toReset: string): void {
-	// Clear all event listeners for Friends, Users, Chats
-	const oldElement = document.querySelector(toReset);
-	if (!oldElement) { return; }
-	const newElement = oldElement.cloneNode(true);
-	oldElement.replaceWith(newElement);
-}
 
 // Clear events in all sections
 function clearEventsInSections(): void {
@@ -72,19 +103,8 @@ function clearEventsInSections(): void {
 	clearEvents("#friendsSection");
 	clearEvents("#chatsSection");
 	clearEvents("#menuBackButton");
-}
-
-function hideElementById(id: string): void {
-	const element = document.getElementById(id);
-	if (element) {
-		element.classList.add("hidden");
-	}
-}
-
-function showElementById(id: string): void {
-	const element = document.getElementById(id);
-	if (element) {
-		element.classList.remove("hidden");
+	if(!initializeGlobals()) {
+		console.error("MENU: globals reinitialization failed: Missing elements");
 	}
 }
 
@@ -99,7 +119,7 @@ function hideSectionsElements(): void {
 
 	// Hide all in chats section
 	hideElementById("chatsSection");
-	hideElementById("chat-user-list");
+	hideElementById("chatsList");
 	hideElementById("chatMessages");
 	hideElementById("chatLowerPanel");
 	
@@ -110,22 +130,14 @@ function hideSectionsElements(): void {
 	showElementById("menuControlPanel");
 }
 
+
 /* ========================================= INITIALIZATION ================================= */
 
 // Menu initialization function
 export async function initMenu(): Promise<void> {
-	// set all documents document.getElementById("ID") to variables
-	// check if they are not null
-	const menuWindow = document.getElementById("menuWindow");
-	const menuCloseButton = document.getElementById("menuCloseButton");
-	const menuButton = document.getElementById("menuButton");
-	const usersButton = document.getElementById("usersSectionButton");
-	const friendsButton = document.getElementById("friendsSectionButton");
-	const chatsButton = document.getElementById("chatsSectionButton");
 
-	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !friendsButton || !chatsButton) {
+	if (!initializeGlobals()) {
 		console.error("Menu initialization failed: Missing elements");
-		// function to fix missing elements or reload html file?
 		return;
 	}
 

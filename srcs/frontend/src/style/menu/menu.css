@@ -25,10 +25,6 @@
 	transform: translateY(-2px);
 	box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
 }
-.menu-open-button:active {
-	transform: translateY(0);
-	box-shadow: 0 2px 8px rgba(74, 222, 128, 0.2);
-}
 
 /* Menu Window */
 .menu-window {
