@@ -4,6 +4,7 @@ import { authMiddleware } from './middleware/auth.middleware.js';
 import { oauthRoutes } from './routes/oauth.routes.js';
 import { twofaRoutes } from './routes/twofa.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
+import { jwksRoutes } from './routes/jwks.routes.js';
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import multipart from '@fastify/multipart';
@@ -58,7 +59,9 @@ const publicRoutes = [
 	'/auth/register',
 	'/auth/refresh',
 	'/2fa/verify',
-	'/health'
+	'/health',
+	'/.well-known/jwks.json',  // JWKS endpoint should be public
+	'/debug/jwks'              // Debug endpoint (remove in production)
 ];
 
 // Apply auth middleware to all routes except public ones
@@ -74,6 +77,7 @@ app.addHook('onRequest', (request, reply, done) => {
 await app.register(oauthRoutes);
 await app.register(twofaRoutes);
 await app.register(authRoutes);
+await app.register(jwksRoutes);
 
 // Health check endpoint
 app.get('/health', async (request, reply) => {

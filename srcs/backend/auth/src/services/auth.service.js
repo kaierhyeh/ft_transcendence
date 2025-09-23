@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import redis from '../../redis/redisClient.js';
 import { CONFIG } from '../config.js';
+import jwksService from './jwks.service.js';
 
 export class AuthService {
 	// Generate a new access token and refresh token for the user using the userId and JWT manager
@@ -45,7 +46,8 @@ export class AuthService {
 		if (!accessToken) {
 			accessToken = jwt.sign({ userId, type: 'access' }, CONFIG.JWT.PRIVATE_KEY, {
 				algorithm: CONFIG.JWT.ALGORITHM,
-				expiresIn: CONFIG.JWT.ACCESS_TOKEN_EXPIRY
+				expiresIn: CONFIG.JWT.ACCESS_TOKEN_EXPIRY,
+				keyid: jwksService.getCurrentKeyId() // Add key ID to JWT header
 			});
 			// Convert expiry to seconds for Redis
 			const expiryInSeconds = CONFIG.JWT.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.ACCESS_TOKEN_EXPIRY);
@@ -56,7 +58,8 @@ export class AuthService {
 		if (!refreshToken) {
 			refreshToken = jwt.sign({ userId, type: 'refresh' }, CONFIG.JWT.PRIVATE_KEY, { 
 				algorithm: CONFIG.JWT.ALGORITHM,
-				expiresIn: CONFIG.JWT.REFRESH_TOKEN_EXPIRY
+				expiresIn: CONFIG.JWT.REFRESH_TOKEN_EXPIRY,
+				keyid: jwksService.getCurrentKeyId() // Add key ID to JWT header
 			});
 			// Convert expiry to seconds for Redis
 			const expiryInSeconds = CONFIG.JWT.REFRESH_TOKEN_EXPIRY === '7d' ? 7 * 24 * 60 * 60 : parseInt(CONFIG.JWT.REFRESH_TOKEN_EXPIRY);
@@ -203,7 +206,8 @@ export class AuthService {
 				CONFIG.JWT.PRIVATE_KEY,
 				{ 
 					algorithm: CONFIG.JWT.ALGORITHM,
-					expiresIn: CONFIG.JWT.ACCESS_TOKEN_EXPIRY 
+					expiresIn: CONFIG.JWT.ACCESS_TOKEN_EXPIRY,
+					keyid: jwksService.getCurrentKeyId() // Add key ID to JWT header
 				}
 			);
 
