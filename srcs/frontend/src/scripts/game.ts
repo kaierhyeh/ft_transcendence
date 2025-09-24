@@ -144,6 +144,16 @@ export function initGame(): void {
 
     (window as any).setAIMode = setAIMode;
 
+    (window as any).gameSystem = {
+        draw: draw,
+        gameState: () => game_state,
+        gameConfig: () => game_conf,
+        setGameState: (state: any) => { game_state = state; },
+        setGameConfig: (config: any) => { game_conf = config; },
+        setGameStarted: (started: boolean) => { gameStarted = started; },
+        startGame: startGame
+    };
+
     function setupGameButtons(): void {
         const onePlayerBtn = document.getElementById('one-player-btn') as HTMLButtonElement;
         if (onePlayerBtn) {
@@ -181,19 +191,6 @@ export function initGame(): void {
     let game_conf: GameConfig | null = null;
     draw();
 
-    setTimeout(async () => {
-        try {
-            const response = await fetch(API_GAME_ENDPOINT + "/1/conf.");
-            const serverConfig = await response.json() as GameConfig;
-
-            game_conf = serverConfig;
-
-            if (!gameStarted)
-                draw();
-        } catch (error) {
-            console.log("Could not load server config, using defaults.");
-        }
-    }, 200);
     const keys: { [key: string]: boolean } = {};
     const input: InputMessage = {
         type: "input",

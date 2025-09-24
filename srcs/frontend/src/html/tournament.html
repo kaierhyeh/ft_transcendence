@@ -1,1 +1,64 @@
-<div class="tournament-title">Tournament</div>
+<div class="tournament-container">
+    <div class="tournament-title">Tournament</div>
+    
+    <div id="player-selection" class="tournament-phase">
+        <h3>Chose the numbers of players</h3>
+        <div class="player-count-buttons">
+            <button id="players-4" class="tournament-btn tournament-btn-primary">4 Players</button>
+            <button id="players-8" class="tournament-btn tournament-btn-primary">8 Players</button>
+        </div>
+    </div>
+
+    <div id="player-names" class="tournament-phase" style="display: none;">
+        <h3>Enter Player Names</h3>
+        <div id="player-inputs" class="player-inputs-grid">
+        </div>
+        <div class="tournament-actions">
+            <button id="start-tournament" class="tournament-btn tournament-btn-success">Start Tournament</button>
+            <button id="back-to-selection" class="tournament-btn tournament-btn-secondary">Back</button>
+        </div>
+    </div>
+
+    <div id="tournament-bracket" class="tournament-phase" style="display: none;">
+        <h3>Tournament Bracket</h3>
+        <div id="bracket-container" class="jquery-bracket-container">
+        </div>
+    </div>
+
+    <div id="current-match" class="tournament-phase" style="display: none;">
+        <h3>Next Match</h3>
+        <div class="match-display">
+            <div class="player-vs">
+                <span id="player1-name" class="player-name">Player 1</span>
+                <span class="vs-text">VS</span>
+                <span id="player2-name" class="player-name">Player 2</span>
+            </div>
+        </div>
+        <div class="match-controls">
+            <button id="start-match" class="tournament-btn tournament-btn-success">Start Match</button>
+        </div>
+    </div>
+
+    <div id="tournament-game" class="tournament-phase" style="display: none;">
+        <div class="pong-game-wrapper" style="display: none;">
+            <canvas id="tournament-pong" width="800" height="750" class="pong-canvas"></canvas>
+        </div>
+        <div class="game-controls">
+            <button id="validate-result" class="tournament-btn tournament-btn-success" style="display: none;" onclick="window.tournamentValidateResult()">Validate Result</button>
+            <button id="reset-score" class="tournament-btn tournament-btn-secondary" style="display: none;" onclick="window.tournamentResetScore()">Reset Score</button>
+        </div>
+    </div>
+
+    <div id="tournament-complete" class="tournament-phase" style="display: none;">
+        <div class="champion-announcement">
+            <h2>🏆 Tournament Complete! 🏆</h2>
+            <div id="champion-display" class="champion-name">
+                Champion: <span id="champion-name">Player Name</span>
+            </div>
+        </div>
+        <div class="tournament-end-actions">
+            <button id="go-home" class="tournament-btn tournament-btn-primary">Go Home</button>
+            <button id="new-tournament" class="tournament-btn tournament-btn-success">Start New Tournament</button>
+        </div>
+    </div>
+</div>

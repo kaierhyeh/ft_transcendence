@@ -4,7 +4,8 @@
 @import "error404.css";
 @import "pong.css";
 @import "profile.css";
-@import "tournament.css";
+@import "tournament-game.css";
+@import "tournament-layout.css";
 @import "./menu/menu.css";
 @import "./menu/menu.chats.css";
 @import "./menu/menu.friends.css";

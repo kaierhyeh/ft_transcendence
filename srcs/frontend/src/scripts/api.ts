@@ -25,7 +25,6 @@ export async function verify_token(): Promise<void> {
 		update_user(new User(data.username, data.id, data.email, data.avatar));
 
 	} catch (error) {
-		// console.error("/api/verify_token error:", error);
 		showError("Session expired.");
 		update_user(undefined);
 	}
