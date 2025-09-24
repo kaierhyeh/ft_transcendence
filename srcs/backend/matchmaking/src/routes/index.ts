@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { UserController } from '../controllers/UserController';
+import { MatchMakingController } from '../controllers/MatchMakingController';
 import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema, UserIdParams, userIdSchema, AvatarParams, avatarFilenameSchema } from "../schemas";
 import { verifyJWT } from "../middleware/verifyJWT";
 
-export default async function usersRoutes(fastify: FastifyInstance) {
-  const userController = new UserController(fastify.services.user);
+export default async function matchMakingRoutes(fastify: FastifyInstance) {
+  const userController = new MatchMakingController(fastify.services.user);
 
   // add a user to database (google, local, guest)
   fastify.post<{ Body: UserCreationData }>(

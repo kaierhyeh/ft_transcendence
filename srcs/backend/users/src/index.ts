@@ -3,12 +3,19 @@ import { CONFIG } from "./config";
 import routes from "./routes"
 import repositoriesPlugin from "./plugins/repositories";
 import servicesPlugin from "./plugins/services";
-import jwtPlugin from "./plugins/jwt"
+import jwtPlugin from "./plugins/jwt";
+import multipart from "@fastify/multipart";
 
 
 const fastify = Fastify({ logger: true });
 
 async function run() {
+  await fastify.register(multipart, {
+    limits: {
+      fileSize: CONFIG.AVATAR.MAX_SIZE,
+      files: 1
+    }
+  });
   
   await fastify.register(jwtPlugin);
   await fastify.register(repositoriesPlugin);

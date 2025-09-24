@@ -1,14 +1,13 @@
 import { AuthClient } from '../clients/AuthClient';
-import { LiteStats, StatsClient } from '../clients/StatsClient';
+import { LiteStats, StatsClient } from '../clients/GameClient';
 import { CONFIG } from '../config';
-import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
 import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData, UserCreationData } from '../schemas';
 
 export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub"> & LiteStats;
 
 export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "updated_at">;
 
-export class UserService {
+export class MatchMakingService {
   private authClient: AuthClient;
   private statsClient: StatsClient;
 

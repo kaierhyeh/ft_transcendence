@@ -10,4 +10,7 @@ export interface JwtPayload {
   exp: number;           // expiration
 }
 
-export * from './game';
+export interface TwoFa {
+    enabled: 0 | 1;
+    secret: string | null;
+}

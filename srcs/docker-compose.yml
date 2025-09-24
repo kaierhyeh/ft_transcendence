@@ -109,6 +109,22 @@ services:
     # Add healthcheck if you can
     restart: unless-stopped
 
+  backend-matchmaking:
+    container_name: backend-matchmaking
+    build:
+      context: ./backend/matchmaking
+      dockerfile: Dockerfile
+    secrets:
+      - jwt_public_key
+    env_file: .env
+    environment:
+      - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
+    networks:
+      - pong_network
+    init: true
+    # Add healthcheck if you can
+    restart: unless-stopped
+
   #   chat:
   #     build:
   #       context: ./backend/chat

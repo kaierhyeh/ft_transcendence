@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 
   -- display + profile (ALL user types can have alias)
   alias           TEXT,                 -- display name; NOT unique
-  avatar_url      TEXT,
+  avatar_filename TEXT,
 
   -- 2FA (TOTP) - only for registered users
   two_fa_enabled  INTEGER NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0,1)),

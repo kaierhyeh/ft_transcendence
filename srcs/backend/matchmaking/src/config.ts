@@ -1,17 +1,5 @@
 export const CONFIG = {
-  // Game settings
-  GAME: {
-    TICK_PERIOD: 1000 / 30, // <=> 30 FPS
-    SESSION_TIMEOUT: 5000, // 5s
-    MAX_SESSIONS: 100,
-  },
   
-  // Database settings
-  DB: {
-    PATH: process.env.DB_PATH || "/app/data/sessions.db",
-    ENABLE_WAL: true,
-  },
-
   JWT: {
     PUBLIC_KEY_PATH: process.env.JWT_PUBLIC_KEY_PATH || "/run/secrets/jwt_public_key",
     ALGORITHM: process.env.JWT_ALGORITHM || "RS256" as const,
@@ -19,7 +7,15 @@ export const CONFIG = {
     AUDIENCE: process.env.JWT_AUDIENCE || "ft_transcendence_users",
   },
 
+
+  AUTH_LITE_SERVICE: {
+    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-auth-lite:3000"
+  },
   
+  GAME_SERVICE: {
+    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-game:3000"
+  },
+
   // Server settings
   SERVER: {
     PORT: parseInt(process.env.PORT || "3000"),

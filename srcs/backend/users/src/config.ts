@@ -2,8 +2,14 @@ export const CONFIG = {
   
   // Database settings
   DB: {
-    PATH: process.env.DB_PATH || "/app/data/users.db",
+    PATH: process.env.DB_PATH || "/app/data/db/users.db",
     ENABLE_WAL: true,
+  },
+
+  AVATAR: {
+    BASE_URL: process.env.AVATAR_BASE_URL || "/app/data/avatar",
+    MAX_SIZE: 2 * 1024 * 1024, // 2MB
+    ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   },
 
   JWT: {
@@ -20,6 +26,10 @@ export const CONFIG = {
   
   STATS_SERVICE: {
     BASE_URL: process.env.USER_SERVICE_URL || "http://backend-stats:3000"
+  },
+
+  API: {
+    BASE_URL: process.env.API_URL || "https://localhost:4443/api"
   },
 
   // Server settings

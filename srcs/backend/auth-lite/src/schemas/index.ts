@@ -25,11 +25,7 @@ export const signupFormSchema = {
       type: "string",
       minLength: 8 // You'll hash this before storing
     },
-    alias: aliasSchema,
-    avatar_url: {
-      type: "string",
-      format: "uri"
-    }
+    alias: aliasSchema
   },
   additionalProperties: false,
 } as const;

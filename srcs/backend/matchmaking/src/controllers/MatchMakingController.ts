@@ -1,13 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { UserService } from '../services/UserService';
+import { MatchMakingService } from '../services/MatchMakingService';
 import { UserCreationData, LoginParams, UpdateRawData, UserIdParams, AvatarParams } from '../schemas';
 import fs from 'fs';
 import path from 'path';
 import { CONFIG } from '../config';
 import { pipeline } from 'stream/promises';
 
-export class UserController {
-  constructor(private userService: UserService) {}
+export class MatchMakingController {
+  constructor(private userService: MatchMakingService) {}
 
   public async createAccount(
     request: FastifyRequest<{ Body: UserCreationData }>, 

@@ -48,7 +48,7 @@
 4. **Clean up all Docker resources (containers, images, volumes):**
 
    ```sh
-   make fclean
+   make clean
    ```
 
 ## Access
