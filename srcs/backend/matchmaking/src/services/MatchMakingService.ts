@@ -1,148 +1,153 @@
-import { AuthClient } from '../clients/AuthClient';
-import { LiteStats, StatsClient } from '../clients/GameClient';
+import { AuthClient, GameSessionClaims } from '../clients/AuthClient';
+import { GameClient, GameCreationData } from '../clients/GameClient';
 import { CONFIG } from '../config';
-import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData, UserCreationData } from '../schemas';
+import { MatchMakingData, MatchParticipant } from '../schemas';
 
-export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub"> & LiteStats;
+type Team = "left" | "right";
+type PlayerSlots = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right";
 
-export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "updated_at">;
+export interface Match {
+  game_id: number;
+  jwt_tickets: string[];
+}
 
 export class MatchMakingService {
   private authClient: AuthClient;
-  private statsClient: StatsClient;
+  private gameClient: GameClient;
 
   constructor(
-    private userRepository: UserRepository,
   ) {
     this.authClient = new AuthClient();
-    this.statsClient = new StatsClient();
+    this.gameClient = new GameClient();
   }
 
-  public async createUser(data: UserCreationData): Promise<{ user_id: number }> {
-    if (data.type === "local") {
-      return this.createLocalUser(data);
-    } else if (data.type === "google") {
-      return this.createGoogleUser(data);
-    } else if (data.type === "guest") {
-      return this.createGuestUser(data);
-    }
-    
-    throw new Error('Invalid account type');
+  public async make(data: MatchMakingData): Promise<Match> {
+    if (data.type === "multi") {
+      return this.makeMultiGame(data);
+    } 
+    return this.makePvpGame(data);
   }
 
-  private async createLocalUser(data: LocalUserCreationData) {
-    const user_data = {
-      username: data.username,
-      email: data.email,
-      password_hash: data.password_hash,
-      alias: data.alias ?? data.username,
+  private async makePvpGame(data: MatchMakingData): Promise<Match> {
+    // Map participants to game players for game creation
+    const players = data.participants.map((participant, index) => ({
+      player_id: index + 1, // Sequential player IDs
+      team: index % 2 === 0 ? "left" as Team : "right" as Team, // Alternate teams (player vs AI)
+      slots: index % 2 === 0 ? "left" as PlayerSlots : "right" as PlayerSlots, // Match slots to teams
+      user_id: participant.user_id,
+      type: participant.type // Include the participant type
+    }));
+
+    const game_creation_data: GameCreationData = {
+      type: data.type,
+      players
     };
 
-    const user_id = this.userRepository.createLocalUser(user_data);
-    return { user_id };
-  }
+    // Create game first to get game_id
+    const game_id = await this.gameClient.createGame(game_creation_data);
 
-  private async createGoogleUser(data: GoogleUserCreationData) {
-    const user_data = {
-      google_sub: data.google_sub,
-      username: data.username,
-      email: data.email,
-      alias: data.alias ?? data.username,
+    // Generate JWT tickets for each participant using the game_id
+    const jwt_tickets = await Promise.all(
+      data.participants.map(async (participant, index) => {
+        const player_id = index + 1;       
+        
+        const claims: GameSessionClaims = {
+          sub: this.generateSub(participant, player_id, index),
+          game_id: game_id,
+          player_id: player_id,
+          type: participant.type
+        };
+        const result = await this.authClient.generateJWT(claims);
+        return result.jwt;
+      })
+    );
+
+    return { game_id, jwt_tickets };
+  }
+  
+  // Generate appropriate sub based on participant type
+  private generateSub(participant: MatchParticipant, player_id: number, index: number): string {
+    let sub: string;
+    switch (participant.type) {
+      case 'registered':
+        if (!participant.user_id) {
+          throw new Error(`Registered participant at index ${index} must have a user_id`);
+        }
+        sub = participant.user_id.toString();
+        break;
+      case 'guest':
+        sub = `guest:${player_id}`;
+        break;
+      case 'ai':
+        sub = `ai:${player_id}`;
+        break;
+      default:
+        throw new Error(`Unknown participant type: ${participant.type}`);
+    }
+    return sub;
+}
+
+
+  private async makeMultiGame(data: MatchMakingData): Promise<Match> {
+    // Validate we have exactly 4 participants for multi-player
+    if (data.participants.length !== 4) {
+      throw new Error(`Multi-player games require exactly 4 participants, got ${data.participants.length}`);
+    }
+
+    // Map participants to game players with specific team/slot assignments
+    const players = data.participants.map((participant, index) => {
+      // Team assignment: first 2 players = "left", last 2 players = "right"
+      const team: Team = index < 2 ? "left" : "right";
+      
+      // Slot assignment based on array order
+      const slots: PlayerSlots = this.getMultiPlayerSlot(index);
+      
+      return {
+        player_id: index + 1,
+        team: team,
+        slots: slots,
+        user_id: participant.user_id,
+        type: participant.type
+      };
+    });
+
+    const game_creation_data: GameCreationData = {
+      type: data.type,
+      players
     };
 
-    const user_id = this.userRepository.createGoogleUser(user_data);
-    return { user_id };
+    // Create game first to get game_id
+    const game_id = await this.gameClient.createGame(game_creation_data);
+
+    // Generate JWT tickets for each participant using the game_id
+    const jwt_tickets = await Promise.all(
+      data.participants.map(async (participant, index) => {
+        const player_id = index + 1;
+        
+        const claims: GameSessionClaims = {
+          sub: this.generateSub(participant, player_id, index),
+          game_id: game_id,
+          player_id: player_id,
+          type: participant.type
+        };
+        const result = await this.authClient.generateJWT(claims);
+        return result.jwt;
+      })
+    );
+
+    return { game_id, jwt_tickets };
   }
 
-  private async createGuestUser(data: GuestUserCreationData) {
-    const user_data = {
-      alias: data.alias ?? "Guest" 
-    };
-
-    const user_id = this.userRepository.createGuestUser(user_data);
-    return { user_id };
-  }
-
-  public async getUserByLogin(login: string): Promise<UserRow> {
-    const user = await this.userRepository.findByLogin(login);
-    if (!user) {
-      const error = new Error('User not found');
-      (error as any).code = 'USER_NOT_FOUND';
-      throw error;
+  // Get slot assignment for multi-player games based on array index
+  private getMultiPlayerSlot(index: number): PlayerSlots {
+    switch (index) {
+      case 0: return "top-left";     // Player 1: top-left
+      case 1: return "bottom-left";  // Player 2: bottom-left  
+      case 2: return "top-right";    // Player 3: top-right
+      case 3: return "bottom-right"; // Player 4: bottom-right
+      default:
+        throw new Error(`Invalid player index for multi-player: ${index}`);
     }
-    return user;
   }
 
-  public async getProfile(user_id: number): Promise<UserProfile> {
-    const user = await this.getUserById(user_id);
-    const lite_stats = await this.statsClient.getLiteStats(user_id);
-    
-    if (!lite_stats) {
-      const error = new Error('Lite stats not found');
-      (error as any).code = 'LITE_STATS_NOT_FOUND';
-      throw error;
-    }
-
-    const { password_hash, two_fa_secret, google_sub, ...cleanUser } = user;
-    
-    return {
-      ...cleanUser,
-      avatar_filename: user.avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/avatar/${user.avatar_filename}` :
-        null,
-      ...lite_stats
-    };
-  }
-
-  public async getPublicProfile(user_id: number): Promise<PublicProfile> {
-    const userProfile = await this.getProfile(user_id);
-    const { email, two_fa_enabled, updated_at, ...publicProfile } = userProfile;
-    
-    return publicProfile;
-  }
-
-  public async updateUser(user_id: number, raw_data: UpdateRawData): Promise<number> {
-    // Transform raw user input to database format
-    const data: UpdateData = {
-      email: raw_data.email,
-      alias: raw_data.alias,
-      settings: raw_data.settings,
-      // Extract just the hash string from the auth service response
-      password_hash: raw_data.password ? await this.updatePassword(user_id, raw_data.password) : undefined,
-      // Extract the TwoFa object from the auth service response
-      two_fa: raw_data.two_fa_enabled !== undefined ? await this.authClient.set2fa(raw_data.two_fa_enabled) : undefined
-    };
-
-    const changes = this.userRepository.updateById(user_id, data);
-
-    return changes;
-  }
-
-  public async updateAvatar(user_id: number, avatar_filename: string): Promise<number> {
-    const data: UpdateData = { avatar_filename };
-    const changes = this.userRepository.updateById(user_id, data);
-    return changes;
-  }
-
-  private async updatePassword(user_id: number, update_data: PasswordUpdateData): Promise<string> {
-
-    const user = await this.getUserById(user_id);
-    if (!user.password_hash) {
-      const error = new Error('Forbidden operation: No existing password to update');
-      (error as any).code = 'FORBIDDEN_OPERATION';
-      throw error;
-    }
-    const { password_hash } = await this.authClient.updatePasswordHash(update_data, user.password_hash);
-    return password_hash;
-  } 
-
-  public async getUserById(id: number): Promise<UserRow> {
-    const user = this.userRepository.findById(id);
-    if (!user) {
-      const error = new Error('User not found');
-      (error as any).code = 'USER_NOT_FOUND';
-      throw error;
-    }
-    return user;
-  }
 }

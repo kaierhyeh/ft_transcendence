@@ -9,8 +9,3 @@ export interface JwtPayload {
   iat: number;           // issued at
   exp: number;           // expiration
 }
-
-export interface TwoFa {
-    enabled: 0 | 1;
-    secret: string | null;
-}

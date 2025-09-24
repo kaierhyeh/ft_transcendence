@@ -1,4 +1,5 @@
 import { CONFIG } from "../config";
+import { GameType, MatchMakingData, PlayerType } from "../schemas";
 
 interface ErrorResponse {
   message?: string;
@@ -6,18 +7,27 @@ interface ErrorResponse {
   validation?: any[];
 }
 
-export interface LiteStats {
-  wins: number;
-  losses: number;
-  curr_winstreak: number;
-  best_winstreak: number;
-  total_point_scored: number;
+type Team = "left" | "right";
+type PlayerSlots = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right";
+
+interface Player {
+  player_id: number;
+  team: Team;
+  slots: PlayerSlots;
+  user_id?: number;
+  type: PlayerType;
 }
 
-export class StatsClient {
-  private base_url = CONFIG.STATS_SERVICE.BASE_URL;
+export interface GameCreationData {
+  type: GameType;
+  players: Player[];
+};
 
-  async getLiteStats(user_id: number): Promise<LiteStats> {
+
+export class GameClient {
+  private base_url = CONFIG.GAME_SERVICE.BASE_URL;
+
+  async createGame(data: GameCreationData): Promise<number> {
 //     const response = await fetch(`${this.base_url}/stats/${user_id}/lite`);
 
 //     if (!response.ok) {
@@ -33,13 +43,7 @@ export class StatsClient {
 
 //     return await response.json() as LiteStats;
 
-        return {
-            wins: 8,
-            losses: 2,
-            curr_winstreak: 2,
-            best_winstreak: 4,
-            total_point_scored: 40
-        };
+        return 0;
     }
 
 }
