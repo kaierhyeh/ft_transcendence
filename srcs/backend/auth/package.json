@@ -2,11 +2,11 @@
 	"name": "transcendence-auth-service",
 	"version": "1.0.0",
 	"description": "Authentication microservice for transcendence project",
-	"main": "server.js",
+	"main": "src/index.js",
 	"type": "module",
 	"scripts": {
-		"start": "node server.js | pino-pretty",
-		"dev": "nodemon server.js | pino-pretty"
+		"start": "node src/index.js | pino-pretty",
+		"dev": "nodemon src/index.js | pino-pretty"
 	},
 	"dependencies": {
 		"fastify": "^4.17.0",

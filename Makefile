@@ -21,4 +21,6 @@ fclean:
 	docker system prune --all --force --volumes
 	docker volume rm -f $$(docker volume ls | grep -v DRIVER | tr -s " " | cut -d " " -f 2 | tr "\n" " ") 2>/dev/null || true
 
-.PHONY: up prepare stop down del
+re: fclean all
+
+.PHONY: up prepare stop down fclean re

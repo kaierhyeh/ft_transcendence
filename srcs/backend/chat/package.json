@@ -1,26 +1,29 @@
 {
-	"name": "transcendence-chat-service",
+	"name": "my-fastify-app",
 	"version": "1.0.0",
-	"description": "Chat microservice for transcendence project",
-	"main": "server.js",
-	"type": "module",
+	"main": "index.ts",
 	"scripts": {
-		"start": "node server.js | pino-pretty",
-		"dev": "nodemon server.js | pino-pretty"
+		"start": "ts-node src/index.ts",
+		"dev": "ts-node --watch index.ts",
+		"build": "tsc",
+		"serve": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"fastify": "^4.17.0",
-		"@fastify/cookie": "^8.3.0",
-		"@fastify/cors": "^8.3.0",
-		"@fastify/websocket": "^8.2.0",
-		"better-sqlite3": "^8.4.0",
-		"ioredis": "^5.3.2",
-		"ws": "^8.13.0",
-		"@types/ws": "^8.5.10",
-		"dotenv": "^16.0.3",
-		"pino-pretty": "^10.2.0"
+		"@fastify/jwt": "^10.0.0",
+		"@fastify/mongodb": "^9.0.2",
+		"@fastify/websocket": "^11.2.0",
+		"better-sqlite3": "^12.2.0",
+		"fastify": "^5.6.0",
+		"fastify-plugin": "^5.0.1",
+		"fs": "^0.0.1-security",
+		"node": "^20.19.5",
+		"path": "^0.12.7",
+		"sqlite3": "^5.1.7",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.2",
+		"ws": "^8.18.3"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.9"
+		"@types/node": "^24.3.1"
 	}
 }

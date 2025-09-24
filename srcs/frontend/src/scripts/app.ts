@@ -1,6 +1,7 @@
 import {initGame} from "./game.js";
 import {initGame4p} from "./game4p.js";
 import {initStats} from "./stats.js";
+import {initMenu} from "./menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
 
@@ -19,6 +20,10 @@ const routes: Record<string, string> = {
 };
 
 const initScripts: Record<string, () => void> = {
+	"/": () => {
+		if (typeof initMenu === "function")
+			initMenu();
+	},
 	"/pong": () => {
 		if (typeof initGame === "function")
 			initGame();
