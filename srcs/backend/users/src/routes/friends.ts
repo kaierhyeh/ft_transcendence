@@ -1,47 +1,77 @@
 import { FastifyInstance } from "fastify";
+import { FriendController } from "../controllers/FriendController";
+import { verifyJWT } from "../middleware/verifyJWT";
+import { FriendshipIdParams, friendshipIdSchema, UserIdParams, userIdSchema } from "../schemas/friends";
 
 export default async function friendsRoutes(fastify: FastifyInstance) {
+	const friendController = new FriendController(fastify.services.friends);
 
-  // List current friends [Requires user authentication]
-  fastify.get(
-    "/",
-    async (req, reply) => {
-  });
+	// List current friends [Requires user authentication]
+	fastify.get(
+		"/",
+		{
+			preHandler: verifyJWT
+		},
+		friendController.getListFriends.bind(friendController)
+	);
 
-  // List pending requests (in/out) [Requires user authentication]
-  fastify.get(
-    "/pending",
-    async (req, reply) => {
-  });
+	// List pending requests (in/out) [Requires user authentication]
+	fastify.get(
+		"/pending",
+		{
+			preHandler: verifyJWT
+		},
+		friendController.getPendingRequests.bind(friendController)
+	);
 
-  // Send a friend request [Requires user authentication]
-  fastify.post(
-    "/request/:id",
-    async (request, reply) => {
-    });
+	// Send a friend request [Requires user authentication]
+	fastify.post<{ Params: UserIdParams }>(
+		"/request/:id",
+		{
+			schema: { params: userIdSchema },
+			preHandler: verifyJWT
+		},
+		friendController.sendFriendRequest.bind(friendController)
+	);
 
-  // Cancel a friend request [Requires user authentication]
-  fastify.delete(
-    "/request/:id",
-    async (request, reply) => {
-  });
+	// Cancel a friend request [Requires user authentication]
+	fastify.delete<{ Params: FriendshipIdParams }>(
+		"/request/:id",
+		{
+			schema: { params: friendshipIdSchema },
+			preHandler: verifyJWT
+		},
+		friendController.cancelFriendRequest.bind(friendController)
+	);
 
-  // Accept friend request [Requires user authentication]
-  fastify.post(
-    "/accept/:id",
-    async (request, reply) => {
-  });
+	// Accept friend request [Requires user authentication]
+	fastify.post<{ Params: FriendshipIdParams }>(
+		"/accept/:id",
+		{
+			schema: { params: friendshipIdSchema },
+			preHandler: verifyJWT
+		},
+		friendController.acceptFriendRequest.bind(friendController)
+	);
 
-  // Decline friend request [Requires user authentication]
-  fastify.post(
-    "/decline/:id",
-    async (request, reply) => {
-  });
+	// Decline friend request [Requires user authentication]
+	fastify.post<{ Params: FriendshipIdParams }>(
+		"/decline/:id",
+		{
+			schema: { params: friendshipIdSchema },
+			preHandler: verifyJWT
+		},
+		friendController.declineFriendRequest.bind(friendController)
+	);
 
-  // Remove friend [Requires user authentication]
-  fastify.delete(
-    "/:id",
-    async (request, reply) => {
-  });
+	// Remove friend [Requires user authentication]
+	fastify.delete<{ Params: FriendshipIdParams }>(
+		"/:id",
+		{
+			schema: { params: friendshipIdSchema },
+			preHandler: verifyJWT
+		},
+		friendController.removeFriend.bind(friendController)
+	);
 
 }
