@@ -4,7 +4,7 @@ export const userIdSchema = {
 	type: "object",
 	required: ["id"],
 	properties: {
-		id: { type: "number" },
+		id: { type: "number", minimum: 0 },
 	},
 	additionalProperties: false,
 } as const;
@@ -13,7 +13,7 @@ export const friendshipIdSchema = {
 	type: "object",
 	required: ["id"],
 	properties: {
-		id: { type: "number" },
+		id: { type: "number", minimum: 0 },
 	},
 	additionalProperties: false,
 } as const;

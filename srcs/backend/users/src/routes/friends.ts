@@ -3,6 +3,13 @@ import { FriendController } from "../controllers/FriendController";
 import { verifyJWT } from "../middleware/verifyJWT";
 import { FriendshipIdParams, friendshipIdSchema, UserIdParams, userIdSchema } from "../schemas/friends";
 
+
+/* 
+ * Time to think about friendship manpulations: 
+ * is it better to use FriendshipIdParams or UserIdParams
+ * for accepting/declining/canceling requests and removing friends?
+ */
+
 export default async function friendsRoutes(fastify: FastifyInstance) {
 	const friendController = new FriendController(fastify.services.friends);
 
@@ -12,7 +19,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		{
 			preHandler: verifyJWT
 		},
-		friendController.getListFriends.bind(friendController)
+		friendController.getFriends.bind(friendController)
 	);
 
 	// List pending requests (in/out) [Requires user authentication]
