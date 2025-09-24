@@ -1,6 +1,6 @@
 -- Friendship requests and relationships
 CREATE TABLE IF NOT EXISTS friendships (
-    id           INTEGER PRIMARY KEY,
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
     requester_id INTEGER NOT NULL,    -- Who sent the request
     addressee_id INTEGER NOT NULL,    -- Who received the request
     status       TEXT NOT NULL CHECK (
@@ -14,10 +14,7 @@ CREATE TABLE IF NOT EXISTS friendships (
     -- Prevent self-friendship
     CONSTRAINT no_self_friendship CHECK (requester_id <> addressee_id),
     -- Only one friendship request between any two users (in either direction)
-    CONSTRAINT unique_friendship UNIQUE (
-        CASE WHEN requester_id < addressee_id THEN requester_id ELSE addressee_id END,
-        CASE WHEN requester_id < addressee_id THEN addressee_id ELSE requester_id END
-    )
+    CONSTRAINT unique_friendship UNIQUE (requester_id, addressee_id)
 );
 
 -- Indexes for performance

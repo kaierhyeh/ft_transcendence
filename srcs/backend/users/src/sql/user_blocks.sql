@@ -1,6 +1,6 @@
 -- User blocks
 CREATE TABLE IF NOT EXISTS user_blocks (
-    id         INTEGER PRIMARY KEY,
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
     blocker_id INTEGER NOT NULL,     -- Who is doing the blocking
     blocked_id INTEGER NOT NULL,     -- Who is being blocked
     created_at DATETIME NOT NULL DEFAULT (datetime('now')),
