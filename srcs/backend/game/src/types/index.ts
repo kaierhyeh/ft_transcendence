@@ -4,4 +4,10 @@ export interface Result {
     msg: string;
 }
 
+export interface JwtPayload {
+  sub: number;           // user ID
+  iat: number;           // issued at
+  exp: number;           // expiration
+}
+
 export * from './game';

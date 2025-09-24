@@ -1,5 +1,6 @@
 import { AuthClient } from '../clients/AuthClient';
 import { LiteStats, StatsClient } from '../clients/StatsClient';
+import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
 import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData, UserCreationData } from '../schemas';
 
@@ -36,7 +37,6 @@ export class UserService {
       email: data.email,
       password_hash: data.password_hash,
       alias: data.alias ?? data.username,
-      avatar_url: data.avatar_url
     };
 
     const user_id = this.userRepository.createLocalUser(user_data);
@@ -49,7 +49,6 @@ export class UserService {
       username: data.username,
       email: data.email,
       alias: data.alias ?? data.username,
-      avatar_url: data.avatar_url
     };
 
     const user_id = this.userRepository.createGoogleUser(user_data);
@@ -89,6 +88,9 @@ export class UserService {
     
     return {
       ...cleanUser,
+      avatar_filename: user.avatar_filename ?
+        `${CONFIG.API.BASE_URL}/users/avatar/${user.avatar_filename}` :
+        null,
       ...lite_stats
     };
   }
@@ -105,7 +107,6 @@ export class UserService {
     const data: UpdateData = {
       email: raw_data.email,
       alias: raw_data.alias,
-      avatar_filename: raw_data.avatar_url,
       settings: raw_data.settings,
       // Extract just the hash string from the auth service response
       password_hash: raw_data.password ? await this.updatePassword(user_id, raw_data.password) : undefined,
@@ -115,6 +116,12 @@ export class UserService {
 
     const changes = this.userRepository.updateById(user_id, data);
 
+    return changes;
+  }
+
+  public async updateAvatar(user_id: number, avatar_filename: string): Promise<number> {
+    const data: UpdateData = { avatar_filename };
+    const changes = this.userRepository.updateById(user_id, data);
     return changes;
   }
 

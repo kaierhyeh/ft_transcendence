@@ -20,12 +20,12 @@ export interface UserRow {
 }
 
 export interface UpdateData {
-    email: string | undefined;
-    password_hash: string | undefined;
-    alias: string | undefined;
-    avatar_filename: string | undefined;
-    settings: string | undefined;
-    two_fa: TwoFa | undefined;
+    email?: string;
+    password_hash?: string;
+    alias?: string;
+    avatar_filename?: string;
+    settings?: string;
+    two_fa?: TwoFa;
 }
 
 export class UserRepository {
@@ -35,7 +35,7 @@ export class UserRepository {
 
     public createLocalUser(data: LocalUserCreationData): number {
         const stmt = this.db.prepare(`
-            INSERT INTO users (username, email, password_hash, alias, avatar_url)
+            INSERT INTO users (username, email, password_hash, alias)
             VALUES (?, ?, ?, ?, ?)
         `);
         const result = stmt.run(
@@ -43,14 +43,13 @@ export class UserRepository {
             data.email,
             data.password_hash,
             data.alias ?? null,  // Use nullish coalescing for more explicit null handling
-            data.avatar_url ?? null
         );
         return result.lastInsertRowid as number;
     }
 
     public createGoogleUser(data: GoogleUserCreationData): number {
         const stmt = this.db.prepare(`
-            INSERT INTO users (google_sub, username, email, alias, avatar_url)
+            INSERT INTO users (google_sub, username, email, alias)
             VALUES (?, ?, ?, ?, ?)
         `);
         const result = stmt.run(
@@ -58,7 +57,6 @@ export class UserRepository {
             data.username,
             data.email,
             data.alias ?? null,  // Use nullish coalescing for more explicit null handling
-            data.avatar_url ?? null
         );
         return result.lastInsertRowid as number;
     }
@@ -103,7 +101,7 @@ export class UserRepository {
             params.alias = data.alias;
         }
         if (data.avatar_filename !== undefined) {
-            set_clauses.push("avatar_url = @avatar_url");
+            set_clauses.push("avatar_filename = @avatar_filename");
             params.avatar_url = data.avatar_filename;
         }
         if (data.settings !== undefined) {

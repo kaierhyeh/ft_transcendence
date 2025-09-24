@@ -2,8 +2,8 @@ import { FastifyPluginAsync } from "fastify";
 import Database from "better-sqlite3";
 import { CONFIG } from "../config";
 import fp from "fastify-plugin";
-import { join } from "path";
-import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { readFileSync, mkdirSync } from "fs";
 import { BlockRepository, FriendRepository, UserRepository } from "../repositories";
 
 declare module "fastify" {
@@ -17,6 +17,19 @@ declare module "fastify" {
 }
 
 const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
+  // Ensure required directories exist
+  const dbDir = dirname(CONFIG.DB.PATH);
+  const avatarDir = CONFIG.AVATAR.BASE_URL;
+  
+  try {
+    mkdirSync(dbDir, { recursive: true });
+    mkdirSync(avatarDir, { recursive: true });
+    fastify.log.info(`📁 Created directories: ${dbDir}, ${avatarDir}`);
+  } catch (error) {
+    fastify.log.error(`❌ Failed to create required directories: ${error}`);
+    throw error;
+  }
+
   const db = new Database(CONFIG.DB.PATH);
 
   if (CONFIG.DB.ENABLE_WAL) {
@@ -27,8 +40,8 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
   const sql_dir = join(__dirname, '../sql');
   const sql_files = [
     'users.sql',
-    'friendships.sql',
-    'user_blocks.sql'
+    'friends.sql',
+    'blocks.sql'
   ];
 
   for (const file of sql_files) {

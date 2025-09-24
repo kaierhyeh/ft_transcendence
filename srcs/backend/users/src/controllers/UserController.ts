@@ -4,8 +4,7 @@ import { UserCreationData, LoginParams, UpdateRawData, UserIdParams, AvatarParam
 import fs from 'fs';
 import path from 'path';
 import { CONFIG } from '../config';
-import { request } from 'http';
-import { pipeline } from 'stream';
+import { pipeline } from 'stream/promises';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -72,16 +71,19 @@ export class UserController {
       if (!data)
         return reply.status(400).send({ error: "No file uploaded" });
       
-      if (!CONFIG.AVATAR.ALLOWED_TYPE.includes(data.mimetype))
+      // Type-safe mimetype check
+      const allowedTypes = CONFIG.AVATAR.ALLOWED_TYPES as readonly string[];
+      if (!allowedTypes.includes(data.mimetype))
         return reply.status(400).send({ error: "Invalid file type" });
 
       const timestamp = Date.now();
-      const extension = path.extname(data.fieldname || '') || '.jpg';
+      const extension = path.extname(data.filename || '') || '.jpg';
       const filename = `user_${user_id}_${timestamp}${extension}`;
       const filepath = path.join(CONFIG.AVATAR.BASE_URL, filename);
 
       await fs.promises.mkdir(CONFIG.AVATAR.BASE_URL, {recursive: true});
 
+      // Use pipeline from stream/promises
       await pipeline(data.file, fs.createWriteStream(filepath));
 
       const old_user = await this.userService.getUserById(user_id);
@@ -96,7 +98,11 @@ export class UserController {
         }
       }
 
-      const { changes } = await this.userService.updateUser(user_id, { avatar_})
+      const changes = await this.userService.updateAvatar(user_id, filename);
+
+      return reply.status(201).send(changes);
+    } catch (error) {
+        this.handleError(error, reply);
     }
   }
 
@@ -130,7 +136,7 @@ export class UserController {
       const stats = await fs.promises.stat(filepath);
       const ext = path.extname(filename).toLowerCase();
 
-      const mime_types = {
+      const mime_types: Record<string, string> = {
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
         '.png': 'image/png',

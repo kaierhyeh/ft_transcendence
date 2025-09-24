@@ -4,6 +4,7 @@ import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
+import { verifyJWT } from "../middleware/verifyJWT";
 
 let next_id = 0;
 
@@ -49,7 +50,7 @@ export class LiveSessionManager {
                 const ticket = msg.ticket as string | undefined;
                 if (!ticket) { connection.socket.close(4001, "Missing ticket"); return; }
                 try {
-                    const payload = verifyJwt(ticket); // throws on invalid
+                    const payload = verifyJWT(ticket); // throws on invalid
                     if (!payload.game_id || payload.game_id !== id)
                         throw new Error;
                     const player_id = payload.sub;

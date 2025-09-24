@@ -11,9 +11,9 @@ const fastify = Fastify({ logger: true });
 
 async function run() {
   await fastify.register(multipart, {
-    attachFieldsToBody: 'auto',
     limits: {
-      fileSize: 2 * 1024 * 1024 // 2MB
+      fileSize: CONFIG.AVATAR.MAX_SIZE,
+      files: 1
     }
   });
   

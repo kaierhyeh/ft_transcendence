@@ -24,7 +24,6 @@ export class AuthService {
       email: data.email,
       password_hash,
       alias: data.alias || undefined,
-      avatar_url: data.avatar_url || undefined
     });
   
     return { user_id };

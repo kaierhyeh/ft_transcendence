@@ -11,6 +11,14 @@ export const CONFIG = {
     PATH: process.env.DB_PATH || "/app/data/sessions.db",
     ENABLE_WAL: true,
   },
+
+  JWT: {
+    PUBLIC_KEY_PATH: process.env.JWT_PUBLIC_KEY_PATH || "/run/secrets/jwt_public_key",
+    ALGORITHM: process.env.JWT_ALGORITHM || "RS256" as const,
+    ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
+    AUDIENCE: process.env.JWT_AUDIENCE || "ft_transcendence_users",
+  },
+
   
   // Server settings
   SERVER: {

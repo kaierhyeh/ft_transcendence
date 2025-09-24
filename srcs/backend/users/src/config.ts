@@ -9,7 +9,7 @@ export const CONFIG = {
   AVATAR: {
     BASE_URL: process.env.AVATAR_BASE_URL || "/app/data/avatar",
     MAX_SIZE: 2 * 1024 * 1024, // 2MB
-    ALLOWED_TYPE: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   },
 
   JWT: {

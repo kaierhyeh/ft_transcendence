@@ -32,11 +32,6 @@ const aliasSchema = {
   maxLength: 50
 } as const;
 
-const avatarUrlSchema = {
-  type: "string",
-  format: "uri"
-} as const;
-
 const googleSubSchema = {
   type: "string"
 } as const;
@@ -58,8 +53,7 @@ export const createLocalUserSchema = {
     username: usernameSchema,
     email: emailSchema,
     password_hash: passwordHashSchema,
-    alias: aliasSchema,
-    avatar_url: avatarUrlSchema
+    alias: aliasSchema
   },
   additionalProperties: false,
 } as const;
@@ -81,8 +75,7 @@ export const createGoogleUserSchema = {
     google_sub: googleSubSchema,
     email: emailSchema,
     username: usernameSchema,
-    alias: aliasSchema,
-    avatar_url: avatarUrlSchema
+    alias: aliasSchema
   },
   additionalProperties: false,
 } as const;
