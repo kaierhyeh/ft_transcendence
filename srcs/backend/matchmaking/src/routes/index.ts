@@ -1,0 +1,68 @@
+import { FastifyInstance } from "fastify";
+import { MatchMakingController } from '../controllers/MatchMakingController';
+import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema, UserIdParams, userIdSchema, AvatarParams, avatarFilenameSchema } from "../schemas";
+import { verifyJWT } from "../middleware/verifyJWT";
+
+export default async function matchMakingRoutes(fastify: FastifyInstance) {
+  const userController = new MatchMakingController(fastify.services.user);
+
+  // add a user to database (google, local, guest)
+  fastify.post<{ Body: UserCreationData }>(
+    "/",
+    { schema: { body: createUserSchema} },
+    userController.createAccount.bind(userController)
+  );
+
+  // get all user data via its login [SHOULD be accessible only to backend micro services]
+  fastify.get<{ Params: LoginParams }>(
+    "/:login",
+    { schema: { params: loginSchema} },
+    userController.getUserByLogin.bind(userController)
+  );
+
+  // update some user data (email, password, 2fa, alias, settings) [Requires user authentication]
+  fastify.put<{ Body: UpdateRawData }>(
+    "/me",
+    {
+      schema: { body: updateSchema },
+      preHandler: verifyJWT
+    }, 
+    userController.updateMe.bind(userController)
+  );
+
+  // update avatar [Requires user authentication]
+  fastify.put<{  }>(
+    "/me/avatar",
+    {
+      schema: { },
+      preHandler: verifyJWT
+    },
+    userController.updateAvatar.bind(userController)
+  );
+
+  // get user profile (most of user data + stats summary) [Requires user authentication]
+  fastify.get(
+    "/me",
+    { preHandler: verifyJWT },
+    userController.getMe.bind(userController)
+  );
+
+  // Retrieve avatar image file
+  fastify.get<{ Params: AvatarParams }> (
+    "/avatar/:filename",
+    { schema: { params: avatarFilenameSchema }  },
+    userController.getAvatar.bind(userController)
+  );
+
+  // get public user profile (no sensisitive data + stats summary)
+  fastify.get<{ Params: UserIdParams }>(
+    "/id/:id",
+    { schema: { params: userIdSchema } },
+    userController.getPublicProfile.bind(userController)
+  );
+
+  // get match-history aka game sessions via game service
+  fastify.get("/match-history", async (request, reply) => {
+    // TODO - implement match history retrieval
+  });
+}
