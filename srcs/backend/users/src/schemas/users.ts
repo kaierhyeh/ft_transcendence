@@ -140,8 +140,8 @@ export const avatarFilenameSchema = {
   properties: {
     filename: {
       type: 'string',
-      pattern: '^user_\\d+_\\d+\\.(jpg|jpeg|png|gif|webp)$',
-      description: 'Filename of the avatar image in the format user_<userId>_<timestamp>.<extension>'
+      pattern: `^(user_\\d+_\\d+\\.(jpg|jpeg|png|gif|webp)|${CONFIG.AVATAR.DEFAULT_FILENAME.replace('.', '\\.')})$`,
+      description: `Filename of avatar image: user_<userId>_<timestamp>.<extension> or ${CONFIG.AVATAR.DEFAULT_FILENAME}`
     },
   },
   additionalProperties: false,

@@ -217,7 +217,7 @@ export class UserRepository {
             this.safeDeleteAvatarFile(user.avatar_filename);
         }
         
-        // Now update the user record (reset to default avatar)
+        // Now update the user record (clear avatar_filename for deleted users)
         const stmt = this.db.prepare(`
             UPDATE users 
             SET status = 'deleted',
@@ -225,7 +225,7 @@ export class UserRepository {
                 email = NULL,
                 password_hash = NULL,
                 alias = NULL,
-                avatar_filename = ?,
+                avatar_filename = NULL,
                 google_sub = NULL,
                 two_fa_enabled = 0,
                 two_fa_secret = NULL,
@@ -233,7 +233,7 @@ export class UserRepository {
                 updated_at = datetime('now')
             WHERE user_id = ?
         `);
-        const result = stmt.run(CONFIG.AVATAR.DEFAULT_FILENAME, user_id);
+        const result = stmt.run(user_id);
         return result.changes as number;
     }
 
