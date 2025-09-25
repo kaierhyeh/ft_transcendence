@@ -2,7 +2,7 @@ import { AuthClient } from '../clients/AuthClient';
 import { LiteStats, StatsClient } from '../clients/StatsClient';
 import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
-import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
+import { GoogleUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
 
 export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub"> & LiteStats;
 
@@ -43,14 +43,7 @@ export class UserService {
     return { user_id };
   }
 
-  public async createGuestUser(data: GuestUserCreationData) {
-    const user_data = {
-      alias: data.alias ?? "Guest" 
-    };
-
-    const user_id = this.userRepository.createGuestUser(user_data);
-    return { user_id };
-  }
+  
 
   public async getUserByLogin(login: string): Promise<UserRow> {
     const user = await this.userRepository.findByLogin(login);
@@ -133,5 +126,9 @@ export class UserService {
       throw error;
     }
     return user;
+  }
+
+  public async deleteUser(userId: number): Promise<number> {
+    return this.userRepository.markAsDeleted(userId);
   }
 }

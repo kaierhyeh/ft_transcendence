@@ -30,14 +30,6 @@ export const signupFormSchema = {
   additionalProperties: false,
 } as const;
 
-export const createGuestSchema = {
-  type: "object",
-  properties: {
-    alias: aliasSchema,
-  },
-  additionalProperties: false,
-} as const;
-
 export const loginSchema = {
   type: "object",
   required: ["login", "password"],
@@ -103,5 +95,4 @@ export const gameSessionClaimsSchema = {
 export type SignupFormData = FromSchema<typeof signupFormSchema>;
 export type LoginData = FromSchema<typeof loginSchema>;
 export type PasswordUpdateData = FromSchema<typeof passwordUpdateSchema>;
-export type GuestRawData = FromSchema<typeof createGuestSchema>;
 export type GameSessionClaims = FromSchema<typeof gameSessionClaimsSchema>;

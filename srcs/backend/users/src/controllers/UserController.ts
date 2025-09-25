@@ -3,7 +3,6 @@ import { UserService } from '../services/UserService';
 import { 
   LocalUserCreationData, 
   GoogleUserCreationData, 
-  GuestUserCreationData, 
   LoginParams, 
   UpdateRawData, 
   UserIdParams, 
@@ -51,22 +50,7 @@ export class UserController {
     }
   }
 
-  public async createGuestAccount(
-    request: FastifyRequest<{ Body: GuestUserCreationData }>, 
-    reply: FastifyReply
-  ) {
-    try {
-      const result = await this.userService.createGuestUser(request.body);
-      
-      reply.status(201).send({
-        success: true,
-        user_id: result.user_id,
-        message: "Guest user created successfully"
-      });
-    } catch (error) {
-      this.handleError(error, reply);
-    }
-  }
+
 
   public async getUserByLogin(
     request: FastifyRequest<{ Params: LoginParams }>, 
@@ -208,6 +192,25 @@ export class UserController {
       
       const publicProfile = await this.userService.getPublicProfile(user_id);
       return reply.send(publicProfile);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async deleteMe(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = request.user?.sub;
+      
+      if (!userId) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      
+      const changes = await this.userService.deleteUser(userId);
+      return reply.send({ 
+        success: true,
+        changes,
+        message: "User account successfully deleted"
+      });
     } catch (error) {
       this.handleError(error, reply);
     }

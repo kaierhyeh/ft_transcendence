@@ -1,5 +1,5 @@
 import { UserClient, GuestCreationData } from '../clients/UserClient';
-import { GuestRawData, LoginData, SignupFormData } from '../schemas';
+import { LoginData, SignupFormData } from '../schemas';
 import hashPassword from '../utils/crypto';
 import { isValidPassword } from '../utils/validation';
 
@@ -29,16 +29,7 @@ export class AuthService {
     return { user_id };
   }
 
-  async createGuest(data: GuestRawData): Promise<{ user_id: number }> {
-    const guestData: GuestCreationData = {
-      type: "guest",
-      alias: data.alias || undefined
-    };
-    
-    const { user_id } = await this.userClient.createGuest(guestData);
-
-    return { user_id };
-  }  async validateUser(data: LoginData): Promise<{ user_id: number, username: string }> {
+  async validateUser(data: LoginData): Promise<{ user_id: number, username: string }> {
 
     const { user_id, username, password_hash } = await this.userClient.getUserByLogin(data.login);
 

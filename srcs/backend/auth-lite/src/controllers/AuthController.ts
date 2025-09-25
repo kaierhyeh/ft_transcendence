@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { AuthService } from '../services/AuthService';
 import { CONFIG } from '../config';
-import { GameSessionClaims, GuestRawData, LoginData, PasswordUpdateData, SignupFormData } from '../schemas';
+import { GameSessionClaims, LoginData, PasswordUpdateData, SignupFormData } from '../schemas';
 import * as jwt from 'jsonwebtoken';
 
 export class AuthController {
@@ -94,28 +94,6 @@ export class AuthController {
         user_id: user.user_id,
         access_token: token,
         message: "Login successful"
-      });
-    } catch (error) {
-      this.handleError(error, reply);
-    }
-  }
-
-  async createGuest(
-    request: FastifyRequest<{ Body: GuestRawData }>, 
-    reply: FastifyReply
-  ) {
-    try {
-      const result = await this.authService.createGuest(request.body);
-      
-      // For guest users, we use a generic guest username for JWT
-      const guestUsername = `guest_${result.user_id}`;
-      const token = this.issueToken(request.server, result.user_id, guestUsername);
-      
-      reply.status(201).send({
-        success: true,
-        user_id: result.user_id,
-        token,
-        message: "Guest account created successfully"
       });
     } catch (error) {
       this.handleError(error, reply);

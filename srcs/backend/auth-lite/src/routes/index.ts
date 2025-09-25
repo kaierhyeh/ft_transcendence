@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { AuthController } from '../controllers/AuthController';
-import { LoginData, loginSchema, passwordUpdateSchema, PasswordUpdateData, SignupFormData, signupFormSchema, createGuestSchema, GuestRawData, gameSessionClaimsSchema, GameSessionClaims } from "../schemas";
+import { LoginData, loginSchema, passwordUpdateSchema, PasswordUpdateData, SignupFormData, signupFormSchema, gameSessionClaimsSchema, GameSessionClaims } from "../schemas";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const authController = new AuthController();
@@ -21,12 +21,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
     "/hash-password",
     { schema: { body: passwordUpdateSchema } },
     authController.updatePasswordHash.bind(authController)
-  );
-
-  fastify.post<{ Body: GuestRawData }>(
-    "/guest",
-    { schema: { body: createGuestSchema } },
-    authController.createGuest.bind(authController)
   );
 
   fastify.post<{ Body: GameSessionClaims }>(

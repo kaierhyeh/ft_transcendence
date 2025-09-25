@@ -3,10 +3,8 @@ import { UserController } from '../controllers/UserController';
 import { 
   LocalUserCreationData, 
   GoogleUserCreationData, 
-  GuestUserCreationData,
   createLocalUserSchema,
   createGoogleUserSchema, 
-  createGuestSchema,
   LoginParams, 
   loginSchema, 
   UpdateRawData, 
@@ -35,12 +33,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.createGoogleAccount.bind(userController)
   );
 
-  // Create guest user account
-  fastify.post<{ Body: GuestUserCreationData }>(
-    "/guest",
-    { schema: { body: createGuestSchema} },
-    userController.createGuestAccount.bind(userController)
-  );
+
 
   // get all user data via its login [SHOULD be accessible only to backend micro services]
   fastify.get<{ Params: LoginParams }>(
@@ -74,6 +67,13 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     "/me",
     { preHandler: verifyJWT },
     userController.getMe.bind(userController)
+  );
+
+  // delete user account (soft delete) [Requires user authentication]
+  fastify.delete(
+    "/me",
+    { preHandler: verifyJWT },
+    userController.deleteMe.bind(userController)
   );
 
   // Retrieve avatar image file

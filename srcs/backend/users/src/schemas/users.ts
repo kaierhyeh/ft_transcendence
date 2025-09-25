@@ -58,15 +58,6 @@ export const createLocalUserSchema = {
   additionalProperties: false,
 } as const;
 
-// For guest users
-export const createGuestSchema = {
-  type: "object",
-  properties: {
-    alias: aliasSchema,
-  },
-  additionalProperties: false,
-} as const;
-
 // For Google OAuth account creation
 export const createGoogleUserSchema = {
   type: "object",
@@ -158,7 +149,6 @@ export const avatarFilenameSchema = {
 
 export type LocalUserCreationData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
-export type GuestUserCreationData = FromSchema<typeof createGuestSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;

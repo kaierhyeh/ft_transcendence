@@ -1,10 +1,12 @@
 import { Database } from "better-sqlite3";
-import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData } from "../schemas";
+import { GoogleUserCreationData, LocalUserCreationData } from "../schemas";
 import { TwoFa } from "../types";
+import { CONFIG } from "../config";
+import fs from "fs";
+import path from "path";
 
 export interface UserRow {
     user_id: number;
-    user_type: "registered" | "guest" | "deleted" | "expired";
     username: string | null;
     email: string | null;
     password_hash: string | null;
@@ -13,7 +15,7 @@ export interface UserRow {
     two_fa_enabled: 0 | 1;
     two_fa_secret: string | null;
     google_sub: string | null;
-    status: "online" | "offline" | "away";
+    status: "online" | "offline" | "away" | "deleted";
     created_at: string;
     updated_at: string;
     last_seen: string | null;
@@ -61,22 +63,11 @@ export class UserRepository {
         return result.lastInsertRowid as number;
     }
 
-    public createGuestUser(data: GuestUserCreationData): number {
-        const stmt = this.db.prepare(`
-            INSERT INTO users (user_type, alias)
-            VALUES ('guest', ?)
-        `);
-        const result = stmt.run(
-            data.alias
-        );
-        return result.lastInsertRowid as number;
-    }
-
     public findByLogin(login: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
             WHERE (username = ? OR email = ? OR google_sub = ?) 
-              AND user_type = 'registered'
+              AND status != 'deleted'
         `);
         const result = stmt.get(login, login, login) as UserRow | undefined;
         return result || null;
@@ -153,7 +144,7 @@ export class UserRepository {
     public findByEmail(email: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE email = ? AND user_type = 'registered'
+            WHERE email = ? AND status != 'deleted'
         `);
         const result = stmt.get(email) as UserRow | undefined;
         return result || null;
@@ -162,7 +153,7 @@ export class UserRepository {
     public findByGoogleSub(google_sub: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE google_sub = ? AND user_type = 'registered'
+            WHERE google_sub = ? AND status != 'deleted'
         `);
         const result = stmt.get(google_sub) as UserRow | undefined;
         return result || null;
@@ -196,5 +187,45 @@ export class UserRepository {
 //   }): void;
 
 //   bumpPresence(userId: number, status: 'online'|'offline'|'away', when?: string): void; // updates last_seen & status
+
+    public markAsDeleted(user_id: number): number {
+        // First get the current avatar filename before deletion
+        const userStmt = this.db.prepare(`
+            SELECT avatar_filename FROM users WHERE user_id = ?
+        `);
+        const user = userStmt.get(user_id) as { avatar_filename: string | null } | undefined;
+        
+        // Delete avatar file if it exists
+        if (user?.avatar_filename) {
+            const avatarPath = path.join(CONFIG.AVATAR.BASE_URL, user.avatar_filename);
+            try {
+                if (fs.existsSync(avatarPath)) {
+                    fs.unlinkSync(avatarPath);
+                }
+            } catch (error) {
+                console.warn(`Failed to delete avatar file: ${avatarPath}`, error);
+                // Continue with user deletion even if avatar deletion fails
+            }
+        }
+        
+        // Now update the user record
+        const stmt = this.db.prepare(`
+            UPDATE users 
+            SET status = 'deleted',
+                username = NULL,
+                email = NULL,
+                password_hash = NULL,
+                alias = NULL,
+                avatar_filename = NULL,
+                google_sub = NULL,
+                two_fa_enabled = 0,
+                two_fa_secret = NULL,
+                settings = '{}',
+                updated_at = datetime('now')
+            WHERE user_id = ?
+        `);
+        const result = stmt.run(user_id);
+        return result.changes as number;
+    }
 
 }

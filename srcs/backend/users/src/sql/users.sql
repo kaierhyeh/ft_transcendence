@@ -1,66 +1,57 @@
 CREATE TABLE IF NOT EXISTS users (
   user_id         INTEGER PRIMARY KEY AUTOINCREMENT,
 
-  -- User type (registered, guest, expired, deleted)
-  user_type      TEXT NOT NULL DEFAULT 'registered'
-                  CHECK (user_type IN ('registered','guest', 'expired', 'deleted')),
-
-  -- login identity (ONLY for registered users)
+  -- login identity
   username        TEXT COLLATE NOCASE,
   email           TEXT COLLATE NOCASE,
 
-  -- local auth (ONLY for registered users)
+  -- local auth
   password_hash   TEXT,
 
-  -- display + profile (ALL user types can have alias)
+  -- display + profile
   alias           TEXT,                 -- display name; NOT unique
   avatar_filename TEXT,
 
-  -- 2FA (TOTP) - only for registered users
+  -- 2FA (TOTP)
   two_fa_enabled  INTEGER NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0,1)),
   two_fa_secret   TEXT,
 
-  -- Google SSO (ONLY for registered users)
+  -- Google SSO
   google_sub      TEXT,
 
-  -- misc (might be useful for all user types)
+  -- misc
   settings        TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(settings)),
   status          TEXT NOT NULL DEFAULT 'offline'
-                  CHECK (status IN ('online','offline','away')),
+                  CHECK (status IN ('online','offline','away','deleted')),
   last_seen       DATETIME,
   created_at      DATETIME NOT NULL DEFAULT (datetime('now')),
   updated_at      DATETIME NOT NULL DEFAULT (datetime('now')),
 
-  -- REGISTERED users must have username AND email
-  CHECK (user_type != 'registered' OR (username IS NOT NULL AND email IS NOT NULL)),
+  -- Active users must have username AND email
+  CHECK (status = 'deleted' OR (username IS NOT NULL AND email IS NOT NULL)),
   
-  -- GUEST users can ONLY have alias (no credentials, no identity)
-  CHECK (user_type != 'guest' OR 
+  -- Deleted users have credentials cleared but keep user_id for FK references
+  CHECK (status != 'deleted' OR 
          (username IS NULL AND email IS NULL AND password_hash IS NULL AND 
-          google_sub IS NULL AND two_fa_enabled = 0 AND two_fa_secret IS NULL)),
-  
-  -- EXPIRED/DELETED users have credentials cleared but keep user_id for FK references
-  CHECK (user_type NOT IN ('expired', 'deleted') OR 
-         (username IS NULL AND email IS NULL AND password_hash IS NULL AND 
-          google_sub IS NULL AND two_fa_enabled = 0 AND two_fa_secret IS NULL)),
+          google_sub IS NULL AND two_fa_enabled = 0 AND two_fa_secret IS NULL AND
+          alias IS NULL AND avatar_filename IS NULL)),
 
-  -- 2FA integrity
+  -- 2FA integrity  
   CHECK (two_fa_enabled = 0 OR two_fa_secret IS NOT NULL),
   
-  -- Auth requirement: registered users must have password OR google_sub
-  CHECK (user_type != 'registered' OR password_hash IS NOT NULL OR google_sub IS NOT NULL)
+  -- Auth requirement: active users must have password OR google_sub
+  CHECK (status = 'deleted' OR password_hash IS NOT NULL OR google_sub IS NOT NULL)
 );
 
--- Unique constraints ONLY for registered users
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_registered 
-  ON users(username) WHERE username IS NOT NULL AND user_type = 'registered';
+-- Unique constraints for active users only
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_active 
+  ON users(username) WHERE username IS NOT NULL AND status != 'deleted';
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_registered 
-  ON users(email) WHERE email IS NOT NULL AND user_type = 'registered';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active 
+  ON users(email) WHERE email IS NOT NULL AND status != 'deleted';
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub_registered 
-  ON users(google_sub) WHERE google_sub IS NOT NULL AND user_type = 'registered';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub_active 
+  ON users(google_sub) WHERE google_sub IS NOT NULL AND status != 'deleted';
 
 -- Performance indexes
-CREATE INDEX IF NOT EXISTS idx_users_type ON users(user_type);
 CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);

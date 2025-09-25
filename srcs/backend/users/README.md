@@ -4,7 +4,7 @@ This service manages user accounts, profiles, authentication data, and social fe
 
 ## Features
 
-- User account management (local, Google OAuth, guest users)
+- User account management (local, Google OAuth users)
 - Profile management with avatar and settings
 - Social features: friends, blocking, friend requests
 - Match history integration with game service
@@ -42,13 +42,13 @@ Create a new user account.
   "email": "string", 
   "password_hash": "string",
   "alias": "string",
-  "avatar_url": "string",
+  "avatar_filename": "string",
   // For Google accounts:
   "google_sub": "string",
   "username": "string",
   "email": "string",
   "alias": "string",
-  "avatar_url": "string",
+  "avatar_filename": "string",
   // For guest accounts:
   "alias": "string"
 }
@@ -76,8 +76,8 @@ Get user data by login identifier (username, email, or Google sub).
   "email": "string",
   "password_hash": "string",
   "alias": "string",
-  "avatar_url": "string",
-  "user_type": "registered" | "guest" | "expired" | "deleted",
+  "avatar_filename": "string",
+  "status": "online" | "offline" | "away" | "deleted",
   "google_sub": "string",
   "two_fa_enabled": boolean,
   "two_fa_secret": "string",
@@ -100,7 +100,7 @@ Update current user profile.
   "email": "string",
   "password_hash": "string",
   "alias": "string", 
-  "avatar_url": "string",
+  "avatar_filename": "string",
   "settings": "string",
   "two_fa_enabled": boolean,
   "two_fa_secret": "string"
@@ -121,8 +121,8 @@ Get current user profile with sensitive data.
   "username": "string",
   "email": "string",
   "alias": "string",
-  "avatar_url": "string",
-  "user_type": "string",
+  "avatar_filename": "string",
+  "status": "string",
   "two_fa_enabled": boolean,
   "settings": "string",
   "stats": {
@@ -143,7 +143,7 @@ Get public user profile (no sensitive data).
   "user_id": number,
   "username": "string",
   "alias": "string",
-  "avatar_url": "string",
+  "avatar_filename": "string",
   "stats": {
     // TODO: Game statistics summary
   }
@@ -240,8 +240,8 @@ users (
   email TEXT UNIQUE,
   password_hash TEXT,
   alias TEXT,
-  avatar_url TEXT,
-  user_type TEXT CHECK(user_type IN ('registered', 'guest', 'expired', 'deleted')),
+  avatar_filename TEXT,
+  status TEXT CHECK(status IN ('online', 'offline', 'away', 'deleted')) DEFAULT 'offline',
   google_sub TEXT UNIQUE,
   two_fa_enabled BOOLEAN DEFAULT 0,
   two_fa_secret TEXT,
