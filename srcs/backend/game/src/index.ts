@@ -14,9 +14,15 @@ async function run() {
   await fastify.register(dbPlugin);
   await fastify.register(liveSessionManagerPlugin);
   await fastify.register(remoteMatchmakingManagerPlugin);
+  
   for (const route of routes) {
     await fastify.register(route, { prefix: "/game" });
   }
+  
+  // Health check endpoint
+  fastify.get('/health', async () => {
+    return { status: 'ok', service: 'game', timestamp: new Date().toISOString() };
+  });
   
   // Use config for update period
   setInterval(() => {

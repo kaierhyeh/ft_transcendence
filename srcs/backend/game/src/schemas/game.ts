@@ -43,6 +43,7 @@ export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 export type GameType = GameCreationBody["type"];
+<<<<<<< HEAD
 
 
 //REMOTE_PLAYER_ADD
@@ -87,3 +88,5 @@ export type MatchmakingRequest = FromSchema<typeof matchmakingRequestSchema>;
 export type MatchmakingResponse = FromSchema<typeof matchmakingResponseSchema>;
 export type MatchmakingMode = MatchmakingRequest["mode"];
 //END_REMOTE_PLAYER_ADD
+=======
+>>>>>>> develop

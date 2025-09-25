@@ -5,7 +5,11 @@ import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../db/repositories/SessionRepository";
 
+<<<<<<< HEAD
 let next_id = 0;
+=======
+let next_id = 1;
+>>>>>>> develop
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;

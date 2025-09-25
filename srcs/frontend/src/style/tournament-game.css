@@ -1,0 +1,56 @@
+#bracket-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.match-display {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.player-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 15px;
+}
+
+.player-name {
+    color: #4ade80;
+    font-size: 24px;
+    font-weight: bold;
+    min-width: 150px;
+    padding: 10px 20px;
+    background: rgba(74, 222, 128, 0.1);
+    border: 2px solid #4ade80;
+    border-radius: 10px;
+}
+
+.vs-text {
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#tournament-game {
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.game-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: center;
+}
