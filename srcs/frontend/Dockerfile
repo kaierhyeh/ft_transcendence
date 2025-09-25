@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:20-alpine3.21 AS build
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN tsc
 RUN cp dist/*.js dist/*.js.map ./scripts
 RUN rm -rf dist node_modules scripts/*.ts
 
-FROM nginx:stable-alpine
+FROM nginx:1.28.0-alpine3.21
 
 ENV SSL_DIR=/etc/ssl
 ENV CERTS_DIR=${SSL_DIR}/certs
