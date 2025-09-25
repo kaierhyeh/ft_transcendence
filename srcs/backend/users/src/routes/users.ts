@@ -1,16 +1,45 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
-import { UserCreationData, createUserSchema, LoginParams, loginSchema, UpdateRawData, updateSchema, UserIdParams, userIdSchema, AvatarParams, avatarFilenameSchema } from "../schemas";
+import { 
+  LocalUserCreationData, 
+  GoogleUserCreationData, 
+  GuestUserCreationData,
+  createLocalUserSchema,
+  createGoogleUserSchema, 
+  createGuestSchema,
+  LoginParams, 
+  loginSchema, 
+  UpdateRawData, 
+  updateSchema, 
+  UserIdParams, 
+  userIdSchema, 
+  AvatarParams, 
+  avatarFilenameSchema 
+} from "../schemas";
 import { verifyJWT } from "../middleware/verifyJWT";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
 
-  // add a user to database (google, local, guest)
-  fastify.post<{ Body: UserCreationData }>(
-    "/",
-    { schema: { body: createUserSchema} },
-    userController.createAccount.bind(userController)
+  // Create local user account (email/password signup)
+  fastify.post<{ Body: LocalUserCreationData }>(
+    "/local",
+    { schema: { body: createLocalUserSchema} },
+    userController.createLocalAccount.bind(userController)
+  );
+
+  // Create Google OAuth user account
+  fastify.post<{ Body: GoogleUserCreationData }>(
+    "/google",
+    { schema: { body: createGoogleUserSchema} },
+    userController.createGoogleAccount.bind(userController)
+  );
+
+  // Create guest user account
+  fastify.post<{ Body: GuestUserCreationData }>(
+    "/guest",
+    { schema: { body: createGuestSchema} },
+    userController.createGuestAccount.bind(userController)
   );
 
   // get all user data via its login [SHOULD be accessible only to backend micro services]

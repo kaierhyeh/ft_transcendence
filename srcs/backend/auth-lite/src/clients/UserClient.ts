@@ -22,7 +22,7 @@ export class UserClient {
   private base_url = CONFIG.USER_SERVICE.BASE_URL;
 
   async signup(data: LocalUserCreationData): Promise<{ user_id: number }> {
-    const response = await fetch(`${this.base_url}/users`, {
+    const response = await fetch(`${this.base_url}/users/local`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export class UserClient {
   }
 
   async createGuest(data: GuestCreationData): Promise<{ user_id: number }> {
-    const response = await fetch(`${this.base_url}/users`, {
+    const response = await fetch(`${this.base_url}/users/guest`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

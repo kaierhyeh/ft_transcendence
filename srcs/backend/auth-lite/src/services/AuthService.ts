@@ -4,7 +4,6 @@ import hashPassword from '../utils/crypto';
 import { isValidPassword } from '../utils/validation';
 
 export type LocalUserCreationData = Omit<SignupFormData, "password"> & {
-  type: "local";
   password_hash: string;
 };
 
@@ -18,13 +17,14 @@ export class AuthService {
   async signup(data: SignupFormData): Promise<{ user_id: number }> {
     const password_hash =  await hashPassword(data.password);
 
-    const { user_id } = await this.userClient.signup({
-      type: "local",
+    const userCreationData = {
       username: data.username,
       email: data.email,
       password_hash,
       alias: data.alias || undefined,
-    });
+    };
+
+    const { user_id } = await this.userClient.signup(userCreationData);
   
     return { user_id };
   }

@@ -80,43 +80,6 @@ export const createGoogleUserSchema = {
   additionalProperties: false,
 } as const;
 
-// Union type for the API
-export const createUserSchema = {
-  type: "object",
-  required: ["type"],
-  properties: {
-    type: {
-      type: "string",
-      enum: ["local", "google", "guest"]
-    }
-  },
-  oneOf: [
-    {
-      properties: {
-        type: { const: "local" },
-        ...createLocalUserSchema.properties
-      },
-      required: ["type", ...createLocalUserSchema.required],
-      additionalProperties: false
-    },
-    {
-      properties: {
-        type: { const: "google" },
-        ...createGoogleUserSchema.properties
-      },
-      required: ["type", ...createGoogleUserSchema.required],
-      additionalProperties: false
-    },
-    {
-      properties: {
-        type: { const: "guest"},
-        ...createGuestSchema.properties
-      },
-      required: ["type"],
-      additionalProperties: false
-    }
-  ]
-} as const;
 
 export const loginSchema = {
   type: "object",
@@ -193,7 +156,6 @@ export const avatarFilenameSchema = {
   additionalProperties: false,
 } as const;
 
-export type UserCreationData = FromSchema<typeof createUserSchema>;
 export type LocalUserCreationData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
 export type GuestUserCreationData = FromSchema<typeof createGuestSchema>;

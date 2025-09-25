@@ -2,7 +2,7 @@ import { AuthClient } from '../clients/AuthClient';
 import { LiteStats, StatsClient } from '../clients/StatsClient';
 import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
-import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData, UserCreationData } from '../schemas';
+import { GoogleUserCreationData, GuestUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
 
 export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub"> & LiteStats;
 
@@ -19,19 +19,7 @@ export class UserService {
     this.statsClient = new StatsClient();
   }
 
-  public async createUser(data: UserCreationData): Promise<{ user_id: number }> {
-    if (data.type === "local") {
-      return this.createLocalUser(data);
-    } else if (data.type === "google") {
-      return this.createGoogleUser(data);
-    } else if (data.type === "guest") {
-      return this.createGuestUser(data);
-    }
-    
-    throw new Error('Invalid account type');
-  }
-
-  private async createLocalUser(data: LocalUserCreationData) {
+  public async createLocalUser(data: LocalUserCreationData) {
     const user_data = {
       username: data.username,
       email: data.email,
@@ -43,7 +31,7 @@ export class UserService {
     return { user_id };
   }
 
-  private async createGoogleUser(data: GoogleUserCreationData) {
+  public async createGoogleUser(data: GoogleUserCreationData) {
     const user_data = {
       google_sub: data.google_sub,
       username: data.username,
@@ -55,7 +43,7 @@ export class UserService {
     return { user_id };
   }
 
-  private async createGuestUser(data: GuestUserCreationData) {
+  public async createGuestUser(data: GuestUserCreationData) {
     const user_data = {
       alias: data.alias ?? "Guest" 
     };

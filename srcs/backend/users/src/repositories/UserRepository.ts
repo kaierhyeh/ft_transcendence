@@ -36,7 +36,7 @@ export class UserRepository {
     public createLocalUser(data: LocalUserCreationData): number {
         const stmt = this.db.prepare(`
             INSERT INTO users (username, email, password_hash, alias)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
         `);
         const result = stmt.run(
             data.username,
@@ -50,7 +50,7 @@ export class UserRepository {
     public createGoogleUser(data: GoogleUserCreationData): number {
         const stmt = this.db.prepare(`
             INSERT INTO users (google_sub, username, email, alias)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
         `);
         const result = stmt.run(
             data.google_sub,
@@ -102,7 +102,7 @@ export class UserRepository {
         }
         if (data.avatar_filename !== undefined) {
             set_clauses.push("avatar_filename = @avatar_filename");
-            params.avatar_url = data.avatar_filename;
+            params.avatar_filename = data.avatar_filename;
         }
         if (data.settings !== undefined) {
             set_clauses.push("settings = @settings");

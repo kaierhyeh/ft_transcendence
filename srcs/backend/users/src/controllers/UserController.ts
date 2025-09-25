@@ -1,6 +1,14 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
-import { UserCreationData, LoginParams, UpdateRawData, UserIdParams, AvatarParams } from '../schemas';
+import { 
+  LocalUserCreationData, 
+  GoogleUserCreationData, 
+  GuestUserCreationData, 
+  LoginParams, 
+  UpdateRawData, 
+  UserIdParams, 
+  AvatarParams 
+} from '../schemas';
 import fs from 'fs';
 import path from 'path';
 import { CONFIG } from '../config';
@@ -9,17 +17,51 @@ import { pipeline } from 'stream/promises';
 export class UserController {
   constructor(private userService: UserService) {}
 
-  public async createAccount(
-    request: FastifyRequest<{ Body: UserCreationData }>, 
+  public async createLocalAccount(
+    request: FastifyRequest<{ Body: LocalUserCreationData }>, 
     reply: FastifyReply
   ) {
     try {
-      const result = await this.userService.createUser(request.body);
+      const result = await this.userService.createLocalUser(request.body);
       
       reply.status(201).send({
         success: true,
         user_id: result.user_id,
-        message: "User created successfully"
+        message: "Local user created successfully"
+      });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async createGoogleAccount(
+    request: FastifyRequest<{ Body: GoogleUserCreationData }>, 
+    reply: FastifyReply
+  ) {
+    try {
+      const result = await this.userService.createGoogleUser(request.body);
+      
+      reply.status(201).send({
+        success: true,
+        user_id: result.user_id,
+        message: "Google user created successfully"
+      });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async createGuestAccount(
+    request: FastifyRequest<{ Body: GuestUserCreationData }>, 
+    reply: FastifyReply
+  ) {
+    try {
+      const result = await this.userService.createGuestUser(request.body);
+      
+      reply.status(201).send({
+        success: true,
+        user_id: result.user_id,
+        message: "Guest user created successfully"
       });
     } catch (error) {
       this.handleError(error, reply);
