@@ -1,3 +1,5 @@
+import { user } from './users.js';
+
 export default function initRemoteGame():void {
     console.log("create remote interface");
     createRemoteInterface();
@@ -25,17 +27,31 @@ function setupRemoteEvents(): void {
         btn4p.addEventListener('click', function() { joinQueue("4p");  });
     }
 }
+
+function generateParticipantId(): string {
+    if (user === undefined) {
+        console.log("User disconnected during waiting line");
+        return ""; // RETURN ATTENTION 
+        /////IMPORTANT ICI /////
+        //Check server code how we trow error for empty id"
+    }
+    
+    const timestamp = Date.now();
+    const randomNumber = Math.random();
+    return user.userId + "_" + timestamp + "_" + randomNumber;
+}
+
 /*//reuse for websocket later!!!
 function showRemoteStatus(message: string, buttonId: string): void {
     const element = document.getElementById(buttonId);
     if (element != null) {
         element.textContent = message;
     }
-}*/
- 
+}
+
 function joinQueue(mode: "2p" | "4p"): void {
 
-    /*const participantId = generateParticipantId(); // <- ft teest to create, check more into id
+    const participantId = generateParticipantId(); // <- ft teest to create, check more into id
 
     try {
         const response = await fetch('', {
@@ -50,6 +66,7 @@ function joinQueue(mode: "2p" | "4p"): void {
         const data = await response.json();
 
         */
+async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     let buttonId;
     if (mode === "2p") {
         buttonId = "remote-2p-btn";
@@ -57,18 +74,58 @@ function joinQueue(mode: "2p" | "4p"): void {
         buttonId = "remote-4p-btn";
     }
 
+    if (user === undefined) {
+        console.log("User not connected");
+        return;
+    }
+
+    const participantId = generateParticipantId();
+    
     const button = document.getElementById(buttonId);
     if (button != null) {
-        button.textContent = "waiting for players..";
+        button.textContent = "Joining...";
     }
 
     try {
-        console.log("ft_joinqueue called with mode :", mode);
-        // here will implment queue logic from remotematchmaking.ts
-    }
-     catch (error) {
-        console.log("Connection error while trying to joinqueue:", error);
+        const response = await fetch('/game/remoteMatchmaking/join', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                mode: mode,
+                participant_id: participantId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log("Success!");
+            if (button != null) {
+                button.textContent = "Waiting...";
+            }
+            return;
+        }
+        console.log("Error:", data.error);
+        if (button != null) {
+            if (mode === "2p") {
+               button.textContent = "Join 2P";
+            } else {
+                button.textContent = "Join 4P";
+            }
+        }
+        return;
+
+    } catch (error) {
+
+        console.log("Connection error:", error);
+        if (button != null) {
+            if (mode === "2p") {
+                button.textContent = "Join 2P";
+            } else {
+                button.textContent = "Join 4P";
+            }
+        }
     }
 }
-
 

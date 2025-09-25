@@ -27,9 +27,11 @@ function handleStatusRequest(request: any, reply: any): void {
   });
 }
 
-export default function matchmakingRoutes(fastify: FastifyInstance): void {
-  
+export default function matchmakingRoutes(fastify: FastifyInstance, options: any, done: Function): void {
+
   fastify.post("/join", { schema: { body: matchmakingRequestSchema } }, handleJoinRequest);
-  
+
   fastify.get("/status", handleStatusRequest);
+
+  done();
 }
