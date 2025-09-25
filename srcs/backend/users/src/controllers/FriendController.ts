@@ -124,7 +124,7 @@ export class FriendController {
 			if (thisUserId === targetFriendshipId) {
 				return reply.status(400).send({ error: "Cannot remove yourself from friends" });
 			}
-			await this.friendService.removeFriend(thisUserId, targetFriendshipId);
+			await this.friendService.removeFriendship(thisUserId, targetFriendshipId);
 			reply.status(204).send();
 
 		} catch (error) {
