@@ -24,6 +24,5 @@ coverage
 *.swo
 *~
 test/
-test_login_token.js
 API_USAGE_GUIDE.md
 API_USAGE_GUIDE_EN.md
