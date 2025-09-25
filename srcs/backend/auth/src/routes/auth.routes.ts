@@ -34,10 +34,10 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				});
 			}
 
-			// Find user by username
+			// Find user by username or email (case-insensitive)
 			const user = db.prepare(
-				"SELECT * FROM users WHERE username = ? COLLATE NOCASE"
-			).get(username);
+				"SELECT * FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE"
+			).get(username, username);
 
 			if (!user) {
 				return reply.code(401).send({ 
@@ -117,10 +117,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				});
 			}
 
-			// Use username as email if it contains @, otherwise create a dummy email
-			const email = username.includes('@') ? username : `${username}@localhost.local`;
-
-			// Validate username
+			// Validate username (now accepts both traditional usernames and email addresses)
 			const checkedUsername = authUtils.checkUsername(fastify, username);
 			if (typeof checkedUsername === 'object' && checkedUsername.error) {
 				return reply.code(400).send({ 
@@ -129,9 +126,16 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				});
 			}
 
-			// Check if user already exists
+			// Determine if the username is an email address
+			const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
+
+			// If it's an email, use it as both username and email
+			// If it's a traditional username, create a dummy email
+			const email = isEmail ? username : `${username}@localhost.local`;
+
+			// Check if user already exists (check both username and email fields)
 			const existingUser = db.prepare(
-				"SELECT id FROM users WHERE username = ? COLLATE NOCASE OR email = ?"
+				"SELECT id FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE"
 			).get(checkedUsername, email);
 
 			if (existingUser) {

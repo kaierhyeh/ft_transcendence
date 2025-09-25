@@ -92,10 +92,21 @@ export class AuthUtils {
 			return { error: "Username cannot contain more than 3 repeated characters in a row" };
 		}
 
+		// Check if it's an email address (allow @ symbol and common email characters)
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (emailRegex.test(trimmedUsername)) {
+			// For email addresses, only check length (reasonable email length)
+			if (trimmedUsername.length > 254) { // RFC 5321 limit
+				return { error: "Email address is too long" };
+			}
+			return trimmedUsername.toLowerCase(); // Store emails in lowercase
+		}
+
+		// For traditional usernames: must be 3-15 characters, letters/numbers/underscores only
 		const capitalizedUsername = trimmedUsername.charAt(0).toUpperCase() + trimmedUsername.slice(1).toLowerCase();
 		const usernameRegex = /^[a-zA-Z][a-zA-Z0-9_]{3,15}$/;
 		if (!usernameRegex.test(capitalizedUsername)) {
-			return { error: "Username must be 3-15 characters, letters/numbers/underscores only." };
+			return { error: "Username must be 3-15 characters, letters/numbers/underscores only, OR a valid email address." };
 		}
 
 		return capitalizedUsername;
