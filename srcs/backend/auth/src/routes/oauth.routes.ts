@@ -2,14 +2,15 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { google } from 'googleapis';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
-import { CONFIG } from '../config.js';
+import { config } from '../config.js';
+import { type ILoggerService } from '../container.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 const oauth2Client = new google.auth.OAuth2(
-	CONFIG.OAUTH.GOOGLE_CLIENT_ID,
-	CONFIG.OAUTH.GOOGLE_CLIENT_SECRET,
-	CONFIG.OAUTH.GOOGLE_REDIRECT_URI
+	config.oauth.googleClientId,
+	config.oauth.googleClientSecret,
+	config.oauth.googleRedirectUri
 );
 
 // 📌 Route: google/token
@@ -19,6 +20,7 @@ const oauth2Client = new google.auth.OAuth2(
 // It also handles 2FA if enabled for the user
 // It returns the access and refresh tokens in cookies
 export async function oauthRoutes(fastify: FastifyInstance, options: any) {
+	const logger: ILoggerService = (fastify as any).logger;
 	fastify.post('/auth/google', async (request: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
 		try {
 			const { code } = request.body;
@@ -59,7 +61,10 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 			if (user.twofa_secret) {
 				try {
 					const tempToken = await authService.generateTempToken({ userId: user.id }, "2fa", 300);
-					fastify.log.info(`2FA token generated for Google OAuth user: ${user.username}`);
+					logger.info('2FA token generated for Google OAuth user', {
+						userId: user.id,
+						username: user.username
+					});
 
 					return reply.code(202).send({
 						step: "2fa_required",
@@ -67,7 +72,10 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 						temp_token: tempToken
 					});
 				} catch (twoFaError) {
-					fastify.log.error(twoFaError, `2FA token generation error in google Oauth:`);
+					logger.error('2FA token generation error in Google OAuth', twoFaError as Error, {
+						userId: user.id,
+						username: user.username
+					});
 					throw new Error('Failed to generate 2FA token in google Oauth.');
 				}
 			}
@@ -88,7 +96,9 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Google OAuth error: ${(error as Error).message}`);
+			logger.error('Google OAuth error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: 'Internal server error while processing Google OAuth.' });
 		}
 	});
@@ -132,7 +142,10 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 			if (user.twofa_secret) {
 				try {
 					const tempToken = await authService.generateTempToken({ userId: user.id }, "2fa", 300);
-					fastify.log.info(`2FA token generated for Google OAuth user: ${user.username}`);
+					logger.info('2FA token generated for Google OAuth user', {
+						userId: user.id,
+						username: user.username
+					});
 
 					return reply.code(202).send({
 						step: "2fa_required",
@@ -140,7 +153,10 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 						temp_token: tempToken
 					});
 				} catch (twoFaError) {
-					fastify.log.error(twoFaError, `2FA token generation error in Google Oauth:`);
+					logger.error('2FA token generation error in Google OAuth', twoFaError as Error, {
+						userId: user.id,
+						username: user.username
+					});
 					throw new Error('Failed to generate 2FA token in Google Oauth.');
 				}
 			}
@@ -162,7 +178,9 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Google OAuth complete-register error: ${(error as Error).message}`);
+			logger.error('Google OAuth complete-register error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: 'Internal server error while completing Google account registration.' });
 		}
 	});
@@ -191,7 +209,10 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 				}
 			});
 		} catch (error) {
-			fastify.log.error(error, `Error with user account type retrieved.`);
+			logger.error('Error retrieving user account type', error as Error, {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: "Internal server error while retrieving user account type." });
 		}
 	});
@@ -215,7 +236,9 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 			return reply.redirect('https://localhost:4443/profile');
 			
 		} catch (error) {
-			fastify.log.error(error, `Error in Google OAuth callback`);
+			logger.error('Error in Google OAuth callback', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.redirect(`https://localhost:4443/oauth-callback?error=server_error`);
 		}
 	});

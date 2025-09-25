@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -22,6 +23,9 @@ RUN npm rebuild better-sqlite3
 
 # Copy the rest of the application files
 COPY . .
+
+# Build the TypeScript application
+RUN npm run build
 
 # Create storage directories
 RUN mkdir -p /data/avatar && chown -R node:node /data

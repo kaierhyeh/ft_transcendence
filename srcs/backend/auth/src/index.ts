@@ -8,7 +8,8 @@ import { jwksRoutes } from './routes/jwks.routes.js';
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import multipart from '@fastify/multipart';
-import { CONFIG } from './config.js';
+import { config } from './config.js';
+import { initializeContainer, Container, Logger, type ILoggerService } from './container.js';
 
 const app = fastify({ 
 	logger: {
@@ -27,31 +28,39 @@ await app.register(cors, {
 
 await app.register(cookie);
 
-await app.register(multipart, {
-	attachFieldsToBody: true,
-	limits: {
-		fileSize: CONFIG.UPLOAD.MAX_FILE_SIZE
-	}
-});
+	await app.register(multipart, {
+		attachFieldsToBody: true,
+		limits: {
+			fileSize: config.upload.maxFileSize
+		}
+	});
 
-// Initialize database
-try {
-	const db = initializeDatabase(CONFIG.DB.URL);
-	
-	// Create default deleted user
-	db.prepare(`
-		INSERT OR IGNORE INTO users (id, username, password)
-		VALUES (0, '[deleted]', '')
-	`).run();
+	// Initialize services using dependency injection
+	const container = initializeContainer();
 
-	app.decorate('db', db);
-	app.log.info('Database initialized successfully');
-} catch (error) {
-	app.log.error(error, 'Database initialization error:');
-	process.exit(1);
-}
+	// Initialize database through container
+	try {
+		const db = initializeDatabase(config.database.url);
 
-// Public routes that don't need authentication
+		// Create default deleted user
+		db.prepare(`
+			INSERT OR IGNORE INTO users (id, username, password)
+			VALUES (0, '[deleted]', '')
+		`).run();
+
+		app.decorate('db', db);
+		app.decorate('container', container);
+
+		// Initialize logger with fastify instance
+		const logger = new Logger(app);
+		container.register('logger', () => logger);
+		app.decorate('logger', logger);
+
+		app.log.info('Services initialized successfully');
+	} catch (error) {
+		app.log.error(error, 'Service initialization error:');
+		process.exit(1);
+	}// Public routes that don't need authentication
 const publicRoutes = [
 	'/auth/google',
 	'/auth/google/username',
@@ -102,9 +111,9 @@ process.on('SIGTERM', cleanup);
 // Start server
 const start = async () => {
 	try {
-		await app.listen({ 
-			port: CONFIG.SERVER.PORT, 
-			host: CONFIG.SERVER.HOST
+		await app.listen({
+			port: config.server.port,
+			host: config.server.host
 		});
 		app.log.info('Auth service started successfully');
 	} catch (error) {

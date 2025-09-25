@@ -24,7 +24,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
-import { CONFIG } from '../config.js';
+import { config } from '../config.js';
 import { JWTType, UserSessionPayload, GameSessionPayload, InternalAccessPayload } from '../types.js';
 
 interface AuthenticatedRequest {
@@ -93,14 +93,18 @@ async function validateUserSession(
 
 	if (!result.success) {
 		request.log.warn('Invalid or expired user session tokens.');
-		const cookieOptions = {
+		reply.clearCookie('accessToken', {
 			path: '/',
 			secure: true,
 			httpOnly: true,
-			sameSite: 'none' as const
-		};
-		reply.clearCookie('accessToken', cookieOptions);
-		reply.clearCookie('refreshToken', cookieOptions);
+			sameSite: 'none' as any
+		});
+		reply.clearCookie('refreshToken', {
+			path: '/',
+			secure: true,
+			httpOnly: true,
+			sameSite: 'none' as any
+		});
 		return reply.code(401).send({ error: 'Invalid or expired user session.' });
 	}
 

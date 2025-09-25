@@ -28,7 +28,7 @@ export class AuthUtils {
 			path: '/',
 			secure: true,
 			httpOnly: true,
-			sameSite: 'None',
+			sameSite: 'none' as const,
 		};
 
 		// Accepted cases: 1min (debug), 5min, 15min or 7days

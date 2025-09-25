@@ -8,100 +8,104 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load RSA keys
-const keysDir: string = path.join(process.cwd(), 'keys');
-const privateKeyPath: string = path.join(keysDir, 'private.pem');
-const publicKeyPath: string = path.join(keysDir, 'public.pem');
-
-let PRIVATE_KEY: string | null = null;
-let PUBLIC_KEY: string | null = null;
-
-try {
-	PRIVATE_KEY = fs.readFileSync(privateKeyPath, 'utf8');
-	PUBLIC_KEY = fs.readFileSync(publicKeyPath, 'utf8');
-	console.log('✅ RSA keys loaded successfully');
-} catch (error) {
-	console.error('❌ Failed to load RSA keys:', (error as Error).message);
-	console.error('🔧 Please run: node keys/generate-keys.js');
-	process.exit(1);
+// Helper functions for secure configuration
+function loadKeyFromFile(filename: string): string {
+	const keyPath = path.join(process.cwd(), 'keys', filename);
+	try {
+		return fs.readFileSync(keyPath, 'utf8');
+	} catch (error) {
+		throw new Error(`Failed to load key ${filename}: ${(error as Error).message}`);
+	}
 }
 
-interface ConfigType {
-	JWT: {
-		PRIVATE_KEY: string | null;
-		PUBLIC_KEY: string | null;
-		ALGORITHM: 'RS256';
-		ACCESS_TOKEN_EXPIRY: string;
-		REFRESH_TOKEN_EXPIRY: string;
-		TEMP_SECRET: string;
-	};
-	DB: {
-		URL: string;
-	};
-	SERVER: {
-		PORT: number;
-		HOST: string;
-	};
-	OAUTH: {
-		GOOGLE_CLIENT_ID: string | undefined;
-		GOOGLE_CLIENT_SECRET: string | undefined;
-		GOOGLE_REDIRECT_URI: string | undefined;
-	};
-	UPLOAD: {
-		MAX_FILE_SIZE: number;
-	};
-	COOKIE: {
-		OPTIONS: {
-			path: string;
-			secure: boolean;
-			httpOnly: boolean;
-			sameSite: 'None';
-		};
+function optionalEnv(key: string, defaultValue: string): string {
+	return process.env[key] || defaultValue;
+}
+
+// Configuration interfaces
+interface JWTConfig {
+	privateKey: string;
+	publicKey: string;
+	algorithm: 'RS256';
+	accessTokenExpiry: string;
+	refreshTokenExpiry: string;
+	tempSecret: string;
+}
+
+interface DatabaseConfig {
+	url: string;
+}
+
+interface ServerConfig {
+	port: number;
+	host: string;
+}
+
+interface OAuthConfig {
+	googleClientId?: string;
+	googleClientSecret?: string;
+	googleRedirectUri?: string;
+}
+
+interface UploadConfig {
+	maxFileSize: number;
+}
+
+interface CookieConfig {
+	options: {
+		path: string;
+		secure: boolean;
+		httpOnly: boolean;
+		sameSite: 'none' | 'lax' | 'strict';
 	};
 }
 
-export const CONFIG: ConfigType = {
-	// JWT settings with RSA
-	JWT: {
-		PRIVATE_KEY,					// RSA 私鑰（簽發用）
-		PUBLIC_KEY,						// RSA 公鑰（驗證用）
-		ALGORITHM: 'RS256',				// RSA + SHA256 演算法
-		ACCESS_TOKEN_EXPIRY: '15m',		// 15 minutes
-		REFRESH_TOKEN_EXPIRY: '7d',		// 7 days
-		// Fallback for temporary tokens (can still use symmetric for temp tokens)
-		TEMP_SECRET: process.env.JWT_TEMP_SECRET || 'your-temp-secret-key',
-	},
+interface Config {
+	jwt: JWTConfig;
+	database: DatabaseConfig;
+	server: ServerConfig;
+	oauth: OAuthConfig;
+	upload: UploadConfig;
+	cookie: CookieConfig;
+}
 
-	// Database settings
-	DB: {
-		URL: process.env.DATABASE_URL || './data/database.db',
+// Configuration object
+const config: Config = {
+	jwt: {
+		privateKey: optionalEnv('JWT_PRIVATE_KEY', loadKeyFromFile('private.pem')),
+		publicKey: optionalEnv('JWT_PUBLIC_KEY', loadKeyFromFile('public.pem')),
+		algorithm: 'RS256',
+		accessTokenExpiry: '15m',
+		refreshTokenExpiry: '7d',
+		tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
 	},
-
-	// Server settings
-	SERVER: {
-		PORT: parseInt(process.env.PORT || '3000'),
-		HOST: process.env.HOST || '0.0.0.0',
+	database: {
+		url: optionalEnv('DATABASE_URL', './data/database.db'),
 	},
-
-	// OAuth settings
-	OAUTH: {
-		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-		GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+	server: {
+		port: parseInt(optionalEnv('PORT', '3000')),
+		host: optionalEnv('HOST', '0.0.0.0'),
 	},
-
-	// File upload settings
-	UPLOAD: {
-		MAX_FILE_SIZE: 2 * 1024 * 1024, // 2MB
+	oauth: {
+		googleClientId: process.env.GOOGLE_CLIENT_ID,
+		googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+		googleRedirectUri: process.env.GOOGLE_REDIRECT_URI,
 	},
-
-	// Cookie settings
-	COOKIE: {
-		OPTIONS: {
+	upload: {
+		maxFileSize: 2 * 1024 * 1024, // 2MB
+	},
+	cookie: {
+		options: {
 			path: '/',
-			secure: true,
+			secure: false, // Allow HTTP in containers
 			httpOnly: true,
-			sameSite: 'None',
+			sameSite: 'lax',
 		}
 	}
 };
+
+// Export configuration
+export { config };
+
+// Export types for use in other modules
+export type { Config, JWTConfig, DatabaseConfig, ServerConfig, OAuthConfig, UploadConfig, CookieConfig };

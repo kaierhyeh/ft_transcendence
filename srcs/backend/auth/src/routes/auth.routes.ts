@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
+import { type ILoggerService, type LogContext } from '../container.js';
 
 interface LoginRequest {
 	username: string;
@@ -17,11 +18,14 @@ interface AuthenticatedRequest extends FastifyRequest {
 
 export async function authRoutes(fastify: FastifyInstance, options: any) {
 	const db = (fastify as any).db;
+	const logger: ILoggerService = (fastify as any).logger;
 
 	// Login route
 	fastify.post('/auth/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
+		let username = ''; // Declare for logging context
 		try {
-			const { username, password } = request.body;
+			const { username: reqUsername, password } = request.body;
+			username = reqUsername;
 
 			if (!username || !password) {
 				return reply.code(400).send({ 
@@ -90,7 +94,10 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Login error: ${(error as Error).message}`);
+			logger.error('Login error', error as Error, {
+				username,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ 
 				success: false, 
 				error: 'Internal server error during login' 
@@ -162,7 +169,9 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Registration error: ${(error as Error).message}`);
+			logger.error('Registration error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during registration'
@@ -202,7 +211,9 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Token refresh error: ${(error as Error).message}`);
+			logger.error('Token refresh error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during token refresh'
@@ -252,7 +263,10 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Logout error: ${(error as Error).message}`);
+			logger.error('Logout error', error as Error, {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during logout'
@@ -307,7 +321,9 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 
 		} catch (error) {
-			fastify.log.error(`Token verification error: ${(error as Error).message}`);
+			logger.error('Token verification error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during token verification'

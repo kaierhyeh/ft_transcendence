@@ -15,10 +15,16 @@ services:
     networks:
       - pong_network
     init: true
-    # Add healthcheck if you can
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost/health", "--insecure"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_healthy
 
   ##############
   ## API Gateway
@@ -31,11 +37,18 @@ services:
     networks:
       - pong_network
     init: true
-    # Add healthcheck if you can
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     depends_on:
-      - backend-game
-      - backend-auth
+      backend-game:
+        condition: service_healthy
+      backend-auth:
+        condition: service_healthy
 
   ###################
   ## Backend Services
@@ -48,12 +61,19 @@ services:
       context: ./backend/auth
       dockerfile: Dockerfile
     environment:
+      - NODE_ENV=development
       - DATABASE_URL=/app/data/database.db
     volumes:
       - auth_data:/app/data
     networks:
       - pong_network
     init: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
   backend-game:
@@ -66,7 +86,12 @@ services:
     networks:
       - pong_network
     init: true
-    # Add healthcheck if you can
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
   # backend-user:
@@ -107,7 +132,12 @@ services:
     ports:
       - "3001:3001"
     init: true
-      # Add healthcheck if you can
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
     working_dir: /app
 

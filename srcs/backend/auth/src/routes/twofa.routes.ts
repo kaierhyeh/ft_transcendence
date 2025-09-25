@@ -1,13 +1,14 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import bcrypt from 'bcrypt';
 import redis from '../../redis/redisClient.js';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
+import { type ILoggerService } from '../container.js';
 
 export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 	const db = (fastify as any).db;
+	const logger: ILoggerService = (fastify as any).logger;
 
 	// 📌 Route: 2fa/setup
 	// Route to setup 2FA for the user.
@@ -18,36 +19,54 @@ export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 	// The user must scan the QR code and enter the verification code to activate 2FA.
 	// The secret is  stored in the database only after successful verification.
 	// The QR code is displayed in the frontend for the user to scan.
-	fastify.post("/2fa/setup", async (request: FastifyRequest, reply: FastifyReply) => {
+	fastify.post('/2fa/setup', {
+		schema: {
+			description: 'Setup 2FA for the authenticated user',
+			tags: ['2FA'],
+			security: [{ bearerAuth: [] }],
+			response: {
+				200: {
+					type: 'object',
+					properties: {
+						success: { type: 'boolean' },
+						qrCode: { type: 'string' },
+						secret: { type: 'string' }
+					}
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const userId = (request as any).user.userId;
+		const ip = (request as any).ip;
+
 		try {
-			const userId = (request as any).user.userId;
-			// Check if the user exists in the database.
-			const user = db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
-			if (!user)
-				return reply.code(404).send({ success: false, error: "User not found." });
+			logger.info('2FA setup initiated', { userId, ip });
 
-			// Check if 2FA is already enabled for the user.
-			if (user.twofa_secret)
+			// Check if user already has 2FA enabled
+			const user = db.prepare("SELECT twofa_secret FROM users WHERE id = ?").get(userId) as any;
+			if (user?.twofa_secret) {
+				logger.warn('2FA setup failed: 2FA already enabled', { userId, ip });
 				return reply.code(400).send({ success: false, error: "2FA is already enabled." });
+			}
 
-			// Prepare the secret for the user using speakeasy.
-			const secret = speakeasy.generateSecret({ name: `ft_transcendence:${user.username}` });
+			// Generate a new secret
+			const secret = speakeasy.generateSecret({
+				name: `42-Transcendence:${userId}`,
+				issuer: '42-Transcendence'
+			});
 
-			// Generate the otpauth_url for the QR code.
+			// Generate QR code
 			const qrCode = await qrcode.toDataURL(secret.otpauth_url!);
 
-			// Store the secret temporarily in Redis with a 5-minute expiration.
-			await redis.setex(`2fa_setup_${userId}`, 300, secret.base32);
-
-			// Store the secret in the database.
-			return reply.code(200).send({
+			logger.audit('2FA setup completed successfully', { userId, ip });
+			return reply.send({
 				success: true,
-				otpauth_url: secret.otpauth_url,
-				qrCode		// To be displayed in the frontend.
+				qrCode,
+				secret: secret.base32
 			});
 		} catch (error) {
-			fastify.log.error(error, `Error during 2FA setup.`);
-			return reply.code(500).send({ success: false, error: "Internal server error during 2FA setup." });
+			logger.error('2FA setup failed', error as Error, { userId, ip });
+			return reply.code(500).send({ success: false, error: "Internal server error." });
 		}
 	});
 
@@ -72,7 +91,10 @@ export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 
 			if (!isValid)
 				return reply.code(400).send({ success: false, error: "Invalid verification code." });
-			fastify.log.info(`[2FA] Secret verified for user: ${userId}`);
+			logger.audit('2FA secret verified for user', {
+				userId,
+				ip: (request as any).ip
+			});
 
 			// Finally, store the secret in the database.
 			db.prepare("UPDATE users SET twofa_secret = ? WHERE id = ?").run(secret, userId);
@@ -82,7 +104,10 @@ export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 
 			return reply.code(200).send({ success: true, message: "2FA successfully activated." });
 		} catch (error) {
-			fastify.log.error(error, `Error during 2FA activation.`);
+			logger.error('Error during 2FA activation', error as Error, {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: "Internal server error during 2FA activation." });
 		}
 	});
@@ -133,7 +158,9 @@ export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 				id: user.id
 			});
 		} catch (error) {
-			fastify.log.error(error, `Error during 2FA verification.`);
+			logger.error('Error during 2FA verification', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: "Internal server error during 2FA verification." });
 		}
 	});
@@ -151,21 +178,33 @@ export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 			// Get the user from the database.
 			const user = db.prepare("SELECT password, username, is_google_account, twofa_secret FROM users WHERE id = ?").get(userId);
 			if (!user) {
-				fastify.log.warn(`[2FA] Disable attempt failed: User not found.`);
+				logger.warn('2FA disable attempt failed: User not found', {
+					userId,
+					ip: (request as any).ip
+				});
 				return reply.code(404).send({ success: false, error: "User not found." });
 			}
 			if (!user.twofa_secret) {
-				fastify.log.info(`[2FA] Disable attempt failed: 2FA not enabled for the user.`);
+				logger.info('2FA disable attempt failed: 2FA not enabled for user', {
+					userId,
+					ip: (request as any).ip
+				});
 				return reply.code(400).send({ success: false, error: "2FA is not enabled." });
 			}
 
 			// Remove the 2FA secret from the database.
 			db.prepare("UPDATE users SET twofa_secret = NULL WHERE id = ?").run(userId);
-			fastify.log.info(`[2FA] Successful disable attempt for the user.`);
+			logger.audit('2FA successfully disabled for user', {
+				userId,
+				ip: (request as any).ip
+			});
 
 			return reply.code(200).send({ success: true, message: "2FA has been disabled." });
 		} catch (error) {
-			fastify.log.error(error, `Error during 2FA disable.`);
+			logger.error('Error during 2FA disable', error as Error, {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: "Internal server error during 2FA disable." });
 		}
 	});
@@ -183,7 +222,10 @@ export async function twofaRoutes(fastify: FastifyInstance, options: any) {
 				return reply.code(404).send({ success: false, error: "User not found." });
 			return reply.code(200).send({ success: true, enabled: !!user.twofa_secret });
 		} catch (error) {
-			fastify.log.error(error, `Error during 2FA status check.`);
+			logger.error('Error during 2FA status check', error as Error, {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ success: false, error: "Internal server error during 2FA status check." });
 		}
 	});

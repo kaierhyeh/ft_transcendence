@@ -17,6 +17,11 @@ async function run() {
     await fastify.register(route, { prefix: "/game" });
   }
   
+  // Health check endpoint
+  fastify.get('/health', async () => {
+    return { status: 'ok', service: 'game', timestamp: new Date().toISOString() };
+  });
+  
   // Use config for update period
   setInterval(() => {
     fastify.sessions.update();

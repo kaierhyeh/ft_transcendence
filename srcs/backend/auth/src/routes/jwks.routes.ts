@@ -1,6 +1,8 @@
 import jwksService from '../services/jwks.service.js';
+import { type ILoggerService } from '../container.js';
 
 export async function jwksRoutes(fastify: any, options: any): Promise<void> {
+	const logger: ILoggerService = (fastify as any).logger;
 	
 	/**
 	 * JWKS endpoint - RFC 7517 compliant
@@ -51,7 +53,9 @@ export async function jwksRoutes(fastify: any, options: any): Promise<void> {
 			return jwksData.jwks;
 			
 		} catch (error) {
-			fastify.log.error(error, 'Error serving JWKS.');
+			logger.error('Error serving JWKS', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				error: 'Internal server error.',
 				message: 'Failed to retrieve JWKS.'
@@ -76,7 +80,9 @@ export async function jwksRoutes(fastify: any, options: any): Promise<void> {
 			};
 			
 		} catch (error) {
-			fastify.log.error(error, 'Error in JWKS debug endpoint.');
+			logger.error('Error in JWKS debug endpoint', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				error: 'Internal server error.'
 			});
@@ -88,14 +94,19 @@ export async function jwksRoutes(fastify: any, options: any): Promise<void> {
 		preHandler: async (request: any, reply: any) => {
 			// TODO: Add admin authentication
 			// For now, just log the request
-			fastify.log.warn('JWKS refresh requested - should implement admin auth.');
+			logger.warn('JWKS refresh requested - should implement admin auth', {
+				ip: (request as any).ip
+			});
 		}
 	}, async (request: any, reply: any) => {
 		try {
 			await jwksService.refresh();
 			const jwksData = await jwksService.getJWKSWithCacheInfo();
 			
-			fastify.log.info(`JWKS refreshed - New Key ID: ${jwksData.keyId}`);
+			logger.info('JWKS refreshed successfully', {
+				newKeyId: jwksData.keyId,
+				ip: (request as any).ip
+			});
 			
 			return {
 				success: true,
@@ -105,7 +116,9 @@ export async function jwksRoutes(fastify: any, options: any): Promise<void> {
 			};
 			
 		} catch (error) {
-			fastify.log.error(error, 'Error refreshing JWKS.');
+			logger.error('Error refreshing JWKS', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Failed to refresh JWKS'

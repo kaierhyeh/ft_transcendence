@@ -12,7 +12,7 @@
  */
 
 import crypto from 'crypto';
-import { CONFIG } from '../config.js';
+import { config } from '../config.js';
 
 interface JWK {
 	kty: string;
@@ -121,7 +121,7 @@ export class JWKSService {
 			return {
 				kty: jwk.kty,				// Key Type (RSA)
 				use: 'sig',					// Public key use (signature)
-				alg: CONFIG.JWT.ALGORITHM,	// Algorithm (RS256)
+				alg: config.jwt.algorithm,	// Algorithm (RS256)
 				kid: keyId,					// Key ID with type context
 				n: jwk.n,					// RSA modulus
 				e: jwk.e					// RSA public exponent
@@ -137,19 +137,19 @@ export class JWKSService {
 			console.log('🔄 Falling back to legacy JWKS generation...');
 			
 			// Parse the public key to get key components
-			const publicKeyObject = crypto.createPublicKey(CONFIG.JWT.PUBLIC_KEY!);
+			const publicKeyObject = crypto.createPublicKey(config.jwt.publicKey!);
 			
 			// Export public key in JWK format
 			const jwk = publicKeyObject.export({ format: 'jwk' }) as any;
 			
 			// Generate key ID (kid) from public key
-			const keyId = this.generateKeyId(CONFIG.JWT.PUBLIC_KEY!);
+			const keyId = this.generateKeyId(config.jwt.publicKey!);
 			
 			// Build JWK according to RFC 7517
 			const jwkWithMetadata: JWK = {
 				kty: jwk.kty,				// Key Type (RSA)
 				use: 'sig',					// Public key use (signature)
-				alg: CONFIG.JWT.ALGORITHM,	// Algorithm (RS256)
+				alg: config.jwt.algorithm,	// Algorithm (RS256)
 				kid: keyId,					// Key ID
 				n: jwk.n,					// RSA modulus
 				e: jwk.e					// RSA public exponent
@@ -230,7 +230,7 @@ export class JWKSService {
 		const typeKey = this.jwks.keys.find(key => {
 			// Key ID contains type information
 			return key.kid.includes(jwtType.toLowerCase()) || 
-				   this.generateKeyId(CONFIG.JWT.PUBLIC_KEY!, jwtType) === key.kid;
+				   this.generateKeyId(config.jwt.publicKey!, jwtType) === key.kid;
 		});
 		
 		return typeKey?.kid || null;
