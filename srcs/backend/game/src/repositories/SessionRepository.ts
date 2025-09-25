@@ -13,7 +13,7 @@ export interface DbPlayerSession {
 export interface DbSession {
     session: {
         type: GameType,
-        tournament_id: number | undefined,
+        tournament_id: number | null,
         created_at: string,
         started_at: string,
         ended_at: string,
@@ -35,8 +35,8 @@ export class SessionRepository {
         `);
 
         const insertPlayerSession = this.db.prepare(`
-            INSERT INTO player_sessions (session_id, user_id, team, player_slot, score, winner)
-            VALUES (@session_id, @user_id, @team, @player_slot, @score, @winner)
+            INSERT INTO player_sessions (session_id, user_id, type, team, score, winner)
+            VALUES (@session_id, @user_id, @type, @team, @score, @winner)
         `);
 
         // Start a transaction so both inserts happen atomically
@@ -48,6 +48,7 @@ export class SessionRepository {
                 insertPlayerSession.run({
                     session_id,
                     user_id: player.user_id,
+                    type: player.type,
                     team: player.team,
                     score: player.score,
                     winner: player.winner ? 1 : 0,

@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS player_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    is_ai BOOLEAN DEFAULT 0,
+    user_id INTEGER,
+    type TEXT NOT NULL CHECK (type IN ('registered', 'guest', 'ai')),
     team TEXT NOT NULL CHECK (team IN ('left', 'right')),
     score INTEGER DEFAULT 0,
     winner BOOLEAN DEFAULT 0,

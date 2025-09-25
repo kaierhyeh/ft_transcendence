@@ -195,7 +195,7 @@ export class GameSession {
         return {
             session: {
                 type: this.type,
-                tournament_id: this.tournament_id,
+                tournament_id: this.tournament_id ?? null,
                 created_at: toSqlDate(this.created_at),
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),
