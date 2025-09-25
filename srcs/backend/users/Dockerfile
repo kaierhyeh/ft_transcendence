@@ -11,7 +11,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy source code
+# Create avatar directory and copy default avatar (rarely changes)
+RUN mkdir -p /app/data/avatar
+COPY assets/default.png /app/data/avatar/default.png
+
+# Copy source code (excluding assets/ due to .dockerignore)
 COPY . .
 
 EXPOSE 3000

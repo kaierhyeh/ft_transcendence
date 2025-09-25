@@ -76,6 +76,13 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.deleteMe.bind(userController)
   );
 
+  // reset avatar to default [Requires user authentication]
+  fastify.delete(
+    "/me/avatar",
+    { preHandler: verifyJWT },
+    userController.resetAvatar.bind(userController)
+  );
+
   // Retrieve avatar image file
   fastify.get<{ Params: AvatarParams }> (
     "/avatar/:filename",

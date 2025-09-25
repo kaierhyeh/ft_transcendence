@@ -5,6 +5,8 @@ import repositoriesPlugin from "./plugins/repositories";
 import servicesPlugin from "./plugins/services";
 import jwtPlugin from "./plugins/jwt";
 import multipart from "@fastify/multipart";
+import fs from "fs";
+import path from "path";
 
 
 const fastify = Fastify({ logger: true });
@@ -20,6 +22,14 @@ async function run() {
   await fastify.register(jwtPlugin);
   await fastify.register(repositoriesPlugin);
   await fastify.register(servicesPlugin);
+
+  // Validate default avatar exists at startup
+  const defaultAvatarPath = path.join(CONFIG.AVATAR.BASE_URL, CONFIG.AVATAR.DEFAULT_FILENAME);
+  if (!fs.existsSync(defaultAvatarPath)) {
+    fastify.log.error(`❌ Default avatar missing at: ${defaultAvatarPath}`);
+    process.exit(1);
+  }
+  fastify.log.info(`✅ Default avatar found at: ${defaultAvatarPath}`);
 
   for (const { route, prefix } of routes) {
     await fastify.register(route, { prefix });

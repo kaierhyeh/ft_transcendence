@@ -188,6 +188,23 @@ export class UserRepository {
 
 //   bumpPresence(userId: number, status: 'online'|'offline'|'away', when?: string): void; // updates last_seen & status
 
+    private safeDeleteAvatarFile(avatar_filename: string | null): void {
+        // Never delete the default avatar
+        if (!avatar_filename || avatar_filename === CONFIG.AVATAR.DEFAULT_FILENAME) {
+            return;
+        }
+
+        const avatarPath = path.join(CONFIG.AVATAR.BASE_URL, avatar_filename);
+        try {
+            if (fs.existsSync(avatarPath)) {
+                fs.unlinkSync(avatarPath);
+                console.log(`Deleted avatar file: ${avatarPath}`);
+            }
+        } catch (error) {
+            console.warn(`Failed to delete avatar file: ${avatarPath}`, error);
+        }
+    }
+
     public markAsDeleted(user_id: number): number {
         // First get the current avatar filename before deletion
         const userStmt = this.db.prepare(`
@@ -195,20 +212,12 @@ export class UserRepository {
         `);
         const user = userStmt.get(user_id) as { avatar_filename: string | null } | undefined;
         
-        // Delete avatar file if it exists
+        // Safely delete avatar file (never deletes default.png)
         if (user?.avatar_filename) {
-            const avatarPath = path.join(CONFIG.AVATAR.BASE_URL, user.avatar_filename);
-            try {
-                if (fs.existsSync(avatarPath)) {
-                    fs.unlinkSync(avatarPath);
-                }
-            } catch (error) {
-                console.warn(`Failed to delete avatar file: ${avatarPath}`, error);
-                // Continue with user deletion even if avatar deletion fails
-            }
+            this.safeDeleteAvatarFile(user.avatar_filename);
         }
         
-        // Now update the user record
+        // Now update the user record (reset to default avatar)
         const stmt = this.db.prepare(`
             UPDATE users 
             SET status = 'deleted',
@@ -216,7 +225,7 @@ export class UserRepository {
                 email = NULL,
                 password_hash = NULL,
                 alias = NULL,
-                avatar_filename = NULL,
+                avatar_filename = ?,
                 google_sub = NULL,
                 two_fa_enabled = 0,
                 two_fa_secret = NULL,
@@ -224,7 +233,30 @@ export class UserRepository {
                 updated_at = datetime('now')
             WHERE user_id = ?
         `);
-        const result = stmt.run(user_id);
+        const result = stmt.run(CONFIG.AVATAR.DEFAULT_FILENAME, user_id);
+        return result.changes as number;
+    }
+
+    public resetAvatarToDefault(user_id: number): number {
+        // First get the current avatar filename
+        const userStmt = this.db.prepare(`
+            SELECT avatar_filename FROM users WHERE user_id = ?
+        `);
+        const user = userStmt.get(user_id) as { avatar_filename: string | null } | undefined;
+        
+        // Safely delete current avatar file (never deletes default.png)
+        if (user?.avatar_filename) {
+            this.safeDeleteAvatarFile(user.avatar_filename);
+        }
+        
+        // Update to default avatar
+        const stmt = this.db.prepare(`
+            UPDATE users 
+            SET avatar_filename = ?,
+                updated_at = datetime('now')
+            WHERE user_id = ?
+        `);
+        const result = stmt.run(CONFIG.AVATAR.DEFAULT_FILENAME, user_id);
         return result.changes as number;
     }
 

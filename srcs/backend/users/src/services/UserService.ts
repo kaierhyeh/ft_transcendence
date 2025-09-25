@@ -131,4 +131,8 @@ export class UserService {
   public async deleteUser(userId: number): Promise<number> {
     return this.userRepository.markAsDeleted(userId);
   }
+
+  public async resetAvatarToDefault(userId: number): Promise<number> {
+    return this.userRepository.resetAvatarToDefault(userId);
+  }
 }

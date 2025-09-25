@@ -102,6 +102,11 @@ export class UserController {
       if (!allowedTypes.includes(data.mimetype))
         return reply.status(400).send({ error: "Invalid file type" });
 
+      // Prevent uploading files with reserved names
+      if (data.filename === CONFIG.AVATAR.DEFAULT_FILENAME) {
+        return reply.status(400).send({ error: "Filename is reserved" });
+      }
+
       const timestamp = Date.now();
       const extension = path.extname(data.filename || '') || '.jpg';
       const filename = `user_${user_id}_${timestamp}${extension}`;
@@ -115,7 +120,10 @@ export class UserController {
       const old_user = await this.userService.getUserById(user_id);
       const old_avatar_filename = old_user.avatar_filename;
 
-      if (old_avatar_filename && old_avatar_filename !== filename) {
+      // Only delete old avatar if it's not the default avatar
+      if (old_avatar_filename && 
+          old_avatar_filename !== filename && 
+          old_avatar_filename !== CONFIG.AVATAR.DEFAULT_FILENAME) {
         const old_path = path.join(CONFIG.AVATAR.BASE_URL, old_avatar_filename);
         try {
           await fs.promises.unlink(old_path);
@@ -210,6 +218,25 @@ export class UserController {
         success: true,
         changes,
         message: "User account successfully deleted"
+      });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async resetAvatar(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = request.user?.sub;
+      
+      if (!userId) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      
+      const changes = await this.userService.resetAvatarToDefault(userId);
+      return reply.send({ 
+        success: true,
+        changes,
+        message: "Avatar reset to default successfully"
       });
     } catch (error) {
       this.handleError(error, reply);
