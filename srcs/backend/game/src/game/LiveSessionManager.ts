@@ -4,19 +4,42 @@ import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
-import { verifyJWT } from "../middleware/verifyJWT";
+import { verify } from "jsonwebtoken";
+import fs from "fs";
+import { CONFIG } from "../config";
+import { JwtGameSessionPayload } from "../types";
 
 let next_id = 0;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
-    private logger: FastifyBaseLogger;
-    private session_repo: SessionRepository;
+    private gamePublicKey: string;
 
-    constructor(session_repo: SessionRepository, logger: FastifyBaseLogger) {
+    constructor(
+        private session_repo: SessionRepository,
+        private logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
-        this.logger = logger;
-        this.session_repo = session_repo;
+        // Load the game-specific public key for JWT verification
+        this.gamePublicKey = fs.readFileSync(CONFIG.JWT.GAME_PUBLIC_KEY_PATH, 'utf8');
+    }
+
+    /**
+     * Verify game session JWT token using the game-specific public key
+     */
+    private verifyGameSessionJWT(token: string): Promise<JwtGameSessionPayload> {
+        return new Promise((resolve, reject) => {
+            verify(token, this.gamePublicKey, {
+                algorithms: [CONFIG.JWT.ALGORITHM as any],
+                issuer: CONFIG.JWT.ISSUER,
+                audience: CONFIG.JWT.AUDIENCE,
+            }, (err: any, payload: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(payload as JwtGameSessionPayload);
+                }
+            });
+        });
     }
 
     public createGameSession(type: GameType, participants: GameParticipant[]): number {
@@ -38,24 +61,33 @@ export class LiveSessionManager {
             connection.socket.close(4004, "Game not found");
             return;
         }
-        connection.socket.once("message", (raw: string) => {
+        connection.socket.once("message", async (raw: string) => {
             let msg;
 
-            try { msg = JSON.parse(raw); }
-            catch(err) { connection.socket.close(4002, "Invalid JSON"); }
+            try { 
+                msg = JSON.parse(raw); 
+            } catch(err) { 
+                connection.socket.close(4002, "Invalid JSON"); 
+                return;
+            }
 
             if (msg.type === "view") {
                 session.connectViewer(connection);
             } else if (msg.type === "join") {
                 const ticket = msg.ticket as string | undefined;
-                if (!ticket) { connection.socket.close(4001, "Missing ticket"); return; }
+                if (!ticket) { 
+                    connection.socket.close(4001, "Missing ticket"); 
+                    return; 
+                }
                 try {
-                    const payload = verifyJWT(ticket); // throws on invalid
-                    if (!payload.game_id || payload.game_id !== id)
-                        throw new Error;
-                    const player_id = payload.sub;
+                    const payload = await this.verifyGameSessionJWT(ticket);
+                    if (!payload.game_id || payload.game_id !== id) {
+                        throw new Error("Game ID mismatch");
+                    }
+                    const player_id = payload.player_id;
                     session.connectPlayer(player_id, connection);
                 } catch (err) {
+                    this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "JWT verification failed");
                     connection.socket.close(4001, "Invalid or expired token");
                 }
             } 

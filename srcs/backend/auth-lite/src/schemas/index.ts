@@ -84,7 +84,24 @@ export const passwordUpdateSchema = {
   additionalProperties: false
 } as const;
 
+export const gameSessionClaimsSchema = {
+  type: "object",
+  required: ["sub", "game_id", "player_id", "type"],
+  properties: {
+    sub: { type: "string"},
+    game_id: { type: "number" },
+    player_id: { type: "number" },
+    type: {
+      type: "string",
+      enum: ["registered", "guest", "ai"]
+    },
+    tournament_id: { type: "number" }
+  },
+  additionalProperties: false
+} as const;
+
 export type SignupFormData = FromSchema<typeof signupFormSchema>;
 export type LoginData = FromSchema<typeof loginSchema>;
 export type PasswordUpdateData = FromSchema<typeof passwordUpdateSchema>;
 export type GuestRawData = FromSchema<typeof createGuestSchema>;
+export type GameSessionClaims = FromSchema<typeof gameSessionClaimsSchema>;

@@ -1,31 +1,37 @@
 import { FastifyInstance } from "fastify";
 import { AuthController } from '../controllers/AuthController';
-import { LoginData, loginSchema, passwordUpdateSchema, PasswordUpdateData, SignupFormData, signupFormSchema, createGuestSchema, GuestRawData } from "../schemas";
+import { LoginData, loginSchema, passwordUpdateSchema, PasswordUpdateData, SignupFormData, signupFormSchema, createGuestSchema, GuestRawData, gameSessionClaimsSchema, GameSessionClaims } from "../schemas";
 
 export default async function authRoutes(fastify: FastifyInstance) {
-  const userController = new AuthController();
+  const authController = new AuthController();
 
   fastify.post<{ Body: SignupFormData }>(
     "/signup",
     { schema: { body: signupFormSchema } },
-    userController.signup.bind(userController)
+    authController.signup.bind(authController)
   );
 
   fastify.post<{ Body: LoginData }>(
     "/login",
     { schema: { body: loginSchema} },
-    userController.login.bind(userController)
+    authController.login.bind(authController)
   );
 
   fastify.put<{ Body: PasswordUpdateData }>(
     "/hash-password",
     { schema: { body: passwordUpdateSchema } },
-    userController.updatePasswordHash.bind(userController)
+    authController.updatePasswordHash.bind(authController)
   );
 
   fastify.post<{ Body: GuestRawData }>(
     "/guest",
     { schema: { body: createGuestSchema } },
-    userController.createGuest.bind(userController)
+    authController.createGuest.bind(authController)
+  );
+
+  fastify.post<{ Body: GameSessionClaims }>(
+    "/game-jwt",
+    { schema: { body: gameSessionClaimsSchema } },
+    authController.generateGameJWT.bind(authController)
   );
 }

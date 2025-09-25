@@ -1,7 +1,8 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { AuthService } from '../services/AuthService';
 import { CONFIG } from '../config';
-import { GuestRawData, LoginData, PasswordUpdateData, SignupFormData } from '../schemas';
+import { GameSessionClaims, GuestRawData, LoginData, PasswordUpdateData, SignupFormData } from '../schemas';
+import * as jwt from 'jsonwebtoken';
 
 export class AuthController {
   private authService: AuthService;
@@ -24,6 +25,37 @@ export class AuthController {
         expiresIn: CONFIG.JWT.EXPIRES_IN
       }
     );
+  }
+
+  async generateGameJWT(
+    request: FastifyRequest<{ Body: GameSessionClaims }>, 
+    reply: FastifyReply
+    ) {
+      try {
+        const claims = request.body;
+        
+        // Use the game private key instead of the regular JWT key
+        const gameJwt = jwt.sign(
+          {
+            sub: claims.sub,
+            game_id: claims.game_id,
+            player_id: claims.player_id,
+            type: claims.type,
+            tournament_id: claims.tournament_id, // Fixed typo: tournamemt_id -> tournament_id
+            iss: CONFIG.JWT.ISSUER,
+            aud: CONFIG.JWT.AUDIENCE
+          },
+          request.server.gameKeys.private, // Use game private key
+          {
+            algorithm: CONFIG.JWT.ALGORITHM as any,
+            expiresIn: CONFIG.JWT.EXPIRES_IN
+          }
+        );
+        
+        reply.status(201).send({ token: gameJwt });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
   }
 
   async signup(
