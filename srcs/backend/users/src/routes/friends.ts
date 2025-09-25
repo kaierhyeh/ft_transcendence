@@ -22,13 +22,22 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		friendController.getFriends.bind(friendController)
 	);
 
-	// List pending requests (in/out) [Requires user authentication]
+	// List pending requests to this user (in) [Requires user authentication]
 	fastify.get(
-		"/pending",
+		"/incoming",
 		{
 			preHandler: verifyJWT
 		},
-		friendController.getPendingRequests.bind(friendController)
+		friendController.getPendingIncomingRequests.bind(friendController)
+	);
+
+	// List pending requests from this (out) [Requires user authentication]
+	fastify.get(
+		"/outgoing",
+		{
+			preHandler: verifyJWT
+		},
+		friendController.getPendingOutgoingRequests.bind(friendController)
 	);
 
 	// Send a friend request [Requires user authentication]

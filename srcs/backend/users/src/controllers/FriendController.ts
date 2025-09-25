@@ -18,13 +18,26 @@ export class FriendController {
 		}
 	}
 
-	public async getPendingRequests(request: FastifyRequest, reply: FastifyReply) {
+	public async getPendingIncomingRequests(request: FastifyRequest, reply: FastifyReply) {
 		try {
 			const thisUserId = request.user?.sub;
 			if (!thisUserId) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
-			const requests = await this.friendService.getPendingRequests(thisUserId);
+			const requests = await this.friendService.getPendingIncomingRequests(thisUserId);
+			reply.status(200).send(requests);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async getPendingOutgoingRequests(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const requests = await this.friendService.getPendingOutgoingRequests(thisUserId);
 			reply.status(200).send(requests);
 		} catch (error) {
 			this.handleError(error, reply);

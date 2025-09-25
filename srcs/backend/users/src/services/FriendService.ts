@@ -10,11 +10,18 @@ export class FriendService {
 		return this.friendRepository.listFriends(userId);
 	}
 
-	public async getPendingRequests(userId: number) {
-		// get both incoming and outgoing requests status="pending"
+	public async getPendingIncomingRequests(userId: number) {
+		// get requests status="pending" TO userId
 		// if no requests, return empty array
 
-		return this.friendRepository.listPendingRequests(userId);
+		return this.friendRepository.listPendingIncomingRequests(userId);
+	}
+
+	public async getPendingOutgoingRequests(userId: number) {
+		// get requests status="pending" FROM userId
+		// if no requests, return empty array
+
+		return this.friendRepository.listPendingOutgoingRequests(userId);
 	}
 
 	public async sendFriendRequest(fromUserId: number, toUserId: number) {
