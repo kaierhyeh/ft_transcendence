@@ -1,130 +1,89 @@
-# Auth Service Tests
+# Auth Service Testing Guide
 
-這個目錄包含了 Auth 服務的所有測試檔案。
+## 🐳 Container-Based Testing
 
-## 測試檔案說明
+All tests now run inside Docker containers - **no local Node.js installation required**.
 
-### 🧪 test-rsa.js
-- **功能**: 測試 RSA 金鑰對和 JWT 簽名/驗證
-- **執行**: `node test/test-rsa.js`
-- **依賴**: 需要 jsonwebtoken 套件
-- **測試內容**:
-  - RSA 金鑰格式驗證
-  - JWT 生成和驗證
-  - 安全性測試（防篡改、算法驗證）
+## 🚀 Quick Start
 
-### 🌐 test-api.js  
-- **功能**: 測試 Auth API 端點
-- **執行**: `node test/test-api.js`
-- **依賴**: Node.js 18+ (使用內建 fetch)
-- **前置條件**: Auth 服務需要正在運行
-- **測試內容**:
-  - 健康檢查端點
-  - 基本 API 可用性
-
-### 🔍 test-jwt.js
-- **功能**: 分析 JWT token 結構
-- **執行**: `node test/test-jwt.js`  
-- **依賴**: 無（使用 Node.js 內建功能）
-- **測試內容**:
-  - JWT header 和 payload 解析
-  - 驗證 RSA 簽名格式
-  - Key ID 檢查
-
-### 🔐 test-jwks.sh
-- **功能**: JWKS 整合測試
-- **執行**: `./test/test-jwks.sh`
-- **前置條件**: Auth 服務需要正在運行
-- **測試內容**:
-  - JWKS 端點測試
-  - 完整認證流程測試
-  - JWT 和 JWKS 整合驗證
-
-## 快速執行
-
-### 執行所有測試
 ```bash
-cd /home/kyeh/develop/srcs/backend/auth/test
+# 1. Start the auth service
+cd ../../.. && docker compose up -d backend-auth
+
+# 2. Run all tests
+cd srcs/backend/auth/test
 ./run-tests.sh
 ```
 
-### 執行特定測試
+## 📁 Test Files
+
+| File | Description | Environment |
+|------|-------------|-------------|
+| `run-tests.sh` | Complete test runner with JWKS validation | Docker container |
+| `test-jwt.ts` | Complete JWT + RSA security tests | Container-executed |
+| `test-jwks-service.ts` | JWKS service functionality tests | Container-executed |
+
+## 🔧 Changes Made
+
+### ✅ Removed Local Dependencies
+- ❌ Deleted local `node_modules/`
+- ❌ Removed local `npm install` requirements
+- ❌ No local Node.js environment needed
+
+### ✅ Container-Native Testing
+- ✅ All tests run inside `backend-auth` container
+- ✅ Uses container's Node.js and npm packages
+- ✅ Complete JWT security validation
+- ✅ Integrated JWKS endpoint testing
+- ✅ RSA key security testing
+- ✅ Container-based curl commands for API testing
+
+### ✅ Benefits
+- 🏗️ **Environment Consistency** - Same environment as production
+- 🚫 **No Local Pollution** - Host system stays clean
+- 🔄 **Easy CI/CD** - Tests run in containerized environment
+- 📦 **Self-Contained** - Everything needed is in the container
+
+## 🛠️ Technical Details
+
+### Container Commands Used
 ```bash
-# 從 auth 目錄執行
-cd /home/kyeh/develop/srcs/backend/auth
+# Execute TypeScript tests in container
+docker exec backend-auth npx ts-node --esm test/test-jwt.ts
 
-# RSA 測試
-node test/test-rsa.js
+# Execute curl commands in container
+docker exec backend-auth curl -s http://localhost:3000/health
 
-# API 測試 (需要服務運行)
-node test/test-api.js
-
-# JWT 分析
-node test/test-jwt.js
-
-# JWKS 整合測試 (需要服務運行)
-./test/test-jwks.sh
+# Check container status
+docker ps --format "table {{.Names}}" | grep backend-auth
 ```
 
-## 前置條件
-
-### 1. 安裝依賴
-```bash
-npm install
+### File Structure
+```
+auth/
+├── test/
+│   ├── run-tests.sh              # 🐳 Complete container test runner
+│   ├── test-jwt.ts               # Complete JWT + RSA tests
+│   ├── test-jwks-service.ts      # JWKS service tests
+│   ├── tsconfig.json             # TypeScript configuration
+│   └── README.md                 # This documentation
+└── src/                          # Application source
 ```
 
-### 2. 啟動服務 (用於 API 和 JWKS 測試)
+## 🎯 Usage Examples
+
+### Run All Tests
 ```bash
-cd ../../..  # 回到 srcs 目錄
-docker compose up -d backend-auth
+./run-tests.sh
 ```
 
-### 3. 確認 RSA 金鑰存在
-測試會自動檢查 `../keys/` 目錄中的：
-- `private.pem` - RSA 私鑰
-- `public.pem` - RSA 公鑰
-
-## 測試覆蓋範圍
-
-✅ **RSA 加密系統**
-- 金鑰格式驗證
-- 簽名和驗證功能
-- 安全性防護
-
-✅ **JWT 實作**  
-- Token 生成和解析
-- 算法驗證 (RS256)
-- Key ID 整合
-
-✅ **JWKS 系統**
-- 標準端點測試
-- RFC 7517 相容性
-- 金鑰發佈和驗證
-
-✅ **API 整合**
-- 健康檢查
-- 認證流程
-- 錯誤處理
-
-## 故障排除
-
-### 找不到模組錯誤
+### Test Specific Component
 ```bash
-# 安裝依賴
-npm install
+# Direct container execution
+docker exec backend-auth npx ts-node --esm test/test-jwt.ts
+docker exec backend-auth npx ts-node --esm test/test-jwks-service.ts
 ```
 
-### 連線錯誤
-```bash
-# 確認服務運行
-docker compose ps backend-auth
+---
 
-# 啟動服務
-docker compose up -d backend-auth
-```
-
-### 金鑰檔案錯誤
-```bash
-# 檢查金鑰檔案
-ls -la ../keys/
-```
+**Note**: All tests require the auth service container to be running. Use `docker compose up -d backend-auth` to start it.
