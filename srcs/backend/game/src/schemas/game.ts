@@ -43,20 +43,14 @@ export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 export type GameType = GameCreationBody["type"];
-<<<<<<< HEAD
-
 
 //REMOTE_PLAYER_ADD
 export const matchmakingRequestSchema = {
   type: "object",
-  required: ["type", "mode", "participant_id"],
+  required: ["mode", "participant_id"],
   properties: {
-    type: {
-      type: "string",
-      enum: ["join_queue", "queue_status"],
-    },
     mode: {
-      type: "string", 
+      type: "string",
       enum: ["2p", "4p"],
     },
     participant_id: { type: "string" },
@@ -88,5 +82,3 @@ export type MatchmakingRequest = FromSchema<typeof matchmakingRequestSchema>;
 export type MatchmakingResponse = FromSchema<typeof matchmakingResponseSchema>;
 export type MatchmakingMode = MatchmakingRequest["mode"];
 //END_REMOTE_PLAYER_ADD
-=======
->>>>>>> develop
