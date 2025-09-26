@@ -1,4 +1,4 @@
-import { TournamentTree, TournamentBracket } from './types.js';
+import { TournamentBracket } from './types.js';
 import { TournamentBracketManager } from './bracket.js';
 
 export class TournamentUIManager {
