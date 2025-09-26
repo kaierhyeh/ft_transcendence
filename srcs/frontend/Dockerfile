@@ -18,7 +18,7 @@ ENV SSL_DIR=/etc/ssl
 ENV CERTS_DIR=${SSL_DIR}/certs
 ENV KEYS_DIR=${SSL_DIR}/private
 
-RUN apk add openssl
+RUN apk add openssl curl
 
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app /var/www/html

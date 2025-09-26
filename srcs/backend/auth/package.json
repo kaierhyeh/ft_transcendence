@@ -2,11 +2,14 @@
 	"name": "transcendence-auth-service",
 	"version": "1.0.0",
 	"description": "Authentication microservice for transcendence project",
-	"main": "src/index.js",
+	"main": "index.ts",
 	"type": "module",
 	"scripts": {
-		"start": "node src/index.js | pino-pretty",
-		"dev": "nodemon src/index.js | pino-pretty"
+		"start": "redis-server --daemonize yes && node dist/src/index.js",
+		"dev": "nodemon --exec \"node --loader ts-node/esm\" src/index.ts",
+		"build": "tsc",
+		"serve": "node dist/src/index.js",
+		"install-check": "npm ls ts-node || npm install"
 	},
 	"dependencies": {
 		"fastify": "^4.17.0",
@@ -14,7 +17,7 @@
 		"@fastify/cors": "^8.3.0",
 		"@fastify/multipart": "^7.6.0",
 		"bcrypt": "^5.1.0",
-		"better-sqlite3": "^8.4.0",
+		"better-sqlite3": "^9.6.0",
 		"googleapis": "^118.0.0",
 		"ioredis": "^5.3.2",
 		"jsonwebtoken": "^9.0.0",
@@ -24,6 +27,14 @@
 		"pino-pretty": "^10.2.0"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.9"
+		"nodemon": "^3.1.9",
+		"typescript": "^5.0.0",
+		"@types/node": "^20.0.0",
+		"@types/bcrypt": "^5.0.0",
+		"@types/jsonwebtoken": "^9.0.0",
+		"@types/qrcode": "^1.5.0",
+		"@types/speakeasy": "^2.0.0",
+		"@types/better-sqlite3": "^7.0.0",
+		"ts-node": "^10.0.0"
 	}
 }

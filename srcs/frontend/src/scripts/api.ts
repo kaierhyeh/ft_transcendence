@@ -451,7 +451,7 @@ export async function setup2fa(): Promise<{ otpauth_url: string, qrCode: string 
 		}
 
 		return {
-			otpauth_url: data.otpauth_url,
+			otpauth_url: `otpauth://totp/42-Transcendence:${user?.name}?secret=${data.secret}&issuer=42-Transcendence`,
 			qrCode: data.qrCode
 		};
 	} catch (error) {

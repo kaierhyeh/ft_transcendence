@@ -1,18 +1,31 @@
-FROM node:20-alpine
+FROM node:lts-slim
 
-# Install SQLite and Redis
-RUN apk add --no-cache sqlite redis
+# Install SQLite, Redis, and build tools for native modules
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    redis-server \
+    python3 \
+    make \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies (production only)
-RUN npm install --production
+# Install dependencies (including dev dependencies for ts-node)
+RUN npm install
+
+# Rebuild native modules for Alpine
+RUN npm rebuild better-sqlite3
 
 # Copy the rest of the application files
 COPY . .
+
+# Build the TypeScript application
+RUN npm run build
 
 # Create storage directories
 RUN mkdir -p /data/avatar && chown -R node:node /data
@@ -23,4 +36,4 @@ RUN chmod +x /start.sh
 
 EXPOSE 3000
 
-CMD ["/start.sh"]
+CMD [ "npm", "start" ]
