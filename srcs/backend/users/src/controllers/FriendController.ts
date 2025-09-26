@@ -55,7 +55,7 @@ export class FriendController {
 			if (thisUserId === targetUserId) {
 				return reply.status(400).send({ error: "Cannot send friend request to yourself" });
 			}
-			const result = await this.friendService.sendFriendRequest(thisUserId, targetUserId);
+			await this.friendService.sendFriendRequest(thisUserId, targetUserId);
 			reply.status(201).send({
 				success: true,
 				message: "Friend request sent"

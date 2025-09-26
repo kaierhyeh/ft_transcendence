@@ -1,5 +1,21 @@
 import { Database } from "better-sqlite3";
 
+export interface FriendRow {
+	id: number;
+	nickname: string;
+	isOnline: boolean;
+}
+
+export interface IncomingRequestRow {
+	fromUserId: number;
+	nickname: string;
+}
+
+export interface OutgoingRequestRow {
+	toUserId: number;
+	nickname: string;
+}
+
 export class FriendRepository {
 	constructor(private db: Database) {
 		this.db = db;
@@ -12,7 +28,7 @@ export class FriendRepository {
 			JOIN users u ON (f.user_id = u.id OR f.friend_id = u.id)
 			WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status = 'accepted' AND u.id != ?
 		`);
-		return stmt.all(userId, userId, userId);
+		return stmt.all(userId, userId, userId) as FriendRow[];
 	}
 
 	/* INCOMING requests */
@@ -23,7 +39,7 @@ export class FriendRepository {
 			JOIN users u ON u.id = f.user_id
 			WHERE f.friend_id = ? AND f.status = 'pending'
 		`);
-		return stmt.all(userId);
+		return stmt.all(userId) as IncomingRequestRow[];
 	}
 
 	/* OUTGOING requests */
@@ -34,7 +50,7 @@ export class FriendRepository {
 			JOIN users u ON u.id = f.friend_id
 			WHERE f.user_id = ? AND f.status = 'pending'
 		`);
-		return stmt.all(userId);
+		return stmt.all(userId) as OutgoingRequestRow[];
 	}
 
 	// IGNORE duplicates
@@ -74,6 +90,7 @@ export class FriendRepository {
 		stmt.run(friendId, userId);
 	}
 
+	// remove friendship (if status="accepted")
 	public async removeFriendship(userId: number, friendId: number) {
 		const stmt = this.db.prepare(`
 			DELETE FROM friendships
