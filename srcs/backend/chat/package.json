@@ -1,29 +1,4 @@
 {
-<<<<<<< HEAD
-	"name": "transcendence-chat-service",
-	"version": "1.0.0",
-	"description": "Chat microservice for transcendence project",
-	"main": "server.js",
-	"type": "module",
-	"scripts": {
-		"start": "node server.js | pino-pretty",
-		"dev": "nodemon server.js | pino-pretty"
-	},
-	"dependencies": {
-		"fastify": "^4.17.0",
-		"@fastify/cookie": "^8.3.0",
-		"@fastify/cors": "^8.3.0",
-		"@fastify/websocket": "^8.2.0",
-		"better-sqlite3": "^8.4.0",
-		"ioredis": "^5.3.2",
-		"ws": "^8.13.0",
-		"@types/ws": "^8.5.10",
-		"dotenv": "^16.0.3",
-		"pino-pretty": "^10.2.0"
-	},
-	"devDependencies": {
-		"nodemon": "^3.1.9"
-=======
 	"name": "my-fastify-app",
 	"version": "1.0.0",
 	"main": "index.ts",
@@ -50,6 +25,5 @@
 	},
 	"devDependencies": {
 		"@types/node": "^24.3.1"
->>>>>>> develop
 	}
 }

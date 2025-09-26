@@ -1,11 +1,5 @@
 #!/bin/sh
 
-<<<<<<< HEAD
-# Cleanup function
-cleanup() {
-	echo "Stopping services..."
-	kill $(jobs -p)
-=======
 # Check if npm is available
 if ! command -v npm >/dev/null 2>&1; then
     echo "Error: npm is not installed"
@@ -28,7 +22,6 @@ fi
 cleanup() {
 	echo "Stopping services..."
 	kill $(jobs -p) 2>/dev/null
->>>>>>> develop
 	wait
 	exit 0
 }
@@ -39,13 +32,8 @@ trap cleanup SIGTERM SIGINT
 # Start Redis in background
 redis-server --daemonize yes
 
-<<<<<<< HEAD
-# Start Node application
-node server.js &
-=======
 # Start Node application with ts-node
 npx ts-node --esm src/index.ts &
->>>>>>> develop
 
 # Wait for background processes
 wait

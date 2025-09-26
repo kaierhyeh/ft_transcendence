@@ -2,13 +2,6 @@
 	"name": "transcendence-auth-service",
 	"version": "1.0.0",
 	"description": "Authentication microservice for transcendence project",
-<<<<<<< HEAD
-	"main": "server.js",
-	"type": "module",
-	"scripts": {
-		"start": "node server.js | pino-pretty",
-		"dev": "nodemon server.js | pino-pretty"
-=======
 	"main": "index.ts",
 	"type": "module",
 	"scripts": {
@@ -17,7 +10,6 @@
 		"build": "tsc",
 		"serve": "node dist/src/index.js",
 		"install-check": "npm ls ts-node || npm install"
->>>>>>> develop
 	},
 	"dependencies": {
 		"fastify": "^4.17.0",
@@ -25,11 +17,7 @@
 		"@fastify/cors": "^8.3.0",
 		"@fastify/multipart": "^7.6.0",
 		"bcrypt": "^5.1.0",
-<<<<<<< HEAD
-		"better-sqlite3": "^8.4.0",
-=======
 		"better-sqlite3": "^9.6.0",
->>>>>>> develop
 		"googleapis": "^118.0.0",
 		"ioredis": "^5.3.2",
 		"jsonwebtoken": "^9.0.0",
@@ -39,9 +27,6 @@
 		"pino-pretty": "^10.2.0"
 	},
 	"devDependencies": {
-<<<<<<< HEAD
-		"nodemon": "^3.1.9"
-=======
 		"nodemon": "^3.1.9",
 		"typescript": "^5.0.0",
 		"@types/node": "^20.0.0",
@@ -51,6 +36,5 @@
 		"@types/speakeasy": "^2.0.0",
 		"@types/better-sqlite3": "^7.0.0",
 		"ts-node": "^10.0.0"
->>>>>>> develop
 	}
 }
