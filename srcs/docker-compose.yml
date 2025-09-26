@@ -83,12 +83,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - game_sessions:/app/data
-    secrets:
-      - jwt_public_key
-      - game_public_key
-    environment:
-      - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
-      - GAME_PUBLIC_KEY_PATH=/run/secrets/game_public_key
     networks:
       - pong_network
     init: true
@@ -107,63 +101,55 @@ services:
       dockerfile: Dockerfile
     volumes:
       - users:/app/data
-    secrets:
-      - jwt_public_key
     env_file: .env
-    environment:
-      - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
     networks:
       - pong_network
     init: true
-    # Add healthcheck if you can
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
-  backend-auth-lite:
-    container_name: backend-auth-lite
-    build:
-      context: ./backend/auth-lite
-      dockerfile: Dockerfile
-    networks:
-      - pong_network
-    secrets:
-      - jwt_private_key
-      - jwt_public_key
-      - game_private_key
-      - game_public_key
-    env_file: .env
-    environment:
-      - JWT_PRIVATE_KEY_PATH=/run/secrets/jwt_private_key
-      - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
-      - GAME_PRIVATE_KEY_PATH=/run/secrets/game_private_key
-      - GAME_PUBLIC_KEY_PATH=/run/secrets/game_public_key
-    init: true
-    # Add healthcheck if you can
-    restart: unless-stopped
+  # backend-auth-lite:
+  #   container_name: backend-auth-lite
+  #   build:
+  #     context: ./backend/auth-lite
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - pong_network
+  #   secrets:
+  #     - jwt_private_key
+  #     - jwt_public_key
+  #     - game_private_key
+  #     - game_public_key
+  #   env_file: .env
+  #   environment:
+  #     - JWT_PRIVATE_KEY_PATH=/run/secrets/jwt_private_key
+  #     - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
+  #     - GAME_PRIVATE_KEY_PATH=/run/secrets/game_private_key
+  #     - GAME_PUBLIC_KEY_PATH=/run/secrets/game_public_key
+  #   init: true
+  #   # Add healthcheck if you can
+  #   restart: unless-stopped
 
   backend-matchmaking:
     container_name: backend-matchmaking
     build:
       context: ./backend/matchmaking
       dockerfile: Dockerfile
-    secrets:
-      - jwt_public_key
-    env_file: .env
-    environment:
-      - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
     networks:
       - pong_network
     init: true
-    # Add healthcheck if you can
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
-
-  #   chat:
-  #     build:
-  #       context: ./backend/chat
-  #     dockerfile: Dockerfile
-  #   stats:
-  #     build:
-  #       context: ./backend/stats
-  #     dockerfile: Dockerfile
 
   backend-chat:
     container_name: backend-chat
@@ -197,13 +183,3 @@ volumes:
     driver: local
   auth_data:
   users:
-
-secrets:
-  jwt_private_key:
-    file: ../secrets/jwt_private_key.pem
-  jwt_public_key:
-    file: ../secrets/jwt_public_key.pem
-  game_private_key:
-    file: ../secrets/game_private_key.pem
-  game_public_key:
-    file: ../secrets/game_public_key.pem

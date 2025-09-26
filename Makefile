@@ -1,60 +1,13 @@
 COMPOSE_FILE := srcs/docker-compose.yml
-SECRETS_DIR := ./secrets
-JWT_PRIVATE_KEY := $(SECRETS_DIR)/jwt_private_key.pem
-JWT_PUBLIC_KEY := $(SECRETS_DIR)/jwt_public_key.pem
-GAME_PRIVATE_KEY := $(SECRETS_DIR)/game_private_key.pem
-GAME_PUBLIC_KEY := $(SECRETS_DIR)/game_public_key.pem
 
-.PHONY: all up prepare gen-keys stop down del-vol clean fclean status help
+.PHONY: all up stop down del-vol clean fclean status help
 
 # Default target
 all: up
 
 # Start all services
-up: prepare
+up:
 	docker compose -f $(COMPOSE_FILE) up ${OPTS} --build $(ARGS)
-
-# Prepare environment (create directories and keys)
-prepare: $(SECRETS_DIR) $(JWT_PRIVATE_KEY) $(JWT_PUBLIC_KEY) $(GAME_PRIVATE_KEY) $(GAME_PUBLIC_KEY)
-
-# Create secrets directory if it doesn't exist
-$(SECRETS_DIR):
-	@echo "Creating secrets directory..."
-	@mkdir -p $(SECRETS_DIR)
-
-# Generate JWT private key if it doesn't exist
-$(JWT_PRIVATE_KEY): $(SECRETS_DIR)
-	@echo "Generating JWT private key..."
-	@openssl genpkey -algorithm RSA -out $(JWT_PRIVATE_KEY) -pkeyopt rsa_keygen_bits:2048
-
-# Generate JWT public key if it doesn't exist
-$(JWT_PUBLIC_KEY): $(JWT_PRIVATE_KEY)
-	@echo "Generating JWT public key..."
-	@openssl rsa -pubout -in $(JWT_PRIVATE_KEY) -out $(JWT_PUBLIC_KEY)
-
-# Generate Game private key if it doesn't exist
-$(GAME_PRIVATE_KEY): $(SECRETS_DIR)
-	@echo "Generating Game private key..."
-	@openssl genpkey -algorithm RSA -out $(GAME_PRIVATE_KEY) -pkeyopt rsa_keygen_bits:2048
-
-# Generate Game public key if it doesn't exist
-$(GAME_PUBLIC_KEY): $(GAME_PRIVATE_KEY)
-	@echo "Generating Game public key..."
-	@openssl rsa -pubout -in $(GAME_PRIVATE_KEY) -out $(GAME_PUBLIC_KEY)
-
-# Manually regenerate keys (force)
-gen-keys:
-	@echo "Regenerating all keys..."
-	@mkdir -p $(SECRETS_DIR)
-	@echo "Generating JWT keys..."
-	@openssl genpkey -algorithm RSA -out $(JWT_PRIVATE_KEY) -pkeyopt rsa_keygen_bits:2048
-	@openssl rsa -pubout -in $(JWT_PRIVATE_KEY) -out $(JWT_PUBLIC_KEY)
-	@echo "Generating Game session keys..."
-	@openssl genpkey -algorithm RSA -out $(GAME_PRIVATE_KEY) -pkeyopt rsa_keygen_bits:2048
-	@openssl rsa -pubout -in $(GAME_PRIVATE_KEY) -out $(GAME_PUBLIC_KEY)
-	@echo "All keys generated successfully!"
-	@echo "  - JWT keys: $(JWT_PRIVATE_KEY), $(JWT_PUBLIC_KEY)"
-	@echo "  - Game keys: $(GAME_PRIVATE_KEY), $(GAME_PUBLIC_KEY)"
 
 # Clean only Docker volumes
 del-vol:
@@ -109,13 +62,6 @@ fclean:
 	@docker system prune --all --force --volumes
 	@echo "Full system cleanup completed!"
 
-# # Development helpers
-# dev: prepare
-# 	docker compose -f $(COMPOSE_FILE) up --build
-
-# logs:
-# 	docker compose -f $(COMPOSE_FILE) logs -f
-
 re: down up
 
 # Show Docker status and volumes
@@ -134,14 +80,10 @@ help:
 	@echo "Available targets:"
 	@echo "  all       - Default target, same as 'up'"
 	@echo "  up        - Start all services with build"
-# 	@echo "  dev       - Start in development mode"
-	@echo "  prepare   - Create directories and generate all keys"
-	@echo "  gen-keys  - Force regenerate all keys (JWT + Game)"
 	@echo "  stop      - Stop all containers"
 	@echo "  down      - Stop and remove containers"
 	@echo "  re        - Stop and start containers"
 	@echo "  status    - Show containers, volumes, and images status"
-# 	@echo "  logs      - Show and follow logs"
 	@echo "  del-vol   - Remove only project volumes (preserves containers/images)"
 	@echo "  clean     - Remove project containers, images, and volumes"
 	@echo "  fclean    - ⚠️  Complete system-wide Docker cleanup (use with caution)"
