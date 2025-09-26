@@ -3,61 +3,46 @@ import { FriendRepository } from '../repositories';
 export class FriendService {
 	constructor(private friendRepository: FriendRepository) {}
 
+	// if no friends, return empty array
+	// user(id, nickname, isOnline)
 	public async getFriends(userId: number) {
-		// return friends data (id, nickname, avatar_url, isOnline....) status="accepted"
-		// if no friends, return empty array
-
 		return this.friendRepository.listFriends(userId);
 	}
 
+	// if no requests TO userId, return empty array
+	// requestIn(fromUserId, nickname)
 	public async getPendingIncomingRequests(userId: number) {
-		// get requests status="pending" TO userId
-		// if no requests, return empty array
-
 		return this.friendRepository.listPendingIncomingRequests(userId);
 	}
 
+	// if no requests FROM userId, returns empty array
+	// requestOut(toUserId, nickname)
 	public async getPendingOutgoingRequests(userId: number) {
-		// get requests status="pending" FROM userId
-		// if no requests, return empty array
-
 		return this.friendRepository.listPendingOutgoingRequests(userId);
 	}
 
 	public async sendFriendRequest(fromUserId: number, toUserId: number) {
-		// if toUser exist
-		// if request not exist
-		// insert into friends values (fromUserId, toUserId, 'pending')
 
-		return this.friendRepository.sendFriendRequest(fromUserId, toUserId);
+		// Better to check that toUser exist
+		// but toUserId going from front MENU USERS section
+
+		this.friendRepository.sendFriendRequest(fromUserId, toUserId);
 	}
 
 	public async cancelFriendRequest(fromUserId: number, toUserId: number) {
-		// if request exist and status="pending"
-		// delete line from friends table
-
-		return this.friendRepository.cancelFriendRequest(fromUserId, toUserId);
+		this.friendRepository.cancelFriendRequest(fromUserId, toUserId);
 	}
 
 	public async acceptFriendRequest(userId: number, friendId: number) {
-		// if request exist and status="pending"
-		// change status to "accepted"
-
-		return this.friendRepository.acceptFriendRequest(userId, friendId);
+		this.friendRepository.acceptFriendRequest(userId, friendId);
 	}
 
 	public async declineFriendRequest(userId: number, friendId: number) {
-		// if request exist and status="pending"
-		// delete line from friends table
-
-		return this.friendRepository.declineFriendRequest(userId, friendId);
+		this.friendRepository.declineFriendRequest(userId, friendId);
 	}
 
 	public async removeFriendship(userId: number, friendId: number) {
-		// if request exist and status="accepted"
-		// delete line from friends table
-
-		return this.friendRepository.removeFriendship(userId, friendId);
+		this.friendRepository.removeFriendship(userId, friendId);
 	}
 
 }
