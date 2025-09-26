@@ -5,7 +5,7 @@ JWT_PUBLIC_KEY := $(SECRETS_DIR)/jwt_public_key.pem
 GAME_PRIVATE_KEY := $(SECRETS_DIR)/game_private_key.pem
 GAME_PUBLIC_KEY := $(SECRETS_DIR)/game_public_key.pem
 
-.PHONY: all up prepare gen-keys stop down clean fclean status help
+.PHONY: all up prepare gen-keys stop down del-vol clean fclean status help
 
 # Default target
 all: up
@@ -56,14 +56,16 @@ gen-keys:
 	@echo "  - JWT keys: $(JWT_PRIVATE_KEY), $(JWT_PUBLIC_KEY)"
 	@echo "  - Game keys: $(GAME_PRIVATE_KEY), $(GAME_PUBLIC_KEY)"
 
-# Generate only game keys (force)
-gen-game-keys:
-	@echo "Regenerating Game session keys..."
-	@mkdir -p $(SECRETS_DIR)
-	@openssl genpkey -algorithm RSA -out $(GAME_PRIVATE_KEY) -pkeyopt rsa_keygen_bits:2048
-	@openssl rsa -pubout -in $(GAME_PRIVATE_KEY) -out $(GAME_PUBLIC_KEY)
-	@echo "Game keys generated successfully!"
-	@echo "  - Game keys: $(GAME_PRIVATE_KEY), $(GAME_PUBLIC_KEY)"
+# Clean only Docker volumes
+del-vol:
+	@echo "Removing project volumes..."
+	@echo "Stopping containers first..."
+	@docker compose -f $(COMPOSE_FILE) down 2>/dev/null || true
+	@echo "Removing specific project volumes..."
+	@docker volume rm $$(docker volume ls -q | grep -E "(ssl|game_sessions|auth_data|users|ft_transcendence)" 2>/dev/null) 2>/dev/null || true
+	@echo "Removing any dangling volumes..."
+	@docker volume prune -f
+	@echo "Volume cleanup completed!"
 
 # Stop all running containers
 stop:
@@ -135,12 +137,12 @@ help:
 # 	@echo "  dev       - Start in development mode"
 	@echo "  prepare   - Create directories and generate all keys"
 	@echo "  gen-keys  - Force regenerate all keys (JWT + Game)"
-	@echo "  gen-game-keys - Force regenerate only game session keys"
 	@echo "  stop      - Stop all containers"
 	@echo "  down      - Stop and remove containers"
 	@echo "  re        - Stop and start containers"
 	@echo "  status    - Show containers, volumes, and images status"
 # 	@echo "  logs      - Show and follow logs"
+	@echo "  del-vol   - Remove only project volumes (preserves containers/images)"
 	@echo "  clean     - Remove project containers, images, and volumes"
 	@echo "  fclean    - ⚠️  Complete system-wide Docker cleanup (use with caution)"
 	@echo "  help      - Show this help message"
