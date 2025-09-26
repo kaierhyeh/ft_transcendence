@@ -1,24 +1,164 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { FriendService } from '../services/FriendService';
+import { FriendshipIdParams, UserIdParams } from '../schemas/friends';
 
 export class FriendController {
-  constructor(private friendService: FriendService) {}
+	constructor(private friendService: FriendService) {}
 
+	public async getFriends(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const friends = await this.friendService.getFriends(thisUserId);
+			reply.status(200).send(friends);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
 
-  private handleError(error: any, reply: FastifyReply) {
-    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      reply.status(409).send({ 
-        error: "Username or email already exists" 
-      });
-    } else if (error.code === 'USER_NOT_FOUND') {
-      reply.status(404).send({ 
-        error: "User not found" 
-      });
-    } else {
-      reply.log.error(error);
-      reply.status(500).send({ 
-        error: "Internal server error" 
-      });
-    }
-  }
+	public async getPendingIncomingRequests(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const requests = await this.friendService.getPendingIncomingRequests(thisUserId);
+			reply.status(200).send(requests);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async getPendingOutgoingRequests(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const requests = await this.friendService.getPendingOutgoingRequests(thisUserId);
+			reply.status(200).send(requests);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async sendFriendRequest(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			const targetUserId = request.params.id;
+
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			if (thisUserId === targetUserId) {
+				return reply.status(400).send({ error: "Cannot send friend request to yourself" });
+			}
+			const result = await this.friendService.sendFriendRequest(thisUserId, targetUserId);
+			reply.status(201).send({
+				success: true,
+				message: "Friend request sent"
+			});
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async cancelFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			const targetFriendshipId = request.params.id;
+
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			if (thisUserId === targetFriendshipId) {
+				return reply.status(400).send({ error: "Cannot cancel friend request to yourself" });
+			}
+			await this.friendService.cancelFriendRequest(thisUserId, targetFriendshipId);
+			reply.status(204).send();
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async acceptFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			const targetFriendshipId = request.params.id;
+
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			if (thisUserId === targetFriendshipId) {
+				return reply.status(400).send({ error: "Cannot accept friend request to yourself" });
+			}
+			await this.friendService.acceptFriendRequest(thisUserId, targetFriendshipId);
+			reply.status(200).send({
+				success: true,
+				message: "Friend request accepted" });
+
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async declineFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			const targetFriendshipId = request.params.id;
+
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			if (thisUserId === targetFriendshipId) {
+				return reply.status(400).send({ error: "Cannot decline friend request to yourself" });
+			}
+			await this.friendService.declineFriendRequest(thisUserId, targetFriendshipId);
+			reply.status(200).send({
+				success: true,
+				message: "Friend request declined"
+			});
+
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async removeFriend(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
+		try {
+			const thisUserId = request.user?.sub;
+			const targetFriendshipId = request.params.id;
+
+			if (!thisUserId) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			if (thisUserId === targetFriendshipId) {
+				return reply.status(400).send({ error: "Cannot remove yourself from friends" });
+			}
+			await this.friendService.removeFriendship(thisUserId, targetFriendshipId);
+			reply.status(204).send();
+
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	private handleError(error: any, reply: FastifyReply) {
+		if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+			reply.status(409).send({
+				error: "Username or email already exists"
+			});
+		} else if (error.code === 'USER_NOT_FOUND') {
+			reply.status(404).send({
+				error: "User not found"
+			});
+		} else {
+			reply.log.error(error);
+			reply.status(500).send({
+				error: "Internal server error"
+			});
+		}
+	}
 }

@@ -1,8 +1,9 @@
 -- Friendship requests and relationships
 CREATE TABLE IF NOT EXISTS friendships (
-    id        INTEGER PRIMARY KEY,
-    user_id   INTEGER NOT NULL,    -- User in the relationship
-    friend_id INTEGER NOT NULL,    -- Friend in the relationship
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id   INTEGER NOT NULL,    -- Who sent the request or blocked
+    friend_id INTEGER NOT NULL,    -- Who received the request or was blocked
+    status    TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'blocked')),
     created_at DATETIME NOT NULL DEFAULT (datetime('now')),
     
     FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
