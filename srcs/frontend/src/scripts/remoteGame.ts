@@ -1,5 +1,9 @@
 import { user } from './users.js';
 
+let gameWebSocket: WebSocket | null = null;
+let currentGameId: number | null = null;
+let currentParticipantId: string | null = null;
+
 export default function initRemoteGame():void {
     console.log("create remote interface");
     createRemoteInterface();
@@ -80,6 +84,7 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     }
 
     const participantId = generateParticipantId();
+    currentParticipantId = participantId;
     
     const button = document.getElementById(buttonId);
     if (button != null) {
@@ -100,12 +105,19 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
         const data = await response.json();
 
         if (data.success) {
-            console.log("Success!");
-            if (button != null) {
-                button.textContent = "Waiting...";
-            }
-            return;
+    console.log("Success!");
+    
+    if (data.type === "game_ready") {
+        console.log("Match found , game_id = ", data.game_id);
+        //here call connect game later
+    } else if (data.type === "queue_joined") {
+        if (button != null) {
+            button.textContent = `Waiting...`;
         }
+        //here maybe listen  connexion?later
+    }
+    return;
+}
         console.log("Error:", data.error);
         if (button != null) {
             if (mode === "2p") {
@@ -129,3 +141,37 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     }
 }
 
+function connectToGame(gameId: number): void {
+    currentGameId = gameId;
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/game/${gameId}/ws`;
+    
+    console.log(`Connexion WebSocket vers: ${wsUrl}`);
+    
+    gameWebSocket = new WebSocket(wsUrl);
+    
+    gameWebSocket.onopen = () => {
+    console.log(`Connecté au jeu ${gameId}`);
+    
+    gameWebSocket!.send(JSON.stringify({
+        type: "join",
+        participant_id: currentParticipantId
+    }));
+    };
+    
+    gameWebSocket.onmessage = (event) => {
+        console.log("Message reçu du serveur:", event.data);
+    };
+    
+    gameWebSocket.onclose = (event) => {
+        console.log("WebSocket fermé:", event.code, event.reason);
+    };
+    
+    gameWebSocket.onerror = (error) => {
+        console.error("Erreur WebSocket:", error);
+    };
+}
+
+//ADD A WAY TO DEAL WITH EVENTS TOUCH
