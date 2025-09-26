@@ -1,5 +1,6 @@
 // Profile page functionality
 import { initiateGoogleLogin, processGoogleOAuth, setup2fa, activate2fa, verify2fa, disable2fa } from './api.js';
+import { update_user, User } from './users.js';
 
 export function initProfile() {
 	const authForm = document.getElementById('auth-form');
@@ -56,6 +57,7 @@ export function initProfile() {
 			const data = await response.json();
 
 			if (response.ok && data.success) {
+				update_user(new User(data.username, data.id));
 				alert('Registration successful! You are now logged in.');
 				showLoggedInView(data.username);
 			} else
@@ -91,6 +93,7 @@ export function initProfile() {
 					await handle2FA(token, data.temp_token);
 				return;
 			} else if (response.ok && data.success) {
+				update_user(new User(data.username, data.id));
 				alert(`Welcome back, ${data.username}!`);
 				showLoggedInView(data.username);
 			} else
@@ -116,6 +119,7 @@ export function initProfile() {
 			const data = await response.json();
 
 			if (response.ok && data.success) {
+				update_user(new User(data.username, data.id));
 				alert(`Welcome back, ${data.username}!`);
 				showLoggedInView(data.username);
 			} else
@@ -222,6 +226,7 @@ export function initProfile() {
 			if (response.ok) {
 				const data = await response.json();
 				if (data.success && data.username) {
+					update_user(new User(data.username, data.id, data.email, data.avatar));
 					showLoggedInView(data.username);
 				} else
 					showLoggedOutView();

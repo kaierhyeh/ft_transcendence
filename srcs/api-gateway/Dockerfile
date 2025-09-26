@@ -1,5 +1,7 @@
 FROM nginx:1.28.0-alpine3.21
 
+RUN apk add --no-cache curl
+
 COPY nginx.conf /etc/nginx
 
 # Set up entrypoint script

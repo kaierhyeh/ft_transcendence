@@ -9,7 +9,7 @@ import fs from "fs";
 import { CONFIG } from "../config";
 import { JwtGameSessionPayload } from "../types";
 
-let next_id = 0;
+let next_id = 1;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;

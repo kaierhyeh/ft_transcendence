@@ -9,8 +9,8 @@ RUN npm install -g typescript
 
 RUN tsc
 
-RUN cp dist/*.js dist/*.js.map ./scripts
-RUN rm -rf dist node_modules scripts/*.ts
+RUN cp -r dist/* ./scripts/
+RUN rm -rf dist node_modules scripts/*.ts scripts/**/*.ts
 
 FROM nginx:1.28.0-alpine3.21
 
@@ -18,7 +18,7 @@ ENV SSL_DIR=/etc/ssl
 ENV CERTS_DIR=${SSL_DIR}/certs
 ENV KEYS_DIR=${SSL_DIR}/private
 
-RUN apk add openssl
+RUN apk add openssl curl
 
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app /var/www/html

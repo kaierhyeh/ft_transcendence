@@ -28,6 +28,11 @@ chatServer.register(wsRoutes);
 chatServer.register(fastifyJwt, { secret: CONFIG.SECURITY.JWT_SECRET });
 chatServer.register(FastifyWebsocket);
 
+// Health check endpoint
+chatServer.get('/health', async () => {
+	return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
+});
+
 const run = async () => {
 	try {
 		colorLog("cyan", "Start Chat service");

@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
 // Create SQLite database
-export function initializeDatabase(dbPath) {
+export function initializeDatabase(dbPath: string): Database.Database {
 	const db = new Database(dbPath);
 	
 	// Users table: id, username, password, avatar, settings, wins, losses with OAuth and 2FA support

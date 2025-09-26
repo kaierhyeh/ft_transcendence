@@ -1,13 +1,31 @@
-import authService from '../auth.service.js';
-import authUtils from '../auth.utils.js';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import authService from '../services/auth.service.js';
+import authUtils from '../utils/auth.utils.js';
+import { authMiddleware } from '../middleware/auth.middleware.js';
+import { type ILoggerService, type LogContext } from '../container.js';
 
-export async function authRoutes(fastify, options) {
-	const { db } = fastify;
+interface LoginRequest {
+	username: string;
+	password: string;
+}
+
+interface AuthenticatedRequest extends FastifyRequest {
+	user?: {
+		userId: number;
+		type?: string;
+	};
+}
+
+export async function authRoutes(fastify: FastifyInstance, options: any) {
+	const db = (fastify as any).db;
+	const logger: ILoggerService = (fastify as any).logger;
 
 	// Login route
-	fastify.post('/auth/login', async (request, reply) => {
+	fastify.post('/auth/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
+		let username = ''; // Declare for logging context
 		try {
-			const { username, password } = request.body;
+			const { username: reqUsername, password } = request.body;
+			username = reqUsername;
 
 			if (!username || !password) {
 				return reply.code(400).send({ 
@@ -16,10 +34,10 @@ export async function authRoutes(fastify, options) {
 				});
 			}
 
-			// Find user by username
+			// Find user by username or email (case-insensitive)
 			const user = db.prepare(
-				"SELECT * FROM users WHERE username = ? COLLATE NOCASE"
-			).get(username);
+				"SELECT * FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE"
+			).get(username, username);
 
 			if (!user) {
 				return reply.code(401).send({ 
@@ -60,7 +78,7 @@ export async function authRoutes(fastify, options) {
 				});
 			}
 
-			// Generate tokens
+			// Generate tokens using new USER_SESSION method
 			const { accessToken, refreshToken } = await authService.generateTokens(user.id);
 
 			// Set cookies
@@ -76,7 +94,10 @@ export async function authRoutes(fastify, options) {
 			});
 
 		} catch (error) {
-			fastify.log.error('Login error:', error);
+			logger.error('Login error', error as Error, {
+				username,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({ 
 				success: false, 
 				error: 'Internal server error during login' 
@@ -85,7 +106,7 @@ export async function authRoutes(fastify, options) {
 	});
 
 	// Register route
-	fastify.post('/auth/register', async (request, reply) => {
+	fastify.post('/auth/register', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
 		try {
 			const { username, password } = request.body;
 
@@ -96,10 +117,7 @@ export async function authRoutes(fastify, options) {
 				});
 			}
 
-			// Use username as email if it contains @, otherwise create a dummy email
-			const email = username.includes('@') ? username : `${username}@localhost.local`;
-
-			// Validate username
+			// Validate username (now accepts both traditional usernames and email addresses)
 			const checkedUsername = authUtils.checkUsername(fastify, username);
 			if (typeof checkedUsername === 'object' && checkedUsername.error) {
 				return reply.code(400).send({ 
@@ -108,9 +126,16 @@ export async function authRoutes(fastify, options) {
 				});
 			}
 
-			// Check if user already exists
+			// Determine if the username is an email address
+			const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
+
+			// If it's an email, use it as both username and email
+			// If it's a traditional username, create a dummy email
+			const email = isEmail ? username : `${username}@localhost.local`;
+
+			// Check if user already exists (check both username and email fields)
 			const existingUser = db.prepare(
-				"SELECT id FROM users WHERE username = ? COLLATE NOCASE OR email = ?"
+				"SELECT id FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE"
 			).get(checkedUsername, email);
 
 			if (existingUser) {
@@ -131,7 +156,7 @@ export async function authRoutes(fastify, options) {
 
 			const userId = result.lastInsertRowid;
 
-			// Generate tokens
+			// Generate tokens using new USER_SESSION method
 			const { accessToken, refreshToken } = await authService.generateTokens(userId);
 
 			// Set cookies
@@ -148,7 +173,9 @@ export async function authRoutes(fastify, options) {
 			});
 
 		} catch (error) {
-			fastify.log.error('Registration error:', error);
+			logger.error('Registration error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during registration'
@@ -178,7 +205,9 @@ export async function authRoutes(fastify, options) {
 			}
 
 			// Set new access token cookie
-			authUtils.ft_setCookie(reply, result.newAccessToken, 15);
+			if (result.newAccessToken) {
+				authUtils.ft_setCookie(reply, result.newAccessToken, 15);
+			}
 
 			return reply.code(200).send({
 				success: true,
@@ -186,7 +215,9 @@ export async function authRoutes(fastify, options) {
 			});
 
 		} catch (error) {
-			fastify.log.error('Token refresh error:', error);
+			logger.error('Token refresh error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during token refresh'
@@ -194,33 +225,52 @@ export async function authRoutes(fastify, options) {
 		}
 	});
 
-	// Logout route
-	fastify.post('/auth/logout', async (request, reply) => {
+	// Logout route - requires USER_SESSION authentication
+	fastify.post('/auth/logout', async (request: AuthenticatedRequest, reply: FastifyReply) => {
 		try {
-			const userId = request.user?.userId;
+			// Check for access token
+			const accessToken = request.cookies?.accessToken;
 			
-			if (userId) {
-				await authService.revokeTokens(userId);
+			if (!accessToken) {
+				return reply.code(401).send({ 
+					success: false, 
+					error: 'No access token provided' 
+				});
 			}
+
+			// Verify the token
+			const result = await authService.validate_and_refresh_Tokens(fastify, accessToken, request.cookies?.refreshToken || '');
+			
+			if (!result.success || !result.userId) {
+				return reply.code(401).send({ 
+					success: false, 
+					error: result.reason || 'Invalid or expired user session' 
+				});
+			}
+
+			// Revoke tokens
+			await authService.revokeTokens(result.userId);
 
 			const cookieOptions = {
 				path: '/',
 				secure: true,
 				httpOnly: true,
-				sameSite: 'None'
+				sameSite: 'none' as const
 			};
 
-			return reply
-				.clearCookie('accessToken', cookieOptions)
-				.clearCookie('refreshToken', cookieOptions)
-				.code(200)
-				.send({
-					success: true,
-					message: 'Logged out successfully!'
-				});
+			reply.clearCookie('accessToken', cookieOptions);
+			reply.clearCookie('refreshToken', cookieOptions);
+			
+			return reply.code(200).send({
+				success: true,
+				message: 'Logged out successfully!'
+			});
 
 		} catch (error) {
-			fastify.log.error('Logout error:', error);
+			logger.error('Logout error', error as Error, {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during logout'
@@ -241,7 +291,7 @@ export async function authRoutes(fastify, options) {
 				});
 			}
 
-			const verification = await authService.validate_and_refresh_Tokens(fastify, accessToken, refreshToken);
+			const verification = await authService.validate_and_refresh_Tokens(fastify, accessToken || '', refreshToken || '');
 			
 			if (!verification.success) {
 				return reply.code(401).send({
@@ -275,7 +325,9 @@ export async function authRoutes(fastify, options) {
 			});
 
 		} catch (error) {
-			fastify.log.error('Token verification error:', error);
+			logger.error('Token verification error', error as Error, {
+				ip: (request as any).ip
+			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during token verification'

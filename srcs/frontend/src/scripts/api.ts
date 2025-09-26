@@ -25,7 +25,6 @@ export async function verify_token(): Promise<void> {
 		update_user(new User(data.username, data.id, data.email, data.avatar));
 
 	} catch (error) {
-		// console.error("/api/verify_token error:", error);
 		showError("Session expired.");
 		update_user(undefined);
 	}
@@ -452,7 +451,7 @@ export async function setup2fa(): Promise<{ otpauth_url: string, qrCode: string 
 		}
 
 		return {
-			otpauth_url: data.otpauth_url,
+			otpauth_url: `otpauth://totp/42-Transcendence:${user?.name}?secret=${data.secret}&issuer=42-Transcendence`,
 			qrCode: data.qrCode
 		};
 	} catch (error) {

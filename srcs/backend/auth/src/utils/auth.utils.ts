@@ -1,33 +1,34 @@
 import bcrypt from 'bcrypt';
+import type { FastifyReply, FastifyInstance } from 'fastify';
 
 export class AuthUtils {
 	// Hash password with bcrypt
-	async hashPassword(password, saltRounds = 10) {
+	async hashPassword(password: string, saltRounds: number = 10): Promise<string> {
 		try {
 			return await bcrypt.hash(password, saltRounds);
 		} catch (error) {
-			fastify.log.error(error, 'Password hashing error:');
+			console.error('Password hashing error:', error);
 			throw new Error('Failed to hash password');
 		}
 	}
 
 	// Verify password with bcrypt
-	async verifyPassword(password, hashedPassword) {
+	async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
 		try {
 			return await bcrypt.compare(password, hashedPassword);
 		} catch (error) {
-			fastify.log.error(error, 'Password verification error:');
+			console.error('Password verification error:', error);
 			throw new Error('Failed to verify password');
 		}
 	}
 
 	// Configure and set cookies with flexible expiration time
-	ft_setCookie(reply, token, duration) {
+	ft_setCookie(reply: any, token: string, duration: number): void {
 		const cookieOptions = {
 			path: '/',
 			secure: true,
 			httpOnly: true,
-			sameSite: 'None',
+			sameSite: 'none' as const,
 		};
 
 		// Accepted cases: 1min (debug), 5min, 15min or 7days
@@ -52,7 +53,7 @@ export class AuthUtils {
 		return reply;
 	}
 
-	checkUsername(fastify, username) {
+	checkUsername(fastify: any, username: string): { error: string } | string {
 		fastify.log.info(`Checking username: ${username}`);
 
 		// Check for null/undefined
@@ -91,10 +92,21 @@ export class AuthUtils {
 			return { error: "Username cannot contain more than 3 repeated characters in a row" };
 		}
 
+		// Check if it's an email address (allow @ symbol and common email characters)
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (emailRegex.test(trimmedUsername)) {
+			// For email addresses, only check length (reasonable email length)
+			if (trimmedUsername.length > 254) { // RFC 5321 limit
+				return { error: "Email address is too long" };
+			}
+			return trimmedUsername.toLowerCase(); // Store emails in lowercase
+		}
+
+		// For traditional usernames: must be 3-15 characters, letters/numbers/underscores only
 		const capitalizedUsername = trimmedUsername.charAt(0).toUpperCase() + trimmedUsername.slice(1).toLowerCase();
 		const usernameRegex = /^[a-zA-Z][a-zA-Z0-9_]{3,15}$/;
 		if (!usernameRegex.test(capitalizedUsername)) {
-			return { error: "Username must be 3-15 characters, letters/numbers/underscores only." };
+			return { error: "Username must be 3-15 characters, letters/numbers/underscores only, OR a valid email address." };
 		}
 
 		return capitalizedUsername;
@@ -102,43 +114,3 @@ export class AuthUtils {
 }
 
 export default new AuthUtils();
-
-// Pour tester les cas limites de longueur
-// - ab (trop court, moins de 3 caractères)
-// - abcdefghijklmnop (trop long, plus de 15 caractères)
-// - abc (limite minimale acceptable)
-// - abcdefghijklmno (limite maximale acceptable)
-
-// Pour tester les caractères non autorisés
-// - user@name (caractère spécial @)
-// - user.name (point non autorisé)
-// - user-name (tiret non autorisé)
-// - user!name (caractère spécial !)
-// - user name (espace non autorisé)
-// - user#123 (caractère spécial #)
-
-// Pour tester les caractères de contrôle et les tentatives XSS
-// - user\name (caractère d'échappement) attention
-// - user\u0000 (caractère nul) attention
-// - <script> (balise HTML)
-// - user<div> (balise HTML intégrée)
-// - alert(1) (potentielle injection JS)
-// - "><script>alert(1)</script> (tentative XSS) attention
-
-// Pour tester les caractères répétés
-// - aaaabcd (4 'a' répétés)
-// - ab____cd (4 underscores répétés)
-// - 111123 (4 '1' répétés)
-// - aaa123 (3 'a' répétés - devrait être accepté)
-
-// Pour tester la capitalisation
-// - username (devrait devenir Username)
-// - USERNAME (devrait devenir Username)
-// - UserName (devrait devenir Username)
-
-// Pour tester d'autres validations
-// - user (espaces avant/après - devraient être supprimés)
-// - null (le mot "null", pas la valeur)
-// - undefined (le mot "undefined", pas la valeur)
-// - 123_abc (commence par des chiffres)
-// - _username (commence par un underscore)

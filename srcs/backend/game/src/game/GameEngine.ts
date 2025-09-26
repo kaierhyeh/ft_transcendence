@@ -5,7 +5,7 @@ const PADDLE_WIDTH: number = 10;
 const PADDLE_HEIGHT: number = 50;
 
 const INITIAL_BALL_SPEED: number = 420; // pixel / s
-const PADDLE_SPEED: number = 350; // pixel / s
+let PADDLE_SPEED: number = 350; // pixel / s
 
 const WIDTH: number = 800;
 const HEIGHT: number = 750;
@@ -97,6 +97,8 @@ export class GameEngine {
             win_point: WIN_POINT,
             ball_size: BALL_SIZE
         };
+        if (this.game_mode === "multi")
+            PADDLE_SPEED = PADDLE_SPEED / 2;
 
         this.players = new Map();
         session_players.forEach(p => {
