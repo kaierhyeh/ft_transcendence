@@ -4,8 +4,6 @@ import authUtils from '../utils/auth.utils.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { type ILoggerService, type LogContext } from '../container.js';
 import { GameSessionClaims, gameSessionClaimsSchema } from '../schemas/auth.js';
-import { JWTType } from '../types/jwt.types.js';
-import { GameSessionPayload } from '../types.js';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service.js';
@@ -382,6 +380,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				});
 			}
 	});
+
 
 
 }

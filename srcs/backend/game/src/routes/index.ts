@@ -3,5 +3,5 @@ import sessionRoutes from "./sessions";
 
 export default [
     { route: gameRoutes, prefix: "/users" },
-    { route: sessionRoutes, prefix: "/friends" }
+    { route: sessionRoutes, prefix: "/sessions" }
 ];

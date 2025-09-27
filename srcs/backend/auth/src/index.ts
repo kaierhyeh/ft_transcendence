@@ -11,6 +11,7 @@ import multipart from '@fastify/multipart';
 import { config } from './config.js';
 import { initializeContainer, Container, Logger, type ILoggerService } from './container.js';
 import { initializeKeys } from './utils/generate-keys.js';
+import jwksService from './services/jwks.service.js';
 
 const app = fastify({ 
 	logger: {
@@ -65,6 +66,9 @@ try {
 	container.register('logger', () => logger);
 	app.decorate('logger', logger);
 
+	// Initialize JWKS service with three-type keys
+	await jwksService.generateJWKS();
+	
 	app.log.info('Services initialized successfully');
 } catch (error) {
 	app.log.error(error, 'Service initialization error:');

@@ -4,42 +4,17 @@ import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
-import { verify } from "jsonwebtoken";
-import fs from "fs";
-import { CONFIG } from "../config";
-import { JwtGameSessionPayload } from "../types";
+import { verifyGameSessionJWT } from "../utils/jwt-verifier.js";
 
 let next_id = 1;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
-    private gamePublicKey: string;
 
     constructor(
         private session_repo: SessionRepository,
         private logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
-        // Load the game-specific public key for JWT verification
-        this.gamePublicKey = fs.readFileSync(CONFIG.JWT.GAME_PUBLIC_KEY_PATH, 'utf8');
-    }
-
-    /**
-     * Verify game session JWT token using the game-specific public key
-     */
-    private verifyGameSessionJWT(token: string): Promise<JwtGameSessionPayload> {
-        return new Promise((resolve, reject) => {
-            verify(token, this.gamePublicKey, {
-                algorithms: [CONFIG.JWT.ALGORITHM as any],
-                issuer: CONFIG.JWT.ISSUER,
-                audience: CONFIG.JWT.AUDIENCE,
-            }, (err: any, payload: any) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(payload as JwtGameSessionPayload);
-                }
-            });
-        });
     }
 
     public createGameSession(type: GameType, participants: GameParticipant[]): number {
@@ -80,7 +55,7 @@ export class LiveSessionManager {
                     return; 
                 }
                 try {
-                    const payload = await this.verifyGameSessionJWT(ticket);
+                    const payload = await verifyGameSessionJWT(ticket);
                     if (!payload.game_id || payload.game_id !== id) {
                         throw new Error("Game ID mismatch");
                     }
