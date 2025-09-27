@@ -14,9 +14,6 @@ export interface BaseJWTPayload {
   iss?: string;
   aud?: string;
   userId?: number;
-  gameId?: string;
-  serviceId?: string;
-  permissions?: string[];
 }
 
 // Game Session JWT payload (matching auth service exactly)
@@ -28,6 +25,11 @@ export interface GameSessionPayload extends BaseJWTPayload {
   tournament_id: number;
 }
 
+// Simple Internal JWT payload - just type verification
+export interface InternalJWTPayload extends BaseJWTPayload {
+  type: JWTType.INTERNAL_ACCESS;
+}
+
 // JWT Types for three-tier system (matches auth service)
 export enum JWTType {
   USER_SESSION = 'USER_SESSION',
@@ -36,7 +38,7 @@ export enum JWTType {
 }
 
 // Union type for all JWT payloads (can be extended as needed)
-export type JWTPayload = GameSessionPayload | BaseJWTPayload;
+export type JWTPayload = GameSessionPayload | InternalJWTPayload | BaseJWTPayload;
 
 // export interface JWTHeader {
 //   alg: string;

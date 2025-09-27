@@ -381,6 +381,52 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			}
 	});
 
+	// Generate internal JWT route - for service-to-service communication
+	fastify.post('/auth/internal/token', {
+		schema: {
+			description: 'Generate internal access token for service-to-service communication',
+			tags: ['Auth', 'Internal'],
+			response: {
+				200: {
+					type: 'object',
+					properties: {
+						token: { type: 'string' },
+						expires_in: { type: 'string' }
+					}
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		try {
+			// Generate internal JWT
+			const sign_options: SignOptions = {
+				algorithm: config.jwt.internal.algorithm,
+				expiresIn: config.jwt.internal.accessTokenExpiry as any,
+				keyid: jwksService.getCurrentKeyId()
+			};
 
+			const internal_jwt = jwt.sign(
+				{
+					type: config.jwt.internal.type,
+					iss: config.jwt.internal.issuer,
+				},
+				config.jwt.internal.privateKey,
+				sign_options
+			);
+			
+			reply.status(200).send({ 
+				token: internal_jwt,
+				expires_in: config.jwt.internal.accessTokenExpiry 
+			});
+
+		} catch (error) {
+			logger.error('Internal JWT generation error', error as Error, {
+				ip: (request as any).ip
+			});
+			return reply.status(500).send({
+				error: 'Internal server error during internal JWT generation'
+			});
+		}
+	});
 
 }

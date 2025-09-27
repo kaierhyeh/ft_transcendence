@@ -15,9 +15,6 @@ export interface JWTPayload {
   iss?: string;
   aud?: string;
   userId?: number; // Optional userId for backward compatibility
-  gameId?: string; // Optional gameId
-  serviceId?: string; // Optional serviceId
-  permissions?: string[]; // Optional permissions
 }
 
 // User Session JWT payload
@@ -40,10 +37,6 @@ export interface GameSessionPayload extends JWTPayload {
 // Internal Access JWT payload for service-to-service communication
 export interface InternalAccessPayload extends JWTPayload {
   type: JWTType.INTERNAL_ACCESS;
-  serviceId: string;
-  serviceName: string;
-  permissions: string[];
-  accessLevel: 'read' | 'write' | 'admin';
 }
 
 // JWT Header interface
