@@ -19,7 +19,7 @@ const servicesPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate("services", {
     user: new UserService(fastify.repositories.users),
     friends: new FriendService(fastify.repositories.friends),
-    blocks: new BlockService(fastify.repositories.blocks)
+    blocks: new BlockService(fastify.repositories.blocks, fastify.repositories.friends)
   });
 };
 

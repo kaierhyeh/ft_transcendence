@@ -44,6 +44,9 @@ export class BlockController {
 			if (!thisUserId) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			if (thisUserId === targetUserId) {
+				return reply.status(400).send({ error: "Cannot unblock yourself" });
+			}
 			await this.blockService.unblockUser(thisUserId, targetUserId);
 			reply.status(200).send({ success: true });
 		} catch (error) {
@@ -58,6 +61,9 @@ export class BlockController {
 
 			if (!thisUserId) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			if (thisUserId === targetUserId) {
+				return reply.status(400).send({ error: "Cannot check block status for yourself" });
 			}
 			const isBlocked = await this.blockService.isBlocked(thisUserId, targetUserId);
 			reply.status(200).send({ isBlocked });
