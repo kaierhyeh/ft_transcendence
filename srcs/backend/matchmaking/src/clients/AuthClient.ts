@@ -16,10 +16,10 @@ export interface GameSessionClaims {
 }
 
 export class AuthClient {
-  private base_url = CONFIG.AUTH_LITE_SERVICE.BASE_URL;
+  private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
 
   async generateJWT(claims: GameSessionClaims): Promise<{ jwt: string }> {
-    const response = await fetch(`${this.base_url}/auth-lite/jwt`, {
+    const response = await fetch(`${this.base_url}/auth/game-jwt`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

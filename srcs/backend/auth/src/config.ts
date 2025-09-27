@@ -2,19 +2,32 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { JWTType } from './types';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Key types for type-safe key loading
+type KeyType = 'user' | 'game' | 'internal';
+type KeyFormat = 'private' | 'public';
+
 // Helper functions for secure configuration
-function loadKeyFromFile(filename: string): string {
-	const keyPath = path.join(process.cwd(), 'keys', filename);
+function loadKeyByType(keyType: KeyType, keyFormat: KeyFormat): string {
+	const filename = `${keyType}_${keyFormat}.pem`;
+	const keyPath = path.join('/app/data/keys', filename);
 	try {
-		return fs.readFileSync(keyPath, 'utf8');
+		if (!fs.existsSync(keyPath)) {
+			throw new Error(`Key file ${filename} does not exist at ${keyPath}`);
+		}
+		const key = fs.readFileSync(keyPath, 'utf8');
+		if (!key.trim()) {
+			throw new Error(`Key file ${filename} is empty`);
+		}
+		return key;
 	} catch (error) {
-		throw new Error(`Failed to load key ${filename}: ${(error as Error).message}`);
+		throw new Error(`Failed to load ${keyType} ${keyFormat} key: ${(error as Error).message}`);
 	}
 }
 
@@ -24,6 +37,8 @@ function optionalEnv(key: string, defaultValue: string): string {
 
 // Configuration interfaces
 interface JWTConfig {
+	type: JWTType;
+	issuer: string;
 	privateKey: string;
 	publicKey: string;
 	algorithm: 'RS256';
@@ -61,7 +76,11 @@ interface CookieConfig {
 }
 
 interface Config {
-	jwt: JWTConfig;
+	jwt: {
+		user: JWTConfig;
+		game: JWTConfig;
+		internal: JWTConfig;
+	};
 	database: DatabaseConfig;
 	server: ServerConfig;
 	oauth: OAuthConfig;
@@ -72,12 +91,36 @@ interface Config {
 // Configuration object
 const config: Config = {
 	jwt: {
-		privateKey: optionalEnv('JWT_PRIVATE_KEY', loadKeyFromFile('private.pem')),
-		publicKey: optionalEnv('JWT_PUBLIC_KEY', loadKeyFromFile('public.pem')),
-		algorithm: 'RS256',
-		accessTokenExpiry: '15m',
-		refreshTokenExpiry: '7d',
-		tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
+		user: {
+			type: JWTType.USER_SESSION,
+			issuer: "ft_transcendence",
+			privateKey: loadKeyByType('user', 'private'),
+			publicKey: loadKeyByType('user', 'public'),
+			algorithm: 'RS256',
+			accessTokenExpiry: '15m',
+			refreshTokenExpiry: '7d',
+			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
+		},
+		game: {
+			type: JWTType.GAME_SESSION,
+			issuer: "ft_transcendence",
+			privateKey: loadKeyByType('game', 'private'),
+			publicKey: loadKeyByType('game', 'public'),
+			algorithm: 'RS256',
+			accessTokenExpiry: '2h',
+			refreshTokenExpiry: '',
+			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
+		},
+		internal: {
+			type: JWTType.INTERNAL_ACCESS,
+			issuer: "ft_transcendence",
+			privateKey: loadKeyByType('internal', 'private'),
+			publicKey: loadKeyByType('internal', 'public'),
+			algorithm: 'RS256',
+			accessTokenExpiry: '1h',
+			refreshTokenExpiry: '',
+			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
+		},
 	},
 	database: {
 		url: optionalEnv('DATABASE_URL', './data/database.db'),

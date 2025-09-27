@@ -3,6 +3,14 @@ import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { type ILoggerService, type LogContext } from '../container.js';
+import { GameSessionClaims, gameSessionClaimsSchema } from '../schemas/auth.js';
+import { JWTType } from '../types/jwt.types.js';
+import { GameSessionPayload } from '../types.js';
+import * as jwt from 'jsonwebtoken';
+import { SignOptions } from 'jsonwebtoken';
+import jwksService from '../services/jwks.service.js';
+import { config } from '../config.js';
+
 
 interface LoginRequest {
 	username: string;
@@ -334,4 +342,46 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 		}
 	});
+
+	// Generate game session jwt [Requires Internal JWT]
+	fastify.post<{ Body: GameSessionClaims }>(
+    	"/auth/game-jwt",
+    	{ schema: { body: gameSessionClaimsSchema } },
+		async (request, reply) => {
+			  try {
+				const claims: GameSessionClaims = request.body;
+				const sign_options: SignOptions = {
+					algorithm: config.jwt.game.algorithm,
+					expiresIn: config.jwt.game.accessTokenExpiry as any,
+					keyid: jwksService.getCurrentKeyId()
+				};
+				const game_jwt = jwt.sign(
+					{
+						// Standard JWT claims
+						sub: claims.sub,
+						iss: config.jwt.game.issuer,
+						type: config.jwt.game.type,
+
+						// Game specific claims
+						game_id: claims.game_id,
+						player_id: claims.player_id,
+						player_type: claims.player_type,
+						tournament_id: claims.tournament_id,
+					},
+					config.jwt.game.privateKey,
+					sign_options
+				);
+				
+				reply.status(201).send({ token: game_jwt });
+			} catch (error) {
+				logger.error('Game JWT generation error', error as Error, {
+					ip: (request as any).ip
+				});
+				return reply.status(500).send({
+					error: 'Internal server error during game JWT generation'
+				});
+			}
+	});
+
+
 }

@@ -10,6 +10,7 @@ import cors from "@fastify/cors";
 import multipart from '@fastify/multipart';
 import { config } from './config.js';
 import { initializeContainer, Container, Logger, type ILoggerService } from './container.js';
+import { initializeKeys } from './utils/generate-keys.js';
 
 const app = fastify({ 
 	logger: {
@@ -28,39 +29,48 @@ await app.register(cors, {
 
 await app.register(cookie);
 
-	await app.register(multipart, {
-		attachFieldsToBody: true,
-		limits: {
-			fileSize: config.upload.maxFileSize
-		}
-	});
+await app.register(multipart, {
+	attachFieldsToBody: true,
+	limits: {
+		fileSize: config.upload.maxFileSize
+	}
+});
 
-	// Initialize services using dependency injection
-	const container = initializeContainer();
+// Initialize JWT keys before anything else
+try {
+	initializeKeys();
+} catch (error) {
+	console.error('❌ Key initialization failed:', error);
+	process.exit(1);
+}
 
-	// Initialize database through container
-	try {
-		const db = initializeDatabase(config.database.url);
+// Initialize services using dependency injection
+const container = initializeContainer();
 
-		// Create default deleted user
-		db.prepare(`
-			INSERT OR IGNORE INTO users (id, username, password)
-			VALUES (0, '[deleted]', '')
-		`).run();
+// Initialize database through container
+try {
+	const db = initializeDatabase(config.database.url);
 
-		app.decorate('db', db);
-		app.decorate('container', container);
+	// Create default deleted user
+	db.prepare(`
+		INSERT OR IGNORE INTO users (id, username, password)
+		VALUES (0, '[deleted]', '')
+	`).run();
 
-		// Initialize logger with fastify instance
-		const logger = new Logger(app);
-		container.register('logger', () => logger);
-		app.decorate('logger', logger);
+	app.decorate('db', db);
+	app.decorate('container', container);
 
-		app.log.info('Services initialized successfully');
-	} catch (error) {
-		app.log.error(error, 'Service initialization error:');
-		process.exit(1);
-	}// Public routes that don't need authentication
+	// Initialize logger with fastify instance
+	const logger = new Logger(app);
+	container.register('logger', () => logger);
+	app.decorate('logger', logger);
+
+	app.log.info('Services initialized successfully');
+} catch (error) {
+	app.log.error(error, 'Service initialization error:');
+	process.exit(1);
+}// Public routes that don't need authentication
+
 const publicRoutes = [
 	'/auth/google',
 	'/auth/google/username',

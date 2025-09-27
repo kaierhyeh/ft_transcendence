@@ -52,7 +52,7 @@ export class AuthService {
 		if (existingAccessToken) {
 			try {
 				// Verify if the token is still valid using RSA public key
-				jwt.verify(existingAccessToken, config.jwt.publicKey!, { algorithms: [config.jwt.algorithm] });
+				jwt.verify(existingAccessToken, config.jwt.user.publicKey, { algorithms: [config.jwt.user.algorithm] });
 				accessToken = existingAccessToken;
 			} catch (error) {
 				// If invalid, blacklist it and prepare to generate a new one
@@ -64,7 +64,7 @@ export class AuthService {
 		if (existingRefreshToken) {
 			try {
 				// Verify the token is still valid using RSA public key
-				jwt.verify(existingRefreshToken, config.jwt.publicKey!, { algorithms: [config.jwt.algorithm] });
+				jwt.verify(existingRefreshToken, config.jwt.user.publicKey, { algorithms: [config.jwt.user.algorithm] });
 				refreshToken = existingRefreshToken;
 			} catch (error) {
 				// If invalid, blacklist it and prepare to generate a new one
@@ -75,32 +75,34 @@ export class AuthService {
 		// Generate new access token if needed
 		if (!accessToken) {
 			const signOptions: SignOptions = {
-				algorithm: config.jwt.algorithm,
-				expiresIn: config.jwt.accessTokenExpiry as any,
+				algorithm: config.jwt.user.algorithm,
+				expiresIn: config.jwt.user.accessTokenExpiry as any,
 				keyid: jwksService.getCurrentKeyId()
 			};
-			accessToken = jwt.sign({ userId, type: 'access' }, config.jwt.privateKey!, signOptions);
+			accessToken = jwt.sign({ userId, type: 'access' }, config.jwt.user.privateKey!, signOptions);
 			// Convert expiry to seconds for Redis
-			const expiryInSeconds = config.jwt.accessTokenExpiry === '15m' ? 15 * 60 : parseInt(config.jwt.accessTokenExpiry);
+			const expiryInSeconds = config.jwt.user.accessTokenExpiry === '15m' ? 15 * 60 : parseInt(config.jwt.user.accessTokenExpiry);
 			await redis.setex(`access_${userId}`, expiryInSeconds, accessToken);
 		}
 
 		// Generate new refresh token if needed
 		if (!refreshToken) {
 			const signOptions: SignOptions = {
-				algorithm: config.jwt.algorithm,
-				expiresIn: config.jwt.refreshTokenExpiry as any,
+				algorithm: config.jwt.user.algorithm,
+				expiresIn: config.jwt.user.refreshTokenExpiry as any,
 				keyid: jwksService.getCurrentKeyId()
 			};
-			refreshToken = jwt.sign({ userId, type: 'refresh' }, config.jwt.privateKey!, signOptions);
+			refreshToken = jwt.sign({ userId, type: 'refresh' }, config.jwt.user.privateKey!, signOptions);
 			// Convert expiry to seconds for Redis
-			const expiryInSeconds = config.jwt.refreshTokenExpiry === '7d' ? 7 * 24 * 60 * 60 : parseInt(config.jwt.refreshTokenExpiry);
+			const expiryInSeconds = config.jwt.user.refreshTokenExpiry === '7d' ? 7 * 24 * 60 * 60 : parseInt(config.jwt.user.refreshTokenExpiry);
 			await redis.setex(`refresh_${userId}`, expiryInSeconds, refreshToken);
-		}		return { accessToken, refreshToken };
+		}
+		
+		return { accessToken, refreshToken };
 	}
 
 	async generateTempToken(payload: any, type = "generic", expiresInSeconds = 300) {
-		const token = jwt.sign({ ...payload, type }, config.jwt.tempSecret, {
+		const token = jwt.sign({ ...payload, type }, config.jwt.user.tempSecret, {
 			expiresIn: expiresInSeconds
 		});
 
@@ -112,7 +114,7 @@ export class AuthService {
 		// Verify temporary token (OAuth state, email verification, etc.)
 	async verifyTempToken(token: string) {
 		try {
-			const payload = jwt.verify(token, config.jwt.tempSecret); // Keep using symmetric for temp tokens
+			const payload = jwt.verify(token, config.jwt.user.tempSecret); // Keep using symmetric for temp tokens
 			return { valid: true, payload };
 		} catch (error: any) {
 			return { valid: false, error: error.message };
@@ -129,15 +131,15 @@ export class AuthService {
 				return { valid: false, error: 'No token provided' };
 			}
 
-			// Verify JWT signature and expiry using RSA public key
-			const decoded = jwt.verify(token, config.jwt.publicKey!, { algorithms: [config.jwt.algorithm] }) as JWTPayload & {
-				userId?: number;
-				gameId?: string;
-				serviceId?: string;
-				permissions?: string[];
-			};
+		// Get the correct config for the JWT type
+		const jwtConfig = expectedType === JWTType.INTERNAL_ACCESS 
+			? config.jwt.internal 
+			: config.jwt.game;
 
-			// Check if token type matches expected type
+		// Verify JWT signature and expiry using RSA public key
+		const decoded = jwt.verify(token, jwtConfig.publicKey, { 
+			algorithms: [jwtConfig.algorithm] 
+		}) as JWTPayload;			// Check if token type matches expected type
 			if (decoded.type !== expectedType) {
 				return { 
 					valid: false, 
@@ -151,17 +153,10 @@ export class AuthService {
 				return { valid: false, blacklisted: true, error: 'Token is blacklisted' };
 			}
 
+			// Return the full decoded payload without adding undefined fields
 			return {
 				valid: true,
-				payload: {
-					userId: decoded.userId,
-					type: decoded.type,
-					gameId: decoded.gameId,
-					serviceId: decoded.serviceId,
-					permissions: decoded.permissions,
-					iat: decoded.iat,
-					exp: decoded.exp
-				}
+				payload: decoded
 			};
 
 		} catch (error: any) {
@@ -184,7 +179,7 @@ export class AuthService {
 			fastify.log.info('ACCESS TOKEN CHECK...');
 
 			// Check if the token is valid using RSA public key
-			const decoded = jwt.verify(accessToken, config.jwt.publicKey!, { algorithms: [config.jwt.algorithm] }) as { userId: number; type: string };
+			const decoded = jwt.verify(accessToken, config.jwt.user.publicKey, { algorithms: [config.jwt.user.algorithm] }) as { userId: number; type: string };
 
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${accessToken}`);
@@ -249,7 +244,7 @@ export class AuthService {
 	async refreshAccessToken(fastify: any, refreshToken: string, oldAccessToken?: string) {
 		try {
 			// Check if the token is valid using RSA public key
-			const decoded = jwt.verify(refreshToken, config.jwt.publicKey!, { algorithms: [config.jwt.algorithm] }) as { userId: number; type: string };
+			const decoded = jwt.verify(refreshToken, config.jwt.user.publicKey, { algorithms: [config.jwt.user.algorithm] }) as { userId: number; type: string };
 
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${refreshToken}`);
@@ -285,16 +280,16 @@ export class AuthService {
 			// Create a new access token using RSA private key
 			const newAccessToken = jwt.sign(
 				{ userId: decoded.userId, type: 'access' },
-				config.jwt.privateKey!,
+				config.jwt.user.privateKey,
 				{ 
-					algorithm: config.jwt.algorithm,
-					expiresIn: config.jwt.accessTokenExpiry,
+					algorithm: config.jwt.user.algorithm,
+					expiresIn: config.jwt.user.accessTokenExpiry,
 					keyid: jwksService.getCurrentKeyId() // Add key ID to JWT header
 				} as SignOptions
 			);
 
 			// Store the new token
-			const expiryInSeconds = config.jwt.accessTokenExpiry === '15m' ? 15 * 60 : parseInt(config.jwt.accessTokenExpiry);
+			const expiryInSeconds = config.jwt.user.accessTokenExpiry === '15m' ? 15 * 60 : parseInt(config.jwt.user.accessTokenExpiry);
 			await redis.setex(`access_${decoded.userId}`, expiryInSeconds, newAccessToken);
 
 			return {

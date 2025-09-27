@@ -1,3 +1,5 @@
+import { PlayerType } from "./schemas/auth";
+
 // JWT Types for three-tier system
 export enum JWTType {
   USER_SESSION = 'USER_SESSION',
@@ -29,10 +31,10 @@ export interface UserSessionPayload extends JWTPayload {
 // Game Session JWT payload
 export interface GameSessionPayload extends JWTPayload {
   type: JWTType.GAME_SESSION;
-  userId: number;
-  gameId: string;
-  gameMode: string;
-  permissions: string[];
+  player_id: number;
+  game_id: number;
+  player_type: PlayerType;
+  tournament_id: number;
 }
 
 // Internal Access JWT payload for service-to-service communication

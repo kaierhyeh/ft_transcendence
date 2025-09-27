@@ -1,5 +1,5 @@
 *.pdf
-# .env # Temporarily enabled .env tracking for development purposes
+.env
 
 node_modules
 package-lock.json

@@ -28,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # Create storage directories
-RUN mkdir -p /data/avatar && chown -R node:node /data
+RUN mkdir -p /app/data/keys /app/data/db && chown -R node:node /app/data
 
 # Startup script to launch Redis and Node
 COPY start.sh /start.sh
