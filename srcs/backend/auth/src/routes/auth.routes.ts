@@ -362,9 +362,6 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 						// Game specific claims
 						game_id: claims.game_id,
-						player_id: claims.player_id,
-						player_type: claims.player_type,
-						tournament_id: claims.tournament_id,
 					},
 					config.jwt.game.privateKey,
 					sign_options

@@ -13,7 +13,6 @@ export interface DbPlayerSession {
 export interface DbSession {
     session: {
         type: GameType,
-        tournament_id: number | null,
         created_at: string,
         started_at: string,
         ended_at: string,

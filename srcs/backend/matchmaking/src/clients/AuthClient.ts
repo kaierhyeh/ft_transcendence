@@ -10,9 +10,6 @@ interface ErrorResponse {
 export interface GameSessionClaims {
   sub: string;
   game_id: number,
-  player_id: number;
-  type: PlayerType;
-  tournament_id?: number;
 }
 
 export class AuthClient {

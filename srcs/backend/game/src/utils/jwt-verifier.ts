@@ -2,17 +2,16 @@
  * Simple JWT Verification Utility
  * 
  * Fetches JWKS from auth service and verifies JWT tokens locally
- * Supports all three JWT types: USER_SESSION, GAME_SESSION, INTERNAL_ACCESS
+ * Supports two JWT types: GAME_SESSION, INTERNAL_ACCESS
  * 
  * Usage:
  * - verifyGameSessionToken(token) for game sessions
- * - verifyUserSessionToken(token) for user authentication  
  * - verifyInternalToken(token) for service-to-service communication
  */
 
 import jwt from 'jsonwebtoken';
-import { CONFIG } from '../config.js';
-import { GameSessionPayload } from '../types/index.js';
+import { CONFIG } from '../config';
+import { GameSessionPayload, InternalJWTPayload } from '../types';
 
 interface JWK {
 	kty: string;

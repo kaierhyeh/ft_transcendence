@@ -1,11 +1,9 @@
 CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT NOT NULL CHECK (type IN ('pvp', 'multi', 'tournament')),
-    tournament_id INTEGER DEFAULT NULL,
+    type TEXT NOT NULL CHECK (type IN ('pvp', 'multi')),
     created_at DATETIME,
     started_at DATETIME,
     ended_at DATETIME,
-    CHECK (type != 'tournament' OR tournament_id IS NOT NULL)
 );
 
 CREATE TABLE IF NOT EXISTS player_sessions (

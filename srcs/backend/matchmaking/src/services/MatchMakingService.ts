@@ -52,10 +52,8 @@ export class MatchMakingService {
         const player_id = index + 1;       
         
         const claims: GameSessionClaims = {
-          sub: this.generateSub(participant, player_id, index),
+          sub: `${player_id}`,
           game_id: game_id,
-          player_id: player_id,
-          type: participant.type
         };
         const result = await this.authClient.generateJWT(claims);
         return result.jwt;
@@ -64,28 +62,6 @@ export class MatchMakingService {
 
     return { game_id, jwt_tickets };
   }
-  
-  // Generate appropriate sub based on participant type
-  private generateSub(participant: MatchParticipant, player_id: number, index: number): string {
-    let sub: string;
-    switch (participant.type) {
-      case 'registered':
-        if (!participant.user_id) {
-          throw new Error(`Registered participant at index ${index} must have a user_id`);
-        }
-        sub = participant.user_id.toString();
-        break;
-      case 'guest':
-        sub = `guest:${player_id}`;
-        break;
-      case 'ai':
-        sub = `ai:${player_id}`;
-        break;
-      default:
-        throw new Error(`Unknown participant type: ${participant.type}`);
-    }
-    return sub;
-}
 
 
   private async makeMultiGame(data: MatchMakingData): Promise<Match> {
@@ -125,10 +101,8 @@ export class MatchMakingService {
         const player_id = index + 1;
         
         const claims: GameSessionClaims = {
-          sub: this.generateSub(participant, player_id, index),
+          sub: `${player_id}`,
           game_id: game_id,
-          player_id: player_id,
-          type: participant.type
         };
         const result = await this.authClient.generateJWT(claims);
         return result.jwt;
