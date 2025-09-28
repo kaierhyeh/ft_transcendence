@@ -1,5 +1,5 @@
 /**
- * Simple Internal JWT Middleware
+ * Simple Internal JWT Middleware for Users Service
  * 
  * Verifies that requests come from internal services with valid INTERNAL_ACCESS tokens
  * No complex permissions - just "are you an internal service?"

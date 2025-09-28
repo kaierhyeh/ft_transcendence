@@ -4,7 +4,8 @@ import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
-import { verifyGameSessionJWT } from "../utils/jwt-verifier.js";
+import { verifyGameSessionJWT } from "../utils/jwt-verifier";
+import { toInteger } from "../utils/type-converters";
 
 let next_id = 1;
 
@@ -59,7 +60,7 @@ export class LiveSessionManager {
                     if (!payload.game_id || payload.game_id !== id) {
                         throw new Error("Game ID mismatch");
                     }
-                    const player_id = payload.player_id;
+                    const player_id = toInteger(payload.sub);
                     session.connectPlayer(player_id, connection);
                 } catch (err) {
                     this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "JWT verification failed");

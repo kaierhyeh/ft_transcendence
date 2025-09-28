@@ -29,8 +29,8 @@ export class SessionRepository {
 
     public save(session: DbSession): void {
         const insertSession = this.db.prepare(`
-            INSERT INTO sessions (type, tournament_id, created_at, started_at, ended_at)
-            VALUES (@type, @tournament_id, @created_at, @started_at, @ended_at)
+            INSERT INTO sessions (type, created_at, started_at, ended_at)
+            VALUES (@type, @created_at, @started_at, @ended_at)
         `);
 
         const insertPlayerSession = this.db.prepare(`

@@ -1,11 +1,17 @@
 /**
- * JWT Verification Utility for Users Service
+ * Simple JWT Verification Utility for Users Service
  * 
- * Copy of the game service JWT verifier, adapted for users service
- * Supports USER_SESSION and INTERNAL_ACCESS tokens
+ * Fetches JWKS from auth service and verifies JWT tokens locally
+ * Supports two JWT types: USER_SESSION, INTERNAL_ACCESS
+ * 
+ * Usage:
+ * - verifyUserSessionToken(token) for user sessions
+ * - verifyInternalToken(token) for service-to-service communication
  */
 
 import jwt from 'jsonwebtoken';
+import { CONFIG } from '../config';
+import { UserSessionPayload, InternalAccessPayload } from '../types';
 
 interface JWK {
 	kty: string;
@@ -32,8 +38,7 @@ export class JWTVerifier {
 	private readonly AUTH_SERVICE_URL: string;
 
 	constructor() {
-		// Get auth service URL from environment or use default
-		this.AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth:3000';
+		this.AUTH_SERVICE_URL = CONFIG.AUTH_SERVICE.BASE_URL;
 	}
 
 	/**
@@ -58,10 +63,12 @@ export class JWTVerifier {
 	private async getJWKS(): Promise<JWKS> {
 		const now = Date.now();
 		
+		// Return cached JWKS if still valid
 		if (this.jwksCache && now < this.cacheExpiry) {
 			return this.jwksCache;
 		}
 
+		// Fetch new JWKS
 		this.jwksCache = await this.fetchJWKS();
 		this.cacheExpiry = now + this.CACHE_TTL;
 		
@@ -78,10 +85,11 @@ export class JWTVerifier {
 	}
 
 	/**
-	 * Convert JWK to PEM format
+	 * Convert JWK to PEM format for JWT verification
 	 */
 	private jwkToPem(jwk: JWK): string {
 		try {
+			// Use Node.js crypto to convert JWK to PEM
 			const crypto = require('crypto');
 			const publicKey = crypto.createPublicKey({
 				kty: jwk.kty,
@@ -95,10 +103,11 @@ export class JWTVerifier {
 	}
 
 	/**
-	 * Verify JWT token
+	 * Verify JWT token with automatic key discovery
 	 */
 	private async verifyToken(token: string, expectedType: string): Promise<JWTPayload> {
 		try {
+			// First decode to get key ID from header
 			const decoded = jwt.decode(token, { complete: true });
 			if (!decoded || typeof decoded === 'string') {
 				throw new Error('Invalid token format');
@@ -109,17 +118,20 @@ export class JWTVerifier {
 				throw new Error('Missing key ID in token header');
 			}
 
+			// Find the corresponding JWK
 			const jwk = await this.findKey(kid);
 			if (!jwk) {
 				throw new Error(`Key not found: ${kid}`);
 			}
 
+			// Convert JWK to PEM and verify
 			const publicKey = this.jwkToPem(jwk);
 			const payload = jwt.verify(token, publicKey, {
 				algorithms: [jwk.alg as jwt.Algorithm],
-				issuer: 'ft_transcendence',
+				issuer: CONFIG.JWT.ISSUER || 'ft_transcendence',
 			}) as JWTPayload;
 
+			// Verify token type
 			if (payload.type !== expectedType) {
 				throw new Error(`Invalid token type. Expected: ${expectedType}, got: ${payload.type}`);
 			}
@@ -134,28 +146,33 @@ export class JWTVerifier {
 	}
 
 	/**
-	 * Verify User Session JWT token (most common for users service)
+	 * Verify User Session JWT token
 	 */
-	async verifyUserSessionToken(token: string): Promise<any> {
-		return this.verifyToken(token, 'USER_SESSION');
+	async verifyUserSessionToken(token: string): Promise<UserSessionPayload> {
+		const payload = await this.verifyToken(token, 'USER_SESSION');
+		return payload as UserSessionPayload;
 	}
 
 	/**
-	 * Verify Internal Access JWT token (for service-to-service)
+	 * Verify Internal Access JWT token
 	 */
-	async verifyInternalToken(token: string): Promise<any> {
-		return this.verifyToken(token, 'INTERNAL_ACCESS');
+	async verifyInternalToken(token: string): Promise<InternalAccessPayload> {
+		const payload = await this.verifyToken(token, 'INTERNAL_ACCESS');
+		return payload as InternalAccessPayload;
 	}
 
+	/**
+	 * Clear JWKS cache (useful for testing or key rotation)
+	 */
 	clearCache(): void {
 		this.jwksCache = null;
 		this.cacheExpiry = 0;
 	}
 }
 
-// Export singleton
+// Export singleton instance
 export const jwtVerifier = new JWTVerifier();
 
-// Export convenience functions for users service
-export const verifyUserSessionJWT = (token: string) => jwtVerifier.verifyUserSessionToken(token);
-export const verifyInternalJWT = (token: string) => jwtVerifier.verifyInternalToken(token);
+// Export convenience functions
+export const verifyUserSessionJWT = (token: string): Promise<UserSessionPayload> => jwtVerifier.verifyUserSessionToken(token);
+export const verifyInternalJWT = (token: string): Promise<InternalAccessPayload> => jwtVerifier.verifyInternalToken(token);

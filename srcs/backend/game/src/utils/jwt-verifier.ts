@@ -38,7 +38,7 @@ export class JWTVerifier {
 	private readonly AUTH_SERVICE_URL: string;
 
 	constructor() {
-		this.AUTH_SERVICE_URL = CONFIG.AUTH_SERVICE.URL;
+		this.AUTH_SERVICE_URL = CONFIG.AUTH_SERVICE.BASE_URL;
 	}
 
 	/**
@@ -154,17 +154,11 @@ export class JWTVerifier {
 	}
 
 	/**
-	 * Verify User Session JWT token  
-	 */
-	async verifyUserSessionToken(token: string): Promise<any> {
-		return this.verifyToken(token, 'USER_SESSION');
-	}
-
-	/**
 	 * Verify Internal Access JWT token
 	 */
-	async verifyInternalToken(token: string): Promise<any> {
-		return this.verifyToken(token, 'INTERNAL_ACCESS');
+	async verifyInternalToken(token: string): Promise<InternalJWTPayload> {
+		const payload = await this.verifyToken(token, 'INTERNAL_ACCESS');
+		return payload as InternalJWTPayload;
 	}
 
 	/**
@@ -181,5 +175,4 @@ export const jwtVerifier = new JWTVerifier();
 
 // Export convenience functions
 export const verifyGameSessionJWT = (token: string): Promise<GameSessionPayload> => jwtVerifier.verifyGameSessionToken(token);
-export const verifyUserSessionJWT = (token: string) => jwtVerifier.verifyUserSessionToken(token);
-export const verifyInternalJWT = (token: string) => jwtVerifier.verifyInternalToken(token);
+export const verifyInternalJWT = (token: string): Promise<InternalJWTPayload> => jwtVerifier.verifyInternalToken(token);

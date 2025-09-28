@@ -21,8 +21,8 @@ export const CONFIG = {
   },
 
 
-  AUTH_LITE_SERVICE: {
-    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-auth-lite:3000"
+  AUTH_SERVICE: {
+    BASE_URL: process.env.USER_SERVICE_URL || "http://backend-auth:3000"
   },
   
   STATS_SERVICE: {

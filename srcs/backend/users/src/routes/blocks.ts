@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { verifyJWT } from "../middleware/verifyJWT";
 import { BlockController } from "../controllers/BlockController";
 import { UserIdParams, userIdSchema } from "../schemas/blocks";
+import { userAuthMiddleware } from "../middleware/user-auth.middleware";
 
 export default async function blocksRoutes(fastify: FastifyInstance) {
 	const blockController = new BlockController(fastify.services.blocks);
@@ -10,7 +10,7 @@ export default async function blocksRoutes(fastify: FastifyInstance) {
 	fastify.get(
 		"/",
 		{
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		blockController.getBlockedUsers.bind(blockController)
 		// get blocked list
@@ -21,7 +21,7 @@ export default async function blocksRoutes(fastify: FastifyInstance) {
 		"/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		blockController.blockUser.bind(blockController)
 		// expected param: id (user to block)
@@ -32,7 +32,7 @@ export default async function blocksRoutes(fastify: FastifyInstance) {
 		"/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		blockController.unblockUser.bind(blockController)
 	);
@@ -42,7 +42,7 @@ export default async function blocksRoutes(fastify: FastifyInstance) {
 		"/check/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		blockController.isBlocked.bind(blockController)
 	);

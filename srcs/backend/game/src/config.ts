@@ -18,7 +18,7 @@ export const CONFIG = {
 
   // Auth service settings
   AUTH_SERVICE: {
-    URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000",
+    BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000",
   },
 
   

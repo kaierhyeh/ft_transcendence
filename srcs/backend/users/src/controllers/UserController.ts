@@ -12,6 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG } from '../config';
 import { pipeline } from 'stream/promises';
+import { toInteger } from '../utils/type-converters';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -69,11 +70,12 @@ export class UserController {
     reply: FastifyReply
   ) {
     try {
-      const user_id = request.user?.sub; // `sub` is the user ID in the JWT payload
+      const sub = request.user?.sub; // `sub` is the user ID in the JWT payload
       
-      if (!user_id) {
+      if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
+      const user_id = toInteger(sub);
       
       const raw_data = request.body;
       const changes = await this.userService.updateUser(user_id, raw_data);
@@ -89,9 +91,11 @@ export class UserController {
     reply: FastifyReply
   ) {
     try {
-      const user_id = request.user?.sub;
-      if (!user_id)
-        return reply.status(401).send({ error: "Unauthorized" });
+      const sub = request.user?.sub;
+      if (!sub) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      const user_id = toInteger(sub);
 
       const data = await request.file();
       if (!data)
@@ -142,13 +146,14 @@ export class UserController {
 
   public async getMe(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const userId = request.user?.sub;
+      const sub = request.user?.sub;
       
-      if (!userId) {
+      if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
+      const user_id = toInteger(sub);
       
-      const profile = await this.userService.getProfile(userId);
+      const profile = await this.userService.getProfile(user_id);
       return reply.send(profile);
     } catch (error) {
       this.handleError(error, reply);
@@ -207,13 +212,14 @@ export class UserController {
 
   public async deleteMe(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const userId = request.user?.sub;
+      const sub = request.user?.sub;
       
-      if (!userId) {
+      if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
+      const user_id = toInteger(sub);
       
-      const changes = await this.userService.deleteUser(userId);
+      const changes = await this.userService.deleteUser(user_id);
       return reply.send({ 
         success: true,
         changes,
@@ -226,13 +232,14 @@ export class UserController {
 
   public async resetAvatar(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const userId = request.user?.sub;
+      const sub = request.user?.sub;
       
-      if (!userId) {
+      if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
+      const user_id = toInteger(sub);
       
-      const changes = await this.userService.resetAvatarToDefault(userId);
+      const changes = await this.userService.resetAvatarToDefault(user_id);
       return reply.send({ 
         success: true,
         changes,

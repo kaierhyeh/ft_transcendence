@@ -1,16 +1,18 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { FriendService } from '../services/FriendService';
 import { FriendshipIdParams, UserIdParams } from '../schemas/friends';
+import { toInteger } from '../utils/type-converters';
 
 export class FriendController {
 	constructor(private friendService: FriendService) {}
 
 	public async getFriends(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
-			if (!thisUserId) {
+			const sub = request.user?.sub;
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			const friends = await this.friendService.getFriends(thisUserId);
 			reply.status(200).send(friends);
 		} catch (error) {
@@ -20,10 +22,11 @@ export class FriendController {
 
 	public async getPendingIncomingRequests(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
-			if (!thisUserId) {
+			const sub = request.user?.sub;
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			const requests = await this.friendService.getPendingIncomingRequests(thisUserId);
 			reply.status(200).send(requests);
 		} catch (error) {
@@ -33,10 +36,11 @@ export class FriendController {
 
 	public async getPendingOutgoingRequests(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
-			if (!thisUserId) {
+			const sub = request.user?.sub;
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			const requests = await this.friendService.getPendingOutgoingRequests(thisUserId);
 			reply.status(200).send(requests);
 		} catch (error) {
@@ -46,12 +50,13 @@ export class FriendController {
 
 	public async sendFriendRequest(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetUserId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetUserId) {
 				return reply.status(400).send({ error: "Cannot send friend request to yourself" });
 			}
@@ -67,12 +72,13 @@ export class FriendController {
 
 	public async cancelFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetFriendshipId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetFriendshipId) {
 				return reply.status(400).send({ error: "Cannot cancel friend request to yourself" });
 			}
@@ -85,12 +91,13 @@ export class FriendController {
 
 	public async acceptFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetFriendshipId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetFriendshipId) {
 				return reply.status(400).send({ error: "Cannot accept friend request to yourself" });
 			}
@@ -106,12 +113,13 @@ export class FriendController {
 
 	public async declineFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetFriendshipId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetFriendshipId) {
 				return reply.status(400).send({ error: "Cannot decline friend request to yourself" });
 			}
@@ -128,12 +136,13 @@ export class FriendController {
 
 	public async removeFriend(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetFriendshipId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetFriendshipId) {
 				return reply.status(400).send({ error: "Cannot remove yourself from friends" });
 			}

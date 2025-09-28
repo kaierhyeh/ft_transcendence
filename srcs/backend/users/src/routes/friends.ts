@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { FriendController } from "../controllers/FriendController";
-import { verifyJWT } from "../middleware/verifyJWT";
 import { FriendshipIdParams, friendshipIdSchema, UserIdParams, userIdSchema } from "../schemas/friends";
+import { userAuthMiddleware } from "../middleware/user-auth.middleware";
 
 
 /* 
@@ -17,7 +17,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	fastify.get(
 		"/",
 		{
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.getFriends.bind(friendController)
 	);
@@ -26,7 +26,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	fastify.get(
 		"/incoming",
 		{
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.getPendingIncomingRequests.bind(friendController)
 	);
@@ -35,7 +35,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	fastify.get(
 		"/outgoing",
 		{
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.getPendingOutgoingRequests.bind(friendController)
 	);
@@ -45,7 +45,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		"/request/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.sendFriendRequest.bind(friendController)
 	);
@@ -55,7 +55,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		"/request/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.cancelFriendRequest.bind(friendController)
 	);
@@ -65,7 +65,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		"/accept/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.acceptFriendRequest.bind(friendController)
 	);
@@ -75,7 +75,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		"/decline/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.declineFriendRequest.bind(friendController)
 	);
@@ -85,7 +85,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		"/:id",
 		{
 			schema: { params: userIdSchema },
-			preHandler: verifyJWT
+			preHandler: userAuthMiddleware
 		},
 		friendController.removeFriend.bind(friendController)
 	);

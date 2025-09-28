@@ -1,16 +1,18 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { BlockService } from '../services/BlockService';
 import { UserIdParams } from '../schemas/blocks';
+import { toInteger } from '../utils/type-converters';
 
 export class BlockController {
 	constructor(private blockService: BlockService) {}
 
 	public async getBlockedUsers(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
-			if (!thisUserId) {
+			const sub = request.user?.sub;
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			const blockedUsers = await this.blockService.getBlockedUsers(thisUserId);
 			reply.status(200).send(blockedUsers);
 		} catch (error) {
@@ -20,12 +22,13 @@ export class BlockController {
 
 	public async blockUser(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetUserId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetUserId) {
 				return reply.status(400).send({ error: "Cannot block yourself" });
 			}
@@ -38,12 +41,13 @@ export class BlockController {
 
 	public async unblockUser(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetUserId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetUserId) {
 				return reply.status(400).send({ error: "Cannot unblock yourself" });
 			}
@@ -56,12 +60,13 @@ export class BlockController {
 
 	public async isBlocked(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const thisUserId = request.user?.sub;
+			const sub = request.user?.sub;
 			const targetUserId = request.params.id;
 
-			if (!thisUserId) {
+			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			const thisUserId = toInteger(sub);
 			if (thisUserId === targetUserId) {
 				return reply.status(400).send({ error: "Cannot check block status for yourself" });
 			}

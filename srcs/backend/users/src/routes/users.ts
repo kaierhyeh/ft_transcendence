@@ -14,7 +14,8 @@ import {
   AvatarParams, 
   avatarFilenameSchema 
 } from "../schemas";
-import { verifyJWT } from "../middleware/verifyJWT";
+import { userAuthMiddleware } from "../middleware/user-auth.middleware";
+import { internalAuthMiddleware } from "../middleware/internal-auth.middleware";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
@@ -22,23 +23,30 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   // Create local user account (email/password signup)
   fastify.post<{ Body: LocalUserCreationData }>(
     "/local",
-    { schema: { body: createLocalUserSchema} },
+    { 
+      schema: { body: createLocalUserSchema},
+      preHandler: internalAuthMiddleware 
+    },
     userController.createLocalAccount.bind(userController)
   );
 
   // Create Google OAuth user account
   fastify.post<{ Body: GoogleUserCreationData }>(
     "/google",
-    { schema: { body: createGoogleUserSchema} },
+    {
+      schema: { body: createGoogleUserSchema},
+      preHandler: internalAuthMiddleware 
+    },
     userController.createGoogleAccount.bind(userController)
   );
-
-
 
   // get all user data via its login [SHOULD be accessible only to backend micro services]
   fastify.get<{ Params: LoginParams }>(
     "/:login",
-    { schema: { params: loginSchema} },
+    {
+      schema: { params: loginSchema},
+      preHandler: internalAuthMiddleware,
+    },
     userController.getUserByLogin.bind(userController)
   );
 
@@ -47,7 +55,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     "/me",
     {
       schema: { body: updateSchema },
-      preHandler: verifyJWT
+      preHandler: userAuthMiddleware
     }, 
     userController.updateMe.bind(userController)
   );
@@ -57,7 +65,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     "/me/avatar",
     {
       schema: { },
-      preHandler: verifyJWT
+      preHandler: userAuthMiddleware
     },
     userController.updateAvatar.bind(userController)
   );
@@ -65,21 +73,21 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   // get user profile (most of user data + stats summary) [Requires user authentication]
   fastify.get(
     "/me",
-    { preHandler: verifyJWT },
+    { preHandler: userAuthMiddleware },
     userController.getMe.bind(userController)
   );
 
   // delete user account (soft delete) [Requires user authentication]
   fastify.delete(
     "/me",
-    { preHandler: verifyJWT },
+    { preHandler: userAuthMiddleware },
     userController.deleteMe.bind(userController)
   );
 
   // reset avatar to default [Requires user authentication]
   fastify.delete(
     "/me/avatar",
-    { preHandler: verifyJWT },
+    { preHandler: userAuthMiddleware },
     userController.resetAvatar.bind(userController)
   );
 

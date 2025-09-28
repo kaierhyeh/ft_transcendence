@@ -3,7 +3,6 @@ import { CONFIG } from "./config";
 import routes from "./routes"
 import repositoriesPlugin from "./plugins/repositories";
 import servicesPlugin from "./plugins/services";
-import jwtPlugin from "./plugins/jwt";
 import multipart from "@fastify/multipart";
 import fs from "fs";
 import path from "path";
@@ -19,7 +18,6 @@ async function run() {
     }
   });
   
-  await fastify.register(jwtPlugin);
   await fastify.register(repositoriesPlugin);
   await fastify.register(servicesPlugin);
 
