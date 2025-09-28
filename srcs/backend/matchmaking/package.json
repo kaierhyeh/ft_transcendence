@@ -1,7 +1,7 @@
 {
-  "name": "users-service",
+  "name": "matchmaking-service",
   "version": "1.0.0",
-  "description": "Microservice for managing user accounts and profiles in the Pong game",
+  "description": "Microservice for creating matches and distributing game JWT tickets",
   "main": "index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",

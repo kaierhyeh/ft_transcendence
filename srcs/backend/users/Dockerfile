@@ -15,7 +15,7 @@ RUN npm install
 RUN mkdir -p /app/data/avatar
 COPY assets/default.png /app/data/avatar/default.png
 
-# Copy source code (excluding assets/ due to .dockerignore)
+# Copy source code
 COPY . .
 
 EXPOSE 3000

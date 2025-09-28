@@ -3,9 +3,8 @@
 	"version": "1.0.0",
 	"description": "Authentication microservice for transcendence project",
 	"main": "index.ts",
-	"type": "module",
 	"scripts": {
-		"start": "redis-server --daemonize yes && node dist/src/index.js",
+		"start": "redis-server --daemonize yes && ts-node src/index.ts",
 		"dev": "nodemon --exec \"node --loader ts-node/esm\" src/index.ts",
 		"build": "tsc",
 		"serve": "node dist/src/index.js",
