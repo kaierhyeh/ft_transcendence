@@ -1,4 +1,4 @@
-import { GameType } from "../schemas";
+import { GameMode } from "../schemas";
 import { Team, PlayerType } from "../types";
 import { Database } from "better-sqlite3";
 
@@ -12,7 +12,7 @@ export interface DbPlayerSession {
 
 export interface DbSession {
     session: {
-        type: GameType,
+        mode: GameMode,
         created_at: string,
         started_at: string,
         ended_at: string,
@@ -29,8 +29,8 @@ export class SessionRepository {
 
     public save(session: DbSession): void {
         const insertSession = this.db.prepare(`
-            INSERT INTO sessions (type, created_at, started_at, ended_at)
-            VALUES (@type, @created_at, @started_at, @ended_at)
+            INSERT INTO sessions (mode, created_at, started_at, ended_at)
+            VALUES (@mode, @created_at, @started_at, @ended_at)
         `);
 
         const insertPlayerSession = this.db.prepare(`

@@ -1,5 +1,5 @@
 import { CONFIG } from "../config";
-import { GameType, MatchMakingData, PlayerType } from "../schemas";
+import { GameMode, MatchMakingData, PlayerType } from "../schemas";
 
 interface ErrorResponse {
   message?: string;
@@ -19,7 +19,7 @@ interface Player {
 }
 
 export interface GameCreationData {
-  type: GameType;
+  mode: GameMode;
   players: Player[];
 };
 
@@ -41,7 +41,7 @@ export class GameClient {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          type: data.type,
+          mode: data.mode,
           participants: data.players  // Adjust field name to match game service
         })
       });

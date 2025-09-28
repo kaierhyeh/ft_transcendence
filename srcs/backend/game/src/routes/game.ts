@@ -11,8 +11,8 @@ export default async function gameRoutes(fastify: FastifyInstance) {
       preHandler: internalAuthMiddleware  // ← Simple protection!
     },
     async (request, reply) => {
-      const { type, participants } = request.body;
-      const game_id = fastify.live_sessions.createGameSession(type, participants);
+      const { mode, participants } = request.body;
+      const game_id = fastify.live_sessions.createGameSession(mode, participants);
       reply.status(201).send({game_id: game_id});
   });
 

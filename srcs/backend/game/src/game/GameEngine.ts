@@ -1,3 +1,4 @@
+import { GameMode } from "../schemas";
 import { PlayerSlot, Team } from "../types";
 import { SessionPlayerMap } from "./GameSession";
 
@@ -44,8 +45,6 @@ interface Player {
 }
 
 type Score = Map<Team, number>;
-
-export type GameMode = "pvp" | "multi";
 
 interface GameModeConfig {
     paddlePositions: Partial<Record<PlayerSlot, Paddle>>;

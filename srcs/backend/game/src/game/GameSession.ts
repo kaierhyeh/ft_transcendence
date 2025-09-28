@@ -1,7 +1,7 @@
 import { SocketStream } from '@fastify/websocket';
-import { GameParticipant, GameType } from '../schemas';
+import { GameParticipant, GameMode } from '../schemas';
 import { Team, GameMessage } from '../types'
-import { GameConf, GameEngine, GameMode, GameState } from './GameEngine';
+import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
 import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
@@ -16,7 +16,6 @@ type PlayerMap = Map<number, Player>;
 export type SessionPlayerMap = PlayerMap;
 
 export class GameSession {
-    private type: GameType;
     private game_mode: GameMode;
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
@@ -29,9 +28,8 @@ export class GameSession {
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
 
-    constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
-        this.type = game_type;
-        this.game_mode = game_type === "multi" ? "multi" : "pvp";
+    constructor(game_mode: GameMode, participants: GameParticipant[], logger: FastifyBaseLogger) {
+        this.game_mode = game_mode;
         this.players = this.initPlayers_(participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
@@ -178,7 +176,7 @@ export class GameSession {
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (this.type === "multi" || !this.started_at || !this.ended_at || !game_state.winner)
+        if (this.game_mode === "multi" || !this.started_at || !this.ended_at || !game_state.winner)
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
@@ -193,7 +191,7 @@ export class GameSession {
         
         return {
             session: {
-                type: this.type,
+                mode: this.game_mode,
                 created_at: toSqlDate(this.created_at),
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),

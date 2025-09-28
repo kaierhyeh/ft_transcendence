@@ -1,5 +1,5 @@
 import { SocketStream } from "@fastify/websocket";
-import { GameParticipant, GameType } from "../schemas";
+import { GameParticipant, GameMode } from "../schemas";
 import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
@@ -18,10 +18,10 @@ export class LiveSessionManager {
         this.game_sessions = new Map();
     }
 
-    public createGameSession(type: GameType, participants: GameParticipant[]): number {
+    public createGameSession(mode: GameMode, participants: GameParticipant[]): number {
         const game_id = next_id++;
 
-        const new_game = new GameSession(type, participants, this.logger);
+        const new_game = new GameSession(mode, participants, this.logger);
         this.game_sessions.set(game_id, new_game);
 
         return game_id;

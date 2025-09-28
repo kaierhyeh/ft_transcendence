@@ -33,11 +33,11 @@ export const gameIdSchema = {
 
 export const createGameSchema = {
   type: "object",
-  required: ["type", "participants"],
+  required: ["mode", "participants"],
   properties: {
-    type: {
+    mode: {
       type: "string",
-      enum: ["solo", "pvp", "multi"],
+      enum: ["pvp", "multi"],
     },
     participants: {
       type: "array",
@@ -53,4 +53,4 @@ export const createGameSchema = {
 export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
-export type GameType = GameCreationBody["type"];
+export type GameMode = GameCreationBody["mode"];

@@ -40,7 +40,7 @@ export function initGame(): void {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    type: gameMode === 'multi' ? 'multi' : 'pvp',
+                    mode: gameMode === 'multi' ? 'multi' : 'pvp',
                     participants: participants
                 })
             });

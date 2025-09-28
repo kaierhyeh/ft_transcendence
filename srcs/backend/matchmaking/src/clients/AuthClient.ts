@@ -1,5 +1,4 @@
 import { CONFIG } from "../config";
-import { PlayerType } from "../schemas";
 
 interface ErrorResponse {
   message?: string;

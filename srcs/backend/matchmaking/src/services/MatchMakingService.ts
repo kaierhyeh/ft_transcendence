@@ -1,7 +1,6 @@
 import { AuthClient, GameSessionClaims } from '../clients/AuthClient';
 import { GameClient, GameCreationData } from '../clients/GameClient';
-import { CONFIG } from '../config';
-import { MatchMakingData, MatchParticipant } from '../schemas';
+import { MatchMakingData } from '../schemas';
 
 type Team = "left" | "right";
 type PlayerSlots = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right";
@@ -22,7 +21,7 @@ export class MatchMakingService {
   }
 
   public async make(data: MatchMakingData): Promise<Match> {
-    if (data.type === "multi") {
+    if (data.mode === "multi") {
       return this.makeMultiGame(data);
     } 
     return this.makePvpGame(data);
@@ -39,7 +38,7 @@ export class MatchMakingService {
     }));
 
     const game_creation_data: GameCreationData = {
-      type: data.type,
+      mode: data.mode,
       players
     };
 
@@ -88,7 +87,7 @@ export class MatchMakingService {
     });
 
     const game_creation_data: GameCreationData = {
-      type: data.type,
+      mode: data.mode,
       players
     };
 
