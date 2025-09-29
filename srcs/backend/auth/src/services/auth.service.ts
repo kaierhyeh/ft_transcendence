@@ -2,7 +2,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { config } from '../config.js';
 import jwksService from './jwks.service.js';
 import { JWTType, JWTPayload } from '../types.js';
-import { User, UserClient } from '../clients/UserClient.js';
+import { LocalUserCreationData, User, UserClient } from '../clients/UserClient.js';
 import { LoginRequest } from '../schemas/auth.js';
 import authUtils from '../utils/auth.utils.js';
 
@@ -62,6 +62,21 @@ export class AuthService {
 		return user;
 	}
 
+	async checkUserExistence(login: string): Promise<boolean> {
+		try {
+			await this.userClient.getUserByLogin(login);
+		} catch(error) {
+			if ((error as any).status === 404)
+				return false;
+			throw error;
+		}
+		return true;
+    }
+
+	async register(data: LocalUserCreationData): Promise< {user_id: number} > {
+		const result = this.userClient.register(data);
+		return result;
+	}
 	// Generate a new access token and refresh token for the user using the userId and JWT manager
 	// The access token is valid for 15 minutes and the refresh token for 7 days
 	// The tokens are stored in Redis with the userId as key

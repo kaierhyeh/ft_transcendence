@@ -53,63 +53,48 @@ export class AuthUtils {
 		return reply;
 	}
 
-	checkUsername(fastify: any, username: string): { error: string } | string {
-		fastify.log.info(`Checking username: ${username}`);
+	/**
+	 * Security validation for login input (username or email)
+	 * Performs security checks that can't be handled by JSON schema
+	 * 
+	 * @param fastify - Fastify instance for logging
+	 * @param login - The login input (username or email)
+	 * @returns Sanitized login string or error object
+	 */
+	checkLogin(fastify: any, login: string): { error: string } | string {
+		fastify.log.info(`Security check for login: ${login}`);
 
-		// Check for null/undefined
-		if (username === null || username === undefined) {
-			fastify.log.warn("Search failed: username is null or undefined");
-			return { error: "Username is required" };
-		}
-
-		// Make sure username is a string
-		if (typeof username !== 'string') {
-			fastify.log.warn("Search failed: username is not a string");
-			return { error: "Username must be a text value" };
-		}
-
-		const trimmedUsername = username.trim();
-		if (!trimmedUsername.length) {
-			fastify.log.warn("Search failed: username is empty after trimming");
-			return { error: "Username is required" };
-		}
+		// Note: Basic format validation is handled by JSON schema
+		// This function focuses on security concerns
 
 		// Check for control characters and escape sequences
-		if (/[\x00-\x1F\x7F]/.test(trimmedUsername)) {
-			fastify.log.warn("Search failed: username contains control characters");
-			return { error: "Username contains invalid characters" };
+		if (/[\x00-\x1F\x7F]/.test(login)) {
+			fastify.log.warn("Security check failed: login contains control characters");
+			return { error: "Login contains invalid characters" };
 		}
 
-		// Check for various XSS patterns (more comprehensive)
-		if (/<[^>]*>|script|alert|onerror|onclick|javascript:|&lt;|\"|\'|%3C/.test(trimmedUsername.toLowerCase())) {
-			fastify.log.warn("Search failed: username contains potentially malicious patterns");
-			return { error: "Username contains invalid characters" };
+		// Check for XSS patterns
+		if (/<[^>]*>|script|alert|onerror|onclick|javascript:|&lt;|\"|\'|%3C/.test(login.toLowerCase())) {
+			fastify.log.warn("Security check failed: login contains potentially malicious patterns");
+			return { error: "Login contains invalid characters" };
 		}
 
-		// Check for excessive repetition of characters (ie. aaaaaaa)
-		if (/(.)\1{3,}/.test(trimmedUsername)) {
-			fastify.log.warn("Search failed: username contains excessive repeated characters");
-			return { error: "Username cannot contain more than 3 repeated characters in a row" };
+		// Check for excessive repetition of characters (security concern)
+		if (/(.)\1{6,}/.test(login)) {
+			fastify.log.warn("Security check failed: login contains excessive repeated characters");
+			return { error: "Login cannot contain more than 6 repeated characters in a row" };
 		}
 
-		// Check if it's an email address (allow @ symbol and common email characters)
+		// Normalize the login:
+		// - Email addresses: lowercase
+		// - Usernames: capitalize first letter
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (emailRegex.test(trimmedUsername)) {
-			// For email addresses, only check length (reasonable email length)
-			if (trimmedUsername.length > 254) { // RFC 5321 limit
-				return { error: "Email address is too long" };
-			}
-			return trimmedUsername.toLowerCase(); // Store emails in lowercase
+		if (emailRegex.test(login)) {
+			return login.toLowerCase();
+		} else {
+			// Traditional username normalization
+			return login.charAt(0).toUpperCase() + login.slice(1).toLowerCase();
 		}
-
-		// For traditional usernames: must be 3-15 characters, letters/numbers/underscores only
-		const capitalizedUsername = trimmedUsername.charAt(0).toUpperCase() + trimmedUsername.slice(1).toLowerCase();
-		const usernameRegex = /^[a-zA-Z][a-zA-Z0-9_]{3,15}$/;
-		if (!usernameRegex.test(capitalizedUsername)) {
-			return { error: "Username must be 3-15 characters, letters/numbers/underscores only, OR a valid email address." };
-		}
-
-		return capitalizedUsername;
 	}
 }
 

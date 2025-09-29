@@ -3,7 +3,7 @@ import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { type ILoggerService, type LogContext } from '../container.js';
-import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema } from '../schemas/auth.js';
+import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, signupFormSchema, SignupRequest } from '../schemas/auth.js';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service.js';
@@ -45,7 +45,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			}
 
 			// Generate tokens using new USER_SESSION method
-			const { accessToken, refreshToken } = await authService.generateTokens(user.id);
+			const { accessToken, refreshToken } = await authService.generateTokens(user.user_id);
 
 			// Set cookies
 			authUtils.ft_setCookie(reply, accessToken, 15);
@@ -57,7 +57,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				username: user.username,
 			});
 
-		} catch (error) {
+		} catch (error: any) {
 			 if (error.code === 'INVALID_CREDENTIALS') {
 				reply.status(401).send({
 					error: "Invalid credentials"
@@ -81,7 +81,6 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			}
 
 			logger.error('Login error', error as Error, {
-				username,
 				ip: (request as any).ip
 			});
 			return reply.code(500).send({ 
@@ -92,38 +91,31 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 	});
 
 	// Register route
-	fastify.post('/auth/register', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
+	fastify.post<{ Body: SignupRequest }>(
+		'/auth/register',
+		{ schema: { body: signupFormSchema } },
+		async (request, reply) => {
 		try {
-			const { username, password } = request.body;
+			const { login, password } = request.body;
 
-			if (!username || !password) {
-				return reply.code(400).send({
-					success: false,
-					error: 'Username and password are required.'
-				});
-			}
-
-			// Validate username (now accepts both traditional usernames and email addresses)
-			const checkedUsername = authUtils.checkUsername(fastify, username);
-			if (typeof checkedUsername === 'object' && checkedUsername.error) {
-				return reply.code(400).send({ 
-					success: false, 
-					error: checkedUsername.error 
-				});
+			// Security validation (JSON schema handles format/length validation)
+			const checked_login = authUtils.checkLogin(fastify, login);
+			if (typeof checked_login !== 'string') {
+					return reply.code(400).send({ 
+						success: false, 
+						error: checked_login.error 
+					});
 			}
 
 			// Determine if the username is an email address
-			const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
+			const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(login);
 
 			// If it's an email, use it as both username and email
 			// If it's a traditional username, create a dummy email
-			const email = isEmail ? username : `${username}@localhost.local`;
+			const email = isEmail ? login : `${login}@localhost.local`;
 
 			// Check if user already exists (check both username and email fields)
-			const existingUser = db.prepare(
-				"SELECT id FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE"
-			).get(checkedUsername, email);
-
+			const existingUser = await authService.checkUserExistence(login);
 			if (existingUser) {
 				return reply.code(409).send({
 					success: false,
@@ -132,18 +124,17 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			}
 
 			// Hash password
-			const hashedPassword = await authUtils.hashPassword(password);
+			const password_hash = await authUtils.hashPassword(password);
 
 			// Create user
-			const result = db.prepare(`
-				INSERT INTO users (username, password, email)
-				VALUES (?, ?, ?)
-			`).run(checkedUsername, hashedPassword, email);
-
-			const userId = result.lastInsertRowid;
+			const { user_id } = await authService.register({
+				username: checked_login,
+				email,
+				password_hash
+			});
 
 			// Generate tokens using new USER_SESSION method
-			const { accessToken, refreshToken } = await authService.generateTokens(userId);
+			const { accessToken, refreshToken } = await authService.generateTokens(user_id);
 
 			// Set cookies
 			authUtils.ft_setCookie(reply, accessToken, 15);
@@ -151,10 +142,9 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 			return reply.code(201).send({
 				success: true,
-				id: userId,
-				username: checkedUsername,
+				id: user_id,
+				username: checked_login,
 				email: email,
-				avatar: '/avatar/avatar.png',
 				message: 'User registered successfully'
 			});
 
