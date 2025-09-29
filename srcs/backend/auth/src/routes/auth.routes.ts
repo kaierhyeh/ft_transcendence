@@ -3,17 +3,12 @@ import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { type ILoggerService, type LogContext } from '../container.js';
-import { GameSessionClaims, gameSessionClaimsSchema } from '../schemas/auth.js';
+import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema } from '../schemas/auth.js';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service.js';
 import { config } from '../config.js';
 
-
-interface LoginRequest {
-	username: string;
-	password: string;
-}
 
 interface AuthenticatedRequest extends FastifyRequest {
 	user?: {
@@ -23,56 +18,21 @@ interface AuthenticatedRequest extends FastifyRequest {
 }
 
 export async function authRoutes(fastify: FastifyInstance, options: any) {
-	const db = (fastify as any).db;
 	const logger: ILoggerService = (fastify as any).logger;
 
 	// Login route
-	fastify.post('/auth/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
-		let username = ''; // Declare for logging context
+	fastify.post<{ Body: LoginRequest }>(
+		'/auth/login',
+		{ schema: { body: loginSchema } },
+		async (request, reply) => {
 		try {
-			const { username: reqUsername, password } = request.body;
-			username = reqUsername;
-
-			if (!username || !password) {
-				return reply.code(400).send({ 
-					success: false, 
-					error: 'Username and password are required' 
-				});
-			}
-
-			// Find user by username or email (case-insensitive)
-			const user = db.prepare(
-				"SELECT * FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE"
-			).get(username, username);
-
-			if (!user) {
-				return reply.code(401).send({ 
-					success: false, 
-					error: 'Invalid credentials' 
-				});
-			}
-
-			// For Google accounts, password login not allowed
-			if (user.is_google_account && !user.password) {
-				return reply.code(400).send({
-					success: false,
-					error: 'This account was created with Google. Please use Google Sign-In.'
-				});
-			}
-
-			// Verify password
-			const isValidPassword = await authUtils.verifyPassword(password, user.password);
-			if (!isValidPassword) {
-				return reply.code(401).send({ 
-					success: false, 
-					error: 'Invalid credentials' 
-				});
-			}
+			const data = request.body;
+			const user = await authService.validateLocalUser(data);
 
 			// Check for 2FA
-			if (user.twofa_secret) {
+			if (user.two_fa_enabled) {
 				const tempToken = await authService.generateTempToken(
-					{ userId: user.id }, 
+					{ userId: user.user_id }, 
 					"2fa", 
 					300
 				);
@@ -93,13 +53,33 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 			return reply.code(200).send({
 				success: true,
-				id: user.id,
+				id: user.user_id,
 				username: user.username,
-				email: user.email,
-				avatar: user.avatar
 			});
 
 		} catch (error) {
+			 if (error.code === 'INVALID_CREDENTIALS') {
+				reply.status(401).send({
+					error: "Invalid credentials"
+				});
+				return;
+			}
+
+			 if (error.code === 'NOT_A_LOCAL_USER') {
+				reply.status(400).send({
+					error: "This account was created with Google. Please use Google Sign-In."
+				});
+				return;
+			}
+
+			// User not found
+			if (error.code === 'USER_NOT_FOUND') {
+				reply.status(404).send({ 
+					error: "User not found" 
+				});
+				return;
+			}
+
 			logger.error('Login error', error as Error, {
 				username,
 				ip: (request as any).ip

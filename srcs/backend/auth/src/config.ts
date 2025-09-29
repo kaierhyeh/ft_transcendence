@@ -46,9 +46,12 @@ interface JWTConfig {
 	refreshTokenExpiry: string;
 	tempSecret: string;
 }
+interface ClientConfig {
+	base_url: string;
+}
 
-interface DatabaseConfig {
-	url: string;
+interface ClientsConfig {
+	user: ClientConfig;
 }
 
 interface ServerConfig {
@@ -60,10 +63,6 @@ interface OAuthConfig {
 	googleClientId?: string;
 	googleClientSecret?: string;
 	googleRedirectUri?: string;
-}
-
-interface UploadConfig {
-	maxFileSize: number;
 }
 
 interface CookieConfig {
@@ -81,10 +80,9 @@ interface Config {
 		game: JWTConfig;
 		internal: JWTConfig;
 	};
-	database: DatabaseConfig;
+	clients: ClientsConfig;
 	server: ServerConfig;
 	oauth: OAuthConfig;
-	upload: UploadConfig;
 	cookie: CookieConfig;
 }
 
@@ -122,8 +120,10 @@ const config: Config = {
 			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
 		},
 	},
-	database: {
-		url: optionalEnv('DATABASE_URL', './data/database.db'),
+	clients: {
+		user: {
+			base_url: optionalEnv('USER_SERVICE_URL', "http://backend-users:3000"),
+		},
 	},
 	server: {
 		port: parseInt(optionalEnv('PORT', '3000')),
@@ -133,9 +133,6 @@ const config: Config = {
 		googleClientId: process.env.GOOGLE_CLIENT_ID,
 		googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
 		googleRedirectUri: process.env.GOOGLE_REDIRECT_URI,
-	},
-	upload: {
-		maxFileSize: 2 * 1024 * 1024, // 2MB
 	},
 	cookie: {
 		options: {
@@ -151,4 +148,4 @@ const config: Config = {
 export { config };
 
 // Export types for use in other modules
-export type { Config, JWTConfig, DatabaseConfig, ServerConfig, OAuthConfig, UploadConfig, CookieConfig };
+export type { Config, JWTConfig, ServerConfig, OAuthConfig, CookieConfig };

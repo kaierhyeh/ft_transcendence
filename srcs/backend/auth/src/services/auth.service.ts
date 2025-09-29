@@ -1,8 +1,10 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
-import redis from '../../redis/redisClient.js';
 import { config } from '../config.js';
 import jwksService from './jwks.service.js';
 import { JWTType, JWTPayload } from '../types.js';
+import { User, UserClient } from '../clients/UserClient.js';
+import { LoginRequest } from '../schemas/auth.js';
+import authUtils from '../utils/auth.utils.js';
 
 // JWT Types for three-tier system - using imported enum
 export type { JWTType, JWTPayload } from '../types.js';
@@ -34,6 +36,32 @@ export interface ValidationResult {
  * - INTERNAL_ACCESS: Service-to-service communication
  */
 export class AuthService {
+
+	private userClient: UserClient;
+
+	constructor() {
+		this.userClient = new UserClient();
+	}
+
+	async validateLocalUser(data: LoginRequest): Promise<User> {
+
+		const user = await this.userClient.getUserByLogin(data.login);
+
+		if (user.google_sub) {
+			const error = new Error('Not a local user');
+			(error as any).code = 'NOT_A_LOCAL_USER';
+			throw error;
+		}
+
+		const isValidPassword = await authUtils.verifyPassword(data.password, user.password_hash);
+		if (!isValidPassword) {
+			const error = new Error('Invalid credentials');
+			(error as any).code = 'INVALID_CREDENTIALS';
+			throw error;
+		}
+		return user;
+	}
+
 	// Generate a new access token and refresh token for the user using the userId and JWT manager
 	// The access token is valid for 15 minutes and the refresh token for 7 days
 	// The tokens are stored in Redis with the userId as key

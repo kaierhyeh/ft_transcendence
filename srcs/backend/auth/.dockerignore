@@ -1,4 +1,4 @@
 node_modules
-README.md
+*.md
 *.log
 test/

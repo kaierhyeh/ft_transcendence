@@ -1,13 +1,10 @@
 import fastify from "fastify";
-import { initializeDatabase } from '../db/schema.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import { oauthRoutes } from './routes/oauth.routes.js';
 import { twofaRoutes } from './routes/twofa.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { jwksRoutes } from './routes/jwks.routes.js';
 import cookie from "@fastify/cookie";
-import cors from "@fastify/cors";
-import multipart from '@fastify/multipart';
 import { config } from './config.js';
 import { initializeContainer, Container, Logger, type ILoggerService } from './container.js';
 import { initializeKeys } from './utils/generate-keys.js';
@@ -23,19 +20,8 @@ const app = fastify({
 });
 
 // Register plugins
-await app.register(cors, {
-	origin: true,
-	credentials: true
-});
 
 await app.register(cookie);
-
-await app.register(multipart, {
-	attachFieldsToBody: true,
-	limits: {
-		fileSize: config.upload.maxFileSize
-	}
-});
 
 // Initialize JWT keys before anything else
 try {
@@ -50,15 +36,7 @@ const container = initializeContainer();
 
 // Initialize database through container
 try {
-	const db = initializeDatabase(config.database.url);
 
-	// Create default deleted user
-	db.prepare(`
-		INSERT OR IGNORE INTO users (id, username, password)
-		VALUES (0, '[deleted]', '')
-	`).run();
-
-	app.decorate('db', db);
 	app.decorate('container', container);
 
 	// Initialize logger with fastify instance
