@@ -19,6 +19,7 @@ export function initGame(): void {
     const keys: { [key: string]: boolean } = {};
     const input: InputMessage = { type: "input", participant_id: "", move: "" };
     const join: JoinMessage = { type: "join", participant_id: "" };
+    let isTransitioning: boolean = false;
 
     // --- DOM Elements ---
     const canvas = document.getElementById("pong") as HTMLCanvasElement;
@@ -45,14 +46,20 @@ export function initGame(): void {
     };
 
     // --- Event Listeners ---
-    document.addEventListener("keydown", function (e: KeyboardEvent) {
+    const handleKeyDown = (e: KeyboardEvent) => {
         keys[e.key] = true;
-        if (e.key === " " && gameEnded) {
+        if (e.key === " " && gameEnded && !isTransitioning) {
             e.preventDefault();
             restartGame();
         }
-    });
-    document.addEventListener("keyup", function (e: KeyboardEvent) { keys[e.key] = false; });
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+        keys[e.key] = false;
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
 
     // --- UI Setup ---
     setTimeout(setupGameButtons, 100);
@@ -67,6 +74,7 @@ export function initGame(): void {
             onePlayerBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (isTransitioning) return;
                 updateButtonStates('one');
                 setAIMode(true);
             });
@@ -75,6 +83,7 @@ export function initGame(): void {
             twoPlayersBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (isTransitioning) return;
                 updateButtonStates('two');
                 setAIMode(false);
             });
@@ -83,6 +92,7 @@ export function initGame(): void {
             fourPlayersBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (isTransitioning) return;
                 updateButtonStates('four');
                 start4PlayerGame();
             });
@@ -112,22 +122,33 @@ export function initGame(): void {
     }
 
     function cleanupCurrentGame(): void {
-        console.log("Cleaning up current game - WS state:", ws?.readyState, "Game ID:", game_id);
+        console.log("WS state:", ws?.readyState, "Game ID:", game_id, "Mode:", gameMode);
         
-        if (aiInterval) {
-            console.log("Clearing AI interval");
+        if (aiInterval !== null) {
             clearInterval(aiInterval);
             aiInterval = null;
         }
-        if (inputInterval) {
-            console.log("Clearing input interval");
+        
+        if (inputInterval !== null) {
             clearInterval(inputInterval);
             inputInterval = null;
         }
 
-        if (ws && ws.readyState !== WebSocket.CLOSED) {
-            console.log("Closing WebSocket");
-            ws.close(1000, "Game mode changed");
+        if (ws !== null) {
+            console.log("Closing WebSocket - current state:", ws.readyState);
+
+            ws.onopen = null;
+            ws.onmessage = null;
+            ws.onerror = null;
+            ws.onclose = null;
+            
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                try {
+                    ws.close(1000, "Cleanup");
+                } catch (e) {
+                    console.error("Error closing websocket:", e);
+                }
+            }
             ws = null;
         }
 
@@ -142,50 +163,72 @@ export function initGame(): void {
         const winner = document.getElementById("winner.");
         if (winner) winner.innerText = "";
 
-        if (ctx)
+        if (ctx && canvas)
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        console.log("Cleanup completed");
     }
 
     // --- Game Control Functions ---
-    function setAIMode(mode: boolean): void {
-        console.log("Setting AI mode to:", mode, "- Current gameStarted:", gameStarted);
-        
-        if (gameStarted || gameEnded || ws !== null) {
-            console.log("Cleaning up current game before starting new one");
-            cleanupCurrentGame();
+    async function setAIMode(mode: boolean): Promise<void> {
+        if (isTransitioning) {
+            console.log("Already transitioning, ignoring request");
+            return;
         }
         
+        isTransitioning = true;        
+        cleanupCurrentGame();
+        await new Promise(resolve => setTimeout(resolve, 100));
         isAI = mode;
         gameMode = 'pvp';
-        startGame();
+        
+        console.log("Starting new game - AI:", isAI, "Mode:", gameMode);
+        await startGame();
+        
+        isTransitioning = false;
     }
 
-    function start4PlayerGame(): void {
-        console.log("Starting 4-player game");
-        
-        if (gameStarted || gameEnded || ws !== null) {
-            console.log("Cleaning up current game before starting 4-player game");
-            cleanupCurrentGame();
+    async function start4PlayerGame(): Promise<void> {
+        if (isTransitioning) {
+            console.log("Already transitioning, ignoring request");
+            return;
         }
         
+        isTransitioning = true;        
+        cleanupCurrentGame();
+        await new Promise(resolve => setTimeout(resolve, 100));
         gameMode = 'multi';
         isAI = false;
-        startGame();
+        
+        console.log("Starting new 4-player game");
+        await startGame();
+        
+        isTransitioning = false;
     }
 
-    function startGame(): void {
+    async function startGame(): Promise<void> {
         gameStarted = true;
         gameEnded = false;
-        run();
+        await run();
     }
 
-    function restartGame(): void {
-        if (gameEnded) {
-            cleanupCurrentGame();
-            startGame();
+    async function restartGame(): Promise<void> {
+        if (!gameEnded || isTransitioning) {
+            console.log("Cannot restart - gameEnded:", gameEnded, "isTransitioning:", isTransitioning);
+            return;
         }
+        
+        isTransitioning = true;        
+        const savedMode = gameMode;
+        const savedAI = isAI;
+        
+        cleanupCurrentGame();
+        await new Promise(resolve => setTimeout(resolve, 100));
+        gameMode = savedMode;
+        isAI = savedAI;
+        
+        console.log("Restarting with mode:", gameMode, "AI:", isAI);
+        await startGame();
+        
+        isTransitioning = false;
     }
 
     // --- Networking ---
@@ -194,16 +237,25 @@ export function initGame(): void {
             console.error("Cannot connect WebSocket: game_id is null.");
             return;
         }
+        
+        if (ws !== null) {
+            console.warn("WebSocket already exists, cleaning up first");
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)
+                ws.close(1000, "Reconnecting");
+            ws = null;
+        }
+        
         const url = API_GAME_ENDPOINT + `/${id}/ws`;
-        console.log("Attempting to connect to:", url);
+        console.log("Connecting WebSocket:", url);
         ws = new WebSocket(url);
-        console.log(`websocket for /game/${id}/ws: `, ws);
         
         ws.onopen = function () {
-            console.log("WebSocket connected successfully.");
             startInputSending();
             
-            if (isAI) {
+            if (isAI && gameMode === 'pvp') {
+                console.log("Starting AI interval");
+                if (aiInterval !== null)
+                    clearInterval(aiInterval);
                 aiInterval = setInterval(() => {
                     AIDecision();
                 }, 1000);
@@ -230,53 +282,89 @@ export function initGame(): void {
         };
         
         ws.onclose = function (event: CloseEvent) {
-            console.log("WebSocket disconnected. Code:", event.code, "Reason:", event.reason);
+            console.log("WebSocket CLOSED - Code:", event.code, "Reason:", event.reason);
             
             if (event.code !== 1000) {
-                if (aiInterval) {
+                if (aiInterval !== null) {
                     clearInterval(aiInterval);
                     aiInterval = null;
                 }
-                if (inputInterval) {
+                if (inputInterval !== null) {
                     clearInterval(inputInterval);
                     inputInterval = null;
                 }
+                
+                if (!game_state?.winner && !game_state_4p?.winner && gameStarted && !gameEnded) {
+                    console.log("Attempting reconnect in 3s...");
+                    setTimeout(() => {
+                        if (gameStarted && !gameEnded && game_id)
+                            connectWebSocket(game_id);
+                    }, 3000);
+                }
             }
             
-            if (!game_state?.winner && event.code !== 1000)
-                setTimeout(() => connectWebSocket(id), 3000);
-            else if (game_state?.winner) {
+            if (gameMode === 'pvp' && game_state?.winner) {
+                gameEnded = true;
                 const winner = document.getElementById("winner.");
                 if (winner && winner.innerText.length === 0)
-                    winner.innerText = "Player " + game_state.winner + " won !";
+                    winner.innerText = "Player " + game_state.winner + " won!";
+            } else if (gameMode === 'multi' && game_state_4p?.winner) {
+                gameEnded = true;
+                const winner = document.getElementById("winner.");
+                if (winner && winner.innerText.length === 0)
+                    winner.innerText = game_state_4p.winner + " team won!";
             }
         };
         
         ws.onerror = function (error: Event) {
-            console.error("WebSocket error:", error);
+            console.error("WebSocket ERROR:", error);
         };
     }
 
     function startInputSending(): void {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            console.log(`Sending join requests for ${gameMode === 'pvp' ? '2' : '4'} players.`);
-            
+        if (inputInterval !== null) {
+            console.log("Clearing existing input interval before starting new one");
+            clearInterval(inputInterval);
+            inputInterval = null;
+        }
+        
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            console.error("Cannot start input sending - WebSocket not open");
+            return;
+        }
+        
+        console.log(`Starting input sending for ${gameMode} mode`);
+        
+        try {
             if (gameMode === 'pvp') {
+                console.log("Sending join for 2 players");
                 join.participant_id = participant_ids[0];
                 ws.send(JSON.stringify(join));
                 join.participant_id = participant_ids[1];
                 ws.send(JSON.stringify(join));
             } else {
+                console.log("Sending join for 4 players");
                 participant_ids.forEach((id, index) => {
                     join.participant_id = id;
-                    console.log(`Joining player ${index + 1}:`, join);
                     ws!.send(JSON.stringify(join));
                 });
             }
+        } catch (error) {
+            console.error("Error sending join messages:", error);
+            return;
         }
 
         inputInterval = setInterval(() => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log("WebSocket not open, stopping input interval");
+                if (inputInterval !== null) {
+                    clearInterval(inputInterval);
+                    inputInterval = null;
+                }
+                return;
+            }
+            
+            try {
                 if (gameMode === 'pvp') {
                     input.participant_id = participant_ids[0];
                     if (keys["w"]) input.move = "up";
@@ -284,9 +372,10 @@ export function initGame(): void {
                     else input.move = "stop";
                     ws.send(JSON.stringify(input));
                     
-                    if (isAI) moveAIPaddle();
+                    input.participant_id = participant_ids[1];
+                    if (isAI)
+                        moveAIPaddle();
                     else {
-                        input.participant_id = participant_ids[1];
                         if (keys["ArrowUp"]) input.move = "up";
                         else if (keys["ArrowDown"]) input.move = "down";
                         else input.move = "stop";
@@ -317,8 +406,11 @@ export function initGame(): void {
                     else input.move = "stop";
                     ws.send(JSON.stringify(input));
                 }
+            } catch (error) {
+                console.error("Error sending input:", error);
             }
         }, 50);
+        console.log("Input interval started:", inputInterval);
     }
 
     function handleServerMessage(message: ServerMessage): void {
@@ -355,24 +447,33 @@ export function initGame(): void {
     }
     
     function AIDecision(): void {
-        if (!game_state || !game_conf) return;
+        if (!game_state || !game_conf || gameMode !== 'pvp') return;
         const ball = game_state.ball;
-        if (ball.dx < 0) AITarg = -1;
-        else AITarg = predictBallY(ball, game_state.players.right.paddle.x, game_conf.canvas_width, game_conf.canvas_height, game_conf.ball_size);
+        if (ball.dx < 0)
+            AITarg = -1;
+        else
+            AITarg = predictBallY(ball, game_state.players.right.paddle.x, game_conf.canvas_width, game_conf.canvas_height, game_conf.ball_size);
     }
     
     function moveAIPaddle(): void {
-        if (!game_state || !game_conf) return;
+        if (!game_state || !game_conf || gameMode !== 'pvp') return;
         const rightPaddle = game_state.players.right;
         input.participant_id = participant_ids[1];
-        if (AITarg == -1) {
-            if (rightPaddle.paddle.y > game_conf.canvas_height / 2 + 15) input.move = "up";
-            else if (rightPaddle.paddle.y < game_conf.canvas_height / 2 - 15) input.move = "down";
-            else input.move = "stop";
+        
+        if (AITarg === -1) {
+            if (rightPaddle.paddle.y > game_conf.canvas_height / 2 + 15)
+                input.move = "up";
+            else if (rightPaddle.paddle.y < game_conf.canvas_height / 2 - 15)
+                input.move = "down";
+            else
+                input.move = "stop";
         } else {
-            if (rightPaddle.paddle.y > AITarg) input.move = "up";
-            else if (rightPaddle.paddle.y < AITarg - (game_conf.paddle_height / 1.1)) input.move = "down";
-            else input.move = "stop";
+            if (rightPaddle.paddle.y > AITarg)
+                input.move = "up";
+            else if (rightPaddle.paddle.y < AITarg - (game_conf.paddle_height / 1.1))
+                input.move = "down";
+            else
+                input.move = "stop";
         }
     }
 
@@ -470,48 +571,55 @@ export function initGame(): void {
             console.error("Canvas or context not available.");
             return;
         }
-        try {
-            {
-                let requestBody;
-                if (gameMode === 'pvp') {
-                    requestBody = {
-                        type: "pvp",
-                        participants: [
-                            { user_id: 0, participant_id: participant_ids[0], is_ai: false },
-                            { user_id: 1, participant_id: participant_ids[1], is_ai: isAI },
-                        ],
-                    } as CreateGameRequest;
-                } else {
-                    requestBody = {
-                        type: "multi",
-                        participants: [
-                            { user_id: 0, participant_id: participant_ids[0] },
-                            { user_id: 1, participant_id: participant_ids[1] },
-                            { user_id: 2, participant_id: participant_ids[2] },
-                            { user_id: 3, participant_id: participant_ids[3] }
-                        ],
-                    } as CreateGameRequest4p;
-                }
                 
-                const response = await fetch(API_GAME_ENDPOINT + "/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestBody)
-                });
-                const data: CreateGameResponse = await response.json();
-                game_id = data.game_id;
-                console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} game created with ID:`, game_id);
+        try {
+            let requestBody;
+            if (gameMode === 'pvp') {
+                requestBody = {
+                    type: "pvp",
+                    participants: [
+                        { user_id: 0, participant_id: participant_ids[0], is_ai: false },
+                        { user_id: 1, participant_id: participant_ids[1], is_ai: isAI },
+                    ],
+                } as CreateGameRequest;
+            } else {
+                requestBody = {
+                    type: "multi",
+                    participants: [
+                        { user_id: 0, participant_id: participant_ids[0] },
+                        { user_id: 1, participant_id: participant_ids[1] },
+                        { user_id: 2, participant_id: participant_ids[2] },
+                        { user_id: 3, participant_id: participant_ids[3] }
+                    ],
+                } as CreateGameRequest4p;
             }
-            {
-                const response = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
-                game_conf = await response.json() as GameConfig;
-                canvas.width = game_conf.canvas_width;
-                canvas.height = game_conf.canvas_height;
-                console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} game initialized:`, game_conf);
-            }
+            
+            const response = await fetch(API_GAME_ENDPOINT + "/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok)
+                throw new Error(`Failed to create game: ${response.status}`);
+            
+            const data: CreateGameResponse = await response.json();
+            game_id = data.game_id;
+            console.log(`Game created with ID: ${game_id}`);
+            
+            const configResponse = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
+            if (!configResponse.ok)
+                throw new Error(`Failed to get game config: ${configResponse.status}`);
+            
+            game_conf = await configResponse.json() as GameConfig;
+            canvas.width = game_conf.canvas_width;
+            canvas.height = game_conf.canvas_height;
+            
             connectWebSocket(game_id);
         } catch (error) {
-            console.error(`Failed to initialize ${gameMode === 'pvp' ? '2-player' : '4-player'} game:`, error);
+            console.error(`Failed to initialize game:`, error);
+            gameStarted = false;
+            gameEnded = true;
         }
     }
 }
