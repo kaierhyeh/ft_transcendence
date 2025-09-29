@@ -1,0 +1,22 @@
+[sqlfluff]
+dialect = sqlite
+templater = jinja
+# Exclude spacing rules that hurt readability
+exclude_rules = L003,L013,L016,L031,L036,LT01
+
+[sqlfluff:indentation]
+tab_space_size = 2
+indent_unit = space
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+line_position = trailing
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.identifiers]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = upper
