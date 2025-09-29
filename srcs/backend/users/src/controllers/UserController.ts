@@ -210,6 +210,20 @@ export class UserController {
     }
   }
 
+  public async getUserById(
+    request: FastifyRequest<{ Params: UserIdParams }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const user_id = request.params.id;
+      
+      const user = await this.userService.getUserById(user_id);
+      return reply.send(user);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
   public async deleteMe(request: FastifyRequest, reply: FastifyReply) {
     try {
       const sub = request.user?.sub;

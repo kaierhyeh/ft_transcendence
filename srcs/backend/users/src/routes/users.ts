@@ -42,7 +42,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   // get all user data via its login [SHOULD be accessible only to backend micro services]
   fastify.get<{ Params: LoginParams }>(
-    "/:login",
+    "/login/:login",
     {
       schema: { params: loginSchema},
       preHandler: internalAuthMiddleware,
@@ -52,7 +52,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   // update some user data (email, password, 2fa, alias, settings) [Requires user authentication]
   fastify.put<{ Body: UpdateRawData }>(
-    "/me",
+    "/profile/me",
     {
       schema: { body: updateSchema },
       preHandler: userAuthMiddleware
@@ -62,7 +62,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   // update avatar [Requires user authentication]
   fastify.put<{  }>(
-    "/me/avatar",
+    "/profile/me/avatar",
     {
       schema: { },
       preHandler: userAuthMiddleware
@@ -72,7 +72,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   // get user profile (most of user data + stats summary) [Requires user authentication]
   fastify.get(
-    "/me",
+    "/profile/me",
     { preHandler: userAuthMiddleware },
     userController.getMe.bind(userController)
   );
@@ -86,7 +86,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
 
   // reset avatar to default [Requires user authentication]
   fastify.delete(
-    "/me/avatar",
+    "/profile/me/avatar",
     { preHandler: userAuthMiddleware },
     userController.resetAvatar.bind(userController)
   );
@@ -98,11 +98,21 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getAvatar.bind(userController)
   );
 
-  // get public user profile (no sensisitive data + stats summary)
+  // get public user profile (no sensitive data + stats summary)
   fastify.get<{ Params: UserIdParams }>(
-    "/id/:id",
+    "/profile/id/:id",
     { schema: { params: userIdSchema } },
     userController.getPublicProfile.bind(userController)
+  );
+
+  // get all user data by id [SHOULD be accessible only to backend micro services]
+  fastify.get<{ Params: UserIdParams }>(
+    "/id/:id",
+    {
+      schema: { params: userIdSchema },
+      preHandler: internalAuthMiddleware,
+    },
+    userController.getUserById.bind(userController)
   );
 
   // get match-history aka game sessions via game service

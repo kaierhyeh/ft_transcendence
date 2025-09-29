@@ -1,8 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
-import { authMiddleware } from '../middleware/auth.middleware.js';
-import { type ILoggerService, type LogContext } from '../container.js';
+import { type ILoggerService } from '../container.js';
 import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, signupFormSchema, SignupRequest } from '../schemas/auth.js';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
@@ -55,6 +54,8 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				success: true,
 				id: user.user_id,
 				username: user.username,
+				avatar_url: user.avatar_url,
+				message: "Login successful"
 			});
 
 		} catch (error: any) {
@@ -281,26 +282,24 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				authUtils.ft_setCookie(reply, verification.newAccessToken, 15);
 			}
 
-			// Get user details
-			const user = db.prepare("SELECT id, username, email, avatar FROM users WHERE id = ?")
-				.get(verification.userId);
+			// Get user profile from users service
+			const user = await authService.getUserProfile(verification.userId!);
 
-			if (!user) {
+			return reply.code(200).send({
+				success: true,
+				id: user.user_id,
+				username: user.username,
+				avatar_url: user.avatar_url
+			});
+
+		} catch (error: any) {
+			if (error.code === 'USER_NOT_FOUND') {
 				return reply.code(404).send({
 					success: false,
 					error: 'User not found'
 				});
 			}
-
-			return reply.code(200).send({
-				success: true,
-				id: user.id,
-				username: user.username,
-				email: user.email,
-				avatar: user.avatar
-			});
-
-		} catch (error) {
+			
 			logger.error('Token verification error', error as Error, {
 				ip: (request as any).ip
 			});
@@ -395,5 +394,11 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			});
 		}
 	});
+
+	fastify.put<{ Body: PasswordUpdateData }>(
+		"/auth/hash-password",
+			{ schema: { body: passwordUpdateSchema } },
+			authController.updatePasswordHash.bind(authController)
+	);
 
 }

@@ -4,7 +4,9 @@ import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
 import { GoogleUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
 
-export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub"> & LiteStats;
+export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub" | "avatar_filename"> & LiteStats & {
+  avatar_url: string | null;
+};
 
 export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "updated_at">;
 
@@ -65,12 +67,12 @@ export class UserService {
       throw error;
     }
 
-    const { password_hash, two_fa_secret, google_sub, ...cleanUser } = user;
+    const { password_hash, two_fa_secret, google_sub, avatar_filename, ...cleanUser } = user;
     
     return {
       ...cleanUser,
-      avatar_filename: user.avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/avatar/${user.avatar_filename}` :
+      avatar_url: avatar_filename ?
+        `${CONFIG.API.BASE_URL}/users/avatar/${avatar_filename}` :
         null,
       ...lite_stats
     };

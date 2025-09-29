@@ -6,13 +6,17 @@ interface ErrorResponse {
   validation?: any[];
 }
 
-export interface User {
+export interface UserData {
   user_id: number;
   username: string;
   password_hash: string;
+  avatar_url: string | null;
   google_sub: string | null;
   two_fa_enabled: boolean;
 }
+
+export type UserProfile = Omit<UserData, "google_sub">;
+
 
 export interface LocalUserCreationData {
   username: string;
@@ -48,9 +52,9 @@ export class UserClient {
 
   async getUserByLogin(
     login: string
-  ): Promise< User > {
+  ): Promise< UserData > {
 
-      const response = await fetch(`${this.base_url}/users/${login}`);
+      const response = await fetch(`${this.base_url}/users/login/${login}`);
 
       if (!response.ok) {
         const errorBody = await response.json() as ErrorResponse;
@@ -62,7 +66,32 @@ export class UserClient {
         throw error;
       }
 
-      return await response.json() as User;
+      return await response.json() as UserData;
   }
+
+  async getUserProfile(
+    user_id: number
+  ): Promise<UserProfile> {
+    const response = await fetch(`${this.base_url}/users/profile/id/${user_id}`);
+
+    if (!response.ok) {
+      const errorBody = await response.json() as ErrorResponse;
+      const errorMessage = errorBody.message || errorBody.error || `Get user profile failed: ${response.status}`;
+      
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      (error as any).details = errorBody;
+      
+      if (response.status === 404) {
+        (error as any).code = 'USER_NOT_FOUND';
+      }
+      
+      throw error;
+    }
+
+    return await response.json() as UserProfile;
+  }
+
+
 
 }

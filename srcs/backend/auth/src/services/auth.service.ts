@@ -2,7 +2,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { config } from '../config.js';
 import jwksService from './jwks.service.js';
 import { JWTType, JWTPayload } from '../types.js';
-import { LocalUserCreationData, User, UserClient } from '../clients/UserClient.js';
+import { LocalUserCreationData, UserData, UserClient, UserProfile } from '../clients/UserClient.js';
 import { LoginRequest } from '../schemas/auth.js';
 import authUtils from '../utils/auth.utils.js';
 
@@ -45,21 +45,35 @@ export class AuthService {
 
 	async validateLocalUser(data: LoginRequest): Promise<User> {
 
-		const user = await this.userClient.getUserByLogin(data.login);
+		const raw_user = await this.userClient.getUserByLogin(data.login);
 
-		if (user.google_sub) {
+		if (raw_user.google_sub) {
 			const error = new Error('Not a local user');
 			(error as any).code = 'NOT_A_LOCAL_USER';
 			throw error;
 		}
 
-		const isValidPassword = await authUtils.verifyPassword(data.password, user.password_hash);
-		if (!isValidPassword) {
+		const is_valid_password = await authUtils.verifyPassword(data.password, raw_user.password_hash);
+		if (!is_valid_password) {
 			const error = new Error('Invalid credentials');
 			(error as any).code = 'INVALID_CREDENTIALS';
 			throw error;
 		}
-		return user;
+
+		const { google_sub, ...user } = raw_user;
+		return { ...user };
+	}
+
+	async getUserById(userId: number): Promise<User> {
+		const raw_user = await this.userClient.getUserById(userId);
+		if (!raw_user) {
+			const error = new Error('User not found');
+			(error as any).code = 'USER_NOT_FOUND';
+			throw error;
+		}
+
+		const { google_sub, ...user } = raw_user;
+		return { ...user };
 	}
 
 	async checkUserExistence(login: string): Promise<boolean> {
@@ -374,6 +388,10 @@ export class AuthService {
 			console.error('Token revocation error:', error);
 			return false;
 		}
+	}
+
+	async getUserProfile(userId: number): Promise<UserProfile> {
+		return await this.userClient.getUserProfile(userId);
 	}
 
 	// Blacklist a token by adding it to the Redis blacklist with its remaining duration
