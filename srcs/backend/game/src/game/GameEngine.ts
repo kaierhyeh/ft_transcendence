@@ -97,8 +97,6 @@ export class GameEngine {
             win_point: WIN_POINT,
             ball_size: BALL_SIZE
         };
-        if (this.game_mode === "multi")
-            PADDLE_SPEED = PADDLE_SPEED / 2;
 
         this.players = new Map();
         session_players.forEach(p => {
@@ -307,14 +305,17 @@ export class GameEngine {
 
     public applyMovement(slot: PlayerSlot, move: "up" | "down" | "stop"): void {
         const player = this.players.get(slot);
+        let speed = PADDLE_SPEED;
+        if (this.game_mode == "multi")
+            speed /= 2;
         if (!player)
             return;
         switch (move) {
             case "up":
-                player.velocity = -PADDLE_SPEED;
+                player.velocity = -speed;
                 break;
             case "down":
-                player.velocity = PADDLE_SPEED;
+                player.velocity = speed;
                 break;
             case "stop":
                 player.velocity = 0;
