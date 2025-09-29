@@ -80,15 +80,6 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     } else {
         console.log("Réponse inattendue:", data);
     }
-        if (button != null) {
-            if (mode === "2p") {
-               button.textContent = "Join 2P";
-            } else {
-                button.textContent = "Join 4P";
-            }
-        }
-        return;
-
     } catch (error) {
         console.log("Connection error:", error);
         if (button != null) {
@@ -143,7 +134,6 @@ function onKeyPressed(event: KeyboardEvent): void {
     if (gameWebSocket.readyState != WebSocket.OPEN) {
         return;
     }
-
     let movement = "";
     if (event.key == 'ArrowUp') {
         movement = "up";
@@ -160,7 +150,7 @@ function onKeyPressed(event: KeyboardEvent): void {
             participant_id: currentParticipantId,
             move: movement
         });
-        
+        console.log("Message envoyé au serveur:", message);
         gameWebSocket.send(message);
         console.log("debug check mouv " + movement);
     }
