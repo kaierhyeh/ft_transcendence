@@ -33,54 +33,17 @@ function setupRemoteEvents(): void {
 }
 
 function generateParticipantId(): string {
-    if (user === undefined) {
-        console.log("User disconnected during waiting line");
-        return ""; // RETURN ATTENTION 
-        /////IMPORTANT ICI /////
-        //Check server code how we trow error for empty id"
-    }
-    
     const timestamp = Date.now();
     const randomNumber = Math.random();
-    return user.userId + "_" + timestamp + "_" + randomNumber;
+    return "remote_" + timestamp + "_" + randomNumber;
 }
 
-/*//reuse for websocket later!!!
-function showRemoteStatus(message: string, buttonId: string): void {
-    const element = document.getElementById(buttonId);
-    if (element != null) {
-        element.textContent = message;
-    }
-}
-
-function joinQueue(mode: "2p" | "4p"): void {
-
-    const participantId = generateParticipantId(); // <- ft teest to create, check more into id
-
-    try {
-        const response = await fetch('', {
-            method:
-            headers:,
-            body:
-                mode: mode,
-                participant_id: participantId
-            })
-        });
-
-        const data = await response.json();
-
-        */
 async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     let buttonId;
     if (mode === "2p") {
         buttonId = "remote-2p-btn";
     } else {
         buttonId = "remote-4p-btn";
-    }
-
-    if (user === undefined) {
-        console.log("User not connected");
-        return;
     }
 
     const participantId = generateParticipantId();
@@ -92,7 +55,7 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     }
 
     try {
-        const response = await fetch('/game/remoteMatchmaking/join', {
+        const response = await fetch('/game/join', {
             method: 'POST',
             credentials: 'include',
             headers: { "Content-Type": "application/json" },
@@ -103,22 +66,20 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
         });
 
         const data = await response.json();
-
-        if (data.success) {
-    console.log("Success!");
-    
+        //2line for test to remove
+        console.log("Réponse complète du serveur:", data);
+        console.log("Status de la réponse:", response.status);
     if (data.type === "game_ready") {
-        console.log("Match found , game_id = ", data.game_id);
-        //here call connect game later
+        console.log("Match found, game_id =", data.game_id);
+        connectToGame(data.game_id);
     } else if (data.type === "queue_joined") {
+        console.log("En attente dans la queue, position:", data.position);
         if (button != null) {
-            button.textContent = `Waiting...`;
+            button.textContent = "Waiting...";
         }
-        //here maybe listen  connexion?later
+    } else {
+        console.log("Réponse inattendue:", data);
     }
-    return;
-}
-        console.log("Error:", data.error);
         if (button != null) {
             if (mode === "2p") {
                button.textContent = "Join 2P";
@@ -129,7 +90,6 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
         return;
 
     } catch (error) {
-
         console.log("Connection error:", error);
         if (button != null) {
             if (mode === "2p") {
@@ -153,16 +113,18 @@ function connectToGame(gameId: number): void {
     gameWebSocket = new WebSocket(wsUrl);
     
     gameWebSocket.onopen = () => {
-    console.log(`Connecté au jeu ${gameId}`);
-    
-    gameWebSocket!.send(JSON.stringify({
-        type: "join",
-        participant_id: currentParticipantId
-    }));
+        console.log(`Connecté au jeu ${gameId}`);
+        
+        gameWebSocket!.send(JSON.stringify({
+            type: "join",
+            participant_id: currentParticipantId
+        }));
+        document.addEventListener('keydown', onKeyPressed);
+        document.addEventListener('keyup', onKeyReleased);
     };
     
     gameWebSocket.onmessage = (event) => {
-        console.log("Message reçu du serveur:", event.data);
+        console.log("Msg from serveur:", event.data);
     };
     
     gameWebSocket.onclose = (event) => {
@@ -174,4 +136,60 @@ function connectToGame(gameId: number): void {
     };
 }
 
-//ADD A WAY TO DEAL WITH EVENTS TOUCH
+function onKeyPressed(event: KeyboardEvent): void {
+    if (gameWebSocket == null) {
+        return;
+    }
+    if (gameWebSocket.readyState != WebSocket.OPEN) {
+        return;
+    }
+
+    let movement = "";
+    if (event.key == 'ArrowUp') {
+        movement = "up";
+    }
+    if (event.key == 'ArrowDown') {
+        movement = "down";
+    }
+    
+    if (movement != "") {
+        event.preventDefault(); //stop page scrolling 
+        
+        const message = JSON.stringify({
+            type: "input",
+            participant_id: currentParticipantId,
+            move: movement
+        });
+        
+        gameWebSocket.send(message);
+        console.log("debug check mouv " + movement);
+    }
+}
+
+function onKeyReleased(event: KeyboardEvent): void {
+    if (gameWebSocket == null) {
+        return;
+    }
+    if (gameWebSocket.readyState != WebSocket.OPEN) {
+        return;
+    }
+
+    let shouldStop = false;
+    if (event.key == 'ArrowUp') {
+        shouldStop = true;
+    }
+    if (event.key == 'ArrowDown') {
+        shouldStop = true;
+    }
+    
+    if (shouldStop) {
+        const message = JSON.stringify({
+            type: "input",
+            participant_id: currentParticipantId,
+            move: "stop"
+        });
+        
+        gameWebSocket.send(message);
+        console.log("debug: stop bracket");
+    }
+}
