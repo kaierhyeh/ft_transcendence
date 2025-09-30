@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { BlockController } from "../controllers/BlockController";
 import { UserIdParams, userIdSchema } from "../schemas/blocks";
-import { userAuthMiddleware } from "../middleware/user-auth.middleware";
+import { userAuthMiddleware } from "../middleware/userAuth";
 
 export default async function blocksRoutes(fastify: FastifyInstance) {
 	const blockController = new BlockController(fastify.services.blocks);

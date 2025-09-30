@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { FriendController } from "../controllers/FriendController";
 import { FriendshipIdParams, friendshipIdSchema, UserIdParams, userIdSchema } from "../schemas/friends";
-import { userAuthMiddleware } from "../middleware/user-auth.middleware";
+import { userAuthMiddleware } from "../middleware/userAuth";
 
 
 /* 

@@ -14,8 +14,8 @@ import {
   AvatarParams, 
   avatarFilenameSchema 
 } from "../schemas";
-import { userAuthMiddleware } from "../middleware/user-auth.middleware";
-import { internalAuthMiddleware } from "../middleware/internal-auth.middleware";
+import { userAuthMiddleware } from "../middleware/userAuth";
+import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);

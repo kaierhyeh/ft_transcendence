@@ -1,17 +1,5 @@
-/**
- * Simple JWT Verification Utility for Users Service
- * 
- * Fetches JWKS from auth service and verifies JWT tokens locally
- * Supports two JWT types: USER_SESSION, INTERNAL_ACCESS
- * 
- * Usage:
- * - verifyUserSessionToken(token) for user sessions
- * - verifyInternalToken(token) for service-to-service communication
- */
-
 import jwt from 'jsonwebtoken';
 import { CONFIG } from '../config';
-import { UserSessionPayload, InternalAccessPayload } from '../types';
 
 interface JWK {
 	kty: string;
@@ -26,9 +14,29 @@ interface JWKS {
 	keys: JWK[];
 }
 
-interface JWTPayload {
-	type: string;
-	[key: string]: any;
+export enum JWTType {
+  USER_SESSION = 'USER_SESSION',
+  INTERNAL_ACCESS = 'INTERNAL_ACCESS',
+}
+
+// Base JWT payload interface
+export interface JWTPayload {
+  type: JWTType;
+  sub?: string;
+  iat?: number;
+  exp?: number;
+  iss?: string;
+}
+
+// User Session JWT payload
+export interface UserSessionPayload extends JWTPayload {
+  type: JWTType.USER_SESSION;
+  sub: string;
+}
+
+// Internal Access JWT payload for service-to-service communication
+export interface InternalAccessPayload extends JWTPayload {
+  type: JWTType.INTERNAL_ACCESS;
 }
 
 export class JWTVerifier {
@@ -105,7 +113,7 @@ export class JWTVerifier {
 	/**
 	 * Verify JWT token with automatic key discovery
 	 */
-	private async verifyToken(token: string, expectedType: string): Promise<JWTPayload> {
+	private async verifyToken(token: string, expectedType: JWTType): Promise<JWTPayload> {
 		try {
 			// First decode to get key ID from header
 			const decoded = jwt.decode(token, { complete: true });
@@ -128,7 +136,7 @@ export class JWTVerifier {
 			const publicKey = this.jwkToPem(jwk);
 			const payload = jwt.verify(token, publicKey, {
 				algorithms: [jwk.alg as jwt.Algorithm],
-				issuer: CONFIG.JWT.ISSUER || 'ft_transcendence',
+				issuer: CONFIG.JWT.ISSUER,
 			}) as JWTPayload;
 
 			// Verify token type
@@ -149,7 +157,7 @@ export class JWTVerifier {
 	 * Verify User Session JWT token
 	 */
 	async verifyUserSessionToken(token: string): Promise<UserSessionPayload> {
-		const payload = await this.verifyToken(token, 'USER_SESSION');
+		const payload = await this.verifyToken(token, JWTType.USER_SESSION);
 		return payload as UserSessionPayload;
 	}
 
@@ -157,7 +165,7 @@ export class JWTVerifier {
 	 * Verify Internal Access JWT token
 	 */
 	async verifyInternalToken(token: string): Promise<InternalAccessPayload> {
-		const payload = await this.verifyToken(token, 'INTERNAL_ACCESS');
+		const payload = await this.verifyToken(token, JWTType.INTERNAL_ACCESS);
 		return payload as InternalAccessPayload;
 	}
 

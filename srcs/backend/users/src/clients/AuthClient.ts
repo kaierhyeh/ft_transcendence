@@ -1,7 +1,7 @@
 import { CONFIG } from "../config";
 import { PasswordUpdateData } from "../schemas";
 import { TwoFa } from "../types";
-import { InternalAuthClient } from "./internal-auth.client";
+import { InternalAuthClient } from "./InternalAuthClient";
 
 interface ErrorResponse {
   message?: string;
@@ -12,16 +12,16 @@ interface ErrorResponse {
 
 export class AuthClient {
   private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
-  private internalAuthClient = new InternalAuthClient();
+  private internalTokenClient = new InternalAuthClient();
 
   async updatePasswordHash(update_data: PasswordUpdateData, old_hash: string): Promise<{ password_hash: string }> {
-    const authHeaders = await this.internalAuthClient.getAuthHeaders();
+    const internalAuthHeaders = await this.internalTokenClient.getAuthHeaders();
     
     const response = await fetch(`${this.base_url}/auth/hash-password`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...authHeaders,
+        ...internalAuthHeaders,
       },
       body: JSON.stringify(
         {

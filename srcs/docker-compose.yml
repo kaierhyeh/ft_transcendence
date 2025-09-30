@@ -129,10 +129,7 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
-    depends_on:
-      backend-auth:
-        condition: service_healthy
-
+ 
   # backend-auth-lite:
   #   container_name: backend-auth-lite
   #   build:
@@ -172,9 +169,6 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
-    depends_on:
-      backend-auth:
-        condition: service_healthy
 
   backend-chat:
     container_name: backend-chat
