@@ -49,6 +49,8 @@ services:
         condition: service_healthy
       backend-auth:
         condition: service_healthy
+      backend-users:
+        condition: service_healthy
 
   ###################
   ## Backend Services

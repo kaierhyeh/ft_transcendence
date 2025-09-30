@@ -7,7 +7,6 @@ import { jwksRoutes } from './routes/jwks.routes';
 import cookie from "@fastify/cookie";
 import { config } from './config';
 import { Logger } from './container';
-import { initializeKeys } from './utils/generate-keys';
 import jwksService from './services/jwks.service';
 
 async function startServer() {
@@ -22,15 +21,6 @@ async function startServer() {
 
 	// Register plugins
 	await app.register(cookie);
-
-	// Initialize JWT keys before anything else
-	try {
-		initializeKeys();
-		app.log.info('🔑 JWT keys initialized');
-	} catch (error) {
-		app.log.error(error as Error, '❌ Key initialization failed');
-		process.exit(1);
-	}
 
 	// Initialize logger
 	try {

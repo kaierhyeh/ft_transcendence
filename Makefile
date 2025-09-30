@@ -8,7 +8,7 @@ all: up
 # Generate secrets (JWT keys and client credentials)
 secrets:
 	@echo "Generating secrets..."
-	@./tools/generate-secrets.sh
+	@sh tools/generate-secrets.sh
 
 # Start all services
 up: secrets
