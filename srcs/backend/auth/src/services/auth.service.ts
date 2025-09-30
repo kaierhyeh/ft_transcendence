@@ -394,6 +394,19 @@ export class AuthService {
 		return await this.userClient.getUserProfile(userId);
 	}
 
+	async updatePasswordHash(old_hash: string, old_password: string, new_password: string): Promise<string> {
+		// First verify the old password matches the old hash
+		const valid = await authUtils.verifyPassword(old_password, old_hash);
+		if (!valid) {
+			const error = new Error('Invalid current password');
+			(error as any).code = 'INVALID_CURRENT_PASSWORD';
+			throw error;
+		}
+
+		// If verification passes, hash the new password
+		return await authUtils.hashPassword(new_password);
+	}
+
 	// Blacklist a token by adding it to the Redis blacklist with its remaining duration
 	async blacklistToken(token: string) {
 		try {

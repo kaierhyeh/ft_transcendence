@@ -1,5 +1,11 @@
 import { FromSchema } from "json-schema-to-ts";
 
+export const passwordSchema = {
+  type: "string",
+  minLength: 8,
+  maxLength: 128,    // Reasonable password limit
+} as const;
+
 export const loginSchema = {
   type: "object",
   required: ["login", "password"],
@@ -12,10 +18,8 @@ export const loginSchema = {
       description: "Username (3-15 chars, letters/numbers/underscores) or valid email address"
     },
     password: {
-      type: "string",
-      minLength: 8,
-      maxLength: 128,    // Reasonable password limit
-      description: "Password must be at least 8 characters"
+      ...passwordSchema,
+        description: "Password must be at least 8 characters"
     }
   },
   additionalProperties: false,
@@ -35,13 +39,31 @@ export const signupFormSchema = {
       description: "Username (3-15 chars, letters/numbers/underscores) or valid email address"
     },
     password: {
-      type: "string",
-      minLength: 8,
-      maxLength: 128,    // Reasonable password limit
-      description: "Password must be at least 8 characters"
+      ...passwordSchema,
+        description: "Password must be at least 8 characters"
     }
   },
   additionalProperties: false,
+} as const;
+
+export const passwordUpdateSchema = {
+  type: "object",
+  required: ["old_hash", "old_password", "new_password"],
+  properties: {
+    old_hash: {
+      type: "string",
+      description: "Current password hash from database"
+    },
+    old_password: {
+      ...passwordSchema,
+      description: "Current password provided by user"
+    },
+    new_password: {
+      ...passwordSchema,
+      description: "New password to be hashed"
+    }
+  },
+  additionalProperties: false
 } as const;
 
 export const gameSessionClaimsSchema = {
@@ -55,7 +77,7 @@ export const gameSessionClaimsSchema = {
 } as const;
 
 
-
 export type LoginRequest = FromSchema<typeof loginSchema>;
 export type SignupRequest = FromSchema<typeof signupFormSchema>;
 export type GameSessionClaims = FromSchema<typeof gameSessionClaimsSchema>;
+export type PasswordUpdateData = FromSchema<typeof passwordUpdateSchema>;

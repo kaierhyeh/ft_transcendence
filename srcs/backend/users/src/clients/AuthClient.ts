@@ -1,6 +1,7 @@
 import { CONFIG } from "../config";
 import { PasswordUpdateData } from "../schemas";
 import { TwoFa } from "../types";
+import { InternalAuthClient } from "./internal-auth.client";
 
 interface ErrorResponse {
   message?: string;
@@ -11,12 +12,16 @@ interface ErrorResponse {
 
 export class AuthClient {
   private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
+  private internalAuthClient = new InternalAuthClient();
 
   async updatePasswordHash(update_data: PasswordUpdateData, old_hash: string): Promise<{ password_hash: string }> {
+    const authHeaders = await this.internalAuthClient.getAuthHeaders();
+    
     const response = await fetch(`${this.base_url}/auth/hash-password`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
       },
       body: JSON.stringify(
         {
@@ -45,10 +50,12 @@ export class AuthClient {
     two_fa_enabled: boolean
   ): Promise< TwoFa > {
 
+      // const authHeaders = await this.internalAuthClient.getAuthHeaders();
       // const response = await fetch(`${this.base_url}/auth/2fa`, {
       //   method: "PUT",
       //   headers: {
       //     "Content-Type": "application/json",
+      //     ...authHeaders,
       //   },
       //   body: JSON.stringify(two_fa_enabled)
       // });

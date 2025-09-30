@@ -65,6 +65,17 @@ services:
       - DATABASE_URL=/app/data/database.db
     volumes:
       - auth_data:/app/data
+    secrets:
+      - user-session-private.pem
+      - user-session-public.pem
+      - game-session-private.pem
+      - game-session-public.pem
+      - internal-access-private.pem
+      - internal-access-public.pem
+      - users-service-client.env
+      - game-service-client.env
+      - matchmaking-service-client.env
+      - chat-service-client.env
     networks:
       - pong_network
     init: true
@@ -83,6 +94,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - game_sessions:/app/data
+    secrets:
+      - game-service-client.env
     networks:
       - pong_network
     init: true
@@ -101,6 +114,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - users:/app/data
+    secrets:
+      - users-service-client.env
     env_file: .env
     networks:
       - pong_network
@@ -112,6 +127,9 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      backend-auth:
+        condition: service_healthy
 
   # backend-auth-lite:
   #   container_name: backend-auth-lite
@@ -140,6 +158,8 @@ services:
     build:
       context: ./backend/matchmaking
       dockerfile: Dockerfile
+    secrets:
+      - matchmaking-service-client.env
     networks:
       - pong_network
     init: true
@@ -150,6 +170,9 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      backend-auth:
+        condition: service_healthy
 
   backend-chat:
     container_name: backend-chat
@@ -160,6 +183,8 @@ services:
       # - /app/node_modules
       # - ./:/app
       - db-data:/db
+    secrets:
+      - chat-service-client.env
     networks:
       - pong_network
     init: true
@@ -172,6 +197,30 @@ services:
     restart: unless-stopped
     working_dir: /app
 
+secrets:
+  # JWT Keys
+  user-session-private.pem:
+    file: ../docker/secrets/user-session-private.pem
+  user-session-public.pem:
+    file: ../docker/secrets/user-session-public.pem
+  game-session-private.pem:
+    file: ../docker/secrets/game-session-private.pem
+  game-session-public.pem:
+    file: ../docker/secrets/game-session-public.pem
+  internal-access-private.pem:
+    file: ../docker/secrets/internal-access-private.pem
+  internal-access-public.pem:
+    file: ../docker/secrets/internal-access-public.pem
+  
+  # Client Credentials
+  users-service-client.env:
+    file: ../docker/secrets/users-service-client.env
+  game-service-client.env:
+    file: ../docker/secrets/game-service-client.env
+  matchmaking-service-client.env:
+    file: ../docker/secrets/matchmaking-service-client.env
+  chat-service-client.env:
+    file: ../docker/secrets/chat-service-client.env
 
 networks:
   pong_network:

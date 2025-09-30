@@ -6,6 +6,7 @@ import servicesPlugin from "./plugins/services";
 import multipart from "@fastify/multipart";
 import fs from "fs";
 import path from "path";
+import { InternalAuthClient } from "./clients/internal-auth.client";
 
 
 const fastify = Fastify({ logger: true });
@@ -28,6 +29,16 @@ async function run() {
     process.exit(1);
   }
   fastify.log.info(`✅ Default avatar found at: ${defaultAvatarPath}`);
+
+  // Initialize internal auth client (fetch first token)
+  const internalAuthClient = new InternalAuthClient();
+  try {
+    await internalAuthClient.getToken();
+    fastify.log.info('✅ Internal auth client initialized');
+  } catch (error) {
+    fastify.log.error(`❌ Failed to initialize internal auth client: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    process.exit(1);
+  }
 
   for (const { route, prefix } of routes) {
     await fastify.register(route, { prefix });

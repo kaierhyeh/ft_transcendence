@@ -1,22 +1,18 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { JWTType } from './types';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Key types for type-safe key loading
-type KeyType = 'user' | 'game' | 'internal';
+type KeyType = 'user-session' | 'game-session' | 'internal-access';
 type KeyFormat = 'private' | 'public';
 
 // Helper functions for secure configuration
 function loadKeyByType(keyType: KeyType, keyFormat: KeyFormat): string {
-	const filename = `${keyType}_${keyFormat}.pem`;
-	const keyPath = path.join('/app/data/keys', filename);
+	const filename = `${keyType}-${keyFormat}.pem`;
+	const keyPath = path.join('/run/secrets', filename);
 	try {
 		if (!fs.existsSync(keyPath)) {
 			throw new Error(`Key file ${filename} does not exist at ${keyPath}`);
@@ -29,6 +25,28 @@ function loadKeyByType(keyType: KeyType, keyFormat: KeyFormat): string {
 	} catch (error) {
 		throw new Error(`Failed to load ${keyType} ${keyFormat} key: ${(error as Error).message}`);
 	}
+}
+
+function loadClientCredentials(): Record<string, ClientCredentials> {
+	const credentials: Record<string, ClientCredentials> = {};
+	const services = ['users-service', 'game-service', 'matchmaking-service', 'chat-service'];
+	
+	for (const service of services) {
+		const credentialsPath = path.join('/run/secrets', `${service}-client.env`);
+		if (fs.existsSync(credentialsPath)) {
+			// Use dotenv to parse the file
+			const envConfig = dotenv.parse(fs.readFileSync(credentialsPath));
+			
+			if (envConfig.CLIENT_ID && envConfig.CLIENT_SECRET) {
+				credentials[service] = {
+					id: envConfig.CLIENT_ID,
+					secret: envConfig.CLIENT_SECRET
+				};
+			}
+		}
+	}
+	
+	return credentials;
 }
 
 function optionalEnv(key: string, defaultValue: string): string {
@@ -74,6 +92,11 @@ interface CookieConfig {
 	};
 }
 
+interface ClientCredentials {
+	id: string;
+	secret: string;
+}
+
 interface Config {
 	jwt: {
 		user: JWTConfig;
@@ -84,6 +107,7 @@ interface Config {
 	server: ServerConfig;
 	oauth: OAuthConfig;
 	cookie: CookieConfig;
+	clientCredentials: Record<string, ClientCredentials>;
 }
 
 // Configuration object
@@ -92,8 +116,8 @@ const config: Config = {
 		user: {
 			type: JWTType.USER_SESSION,
 			issuer: "ft_transcendence",
-			privateKey: loadKeyByType('user', 'private'),
-			publicKey: loadKeyByType('user', 'public'),
+			privateKey: loadKeyByType('user-session', 'private'),
+			publicKey: loadKeyByType('user-session', 'public'),
 			algorithm: 'RS256',
 			accessTokenExpiry: '15m',
 			refreshTokenExpiry: '7d',
@@ -102,8 +126,8 @@ const config: Config = {
 		game: {
 			type: JWTType.GAME_SESSION,
 			issuer: "ft_transcendence",
-			privateKey: loadKeyByType('game', 'private'),
-			publicKey: loadKeyByType('game', 'public'),
+			privateKey: loadKeyByType('game-session', 'private'),
+			publicKey: loadKeyByType('game-session', 'public'),
 			algorithm: 'RS256',
 			accessTokenExpiry: '2h',
 			refreshTokenExpiry: '',
@@ -112,8 +136,8 @@ const config: Config = {
 		internal: {
 			type: JWTType.INTERNAL_ACCESS,
 			issuer: "ft_transcendence",
-			privateKey: loadKeyByType('internal', 'private'),
-			publicKey: loadKeyByType('internal', 'public'),
+			privateKey: loadKeyByType('internal-access', 'private'),
+			publicKey: loadKeyByType('internal-access', 'public'),
 			algorithm: 'RS256',
 			accessTokenExpiry: '1h',
 			refreshTokenExpiry: '',
@@ -141,11 +165,12 @@ const config: Config = {
 			httpOnly: true,
 			sameSite: 'lax',
 		}
-	}
+	},
+	clientCredentials: loadClientCredentials(),
 };
 
 // Export configuration
 export { config };
 
 // Export types for use in other modules
-export type { Config, JWTConfig, ServerConfig, OAuthConfig, CookieConfig };
+export type { Config, JWTConfig, ServerConfig, OAuthConfig, CookieConfig, ClientCredentials };

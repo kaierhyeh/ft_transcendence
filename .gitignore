@@ -1,10 +1,4 @@
 *.pdf
 .env
-
-node_modules
-package-lock.json
-.DS_Store
-data.sqlite
 node_modules
 secrets
-srcs/backend/auth/.env

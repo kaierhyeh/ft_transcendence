@@ -1,12 +1,17 @@
 COMPOSE_FILE := srcs/docker-compose.yml
 
-.PHONY: all up stop down del-vol clean fclean status help
+.PHONY: all up stop down del-vol clean fclean status help secrets
 
 # Default target
 all: up
 
+# Generate secrets (JWT keys and client credentials)
+secrets:
+	@echo "Generating secrets..."
+	@./tools/generate-secrets.sh
+
 # Start all services
-up:
+up: secrets
 	docker compose -f $(COMPOSE_FILE) up ${OPTS} --build $(ARGS)
 
 # Clean only Docker volumes

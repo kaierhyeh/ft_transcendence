@@ -2,11 +2,12 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
 import { type ILoggerService } from '../container.js';
-import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, signupFormSchema, SignupRequest } from '../schemas/auth.js';
+import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, PasswordUpdateData, passwordUpdateSchema, signupFormSchema, SignupRequest } from '../schemas/auth.js';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service.js';
 import { config } from '../config.js';
+import { internalAuthMiddleware } from '../middleware/internal-auth.middleware.js';
 
 
 interface AuthenticatedRequest extends FastifyRequest {
@@ -312,8 +313,11 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 	// Generate game session jwt [Requires Internal JWT]
 	fastify.post<{ Body: GameSessionClaims }>(
-    	"/auth/game-jwt",
-    	{ schema: { body: gameSessionClaimsSchema } },
+    	"/auth/game/token",
+    	{ 
+			schema: { body: gameSessionClaimsSchema },
+			preHandler: internalAuthMiddleware
+		},
 		async (request, reply) => {
 			  try {
 				const claims: GameSessionClaims = request.body;
@@ -347,23 +351,64 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			}
 	});
 
-	// Generate internal JWT route - for service-to-service communication
+	// Generate internal JWT route - OAuth2-like client credentials flow
 	fastify.post('/auth/internal/token', {
 		schema: {
-			description: 'Generate internal access token for service-to-service communication',
+			description: 'Generate internal access token using client credentials (OAuth2-like flow)',
 			tags: ['Auth', 'Internal'],
+			body: {
+				type: 'object',
+				properties: {
+					client_id: { type: 'string' },
+					client_secret: { type: 'string' },
+					grant_type: { type: 'string', enum: ['client_credentials'] }
+				},
+				required: ['client_id', 'client_secret', 'grant_type']
+			},
 			response: {
 				200: {
 					type: 'object',
 					properties: {
-						token: { type: 'string' },
-						expires_in: { type: 'string' }
+						access_token: { type: 'string' },
+						token_type: { type: 'string' },
+						expires_in: { type: 'number' }
 					}
 				}
 			}
 		}
-	}, async (request: FastifyRequest, reply: FastifyReply) => {
+	}, async (request: FastifyRequest<{
+		Body: {
+			client_id: string;
+			client_secret: string;
+			grant_type: string;
+		}
+	}>, reply: FastifyReply) => {
 		try {
+			const { client_id, client_secret, grant_type } = request.body;
+			
+			// Validate grant type
+			if (grant_type !== 'client_credentials') {
+				return reply.status(400).send({
+					error: 'unsupported_grant_type',
+					error_description: 'Only client_credentials grant type is supported'
+				});
+			}
+
+			// Find client in our credentials
+			const clientCreds = Object.values(config.clientCredentials).find(
+				creds => creds.id === client_id
+			);
+
+			if (!clientCreds || clientCreds.secret !== client_secret) {
+				console.warn(`� Invalid client credentials for: ${client_id}`);
+				return reply.status(401).send({
+					error: 'invalid_client',
+					error_description: 'Invalid client credentials'
+				});
+			}
+
+			console.log(`🔑 Internal token granted to client: ${client_id}`);
+
 			// Generate internal JWT
 			const sign_options: SignOptions = {
 				algorithm: config.jwt.internal.algorithm,
@@ -380,9 +425,13 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				sign_options
 			);
 			
+			// Parse expiry time to seconds
+			const expiresInSeconds = config.jwt.internal.accessTokenExpiry === '1h' ? 3600 : 3600;
+			
 			reply.status(200).send({ 
-				token: internal_jwt,
-				expires_in: config.jwt.internal.accessTokenExpiry 
+				access_token: internal_jwt,
+				token_type: 'Bearer',
+				expires_in: expiresInSeconds
 			});
 
 		} catch (error) {
@@ -390,15 +439,50 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				ip: (request as any).ip
 			});
 			return reply.status(500).send({
-				error: 'Internal server error during internal JWT generation'
+				error: 'server_error',
+				error_description: 'Internal server error during token generation'
 			});
 		}
 	});
 
+	// Update password hash route - for internal service communication
 	fastify.put<{ Body: PasswordUpdateData }>(
 		"/auth/hash-password",
-			{ schema: { body: passwordUpdateSchema } },
-			authController.updatePasswordHash.bind(authController)
+		{ 
+			schema: { body: passwordUpdateSchema },
+			preHandler: internalAuthMiddleware
+		},
+		async (request, reply) => {
+			try {
+				const data = request.body;
+				const password_hash = await authService.updatePasswordHash(
+					data.old_hash,
+					data.old_password,
+					data.new_password
+				);
+				
+				reply.send({ password_hash });
+			} catch (error: any) {
+				if (error.code === 'INVALID_CURRENT_PASSWORD') {
+					return reply.status(401).send({
+						error: "Invalid current password"
+					});
+				}
+
+				if (error.code === 'USER_NOT_FOUND') {
+					return reply.status(404).send({
+						error: "User not found"
+					});
+				}
+
+				logger.error('Password hash update error', error as Error, {
+					ip: (request as any).ip
+				});
+				return reply.status(500).send({
+					error: 'Internal server error during password hash update'
+				});
+			}
+		}
 	);
 
 }

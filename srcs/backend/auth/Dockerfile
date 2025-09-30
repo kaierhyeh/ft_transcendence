@@ -11,9 +11,6 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Create storage directories
-RUN mkdir -p /app/data/keys /app/data/db
-
 # Copy source code
 COPY . .
 
