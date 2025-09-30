@@ -200,27 +200,27 @@ services:
 secrets:
   # JWT Keys
   user-session-private.pem:
-    file: ../docker/secrets/user-session-private.pem
+    file: ../secrets/user-session-private.pem
   user-session-public.pem:
-    file: ../docker/secrets/user-session-public.pem
+    file: ../secrets/user-session-public.pem
   game-session-private.pem:
-    file: ../docker/secrets/game-session-private.pem
+    file: ../secrets/game-session-private.pem
   game-session-public.pem:
-    file: ../docker/secrets/game-session-public.pem
+    file: ../secrets/game-session-public.pem
   internal-access-private.pem:
-    file: ../docker/secrets/internal-access-private.pem
+    file: ../secrets/internal-access-private.pem
   internal-access-public.pem:
-    file: ../docker/secrets/internal-access-public.pem
+    file: ../secrets/internal-access-public.pem
   
   # Client Credentials
   users-service-client.env:
-    file: ../docker/secrets/users-service-client.env
+    file: ../secrets/users-service-client.env
   game-service-client.env:
-    file: ../docker/secrets/game-service-client.env
+    file: ../secrets/game-service-client.env
   matchmaking-service-client.env:
-    file: ../docker/secrets/matchmaking-service-client.env
+    file: ../secrets/matchmaking-service-client.env
   chat-service-client.env:
-    file: ../docker/secrets/chat-service-client.env
+    file: ../secrets/chat-service-client.env
 
 networks:
   pong_network:

@@ -1,9 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { google } from 'googleapis';
-import authService from '../services/auth.service.js';
-import authUtils from '../utils/auth.utils.js';
-import { config } from '../config.js';
-import { type ILoggerService } from '../container.js';
+import authService from '../services/auth.service';
+import authUtils from '../utils/auth.utils';
+import { config } from '../config';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -20,7 +19,7 @@ const oauth2Client = new google.auth.OAuth2(
 // It also handles 2FA if enabled for the user
 // It returns the access and refresh tokens in cookies
 export async function oauthRoutes(fastify: FastifyInstance, options: any) {
-	const logger: ILoggerService = (fastify as any).logger;
+	const logger = (fastify as any).logger;
 	fastify.post('/auth/google', async (request: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
 		try {
 			const { code } = request.body;

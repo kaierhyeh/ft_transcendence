@@ -6,7 +6,7 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import authService from '../services/auth.service.js';
+import authService from '../services/auth.service';
 
 export async function internalAuthMiddleware(
   request: FastifyRequest,

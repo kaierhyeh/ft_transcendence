@@ -4,7 +4,7 @@
 	"description": "Authentication microservice for transcendence project",
 	"main": "index.ts",
 	"scripts": {
-		"start": "redis-server --daemonize yes && ts-node src/index.ts",
+		"start": "redis-server --daemonize yes && ts-node src/index.clean.ts",
 		"dev": "nodemon --exec \"node --loader ts-node/esm\" src/index.ts",
 		"build": "tsc",
 		"serve": "node dist/src/index.js",
@@ -13,7 +13,6 @@
 	"dependencies": {
 		"@fastify/cookie": "^11.0.2",
 		"bcrypt": "^5.1.0",
-		"better-sqlite3": "^9.6.0",
 		"dotenv": "^16.0.3",
 		"fastify": "^4.17.0",
 		"googleapis": "^118.0.0",
@@ -26,7 +25,6 @@
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^5.0.0",
-		"@types/better-sqlite3": "^7.0.0",
 		"@types/jsonwebtoken": "^9.0.0",
 		"@types/node": "^20.0.0",
 		"@types/qrcode": "^1.5.0",

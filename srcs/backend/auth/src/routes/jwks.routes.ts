@@ -1,8 +1,7 @@
-import jwksService from '../services/jwks.service.js';
-import { type ILoggerService } from '../container.js';
+import jwksService from '../services/jwks.service';
 
 export async function jwksRoutes(fastify: any, options: any): Promise<void> {
-	const logger: ILoggerService = (fastify as any).logger;
+	const logger = (fastify as any).logger;
 	
 	/**
 	 * JWKS endpoint - RFC 7517 compliant

@@ -1,12 +1,11 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import authService from '../services/auth.service.js';
-import authUtils from '../utils/auth.utils.js';
-import { type ILoggerService } from '../container.js';
-import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, PasswordUpdateData, passwordUpdateSchema, signupFormSchema, SignupRequest } from '../schemas/auth.js';
+import authService from '../services/auth.service';
+import authUtils from '../utils/auth.utils';
+import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, PasswordUpdateData, passwordUpdateSchema, signupFormSchema, SignupRequest } from '../schemas/auth';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
-import jwksService from '../services/jwks.service.js';
-import { config } from '../config.js';
+import jwksService from '../services/jwks.service';
+import { config } from '../config';
 import { internalAuthMiddleware } from '../middleware/internal-auth.middleware';
 
 
@@ -18,7 +17,7 @@ interface AuthenticatedRequest extends FastifyRequest {
 }
 
 export async function authRoutes(fastify: FastifyInstance, options: any) {
-	const logger: ILoggerService = (fastify as any).logger;
+	const logger = (fastify as any).logger;
 
 	// Login route
 	fastify.post<{ Body: LoginRequest }>(

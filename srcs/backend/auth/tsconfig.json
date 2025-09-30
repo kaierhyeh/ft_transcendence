@@ -16,15 +16,19 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["*", "*.ts"]
+    }
   },
   "include": [
-    "src/**/*",
-    "db/**/*",
-    "redis/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "db",
+    "redis"
   ]
 }

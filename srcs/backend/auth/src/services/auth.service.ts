@@ -1,11 +1,11 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { config } from '../config.js';
-import jwksService from './jwks.service.js';
-import { JWTType, JWTPayload } from '../types.js';
-import { LocalUserCreationData, UserData, UserClient, UserProfile } from '../clients/UserClient.js';
-import { LoginRequest } from '../schemas/auth.js';
-import authUtils from '../utils/auth.utils.js';
-import redis from '../clients/redis.client.js';
+import { config } from '../config';
+import jwksService from './jwks.service';
+import { JWTType, JWTPayload } from '../types';
+import { LocalUserCreationData, UserData, UserClient, UserProfile } from '../clients/UserClient';
+import { LoginRequest } from '../schemas/auth';
+import authUtils from '../utils/auth.utils';
+import redis from '../clients/redis.client';
 
 // JWT Types for three-tier system - using imported enum
 export type { JWTType, JWTPayload } from '../types.js';

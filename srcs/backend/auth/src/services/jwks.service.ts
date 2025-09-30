@@ -12,8 +12,8 @@
  */
 
 import crypto from 'crypto';
-import { config } from '../config.js';
-import { JWTType } from '../types/index.js';
+import { config } from '../config';
+import { JWTType } from '../types/index';
 
 interface JWK {
 	kty: string;

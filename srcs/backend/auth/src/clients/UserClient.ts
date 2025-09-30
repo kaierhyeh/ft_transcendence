@@ -1,5 +1,5 @@
 import { config } from "../config";
-import authUtils from "../utils/auth.utils.js";
+import authUtils from "../utils/auth.utils";
 
 interface ErrorResponse {
   message?: string;

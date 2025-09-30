@@ -2,8 +2,8 @@ import bcrypt from 'bcrypt';
 import type { FastifyReply, FastifyInstance } from 'fastify';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
-import { config } from '../config.js';
-import jwksService from '../services/jwks.service.js';
+import { config } from '../config';
+import jwksService from '../services/jwks.service';
 
 export class AuthUtils {
 	// Cache for internal JWT token

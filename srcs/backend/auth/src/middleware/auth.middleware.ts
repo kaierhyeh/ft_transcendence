@@ -22,10 +22,10 @@
  */
 
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import authService from '../services/auth.service.js';
-import authUtils from '../utils/auth.utils.js';
-import { config } from '../config.js';
-import { JWTType, UserSessionPayload, GameSessionPayload, InternalAccessPayload } from '../types.js';
+import authService from '../services/auth.service';
+import authUtils from '../utils/auth.utils';
+import { config } from '../config';
+import { JWTType, UserSessionPayload, GameSessionPayload, InternalAccessPayload } from '../types';
 
 interface AuthenticatedRequest {
 	cookies?: { accessToken?: string; refreshToken?: string };

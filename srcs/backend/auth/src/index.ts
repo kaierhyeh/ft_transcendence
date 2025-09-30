@@ -1,57 +1,52 @@
 import fastify from "fastify";
-import { authMiddleware } from './middleware/auth.middleware.js';
-import { oauthRoutes } from './routes/oauth.routes.js';
-import { twofaRoutes } from './routes/twofa.routes.js';
-import { authRoutes } from './routes/auth.routes.js';
-import { jwksRoutes } from './routes/jwks.routes.js';
+import { authMiddleware } from './middleware/auth.middleware';
+import { oauthRoutes } from './routes/oauth.routes';
+import { twofaRoutes } from './routes/twofa.routes';
+import { authRoutes } from './routes/auth.routes';
+import { jwksRoutes } from './routes/jwks.routes';
 import cookie from "@fastify/cookie";
-import { config } from './config.js';
-import { initializeContainer, Container, Logger, type ILoggerService } from './container.js';
-import { initializeKeys } from './utils/generate-keys.js';
-import jwksService from './services/jwks.service.js';
+import { config } from './config';
+import { Logger } from './container';
+import { initializeKeys } from './utils/generate-keys';
+import jwksService from './services/jwks.service';
 
-const app = fastify({ 
-	logger: {
-		transport: {
-			target: 'pino-pretty',
-			options: { translateTime: 'HH:MM:ss Z' }
+async function startServer() {
+	const app = fastify({ 
+		logger: {
+			transport: {
+				target: 'pino-pretty',
+				options: { translateTime: 'HH:MM:ss Z' }
+			}
 		}
+	});
+
+	// Register plugins
+	await app.register(cookie);
+
+	// Initialize JWT keys before anything else
+	try {
+		initializeKeys();
+		app.log.info('🔑 JWT keys initialized');
+	} catch (error) {
+		app.log.error(error as Error, '❌ Key initialization failed');
+		process.exit(1);
 	}
-});
 
-// Register plugins
+	// Initialize logger
+	try {
+		const logger = new Logger(app);
+		app.decorate('logger', logger);
 
-await app.register(cookie);
+		// Initialize JWKS service with three-type keys
+		await jwksService.generateJWKS();
+		
+		app.log.info('✅ Services initialized successfully');
+	} catch (error) {
+		app.log.error(error, '❌ Service initialization error:');
+		process.exit(1);
+	}
 
-// Initialize JWT keys before anything else
-try {
-	initializeKeys();
-} catch (error) {
-	console.error('❌ Key initialization failed:', error);
-	process.exit(1);
-}
-
-// Initialize services using dependency injection
-const container = initializeContainer();
-
-// Initialize database through container
-try {
-
-	app.decorate('container', container);
-
-	// Initialize logger with fastify instance
-	const logger = new Logger(app);
-	container.register('logger', () => logger);
-	app.decorate('logger', logger);
-
-	// Initialize JWKS service with three-type keys
-	await jwksService.generateJWKS();
-	
-	app.log.info('Services initialized successfully');
-} catch (error) {
-	app.log.error(error, 'Service initialization error:');
-	process.exit(1);
-}// Public routes that don't need authentication
+	// Public routes that don't need authentication
 
 const publicRoutes = [
 	'/auth/google',
@@ -74,44 +69,47 @@ app.addHook('onRequest', (request, reply, done) => {
 	authMiddleware(app, request, reply, done);
 });
 
-// Register routes
-await app.register(oauthRoutes);
-await app.register(twofaRoutes);
-await app.register(authRoutes);
-await app.register(jwksRoutes);
+	// Register routes
+	await app.register(oauthRoutes);
+	await app.register(twofaRoutes);
+	await app.register(authRoutes);
+	await app.register(jwksRoutes);
 
-// Health check endpoint
-app.get('/health', async (request, reply) => {
-	return { status: 'ok', service: 'auth', timestamp: new Date().toISOString() };
-});
+	// Health check endpoint
+	app.get('/health', async (request, reply) => {
+		return { status: 'ok', service: 'auth', timestamp: new Date().toISOString() };
+	});
 
-// Graceful shutdown
-const cleanup = async (signal: string) => {
-	app.log.info(`${signal} received. Cleaning up auth service...`);
-	try {
-		await app.close();
-		process.exit(0);
-	} catch (error) {
-		app.log.error(`Error during cleanup: ${(error as Error).message}`);
-		process.exit(1);
-	}
-};
+	// Graceful shutdown
+	const cleanup = async (signal: string) => {
+		app.log.info(`${signal} received. Cleaning up auth service...`);
+		try {
+			await app.close();
+			process.exit(0);
+		} catch (error) {
+			app.log.error(`Error during cleanup: ${(error as Error).message}`);
+			process.exit(1);
+		}
+	};
 
-process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
+	process.on('SIGINT', cleanup);
+	process.on('SIGTERM', cleanup);
 
-// Start server
-const start = async () => {
+	// Start server
 	try {
 		await app.listen({
 			port: config.server.port,
 			host: config.server.host
 		});
-		app.log.info('Auth service started successfully');
+		app.log.info('🚀 Auth service started successfully');
 	} catch (error) {
-		app.log.error(`Error starting auth service: ${(error as Error).message}`);
+		app.log.error(`❌ Error starting auth service: ${(error as Error).message}`);
 		process.exit(1);
 	}
-};
+}
 
-start();
+// Start the server
+startServer().catch((error) => {
+	console.error('❌ Failed to start auth service:', error);
+	process.exit(1);
+});
