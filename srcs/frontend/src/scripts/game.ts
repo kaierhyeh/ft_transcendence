@@ -3,6 +3,7 @@ import "./types.js";
 export function initGame(): void {
     // --- Constants & State ---
     const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
+    const API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
     let isAI: boolean = true;
     let AITarg: number = -1;
     let gameStarted: boolean = false;
@@ -10,15 +11,13 @@ export function initGame(): void {
     let game_state: GameState | null = null;
     let game_state_4p: GameState4p | null = null;
     let game_conf: GameConfig | null = null;
-    let ws: WebSocket | null = null;
+    let websockets: WebSocket[] = [];  // Array of websockets, one per player
     let game_id: number | null = null;
     let gameMode: 'pvp' | 'multi' = 'pvp';
+    let jwtTickets: string[] = [];  // Store JWT tickets for each player
     let aiInterval: number | null = null;
     let inputInterval: number | null = null;
-    const participant_ids: string[] = ["session_id_0", "session_id_1", "session_id_2", "session_id_3"];
     const keys: { [key: string]: boolean } = {};
-    const input: InputMessage = { type: "input", participant_id: "", move: "" };
-    const join: JoinMessage = { type: "join", participant_id: "" };
     let isTransitioning: boolean = false;
 
     // --- DOM Elements ---
@@ -31,6 +30,31 @@ export function initGame(): void {
     if (!ctx) {
         console.error("Unable to get 2D context from canvas.");
         return;
+    }
+
+    // --- Matchmaking Service API ---
+    async function createMatch(participants: any[]): Promise<{ game_id: number; jwt_tickets: string[] }> {
+        try {
+            const response = await fetch(`${API_MATCHMAKING_ENDPOINT}/make`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    mode: gameMode === 'multi' ? 'multi' : 'pvp',
+                    participants: participants
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Matchmaking failed: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to create match:', error);
+            throw error;
+        }
     }
 
     // --- Game System API ---
@@ -122,7 +146,7 @@ export function initGame(): void {
     }
 
     function cleanupCurrentGame(): void {
-        console.log("WS state:", ws?.readyState, "Game ID:", game_id, "Mode:", gameMode);
+        console.log("Cleaning up current game - WebSockets count:", websockets.length, "Game ID:", game_id, "Mode:", gameMode);
         
         if (aiInterval !== null) {
             clearInterval(aiInterval);
@@ -134,23 +158,25 @@ export function initGame(): void {
             inputInterval = null;
         }
 
-        if (ws !== null) {
-            console.log("Closing WebSocket - current state:", ws.readyState);
-
-            ws.onopen = null;
-            ws.onmessage = null;
-            ws.onerror = null;
-            ws.onclose = null;
-            
-            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                try {
-                    ws.close(1000, "Cleanup");
-                } catch (e) {
-                    console.error("Error closing websocket:", e);
+        // Close all WebSocket connections
+        websockets.forEach((ws, index) => {
+            if (ws && ws.readyState !== WebSocket.CLOSED) {
+                console.log(`Closing WebSocket ${index} - current state:`, ws.readyState);
+                ws.onopen = null;
+                ws.onmessage = null;
+                ws.onerror = null;
+                ws.onclose = null;
+                
+                if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                    try {
+                        ws.close(1000, "Cleanup");
+                    } catch (e) {
+                        console.error(`Error closing websocket ${index}:`, e);
+                    }
                 }
             }
-            ws = null;
-        }
+        });
+        websockets = [];
 
         gameStarted = false;
         gameEnded = false;
@@ -158,6 +184,7 @@ export function initGame(): void {
         game_state_4p = null;
         game_conf = null;
         game_id = null;
+        jwtTickets = [];
         AITarg = -1;
 
         const winner = document.getElementById("winner.");
@@ -232,93 +259,114 @@ export function initGame(): void {
     }
 
     // --- Networking ---
-    function connectWebSocket(id: number | undefined): void {
+    function connectWebSockets(id: number | undefined): void {
         if (id === undefined) {
             console.error("Cannot connect WebSocket: game_id is null.");
             return;
         }
         
-        if (ws !== null) {
-            console.warn("WebSocket already exists, cleaning up first");
-            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)
+        // Clean up any existing websockets first
+        websockets.forEach((ws, index) => {
+            if (ws && ws.readyState !== WebSocket.CLOSED) {
+                console.log(`Cleaning up existing WebSocket ${index}`);
                 ws.close(1000, "Reconnecting");
-            ws = null;
-        }
-        
-        const url = API_GAME_ENDPOINT + `/${id}/ws`;
-        console.log("Connecting WebSocket:", url);
-        ws = new WebSocket(url);
-        
-        ws.onopen = function () {
-            startInputSending();
-            
-            if (isAI && gameMode === 'pvp') {
-                console.log("Starting AI interval");
-                if (aiInterval !== null)
-                    clearInterval(aiInterval);
-                aiInterval = setInterval(() => {
-                    AIDecision();
-                }, 1000);
             }
-        };
+        });
+        websockets = [];
         
-        ws.onmessage = function (event: MessageEvent) {
-            try {
-                const message: GameStateMessage | GameStateMessage4p | ServerResponseMessage = JSON.parse(event.data);
-                if (message.type === "game_state") {
-                    if (gameMode === 'pvp') {
-                        game_state = (message as GameStateMessage).data;
-                        game_state_4p = null;
-                    } else {
-                        game_state_4p = (message as GameStateMessage4p).data;
-                        game_state = null;
-                    }
-                    draw();
-                } else if (message.type === "server_message")
-                    handleServerMessage(message);
-            } catch (error) {
-                console.error("Error parsing game data:", error);
-            }
-        };
+        const numPlayers = gameMode === 'pvp' ? 2 : 4;
+        console.log(`Creating ${numPlayers} WebSocket connections for game ${id}`);
         
-        ws.onclose = function (event: CloseEvent) {
-            console.log("WebSocket CLOSED - Code:", event.code, "Reason:", event.reason);
+        // Create WebSocket connections for each player
+        for (let i = 0; i < numPlayers; i++) {
+            const url = API_GAME_ENDPOINT + `/${id}/ws`;
+            console.log(`Connecting WebSocket ${i} to:`, url);
             
-            if (event.code !== 1000) {
-                if (aiInterval !== null) {
-                    clearInterval(aiInterval);
-                    aiInterval = null;
+            const ws = new WebSocket(url);
+            websockets.push(ws);
+            
+            ws.onopen = function () {
+                console.log(`WebSocket ${i} connected successfully.`);
+                
+                // Send join message with JWT ticket
+                const joinMessage = {
+                    type: "join",
+                    ticket: jwtTickets[i]
+                };
+                ws.send(JSON.stringify(joinMessage));
+                
+                // Start AI logic if this is an AI player (index 1 for PvP mode)
+                if (isAI && gameMode === 'pvp' && i === 1 && aiInterval === null) {
+                    console.log("Starting AI interval for player", i);
+                    aiInterval = setInterval(() => {
+                        AIDecision();
+                    }, 1000);
                 }
-                if (inputInterval !== null) {
-                    clearInterval(inputInterval);
-                    inputInterval = null;
+            };
+            
+            ws.onmessage = function (event: MessageEvent) {
+                try {
+                    const message: GameStateMessage | GameStateMessage4p | ServerResponseMessage = JSON.parse(event.data);
+                    if (message.type === "game_state") {
+                        if (gameMode === 'pvp') {
+                            game_state = (message as GameStateMessage).data;
+                            game_state_4p = null;
+                        } else {
+                            game_state_4p = (message as GameStateMessage4p).data;
+                            game_state = null;
+                        }
+                        draw();
+                    } else if (message.type === "server_message") {
+                        handleServerMessage(message);
+                    }
+                } catch (error) {
+                    console.error(`Failed to parse WebSocket ${i} message:`, error);
+                }
+            };
+            
+            ws.onclose = function (event: CloseEvent) {
+                console.log(`WebSocket ${i} disconnected. Code:`, event.code, "Reason:", event.reason);
+                
+                if (event.code !== 1000) {
+                    if (aiInterval !== null) {
+                        clearInterval(aiInterval);
+                        aiInterval = null;
+                    }
+                    if (inputInterval !== null) {
+                        clearInterval(inputInterval);
+                        inputInterval = null;
+                    }
+                    
+                    if (!game_state?.winner && !game_state_4p?.winner && gameStarted && !gameEnded) {
+                        console.log(`Attempting reconnect for WebSocket ${i} in 3s...`);
+                        setTimeout(() => {
+                            if (gameStarted && !gameEnded && game_id)
+                                connectWebSockets(game_id);
+                        }, 3000);
+                    }
                 }
                 
-                if (!game_state?.winner && !game_state_4p?.winner && gameStarted && !gameEnded) {
-                    console.log("Attempting reconnect in 3s...");
-                    setTimeout(() => {
-                        if (gameStarted && !gameEnded && game_id)
-                            connectWebSocket(game_id);
-                    }, 3000);
+                // Check if game finished
+                if (gameMode === 'pvp' && game_state?.winner) {
+                    gameEnded = true;
+                    const winner = document.getElementById("winner.");
+                    if (winner && winner.innerText.length === 0)
+                        winner.innerText = "Player " + game_state.winner + " won!";
+                } else if (gameMode === 'multi' && game_state_4p?.winner) {
+                    gameEnded = true;
+                    const winner = document.getElementById("winner.");
+                    if (winner && winner.innerText.length === 0)
+                        winner.innerText = game_state_4p.winner + " team won!";
                 }
-            }
+            };
             
-            if (gameMode === 'pvp' && game_state?.winner) {
-                gameEnded = true;
-                const winner = document.getElementById("winner.");
-                if (winner && winner.innerText.length === 0)
-                    winner.innerText = "Player " + game_state.winner + " won!";
-            } else if (gameMode === 'multi' && game_state_4p?.winner) {
-                gameEnded = true;
-                const winner = document.getElementById("winner.");
-                if (winner && winner.innerText.length === 0)
-                    winner.innerText = game_state_4p.winner + " team won!";
-            }
-        };
+            ws.onerror = function (error: Event) {
+                console.error(`WebSocket ${i} error:`, error);
+            };
+        }
         
-        ws.onerror = function (error: Event) {
-            console.error("WebSocket ERROR:", error);
-        };
+        // Start input sending after all WebSockets are created
+        setTimeout(() => startInputSending(), 500);
     }
 
     function startInputSending(): void {
@@ -328,86 +376,65 @@ export function initGame(): void {
             inputInterval = null;
         }
         
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-            console.error("Cannot start input sending - WebSocket not open");
-            return;
-        }
+        console.log(`Starting input sending for ${websockets.length} WebSocket connections`);
         
-        console.log(`Starting input sending for ${gameMode} mode`);
-        
-        try {
-            if (gameMode === 'pvp') {
-                console.log("Sending join for 2 players");
-                join.participant_id = participant_ids[0];
-                ws.send(JSON.stringify(join));
-                join.participant_id = participant_ids[1];
-                ws.send(JSON.stringify(join));
-            } else {
-                console.log("Sending join for 4 players");
-                participant_ids.forEach((id, index) => {
-                    join.participant_id = id;
-                    ws!.send(JSON.stringify(join));
-                });
-            }
-        } catch (error) {
-            console.error("Error sending join messages:", error);
-            return;
-        }
-
         inputInterval = setInterval(() => {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                console.log("WebSocket not open, stopping input interval");
-                if (inputInterval !== null) {
-                    clearInterval(inputInterval);
-                    inputInterval = null;
-                }
-                return;
-            }
-            
-            try {
-                if (gameMode === 'pvp') {
-                    input.participant_id = participant_ids[0];
-                    if (keys["w"]) input.move = "up";
-                    else if (keys["s"]) input.move = "down";
-                    else input.move = "stop";
-                    ws.send(JSON.stringify(input));
+            if (gameMode === 'pvp') {
+                // Player 1 (Human) - WebSocket 0
+                if (websockets[0] && websockets[0].readyState === WebSocket.OPEN) {
+                    let move = "stop";
+                    if (keys["w"]) move = "up";
+                    else if (keys["s"]) move = "down";
                     
-                    input.participant_id = participant_ids[1];
-                    if (isAI)
-                        moveAIPaddle();
-                    else {
-                        if (keys["ArrowUp"]) input.move = "up";
-                        else if (keys["ArrowDown"]) input.move = "down";
-                        else input.move = "stop";
-                    }
-                    ws.send(JSON.stringify(input));
-                } else {
-                    input.participant_id = participant_ids[0];
-                    if (keys["w"]) input.move = "up";
-                    else if (keys["s"]) input.move = "down";
-                    else input.move = "stop";
-                    ws.send(JSON.stringify(input));
-
-                    input.participant_id = participant_ids[1];
-                    if (keys["a"]) input.move = "up";
-                    else if (keys["z"]) input.move = "down";
-                    else input.move = "stop";
-                    ws.send(JSON.stringify(input));
-
-                    input.participant_id = participant_ids[2];
-                    if (keys["ArrowUp"]) input.move = "up";
-                    else if (keys["ArrowDown"]) input.move = "down";
-                    else input.move = "stop";
-                    ws.send(JSON.stringify(input));
-
-                    input.participant_id = participant_ids[3];
-                    if (keys["o"]) input.move = "up";
-                    else if (keys["l"]) input.move = "down";
-                    else input.move = "stop";
-                    ws.send(JSON.stringify(input));
+                    const inputMessage = {
+                        type: "input",
+                        move: move
+                    };
+                    websockets[0].send(JSON.stringify(inputMessage));
                 }
-            } catch (error) {
-                console.error("Error sending input:", error);
+                
+                // Player 2 (AI or Human) - WebSocket 1
+                if (websockets[1] && websockets[1].readyState === WebSocket.OPEN) {
+                    let move = "stop";
+                    if (isAI) {
+                        // AI movement is handled by moveAIPaddle function
+                        moveAIPaddle(1);
+                        return; 
+                    } else {
+                        // Human player 2 controls
+                        if (keys["ArrowUp"]) move = "up";
+                        else if (keys["ArrowDown"]) move = "down";
+                    }
+                    
+                    const inputMessage = {
+                        type: "input",
+                        move: move
+                    };
+                    websockets[1].send(JSON.stringify(inputMessage));
+                }
+            } else {
+                // 4-player mode - each WebSocket handles one player
+                const keyMappings = [
+                    { up: "w", down: "s" },      // Player 1
+                    { up: "a", down: "z" },      // Player 2
+                    { up: "ArrowUp", down: "ArrowDown" }, // Player 3
+                    { up: "o", down: "l" }       // Player 4
+                ];
+                
+                websockets.forEach((ws, index) => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        let move = "stop";
+                        const mapping = keyMappings[index];
+                        if (keys[mapping.up]) move = "up";
+                        else if (keys[mapping.down]) move = "down";
+                        
+                        const inputMessage = {
+                            type: "input",
+                            move: move
+                        };
+                        ws.send(JSON.stringify(inputMessage));
+                    }
+                });
             }
         }, 50);
         console.log("Input interval started:", inputInterval);
@@ -455,26 +482,33 @@ export function initGame(): void {
             AITarg = predictBallY(ball, game_state.players.right.paddle.x, game_conf.canvas_width, game_conf.canvas_height, game_conf.ball_size);
     }
     
-    function moveAIPaddle(): void {
+    function moveAIPaddle(playerIndex: number): void {
         if (!game_state || !game_conf || gameMode !== 'pvp') return;
+        if (playerIndex >= websockets.length) return;
+        
+        const ws = websockets[playerIndex];
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        
         const rightPaddle = game_state.players.right;
-        input.participant_id = participant_ids[1];
+        let move = "stop";
         
         if (AITarg === -1) {
             if (rightPaddle.paddle.y > game_conf.canvas_height / 2 + 15)
-                input.move = "up";
+                move = "up";
             else if (rightPaddle.paddle.y < game_conf.canvas_height / 2 - 15)
-                input.move = "down";
-            else
-                input.move = "stop";
+                move = "down";
         } else {
             if (rightPaddle.paddle.y > AITarg)
-                input.move = "up";
+                move = "up";
             else if (rightPaddle.paddle.y < AITarg - (game_conf.paddle_height / 1.1))
-                input.move = "down";
-            else
-                input.move = "stop";
+                move = "down";
         }
+        
+        const inputMessage = {
+            type: "input",
+            move: move
+        };
+        ws.send(JSON.stringify(inputMessage));
     }
 
     // --- Drawing ---
@@ -565,59 +599,73 @@ export function initGame(): void {
         }
     }
 
+    // Create participants array based on game mode and AI setting
+    function createParticipantsArray() {
+        if (gameMode === 'pvp') {
+            const participants = [
+                {
+                    type: "guest",        // Player 1 is always a guest user
+                    user_id: undefined    // No user_id for guest users
+                }
+            ];
+            
+            // Player 2 is either AI or another guest
+            if (isAI) {
+                participants.push({
+                    type: "ai",
+                    user_id: undefined
+                });
+            } else {
+                participants.push({
+                    type: "guest",
+                    user_id: undefined
+                });
+            }
+            
+            return participants;
+        } else {
+            // 4-player mode - all guest users for now
+            return [
+                { type: "guest", user_id: undefined },
+                { type: "guest", user_id: undefined },
+                { type: "guest", user_id: undefined },
+                { type: "guest", user_id: undefined }
+            ];
+        }
+    }
+
     // --- Game Loop ---
     async function run(): Promise<void> {
         if (!canvas || !ctx) {
             console.error("Canvas or context not available.");
             return;
         }
-                
+        
         try {
-            let requestBody;
-            if (gameMode === 'pvp') {
-                requestBody = {
-                    type: "pvp",
-                    participants: [
-                        { user_id: 0, participant_id: participant_ids[0], is_ai: false },
-                        { user_id: 1, participant_id: participant_ids[1], is_ai: isAI },
-                    ],
-                } as CreateGameRequest;
-            } else {
-                requestBody = {
-                    type: "multi",
-                    participants: [
-                        { user_id: 0, participant_id: participant_ids[0] },
-                        { user_id: 1, participant_id: participant_ids[1] },
-                        { user_id: 2, participant_id: participant_ids[2] },
-                        { user_id: 3, participant_id: participant_ids[3] }
-                    ],
-                } as CreateGameRequest4p;
-            }
+            // 1. Create match through matchmaking service
+            const participants = createParticipantsArray();
+            const matchResult = await createMatch(participants);
             
-            const response = await fetch(API_GAME_ENDPOINT + "/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestBody)
-            });
+            game_id = matchResult.game_id;
+            jwtTickets = matchResult.jwt_tickets;
+            console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} match created with ID:`, game_id);
+            console.log("JWT tickets received:", jwtTickets.length);
+            console.log("Tickets:", jwtTickets);
             
+            // 2. Get game configuration
+            const response = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
             if (!response.ok)
-                throw new Error(`Failed to create game: ${response.status}`);
+                throw new Error(`Failed to get game config: ${response.status}`);
             
-            const data: CreateGameResponse = await response.json();
-            game_id = data.game_id;
-            console.log(`Game created with ID: ${game_id}`);
-            
-            const configResponse = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);
-            if (!configResponse.ok)
-                throw new Error(`Failed to get game config: ${configResponse.status}`);
-            
-            game_conf = await configResponse.json() as GameConfig;
+            game_conf = await response.json() as GameConfig;
             canvas.width = game_conf.canvas_width;
             canvas.height = game_conf.canvas_height;
+            console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} game initialized:`, game_conf);
             
-            connectWebSocket(game_id);
+            // 3. Connect WebSockets with JWT authentication
+            connectWebSockets(game_id);
         } catch (error) {
-            console.error(`Failed to initialize game:`, error);
+            console.error(`Failed to initialize ${gameMode === 'pvp' ? '2-player' : '4-player'} game:`, error);
             gameStarted = false;
             gameEnded = true;
         }
