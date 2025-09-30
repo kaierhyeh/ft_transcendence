@@ -12,10 +12,10 @@ interface ErrorResponse {
 
 export class AuthClient {
   private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
-  private internalTokenClient = new InternalAuthClient();
+  private internalAuthClient = new InternalAuthClient();
 
   async updatePasswordHash(update_data: PasswordUpdateData, old_hash: string): Promise<{ password_hash: string }> {
-    const internalAuthHeaders = await this.internalTokenClient.getAuthHeaders();
+    const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
     
     const response = await fetch(`${this.base_url}/auth/hash-password`, {
       method: "PUT",

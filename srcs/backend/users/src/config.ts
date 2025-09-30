@@ -38,10 +38,7 @@ export const CONFIG = {
   },
 
   JWT: {
-    PUBLIC_KEY_PATH: process.env.JWT_PUBLIC_KEY_PATH || "/run/secrets/jwt_public_key",
-    ALGORITHM: process.env.JWT_ALGORITHM || "RS256" as const,
     ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
-    AUDIENCE: process.env.JWT_AUDIENCE || "ft_transcendence_users",
   },
 
   AUTH_SERVICE: {

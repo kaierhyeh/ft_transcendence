@@ -1,12 +1,12 @@
 /**
- * Simple Internal JWT Middleware
+ * Simple Internal JWT Middleware for Users Service
  * 
  * Verifies that requests come from internal services with valid INTERNAL_ACCESS tokens
  * No complex permissions - just "are you an internal service?"
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { verifyInternalJWT } from '../utils/jwt-verifier';
+import { verifyInternalJWT } from '../services/JwtVerifierService';
 
 export async function internalAuthMiddleware(
   request: FastifyRequest,
@@ -19,13 +19,10 @@ export async function internalAuthMiddleware(
       return reply.status(401).send({ error: 'Missing or invalid authorization header' });
     }
 
-    const token = authHeader.substring(7);
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
-    // Just verify it's a valid internal JWT - that's enough!
     await verifyInternalJWT(token);
-    
-    // No need to store anything - we just needed to verify internal access
-    
+        
   } catch (error) {
     return reply.status(401).send({ 
       error: 'Invalid internal JWT',

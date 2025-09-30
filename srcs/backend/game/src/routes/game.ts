@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema } from "../schemas";
-import { internalAuthMiddleware } from "../middleware/internal-auth.middleware";
+import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
   // Protected route - only internal services can create games
