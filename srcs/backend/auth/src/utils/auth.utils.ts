@@ -1,7 +1,20 @@
 import bcrypt from 'bcrypt';
 import type { FastifyReply, FastifyInstance } from 'fastify';
+import * as jwt from 'jsonwebtoken';
+import { SignOptions } from 'jsonwebtoken';
+import { config } from '../config.js';
+import jwksService from '../services/jwks.service.js';
 
 export class AuthUtils {
+	// Cache for internal JWT token
+	private internalJWTCache: {
+		token: string | null;
+		expiresAt: number;
+	} = {
+		token: null,
+		expiresAt: 0
+	};
+
 	// Hash password with bcrypt
 	async hashPassword(password: string, saltRounds: number = 10): Promise<string> {
 		try {
@@ -95,6 +108,44 @@ export class AuthUtils {
 			// Traditional username normalization
 			return login.charAt(0).toUpperCase() + login.slice(1).toLowerCase();
 		}
+	}
+
+	/**
+	 * Generate internal JWT for service-to-service communication
+	 * Centralized method with caching to avoid regenerating tokens
+	 * Tokens are cached and reused until 5 minutes before expiry
+	 */
+	generateInternalJWT(): string {
+		const now = Date.now();
+		
+		// Check if we have a valid cached token (expires 5 minutes early for safety)
+		if (this.internalJWTCache.token && now < this.internalJWTCache.expiresAt - (5 * 60 * 1000)) {
+			return this.internalJWTCache.token;
+		}
+
+		// Generate new token
+		const sign_options: SignOptions = {
+			algorithm: config.jwt.internal.algorithm,
+			expiresIn: config.jwt.internal.accessTokenExpiry as any,
+			keyid: jwksService.getCurrentKeyId()
+		};
+
+		const token = jwt.sign(
+			{
+				type: config.jwt.internal.type,
+				iss: config.jwt.internal.issuer,
+			},
+			config.jwt.internal.privateKey,
+			sign_options
+		);
+
+		// Cache the token with expiry time (1 hour from now)
+		this.internalJWTCache = {
+			token,
+			expiresAt: now + (60 * 60 * 1000) // 1 hour in milliseconds
+		};
+
+		return token;
 	}
 }
 

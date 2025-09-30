@@ -409,21 +409,8 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 			console.log(`🔑 Internal token granted to client: ${client_id}`);
 
-			// Generate internal JWT
-			const sign_options: SignOptions = {
-				algorithm: config.jwt.internal.algorithm,
-				expiresIn: config.jwt.internal.accessTokenExpiry as any,
-				keyid: jwksService.getCurrentKeyId()
-			};
-
-			const internal_jwt = jwt.sign(
-				{
-					type: config.jwt.internal.type,
-					iss: config.jwt.internal.issuer,
-				},
-				config.jwt.internal.privateKey,
-				sign_options
-			);
+			// Generate internal JWT using centralized method
+			const internal_jwt = authUtils.generateInternalJWT();
 			
 			// Parse expiry time to seconds
 			const expiresInSeconds = config.jwt.internal.accessTokenExpiry === '1h' ? 3600 : 3600;

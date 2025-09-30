@@ -1,4 +1,5 @@
 import { config } from "../config";
+import authUtils from "../utils/auth.utils.js";
 
 interface ErrorResponse {
   message?: string;
@@ -27,11 +28,19 @@ export interface LocalUserCreationData {
 export class UserClient {
   private base_url = config.clients.user.base_url;
 
+  private getAuthHeaders(): { Authorization: string } {
+    const token = authUtils.generateInternalJWT();
+    return { Authorization: `Bearer ${token}` };
+  }
+
   async register(data: LocalUserCreationData): Promise<{ user_id: number }> {
+    const authHeaders = this.getAuthHeaders();
+    
     const response = await fetch(`${this.base_url}/users/local`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
       },
       body: JSON.stringify(data)
     });
@@ -53,8 +62,11 @@ export class UserClient {
   async getUserByLogin(
     login: string
   ): Promise< UserData > {
+      const authHeaders = this.getAuthHeaders();
 
-      const response = await fetch(`${this.base_url}/users/login/${login}`);
+      const response = await fetch(`${this.base_url}/users/login/${login}`, {
+        headers: authHeaders
+      });
 
       if (!response.ok) {
         const errorBody = await response.json() as ErrorResponse;
@@ -72,6 +84,7 @@ export class UserClient {
   async getUserProfile(
     user_id: number
   ): Promise<UserProfile> {
+    // This route is public, no auth needed
     const response = await fetch(`${this.base_url}/users/profile/id/${user_id}`);
 
     if (!response.ok) {
