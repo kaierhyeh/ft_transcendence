@@ -92,13 +92,28 @@ export class JWTVerifier {
 		try {
 			// Use Node.js crypto to convert JWK to PEM
 			const crypto = require('crypto');
+			
+			// Ensure we have the required properties
+			if (!jwk.kty || !jwk.n || !jwk.e) {
+				throw new Error(`Invalid JWK: missing required properties (kty: ${jwk.kty}, n: ${!!jwk.n}, e: ${!!jwk.e})`);
+			}
+			
+			// Create public key from JWK format
 			const publicKey = crypto.createPublicKey({
-				kty: jwk.kty,
-				n: jwk.n,
-				e: jwk.e
+				key: {
+					kty: jwk.kty,
+					n: jwk.n,
+					e: jwk.e
+				},
+				format: 'jwk'
 			});
+			
 			return publicKey.export({ type: 'spki', format: 'pem' });
 		} catch (error) {
+			console.error('JWK to PEM conversion failed:', {
+				jwk: { kty: jwk.kty, kid: jwk.kid, alg: jwk.alg, use: jwk.use },
+				error: error instanceof Error ? error.message : 'Unknown error'
+			});
 			throw new Error(`Failed to convert JWK to PEM: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
 	}
