@@ -122,7 +122,7 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 		if (emailExists)
 			return reply.code(400).send({ success: false, error: "Account already exists with this email." });
 
-		const checked_username = authUtils.checkUsername(fastify, username);
+		const checked_username = authUtils.checkLogin(fastify, username);
 		if (typeof checked_username === 'object' && checked_username.error)
 			return reply.status(400).send({ success: false, error: checked_username.error });
 		const existingUser = (fastify as any).db.prepare("SELECT 1 FROM users WHERE username = ?").get(checked_username);

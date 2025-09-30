@@ -5,6 +5,7 @@ import { JWTType, JWTPayload } from '../types.js';
 import { LocalUserCreationData, UserData, UserClient, UserProfile } from '../clients/UserClient.js';
 import { LoginRequest } from '../schemas/auth.js';
 import authUtils from '../utils/auth.utils.js';
+import redis from '../clients/redis.client.js';
 
 // JWT Types for three-tier system - using imported enum
 export type { JWTType, JWTPayload } from '../types.js';
@@ -43,7 +44,7 @@ export class AuthService {
 		this.userClient = new UserClient();
 	}
 
-	async validateLocalUser(data: LoginRequest): Promise<User> {
+	async validateLocalUser(data: LoginRequest): Promise<UserProfile> {
 
 		const raw_user = await this.userClient.getUserByLogin(data.login);
 
@@ -57,18 +58,6 @@ export class AuthService {
 		if (!is_valid_password) {
 			const error = new Error('Invalid credentials');
 			(error as any).code = 'INVALID_CREDENTIALS';
-			throw error;
-		}
-
-		const { google_sub, ...user } = raw_user;
-		return { ...user };
-	}
-
-	async getUserById(userId: number): Promise<User> {
-		const raw_user = await this.userClient.getUserById(userId);
-		if (!raw_user) {
-			const error = new Error('User not found');
-			(error as any).code = 'USER_NOT_FOUND';
 			throw error;
 		}
 

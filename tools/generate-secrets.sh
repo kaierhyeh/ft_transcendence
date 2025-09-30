@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-SECRETS_DIR="./docker/secrets"
+SECRETS_DIR="./secrets"
 mkdir -p "$SECRETS_DIR"
 
 echo "🔑 Generating secrets in $SECRETS_DIR..."

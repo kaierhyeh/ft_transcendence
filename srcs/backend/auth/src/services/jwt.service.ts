@@ -76,7 +76,6 @@ export class JWTService {
       ...payload,
       type: JWTType.USER_SESSION,
       iss: this.issuer,
-      aud: this.audience
     };
 
     const options: SignOptions = {
@@ -94,7 +93,6 @@ export class JWTService {
       ...payload,
       type: JWTType.GAME_SESSION,
       iss: this.issuer,
-      aud: this.audience
     };
 
     const options: SignOptions = {
@@ -112,7 +110,6 @@ export class JWTService {
       ...payload,
       type: JWTType.INTERNAL_ACCESS,
       iss: this.issuer,
-      aud: this.audience
     };
 
     const options: SignOptions = {

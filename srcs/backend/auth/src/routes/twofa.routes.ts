@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import redis from '../../redis/redisClient.js';
+import redis from '../clients/redis.client.js';
 import authService from '../services/auth.service.js';
 import authUtils from '../utils/auth.utils.js';
 import { type ILoggerService } from '../container.js';

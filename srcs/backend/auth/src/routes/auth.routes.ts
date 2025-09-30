@@ -7,7 +7,7 @@ import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service.js';
 import { config } from '../config.js';
-import { internalAuthMiddleware } from '../middleware/internal-auth.middleware.js';
+import { internalAuthMiddleware } from '../middleware/internal-auth.middleware';
 
 
 interface AuthenticatedRequest extends FastifyRequest {
