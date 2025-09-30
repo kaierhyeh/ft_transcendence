@@ -14,7 +14,7 @@ type PlayerSlots = "left" | "right" | "top-left" | "bottom-left" | "top-right" |
 interface Player {
   player_id: number;
   team: Team;
-  slots: PlayerSlots;
+  slot: PlayerSlots;
   user_id?: number;
   type: PlayerType;
 }

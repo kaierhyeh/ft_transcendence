@@ -74,7 +74,7 @@ export class AuthUtils {
 	 * @param login - The login input (username or email)
 	 * @returns Sanitized login string or error object
 	 */
-	checkLogin(fastify: any, login: string): { error: string } | string {
+	checkLoginInput(fastify: any, login: string): { error: string } | string {
 		fastify.log.info(`Security check for login: ${login}`);
 
 		// Note: Basic format validation is handled by JSON schema
@@ -152,6 +152,42 @@ export class AuthUtils {
 			token,
 			expiresAt: now + (60 * 60 * 1000) // 1 hour in milliseconds
 		};
+
+		return token;
+	}
+
+	/**
+	 * Generate game session JWT for game authentication
+	 * Similar to internal JWT but includes game-specific claims
+	 */
+	generateGameJWT(claims: { sub: string; game_id: number }): string {
+		// Generate new token (no caching for game tokens as they're session-specific)
+		const keyId = jwksService.getKeyIdForType(JWTType.GAME_SESSION);
+		if (!keyId) {
+			throw new Error('Game session JWT key ID not found in JWKS');
+		}
+		
+		const sign_options: SignOptions = {
+			algorithm: CONFIG.JWT.GAME.ALGORITHM,
+			expiresIn: CONFIG.JWT.GAME.ACCESS_TOKEN_EXPIRY as any,
+			keyid: keyId
+		};
+
+		console.log(`🎮 Generating new game JWT with key ID: ${keyId} for game: ${claims.game_id}`);
+
+		const token = jwt.sign(
+			{
+				// Standard JWT claims
+				sub: claims.sub,
+				iss: CONFIG.JWT.GAME.ISSUER,
+				type: CONFIG.JWT.GAME.TYPE,
+
+				// Game specific claims
+				game_id: claims.game_id,
+			},
+			CONFIG.JWT.GAME.PRIVATE_KEY,
+			sign_options
+		);
 
 		return token;
 	}

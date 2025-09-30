@@ -15,8 +15,9 @@ interface JWKS {
 }
 
 export enum JWTType {
-  USER_SESSION = 'USER_SESSION',
   INTERNAL_ACCESS = 'INTERNAL_ACCESS',
+  GAME_SESSION = 'GAME_SESSION',
+  USER_SESSION = 'USER_SESSION',
 }
 
 // Base JWT payload interface
@@ -28,15 +29,22 @@ export interface JWTPayload {
   iss?: string;
 }
 
-// User Session JWT payload
-export interface UserSessionPayload extends JWTPayload {
-  type: JWTType.USER_SESSION;
-  sub: string;
-}
-
 // Internal Access JWT payload for service-to-service communication
 export interface InternalAccessPayload extends JWTPayload {
   type: JWTType.INTERNAL_ACCESS;
+}
+
+// Game Session JWT payload
+export interface GameSessionPayload extends JWTPayload {
+	  type: JWTType.GAME_SESSION;
+	  sub: string;
+	  game_id: number;
+}
+
+// User Session JWT payload
+export interface UserSessionPayload extends JWTPayload {
+	  type: JWTType.USER_SESSION;
+	  sub: string;
 }
 
 export class JWTVerifier {
@@ -169,6 +177,22 @@ export class JWTVerifier {
 	}
 
 	/**
+	 * Verify Internal Access JWT token
+	 */
+	async verifyInternalToken(token: string): Promise<InternalAccessPayload> {
+		const payload = await this.verifyToken(token, JWTType.INTERNAL_ACCESS);
+		return payload as InternalAccessPayload;
+	}
+
+	/**
+	 * Verify Game Session JWT token
+	 */
+	async verifyGameSessionToken(token: string): Promise<GameSessionPayload> {
+		const payload = await this.verifyToken(token, JWTType.GAME_SESSION);
+		return payload as GameSessionPayload;
+	}
+
+	/**
 	 * Verify User Session JWT token
 	 */
 	async verifyUserSessionToken(token: string): Promise<UserSessionPayload> {
@@ -176,13 +200,7 @@ export class JWTVerifier {
 		return payload as UserSessionPayload;
 	}
 
-	/**
-	 * Verify Internal Access JWT token
-	 */
-	async verifyInternalToken(token: string): Promise<InternalAccessPayload> {
-		const payload = await this.verifyToken(token, JWTType.INTERNAL_ACCESS);
-		return payload as InternalAccessPayload;
-	}
+	
 
 	/**
 	 * Clear JWKS cache (useful for testing or key rotation)
@@ -197,5 +215,6 @@ export class JWTVerifier {
 export const jwtVerifier = new JWTVerifier();
 
 // Export convenience functions
-export const verifyUserSessionJWT = (token: string): Promise<UserSessionPayload> => jwtVerifier.verifyUserSessionToken(token);
 export const verifyInternalJWT = (token: string): Promise<InternalAccessPayload> => jwtVerifier.verifyInternalToken(token);
+export const verifyGameSessionJWT = (token: string): Promise<GameSessionPayload> => jwtVerifier.verifyGameSessionToken(token);
+export const verifyUserSessionJWT = (token: string): Promise<UserSessionPayload> => jwtVerifier.verifyUserSessionToken(token);

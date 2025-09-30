@@ -32,7 +32,7 @@ export class MatchMakingService {
     const players = data.participants.map((participant, index) => ({
       player_id: index + 1, // Sequential player IDs
       team: index % 2 === 0 ? "left" as Team : "right" as Team, // Alternate teams (player vs AI)
-      slots: index % 2 === 0 ? "left" as PlayerSlots : "right" as PlayerSlots, // Match slots to teams
+      slot: index % 2 === 0 ? "left" as PlayerSlots : "right" as PlayerSlots, // Match slots to teams
       user_id: participant.user_id,
       type: participant.type // Include the participant type
     }));
@@ -55,7 +55,7 @@ export class MatchMakingService {
           game_id: game_id,
         };
         const result = await this.authClient.generateJWT(claims);
-        return result.jwt;
+        return result.token;
       })
     );
 
@@ -75,12 +75,12 @@ export class MatchMakingService {
       const team: Team = index < 2 ? "left" : "right";
       
       // Slot assignment based on array order
-      const slots: PlayerSlots = this.getMultiPlayerSlot(index);
+      const slot: PlayerSlots = this.getMultiPlayerSlot(index);
       
       return {
         player_id: index + 1,
-        team: team,
-        slots: slots,
+        team,
+        slot,
         user_id: participant.user_id,
         type: participant.type
       };
@@ -104,7 +104,7 @@ export class MatchMakingService {
           game_id: game_id,
         };
         const result = await this.authClient.generateJWT(claims);
-        return result.jwt;
+        return result.token;
       })
     );
 

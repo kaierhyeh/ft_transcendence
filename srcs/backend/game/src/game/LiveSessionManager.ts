@@ -4,8 +4,8 @@ import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
-import { verifyGameSessionJWT } from "../utils/jwt-verifier";
 import { toInteger } from "../utils/type-converters";
+import { verifyGameSessionJWT } from "../services/JwtVerifierService";
 
 let next_id = 1;
 

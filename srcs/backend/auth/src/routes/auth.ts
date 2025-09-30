@@ -100,7 +100,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			const { login, password } = request.body;
 
 			// Security validation (JSON schema handles format/length validation)
-			const checked_login = authUtils.checkLogin(fastify, login);
+			const checked_login = authUtils.checkLoginInput(fastify, login);
 			if (typeof checked_login !== 'string') {
 					return reply.code(400).send({ 
 						success: false, 
@@ -375,43 +375,33 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 	// Generate game session jwt [Requires Internal JWT]
 	fastify.post<{ Body: GameSessionClaims }>(
-    	"/token/game",
-    	{ 
-			schema: { body: gameSessionClaimsSchema },
-			preHandler: internalAuthMiddleware
-		},
-		async (request, reply) => {
-			  try {
-				const claims: GameSessionClaims = request.body;
-				const sign_options: SignOptions = {
-					algorithm: CONFIG.JWT.GAME.ALGORITHM,
-					expiresIn: CONFIG.JWT.GAME.ACCESS_TOKEN_EXPIRY as any,
-					keyid: jwksService.getCurrentKeyId()
-				};
-				const game_jwt = jwt.sign(
-					{
-						// Standard JWT claims
-						sub: claims.sub,
-						iss: CONFIG.JWT.GAME.ISSUER,
-						type: CONFIG.JWT.GAME.TYPE,
-
-						// Game specific claims
-						game_id: claims.game_id,
-					},
-					CONFIG.JWT.GAME.PRIVATE_KEY,
-					sign_options
-				);
-				
-				reply.status(201).send({ token: game_jwt });
-			} catch (error) {
-				logger.error('Game JWT generation error', error as Error, {
-					ip: (request as any).ip
-				});
-				return reply.status(500).send({
-					error: 'Internal server error during game JWT generation'
-				});
-			}
-	});
+        "/token/game",
+        { 
+            schema: { body: gameSessionClaimsSchema },
+            preHandler: internalAuthMiddleware
+        },
+        async (request, reply) => {
+            try {
+                const claims: GameSessionClaims = request.body;
+                
+                // Generate game JWT using centralized method
+                const game_jwt = authUtils.generateGameJWT({
+                    sub: claims.sub,
+                    game_id: claims.game_id
+                });
+                
+                reply.status(201).send({ token: game_jwt });
+            } catch (error) {
+                logger.error('Game JWT generation error', error as Error, {
+                    ip: (request as any).ip,
+                    game_id: request.body?.game_id
+                });
+                return reply.status(500).send({
+                    error: 'Internal server error during game JWT generation'
+                });
+            }
+        }
+    );
 
 	// Generate internal JWT route - OAuth2-like client credentials flow
 	fastify.post('/token/internal', {

@@ -3,7 +3,7 @@ import "./types.js";
 export function initGame(): void {
     // --- Constants & State ---
     const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
-    const API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/matchmaking`;
+    const API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
     let isAI: boolean = true;
     let AITarg: number = -1;
     let gameStarted: boolean = false;
@@ -573,6 +573,7 @@ export function initGame(): void {
             jwtTickets = matchResult.jwt_tickets;
             console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} match created with ID:`, game_id);
             console.log("JWT tickets received:", jwtTickets.length);
+            console.log("Tickets:", jwtTickets);
             
             // 2. Get game configuration
             const response = await fetch(API_GAME_ENDPOINT + `/${game_id}/conf`);

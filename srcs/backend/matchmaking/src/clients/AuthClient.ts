@@ -17,7 +17,7 @@ export class AuthClient {
   private internalAuthClient = new InternalAuthClient();
 
 
-  async generateJWT(claims: GameSessionClaims): Promise<{ jwt: string }> {
+  async generateJWT(claims: GameSessionClaims): Promise<{ token: string }> {
     const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
 
     const response = await fetch(`${this.base_url}/auth/token/game`, {
@@ -40,7 +40,7 @@ export class AuthClient {
 
     }
 
-    return await response.json() as { jwt: string };
+    return await response.json() as { token: string };
   }
 
 }
