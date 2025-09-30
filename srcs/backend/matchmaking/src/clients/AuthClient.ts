@@ -20,7 +20,7 @@ export class AuthClient {
   async generateJWT(claims: GameSessionClaims): Promise<{ jwt: string }> {
     const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
 
-    const response = await fetch(`${this.base_url}/auth/game/token`, {
+    const response = await fetch(`${this.base_url}/auth/token/game`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

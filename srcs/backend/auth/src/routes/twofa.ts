@@ -1,11 +1,11 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import redis from '../clients/redis.client';
+import redis from '../clients/RedisClient';
 import authService from '../services/auth.service';
 import authUtils from '../utils/auth.utils';
 
-export async function twofaRoutes(fastify: FastifyInstance, options: any) {
+export default async function twofaRoutes(fastify: FastifyInstance, options: any) {
 	const db = (fastify as any).db;
 	const logger = (fastify as any).logger;
 

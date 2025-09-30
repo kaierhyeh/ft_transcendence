@@ -44,6 +44,7 @@ function loadClientCredentials(): Record<string, ClientCredentials> {
 				};
 			}
 		}
+		console.log(`Loaded credentials for ${service}`);
 	}
 	
 	return credentials;
@@ -55,40 +56,40 @@ function optionalEnv(key: string, defaultValue: string): string {
 
 // Configuration interfaces
 interface JWTConfig {
-	type: JWTType;
-	issuer: string;
-	privateKey: string;
-	publicKey: string;
-	algorithm: 'RS256';
-	accessTokenExpiry: string;
-	refreshTokenExpiry: string;
-	tempSecret: string;
+	TYPE: JWTType;
+	ISSUER: string;
+	PRIVATE_KEY: string;
+	PUBLIC_KEY: string;
+	ALGORITHM: 'RS256';
+	ACCESS_TOKEN_EXPIRY: string;
+	REFRESH_TOKEN_EXPIRY: string;
+	TEMP_SECRET: string;
 }
 interface ClientConfig {
-	base_url: string;
+	BASE_URL: string;
 }
 
 interface ClientsConfig {
-	user: ClientConfig;
+	USER: ClientConfig;
 }
 
 interface ServerConfig {
-	port: number;
-	host: string;
+	PORT: number;
+	HOST: string;
 }
 
 interface OAuthConfig {
-	googleClientId?: string;
-	googleClientSecret?: string;
-	googleRedirectUri?: string;
+	GOOGLE_CLIENT_ID?: string;
+	GOOGLE_CLIENT_SECRET?: string;
+	GOOGLE_REDIRECT_URI?: string;
 }
 
 interface CookieConfig {
-	options: {
-		path: string;
-		secure: boolean;
-		httpOnly: boolean;
-		sameSite: 'none' | 'lax' | 'strict';
+	OPTIONS: {
+		PATH: string;
+		SECURE: boolean;
+		HTTP_ONLY: boolean;
+		SAME_SITE: 'none' | 'lax' | 'strict';
 	};
 }
 
@@ -98,79 +99,77 @@ interface ClientCredentials {
 }
 
 interface Config {
-	jwt: {
-		user: JWTConfig;
-		game: JWTConfig;
-		internal: JWTConfig;
+	JWT: {
+		USER: JWTConfig;
+		GAME: JWTConfig;
+		INTERNAL: JWTConfig;
 	};
-	clients: ClientsConfig;
-	server: ServerConfig;
-	oauth: OAuthConfig;
-	cookie: CookieConfig;
-	clientCredentials: Record<string, ClientCredentials>;
+	CLIENTS: ClientsConfig;
+	SERVER: ServerConfig;
+	OAUTH: OAuthConfig;
+	COOKIE: CookieConfig;
+	CLIENT_CREDENTIALS: Record<string, ClientCredentials>;
 }
 
 // Configuration object
-const config: Config = {
-	jwt: {
-		user: {
-			type: JWTType.USER_SESSION,
-			issuer: "ft_transcendence",
-			privateKey: loadKeyByType('user-session', 'private'),
-			publicKey: loadKeyByType('user-session', 'public'),
-			algorithm: 'RS256',
-			accessTokenExpiry: '15m',
-			refreshTokenExpiry: '7d',
-			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
+export const CONFIG: Config = {
+	JWT: {
+		USER: {
+			TYPE: JWTType.USER_SESSION,
+			ISSUER: "ft_transcendence",
+			PRIVATE_KEY: loadKeyByType('user-session', 'private'),
+			PUBLIC_KEY: loadKeyByType('user-session', 'public'),
+			ALGORITHM: 'RS256',
+			ACCESS_TOKEN_EXPIRY: '15m',
+			REFRESH_TOKEN_EXPIRY: '7d',
+			TEMP_SECRET: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
 		},
-		game: {
-			type: JWTType.GAME_SESSION,
-			issuer: "ft_transcendence",
-			privateKey: loadKeyByType('game-session', 'private'),
-			publicKey: loadKeyByType('game-session', 'public'),
-			algorithm: 'RS256',
-			accessTokenExpiry: '2h',
-			refreshTokenExpiry: '',
-			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
+		GAME: {
+			TYPE: JWTType.GAME_SESSION,
+			ISSUER: "ft_transcendence",
+			PRIVATE_KEY: loadKeyByType('game-session', 'private'),
+			PUBLIC_KEY: loadKeyByType('game-session', 'public'),
+			ALGORITHM: 'RS256',
+			ACCESS_TOKEN_EXPIRY: '2h',
+			REFRESH_TOKEN_EXPIRY: '',
+			TEMP_SECRET: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
 		},
-		internal: {
-			type: JWTType.INTERNAL_ACCESS,
-			issuer: "ft_transcendence",
-			privateKey: loadKeyByType('internal-access', 'private'),
-			publicKey: loadKeyByType('internal-access', 'public'),
-			algorithm: 'RS256',
-			accessTokenExpiry: '1h',
-			refreshTokenExpiry: '',
-			tempSecret: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
-		},
-	},
-	clients: {
-		user: {
-			base_url: optionalEnv('USER_SERVICE_URL', "http://backend-users:3000"),
+		INTERNAL: {
+			TYPE: JWTType.INTERNAL_ACCESS,
+			ISSUER: "ft_transcendence",
+			PRIVATE_KEY: loadKeyByType('internal-access', 'private'),
+			PUBLIC_KEY: loadKeyByType('internal-access', 'public'),
+			ALGORITHM: 'RS256',
+			ACCESS_TOKEN_EXPIRY: '1h',
+			REFRESH_TOKEN_EXPIRY: '',
+			TEMP_SECRET: optionalEnv('JWT_TEMP_SECRET', 'your-temp-secret-key'),
 		},
 	},
-	server: {
-		port: parseInt(optionalEnv('PORT', '3000')),
-		host: optionalEnv('HOST', '0.0.0.0'),
+	CLIENTS: {
+		USER: {
+			BASE_URL: optionalEnv('USER_SERVICE_URL', "http://backend-users:3000"),
+		},
 	},
-	oauth: {
-		googleClientId: process.env.GOOGLE_CLIENT_ID,
-		googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-		googleRedirectUri: process.env.GOOGLE_REDIRECT_URI,
+	SERVER: {
+		PORT: parseInt(optionalEnv('PORT', '3000')),
+		HOST: optionalEnv('HOST', '0.0.0.0'),
 	},
-	cookie: {
-		options: {
-			path: '/',
-			secure: false, // Allow HTTP in containers
-			httpOnly: true,
-			sameSite: 'lax',
+	OAUTH: {
+		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+		GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+	},
+	COOKIE: {
+		OPTIONS: {
+			PATH: '/',
+			SECURE: false, // Allow HTTP in containers
+			HTTP_ONLY: true,
+			SAME_SITE: 'lax',
 		}
 	},
-	clientCredentials: loadClientCredentials(),
+	CLIENT_CREDENTIALS: loadClientCredentials(),
 };
 
-// Export configuration
-export { config };
 
 // Export types for use in other modules
 export type { Config, JWTConfig, ServerConfig, OAuthConfig, CookieConfig, ClientCredentials };

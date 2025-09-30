@@ -12,7 +12,7 @@
  */
 
 import crypto from 'crypto';
-import { config } from '../config';
+import { CONFIG } from '../config';
 import { JWTType } from '../types/index';
 
 interface JWK {
@@ -59,16 +59,16 @@ export class JWKSService {
 			
 			// Get keys for all three JWT types from config
 			const jwtConfigs = [
-				{ type: JWTType.USER_SESSION, config: config.jwt.user },
-				{ type: JWTType.GAME_SESSION, config: config.jwt.game },
-				{ type: JWTType.INTERNAL_ACCESS, config: config.jwt.internal }
+				{ type: JWTType.USER_SESSION, config: CONFIG.JWT.USER },
+				{ type: JWTType.GAME_SESSION, config: CONFIG.JWT.GAME },
+				{ type: JWTType.INTERNAL_ACCESS, config: CONFIG.JWT.INTERNAL }
 			];
 			
 			for (const { type, config: jwtConfig } of jwtConfigs) {
 				try {
-					const publicKey = jwtConfig.publicKey;
+					const publicKey = jwtConfig.PUBLIC_KEY;
 					if (publicKey) {
-						const jwk = this.createJWKFromPublicKey(publicKey, type, jwtConfig.algorithm);
+						const jwk = this.createJWKFromPublicKey(publicKey, type, jwtConfig.ALGORITHM);
 						keys.push(jwk);
 						console.log(`   ✅ Added ${type} key with ID: ${jwk.kid}`);
 					}

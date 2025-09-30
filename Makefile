@@ -69,16 +69,6 @@ fclean:
 
 re: down up
 
-# Show Docker status and volumes
-status:
-	@echo "=== Project Containers ==="
-	@docker compose -f $(COMPOSE_FILE) ps
-	@echo ""
-	@echo "=== Project Volumes ==="
-	@docker volume ls | grep -E "(ssl|game_sessions|auth_data|users|ft_transcendence)" || echo "No project volumes found"
-	@echo ""
-	@echo "=== Project Images ==="
-	@docker images | grep -E "(frontend|backend-|api-gateway)" || echo "No project images found"
 
 # Show help
 help:
@@ -88,7 +78,6 @@ help:
 	@echo "  stop      - Stop all containers"
 	@echo "  down      - Stop and remove containers"
 	@echo "  re        - Stop and start containers"
-	@echo "  status    - Show containers, volumes, and images status"
 	@echo "  del-vol   - Remove only project volumes (preserves containers/images)"
 	@echo "  clean     - Remove project containers, images, and volumes"
 	@echo "  fclean    - ⚠️  Complete system-wide Docker cleanup (use with caution)"

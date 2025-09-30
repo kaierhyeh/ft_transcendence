@@ -10,7 +10,7 @@ export function initProfile() {
 	const googleLoginBtn = document.getElementById('google-login-btn') as HTMLButtonElement;
 	const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
 	const twofaBtn = document.getElementById('2fa-btn') as HTMLButtonElement;
-	const usernameInput = document.getElementById('username') as HTMLInputElement;
+	const loginInput = document.getElementById('login') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
 	// Check if user is already logged in
@@ -33,25 +33,25 @@ export function initProfile() {
 		twofaBtn.addEventListener('click', handle2FASetup);
 
 	async function handleRegister() {
-		const username = usernameInput?.value.trim();
+		const login = loginInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
-		if (!username || !password) {
+		if (!login || !password) {
 			alert('Please enter both username and password.');
 			return;
 		}
 
-		if (username.length > 50 || password.length > 50) {
+		if (login.length > 50 || password.length > 50) {
 			alert('Username or password too long.');
 			return;
 		}
 
 		try {
-			const response = await fetch('/auth/register', {
+			const response = await fetch('/api/auth/register', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ username, password })
+				body: JSON.stringify({ login, password })
 			});
 
 			const data = await response.json();
@@ -69,7 +69,7 @@ export function initProfile() {
 	}
 
 	async function handleLogin() {
-		const username = usernameInput?.value.trim();
+		const username = loginInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
 		if (!username || !password) {
@@ -78,7 +78,7 @@ export function initProfile() {
 		}
 
 		try {
-			const response = await fetch('/auth/login', {
+			const response = await fetch('/api/auth/login', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -106,7 +106,7 @@ export function initProfile() {
 
 	async function handle2FA(token: string, tempToken: string) {
 		try {
-			const response = await fetch('/auth/2fa/verify', {
+			const response = await fetch('/api/auth/2fa/verify', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -134,7 +134,7 @@ export function initProfile() {
 
 	async function handleLogout() {
 		try {
-			const response = await fetch('/auth/logout', {
+			const response = await fetch('/api/auth/logout', {
 				method: 'POST',
 				credentials: 'include'
 			});
@@ -218,7 +218,7 @@ export function initProfile() {
 
 	async function checkAuthStatus() {
 		try {
-			const response = await fetch('/auth/verify', {
+			const response = await fetch('/api/auth/verify', {
 				method: 'POST',
 				credentials: 'include'
 			});
@@ -246,7 +246,7 @@ export function initProfile() {
 		if (profileUsername) profileUsername.textContent = username;
 
 		// Clear form inputs
-		if (usernameInput) usernameInput.value = '';
+		if (loginInput) loginInput.value = '';
 		if (passwordInput) passwordInput.value = '';
 	}
 

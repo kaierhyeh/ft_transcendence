@@ -1,7 +1,6 @@
 FROM node:20-alpine3.21
 
-# Install sqlite3, redis and curl for runtime
-RUN apk add --no-cache sqlite redis curl
+RUN apk add --no-cache curl
 
 WORKDIR /app
 

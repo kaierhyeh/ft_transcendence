@@ -1,4 +1,4 @@
 Dockerfile
 node_modules
-dist
-README.md
+*.md
+package-lock.json

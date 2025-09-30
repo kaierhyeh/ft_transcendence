@@ -15,7 +15,7 @@ export class InternalAuthClient {
       throw new Error('Client credentials not configured');
     }
 
-    const response = await fetch(`${CONFIG.AUTH_SERVICE.BASE_URL}/auth/internal/token`, {
+    const response = await fetch(`${CONFIG.AUTH_SERVICE.BASE_URL}/auth/token/internal`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

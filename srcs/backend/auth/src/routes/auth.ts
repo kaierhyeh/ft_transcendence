@@ -5,7 +5,7 @@ import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, 
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service';
-import { config } from '../config';
+import { CONFIG } from '../config';
 import { internalAuthMiddleware } from '../middleware/internal-auth.middleware';
 
 
@@ -16,12 +16,12 @@ interface AuthenticatedRequest extends FastifyRequest {
 	};
 }
 
-export async function authRoutes(fastify: FastifyInstance, options: any) {
+export default async function authRoutes(fastify: FastifyInstance, options: any) {
 	const logger = (fastify as any).logger;
 
 	// Login route
 	fastify.post<{ Body: LoginRequest }>(
-		'/auth/login',
+		'/login',
 		{ schema: { body: loginSchema } },
 		async (request, reply) => {
 		try {
@@ -93,7 +93,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 	// Register route
 	fastify.post<{ Body: SignupRequest }>(
-		'/auth/register',
+		'/register',
 		{ schema: { body: signupFormSchema } },
 		async (request, reply) => {
 		try {
@@ -126,13 +126,14 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 			// Hash password
 			const password_hash = await authUtils.hashPassword(password);
-
+			console.log("password hashed");
 			// Create user
 			const { user_id } = await authService.register({
 				username: checked_login,
 				email,
 				password_hash
 			});
+			console.log("user created: ", user_id);
 
 			// Generate tokens using new USER_SESSION method
 			const { accessToken, refreshToken } = await authService.generateTokens(user_id);
@@ -149,10 +150,38 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 				message: 'User registered successfully'
 			});
 
-		} catch (error) {
+		} catch (error: any) {
 			logger.error('Registration error', error as Error, {
-				ip: (request as any).ip
+				ip: (request as any).ip,
+				login: request.body?.login,
+				errorStatus: error.status,
+				errorMessage: error.message,
+				errorDetails: error.details
 			});
+			
+			// Handle specific error cases
+			if (error.status === 401) {
+				return reply.code(401).send({
+					success: false,
+					error: error.message || 'Unauthorized access to user service'
+				});
+			}
+			
+			if (error.status === 409) {
+				return reply.code(409).send({
+					success: false,
+					error: error.message || 'User already exists'
+				});
+			}
+			
+			if (error.status === 400) {
+				return reply.code(400).send({
+					success: false,
+					error: error.message || 'Invalid user data'
+				});
+			}
+			
+			// Generic server error
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during registration'
@@ -160,159 +189,193 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 		}
 	});
 
-	// Refresh token route
-	fastify.post('/auth/refresh', async (request, reply) => {
-		try {
-			const refreshToken = request.cookies?.refreshToken;
+	// // Refresh token route
+	// fastify.post('/refresh', async (request, reply) => {
+	// 	try {
+	// 		const refreshToken = request.cookies?.refreshToken;
 			
-			if (!refreshToken) {
-				return reply.code(401).send({
-					success: false,
-					error: 'Refresh token required'
-				});
-			}
+	// 		if (!refreshToken) {
+	// 			return reply.code(401).send({
+	// 				success: false,
+	// 				error: 'Refresh token required'
+	// 			});
+	// 		}
 
-			const result = await authService.refreshAccessToken(fastify, refreshToken);
+	// 		const result = await authService.refreshAccessToken(fastify, refreshToken);
 			
-			if (!result.success) {
-				return reply.code(401).send({
-					success: false,
-					error: result.reason || 'Invalid refresh token'
-				});
-			}
+	// 		if (!result.success) {
+	// 			return reply.code(401).send({
+	// 				success: false,
+	// 				error: result.reason || 'Invalid refresh token'
+	// 			});
+	// 		}
 
-			// Set new access token cookie
-			if (result.newAccessToken) {
-				authUtils.ft_setCookie(reply, result.newAccessToken, 15);
-			}
+	// 		// Set new access token cookie
+	// 		if (result.newAccessToken) {
+	// 			authUtils.ft_setCookie(reply, result.newAccessToken, 15);
+	// 		}
 
-			return reply.code(200).send({
-				success: true,
-				message: 'Token refreshed successfully'
-			});
+	// 		return reply.code(200).send({
+	// 			success: true,
+	// 			message: 'Token refreshed successfully'
+	// 		});
 
-		} catch (error) {
-			logger.error('Token refresh error', error as Error, {
-				ip: (request as any).ip
-			});
-			return reply.code(500).send({
-				success: false,
-				error: 'Internal server error during token refresh'
-			});
-		}
-	});
+	// 	} catch (error) {
+	// 		logger.error('Token refresh error', error as Error, {
+	// 			ip: (request as any).ip
+	// 		});
+	// 		return reply.code(500).send({
+	// 			success: false,
+	// 			error: 'Internal server error during token refresh'
+	// 		});
+	// 	}
+	// });
 
-	// Logout route - requires USER_SESSION authentication
-	fastify.post('/auth/logout', async (request: AuthenticatedRequest, reply: FastifyReply) => {
-		try {
-			// Check for access token
-			const accessToken = request.cookies?.accessToken;
+	// // Logout route - requires USER_SESSION authentication
+	// fastify.post('/logout', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+	// 	try {
+	// 		// Check for access token
+	// 		const accessToken = request.cookies?.accessToken;
 			
-			if (!accessToken) {
-				return reply.code(401).send({ 
-					success: false, 
-					error: 'No access token provided' 
-				});
-			}
+	// 		if (!accessToken) {
+	// 			return reply.code(401).send({ 
+	// 				success: false, 
+	// 				error: 'No access token provided' 
+	// 			});
+	// 		}
 
-			// Verify the token
-			const result = await authService.validate_and_refresh_Tokens(fastify, accessToken, request.cookies?.refreshToken || '');
+	// 		// Verify the token
+	// 		const result = await authService.validate_and_refresh_Tokens(fastify, accessToken, request.cookies?.refreshToken || '');
 			
-			if (!result.success || !result.userId) {
-				return reply.code(401).send({ 
-					success: false, 
-					error: result.reason || 'Invalid or expired user session' 
-				});
-			}
+	// 		if (!result.success || !result.userId) {
+	// 			return reply.code(401).send({ 
+	// 				success: false, 
+	// 				error: result.reason || 'Invalid or expired user session' 
+	// 			});
+	// 		}
 
-			// Revoke tokens
-			await authService.revokeTokens(result.userId);
+	// 		// Revoke tokens
+	// 		await authService.revokeTokens(result.userId);
 
-			const cookieOptions = {
-				path: '/',
-				secure: true,
-				httpOnly: true,
-				sameSite: 'none' as const
-			};
+	// 		const cookieOptions = {
+	// 			path: '/',
+	// 			secure: true,
+	// 			httpOnly: true,
+	// 			sameSite: 'none' as const
+	// 		};
 
-			reply.clearCookie('accessToken', cookieOptions);
-			reply.clearCookie('refreshToken', cookieOptions);
+	// 		reply.clearCookie('accessToken', cookieOptions);
+	// 		reply.clearCookie('refreshToken', cookieOptions);
 			
-			return reply.code(200).send({
-				success: true,
-				message: 'Logged out successfully!'
-			});
+	// 		return reply.code(200).send({
+	// 			success: true,
+	// 			message: 'Logged out successfully!'
+	// 		});
 
-		} catch (error) {
-			logger.error('Logout error', error as Error, {
-				userId: (request as any).user?.userId,
-				ip: (request as any).ip
-			});
-			return reply.code(500).send({
-				success: false,
-				error: 'Internal server error during logout'
-			});
-		}
-	});
+	// 	} catch (error) {
+	// 		logger.error('Logout error', error as Error, {
+	// 			userId: (request as any).user?.userId,
+	// 			ip: (request as any).ip
+	// 		});
+	// 		return reply.code(500).send({
+	// 			success: false,
+	// 			error: 'Internal server error during logout'
+	// 		});
+	// 	}
+	// });
 
-	// Verify token route - check if user is authenticated
-	fastify.post('/auth/verify', async (request, reply) => {
-		try {
-			const accessToken = request.cookies?.accessToken;
-			const refreshToken = request.cookies?.refreshToken;
+	// // Verify token route - check if user is authenticated
+	// fastify.post('/verify', async (request, reply) => {
+	// 	try {
+	// 		const accessToken = request.cookies?.accessToken;
+	// 		const refreshToken = request.cookies?.refreshToken;
 			
-			if (!accessToken && !refreshToken) {
-				return reply.code(401).send({
-					success: false,
-					error: 'No authentication token provided'
-				});
-			}
+	// 		if (!accessToken && !refreshToken) {
+	// 			return reply.code(401).send({
+	// 				success: false,
+	// 				error: 'No authentication token provided'
+	// 			});
+	// 		}
 
-			const verification = await authService.validate_and_refresh_Tokens(fastify, accessToken || '', refreshToken || '');
+	// 		const verification = await authService.validate_and_refresh_Tokens(fastify, accessToken || '', refreshToken || '');
 			
-			if (!verification.success) {
-				return reply.code(401).send({
-					success: false,
-					error: 'Invalid or expired token'
-				});
-			}
+	// 		if (!verification.success) {
+	// 			return reply.code(401).send({
+	// 				success: false,
+	// 				error: 'Invalid or expired token'
+	// 			});
+	// 		}
 
-			// If the access token was refreshed, update the cookie
-			if (verification.newAccessToken) {
-				authUtils.ft_setCookie(reply, verification.newAccessToken, 15);
-			}
+	// 		// If the access token was refreshed, update the cookie
+	// 		if (verification.newAccessToken) {
+	// 			authUtils.ft_setCookie(reply, verification.newAccessToken, 15);
+	// 		}
 
-			// Get user profile from users service
-			const user = await authService.getUserProfile(verification.userId!);
+	// 		// Get user profile from users service
+	// 		const user = await authService.getUserProfile(verification.userId!);
 
-			return reply.code(200).send({
-				success: true,
-				id: user.user_id,
-				username: user.username,
-				avatar_url: user.avatar_url
-			});
+	// 		return reply.code(200).send({
+	// 			success: true,
+	// 			id: user.user_id,
+	// 			username: user.username,
+	// 			avatar_url: user.avatar_url
+	// 		});
 
-		} catch (error: any) {
-			if (error.code === 'USER_NOT_FOUND') {
-				return reply.code(404).send({
-					success: false,
-					error: 'User not found'
-				});
-			}
+	// 	} catch (error: any) {
+	// 		if (error.code === 'USER_NOT_FOUND') {
+	// 			return reply.code(404).send({
+	// 				success: false,
+	// 				error: 'User not found'
+	// 			});
+	// 		}
 			
-			logger.error('Token verification error', error as Error, {
-				ip: (request as any).ip
-			});
-			return reply.code(500).send({
-				success: false,
-				error: 'Internal server error during token verification'
-			});
-		}
-	});
+	// 		logger.error('Token verification error', error as Error, {
+	// 			ip: (request as any).ip
+	// 		});
+	// 		return reply.code(500).send({
+	// 			success: false,
+	// 			error: 'Internal server error during token verification'
+	// 		});
+	// 	}
+	// });
+
+
+	// fastify.get('/account_type', async (request: FastifyRequest, reply: FastifyReply) => {
+	// 	try {
+	// 		const userId = (request as any).user.userId;
+
+	// 		if (!userId)
+	// 			return reply.code(401).send({ success: false, error: "Unauthorized." });
+
+	// 		const user = (fastify as any).db.prepare(`SELECT is_google_account, password FROM users WHERE id = ?`).get(userId);
+
+	// 		if (!user)
+	// 			return reply.code(404).send({ success: false, error: "User not found." });
+
+	// 		const isGoogle = !!user.is_google_account;
+	// 		const hasPassword = !!(user.password && user.password.trim().length > 0);
+
+	// 		return reply.code(200).send({
+	// 			success: true,
+	// 			message: "User account type retrieved.",
+	// 			data: {
+	// 				is_google_account: isGoogle,
+	// 				has_password: hasPassword
+	// 			}
+	// 		});
+	// 	} catch (error) {
+	// 		logger.error('Error retrieving user account type', error as Error, {
+	// 			userId: (request as any).user?.userId,
+	// 			ip: (request as any).ip
+	// 		});
+	// 		return reply.code(500).send({ success: false, error: "Internal server error while retrieving user account type." });
+	// 	}
+	// });
+
 
 	// Generate game session jwt [Requires Internal JWT]
 	fastify.post<{ Body: GameSessionClaims }>(
-    	"/auth/game/token",
+    	"/token/game",
     	{ 
 			schema: { body: gameSessionClaimsSchema },
 			preHandler: internalAuthMiddleware
@@ -321,21 +384,21 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			  try {
 				const claims: GameSessionClaims = request.body;
 				const sign_options: SignOptions = {
-					algorithm: config.jwt.game.algorithm,
-					expiresIn: config.jwt.game.accessTokenExpiry as any,
+					algorithm: CONFIG.JWT.GAME.ALGORITHM,
+					expiresIn: CONFIG.JWT.GAME.ACCESS_TOKEN_EXPIRY as any,
 					keyid: jwksService.getCurrentKeyId()
 				};
 				const game_jwt = jwt.sign(
 					{
 						// Standard JWT claims
 						sub: claims.sub,
-						iss: config.jwt.game.issuer,
-						type: config.jwt.game.type,
+						iss: CONFIG.JWT.GAME.ISSUER,
+						type: CONFIG.JWT.GAME.TYPE,
 
 						// Game specific claims
 						game_id: claims.game_id,
 					},
-					config.jwt.game.privateKey,
+					CONFIG.JWT.GAME.PRIVATE_KEY,
 					sign_options
 				);
 				
@@ -351,7 +414,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 	});
 
 	// Generate internal JWT route - OAuth2-like client credentials flow
-	fastify.post('/auth/internal/token', {
+	fastify.post('/token/internal', {
 		schema: {
 			description: 'Generate internal access token using client credentials (OAuth2-like flow)',
 			tags: ['Auth', 'Internal'],
@@ -394,7 +457,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			}
 
 			// Find client in our credentials
-			const clientCreds = Object.values(config.clientCredentials).find(
+			const clientCreds = Object.values(CONFIG.CLIENT_CREDENTIALS).find(
 				creds => creds.id === client_id
 			);
 
@@ -412,7 +475,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 			const internal_jwt = authUtils.generateInternalJWT();
 			
 			// Parse expiry time to seconds
-			const expiresInSeconds = config.jwt.internal.accessTokenExpiry === '1h' ? 3600 : 3600;
+			const expiresInSeconds = CONFIG.JWT.INTERNAL.ACCESS_TOKEN_EXPIRY === '1h' ? 3600 : 3600;
 			
 			reply.status(200).send({ 
 				access_token: internal_jwt,
@@ -433,7 +496,7 @@ export async function authRoutes(fastify: FastifyInstance, options: any) {
 
 	// Update password hash route - for internal service communication
 	fastify.put<{ Body: PasswordUpdateData }>(
-		"/auth/hash-password",
+		"/hash-password",
 		{ 
 			schema: { body: passwordUpdateSchema },
 			preHandler: internalAuthMiddleware

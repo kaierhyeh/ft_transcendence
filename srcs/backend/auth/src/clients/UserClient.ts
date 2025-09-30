@@ -1,4 +1,4 @@
-import { config } from "../config";
+import { CONFIG } from "../config";
 import authUtils from "../utils/auth.utils";
 
 interface ErrorResponse {
@@ -26,7 +26,7 @@ export interface LocalUserCreationData {
 }
 
 export class UserClient {
-  private base_url = config.clients.user.base_url;
+  private base_url = CONFIG.CLIENTS.USER.BASE_URL;
 
   private getAuthHeaders(): { Authorization: string } {
     const token = authUtils.generateInternalJWT();
@@ -47,7 +47,7 @@ export class UserClient {
 
     if (!response.ok) {
       const errorBody = await response.json() as ErrorResponse;
-      const errorMessage = errorBody.message || errorBody.error || `User signup failed: ${response.status}`;
+      const errorMessage = errorBody.message || errorBody.error || `User registration failed: ${response.status}`;
       
       const error = new Error(errorMessage);
       (error as any).status = response.status;

@@ -24,7 +24,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service';
 import authUtils from '../utils/auth.utils';
-import { config } from '../config';
 import { JWTType, UserSessionPayload, GameSessionPayload, InternalAccessPayload } from '../types';
 
 interface AuthenticatedRequest {

@@ -16,8 +16,8 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost/health", "--insecure"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "https://localhost/health", "--insecure", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -38,8 +38,8 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 30s
@@ -62,11 +62,6 @@ services:
     build:
       context: ./backend/auth
       dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=/app/data/database.db
-    volumes:
-      - auth_data:/app/data
     secrets:
       - user-session-private.pem
       - user-session-public.pem
@@ -82,11 +77,28 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
+    depends_on:
+      backend-redis:
+        condition: service_healthy
+
+  backend-redis:
+    container_name: backend-redis
+    image: "redis:7.0-alpine"
+    networks:
+      - pong_network
+    init: true
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli ping > /dev/null 2>&1"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
   backend-game:
@@ -123,12 +135,13 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
     restart: unless-stopped
+
  
   # backend-auth-lite:
   #   container_name: backend-auth-lite
@@ -163,8 +176,8 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -184,12 +197,12 @@ services:
     networks:
       - pong_network
     init: true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
     restart: unless-stopped
     working_dir: /app
 
@@ -226,5 +239,4 @@ volumes:
   game_sessions:
   db-data:
     driver: local
-  auth_data:
   users:

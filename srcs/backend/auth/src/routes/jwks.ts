@@ -1,6 +1,6 @@
 import jwksService from '../services/jwks.service';
 
-export async function jwksRoutes(fastify: any, options: any): Promise<void> {
+export default async function jwksRoutes(fastify: any, options: any): Promise<void> {
 	const logger = (fastify as any).logger;
 	
 	/**

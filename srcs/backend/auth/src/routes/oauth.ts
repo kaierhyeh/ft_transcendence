@@ -2,14 +2,14 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { google } from 'googleapis';
 import authService from '../services/auth.service';
 import authUtils from '../utils/auth.utils';
-import { config } from '../config';
+import { CONFIG } from '../config';
 import dotenv from 'dotenv';
 
 dotenv.config();
 const oauth2Client = new google.auth.OAuth2(
-	config.oauth.googleClientId,
-	config.oauth.googleClientSecret,
-	config.oauth.googleRedirectUri
+	CONFIG.OAUTH.GOOGLE_CLIENT_ID,
+	CONFIG.OAUTH.GOOGLE_CLIENT_SECRET,
+	CONFIG.OAUTH.GOOGLE_REDIRECT_URI
 );
 
 // 📌 Route: google/token
@@ -18,9 +18,9 @@ const oauth2Client = new google.auth.OAuth2(
 // and create or update the user in the database
 // It also handles 2FA if enabled for the user
 // It returns the access and refresh tokens in cookies
-export async function oauthRoutes(fastify: FastifyInstance, options: any) {
+export default async function oauthRoutes(fastify: FastifyInstance, options: any) {
 	const logger = (fastify as any).logger;
-	fastify.post('/auth/google', async (request: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
+	fastify.post('/', async (request: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
 		try {
 			const { code } = request.body;
 			if (!code)
@@ -102,7 +102,7 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 		}
 	});
 
-		fastify.post("/auth/google/username", async (request: FastifyRequest<{ Body: { username: string; temp_token: string } }>, reply: FastifyReply) => {
+		fastify.post("/username", async (request: FastifyRequest<{ Body: { username: string; temp_token: string } }>, reply: FastifyReply) => {
 			const { username, temp_token } = request.body;		try {
 			// Verified token and get the payload from it
 			const payload = await authService.verifyTempToken(temp_token);
@@ -184,40 +184,8 @@ export async function oauthRoutes(fastify: FastifyInstance, options: any) {
 		}
 	});
 
-	fastify.get('/auth/account_type', async (request: FastifyRequest, reply: FastifyReply) => {
-		try {
-			const userId = (request as any).user.userId;
-
-			if (!userId)
-				return reply.code(401).send({ success: false, error: "Unauthorized." });
-
-			const user = (fastify as any).db.prepare(`SELECT is_google_account, password FROM users WHERE id = ?`).get(userId);
-
-			if (!user)
-				return reply.code(404).send({ success: false, error: "User not found." });
-
-			const isGoogle = !!user.is_google_account;
-			const hasPassword = !!(user.password && user.password.trim().length > 0);
-
-			return reply.code(200).send({
-				success: true,
-				message: "User account type retrieved.",
-				data: {
-					is_google_account: isGoogle,
-					has_password: hasPassword
-				}
-			});
-		} catch (error) {
-			logger.error('Error retrieving user account type', error as Error, {
-				userId: (request as any).user?.userId,
-				ip: (request as any).ip
-			});
-			return reply.code(500).send({ success: false, error: "Internal server error while retrieving user account type." });
-		}
-	});
-
 	// Google OAuth callback route
-	fastify.get('/auth/google/callback', async (request: FastifyRequest<{ Querystring: { code?: string; error?: string } }>, reply: FastifyReply) => {
+	fastify.get('/callback', async (request: FastifyRequest<{ Querystring: { code?: string; error?: string } }>, reply: FastifyReply) => {
 		try {
 			const { code, error } = request.query;
 			

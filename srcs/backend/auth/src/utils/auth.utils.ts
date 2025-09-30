@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt';
-import type { FastifyReply, FastifyInstance } from 'fastify';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
-import { config } from '../config';
+import { CONFIG } from '../config';
 import jwksService from '../services/jwks.service';
+import { JWTType } from '../types/index';
 
 export class AuthUtils {
 	// Cache for internal JWT token
@@ -120,22 +120,30 @@ export class AuthUtils {
 		
 		// Check if we have a valid cached token (expires 5 minutes early for safety)
 		if (this.internalJWTCache.token && now < this.internalJWTCache.expiresAt - (5 * 60 * 1000)) {
+			console.log('🔄 Using cached internal JWT token');
 			return this.internalJWTCache.token;
 		}
 
 		// Generate new token
+		const keyId = jwksService.getKeyIdForType(JWTType.INTERNAL_ACCESS);
+		if (!keyId) {
+			throw new Error('Internal JWT key ID not found in JWKS');
+		}
+		
 		const sign_options: SignOptions = {
-			algorithm: config.jwt.internal.algorithm,
-			expiresIn: config.jwt.internal.accessTokenExpiry as any,
-			keyid: jwksService.getCurrentKeyId()
+			algorithm: CONFIG.JWT.INTERNAL.ALGORITHM,
+			expiresIn: CONFIG.JWT.INTERNAL.ACCESS_TOKEN_EXPIRY as any,
+			keyid: keyId
 		};
+
+		console.log(`🔐 Generating new internal JWT with key ID: ${keyId}`);
 
 		const token = jwt.sign(
 			{
-				type: config.jwt.internal.type,
-				iss: config.jwt.internal.issuer,
+				type: CONFIG.JWT.INTERNAL.TYPE,
+				iss: CONFIG.JWT.INTERNAL.ISSUER,
 			},
-			config.jwt.internal.privateKey,
+			CONFIG.JWT.INTERNAL.PRIVATE_KEY,
 			sign_options
 		);
 
