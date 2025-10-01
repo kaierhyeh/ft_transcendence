@@ -69,10 +69,10 @@ export function initProfile() {
 	}
 
 	async function handleLogin() {
-		const username = loginInput?.value.trim();
+		const login = loginInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
-		if (!username || !password) {
+		if (!login || !password) {
 			alert('Please enter both username and password.');
 			return;
 		}
@@ -82,7 +82,7 @@ export function initProfile() {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ username, password })
+				body: JSON.stringify({ login, password })
 			});
 
 			const data = await response.json();
