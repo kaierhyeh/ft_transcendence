@@ -3,6 +3,7 @@ import {initStats} from "./stats.js";
 import {initMenu} from "./menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
+import {initHistory} from "./history.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -14,7 +15,8 @@ const routes: Record<string, string> = {
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/profile": "./html/profile.html",
-	"/oauth-callback": "./html/profile.html"
+	"/oauth-callback": "./html/profile.html",
+	"/history": "./html/history.html"
 };
 
 const initScripts: Record<string, () => void> = {
@@ -37,6 +39,10 @@ const initScripts: Record<string, () => void> = {
 	"/tournament": () => {
 		if (typeof initTournament === "function")
 			initTournament();
+	},
+	"/history": () => {
+		if (typeof initHistory === "function")
+			initHistory();
 	},
 	"/oauth-callback": () => {
 		if (typeof handleOAuthCallback === "function")

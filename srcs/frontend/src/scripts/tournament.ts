@@ -14,6 +14,52 @@ export function initTournament(): void {
     const gameManager = new TournamentGameManager();
     const uiManager = new TournamentUIManager(bracketManager);
 
+    //--- Avalanche & Remix structures ---
+    // @ts-ignore
+    const ethers = window.ethers;
+    const contractAdress = "0xE4387dA1d5636f1b4B88ef4a9e67BE05A02777d4";
+    const abi = [
+        {
+            "inputs": [
+                { "internalType": "uint256", "name": "tournamentId", "type": "uint256" },
+                { "internalType": "uint256", "name": "playersCount", "type": "uint256" },
+                { "internalType": "string", "name": "winnerName", "type": "string" }
+            ],
+            "name": "addTournament",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "getAllTournaments",
+            "outputs": [
+                {
+                    "components": [
+                        { "internalType": "uint256", "name": "tournamentId", "type": "uint256" },
+                        { "internalType": "uint256", "name": "playersCount", "type": "uint256" },
+                        { "internalType": "string", "name": "winnerName", "type": "string" },
+                        { "internalType": "uint256", "name": "date", "type": "uint256" }
+                    ],
+                    "internalType": "struct TournamentStorage.Tournament[]",
+                    "name": "",
+                    "type": "tuple[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "getNextId",
+            "outputs": [
+                { "internalType": "uint256", "name": "", "type": "uint256" }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ];
+
     document.body.classList.add('tournament-page');
 
     (window as any).tournamentMode = true;
@@ -198,7 +244,10 @@ export function initTournament(): void {
                 } else {
                     const winner = bracketManager.getTournamentWinner();
                     if (winner)
+                    {
                         uiManager.showTournamentComplete(winner);
+                        saveTournamentResult(selectedPlayerCount, winner);
+                    }
                     else
                         alert('Tournament completed but there was an error determining the winner');
                 }
@@ -223,6 +272,29 @@ export function initTournament(): void {
         document.body.classList.remove('tournament-page');
         gameManager.cleanup();
     };
+
+    async function saveTournamentResult(playersCount: number, winnerName: string) {
+        if (!(window as any).ethereum) {
+            alert("MetaMask n'est pas installé !");
+            return;
+        }
+
+        try {
+            const provider = new ethers.BrowserProvider((window as any).ethereum);
+            const signer = await provider.getSigner();
+            const contract = new ethers.Contract(contractAdress, abi, signer);
+
+            const nextId: bigint = await contract.getNextId();
+
+            const tx = await contract.addTournament(nextId, playersCount, winnerName);
+            await tx.wait();
+
+            console.log(`✅ Tournoi enregistré sur le contrat avec ID ${nextId.toString()}`);
+        } catch (err) {
+            console.error("Erreur enregistrement tournoi:", err);
+        }
+    }
+
 }
 
 (window as any).initTournament = initTournament;
