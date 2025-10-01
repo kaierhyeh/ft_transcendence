@@ -30,7 +30,7 @@ export class TournamentUIManager {
                 input.id = `player-${i}`;
                 input.name = `player-${i}`;
                 input.placeholder = `Enter name`;
-                input.maxLength = 16;
+                input.maxLength = 14;
                 input.required = true;
                 
                 input.addEventListener('keypress', (e) => {

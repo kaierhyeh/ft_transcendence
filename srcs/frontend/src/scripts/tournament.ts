@@ -17,7 +17,7 @@ export function initTournament(): void {
     //--- Avalanche & Remix structures ---
     // @ts-ignore
     const ethers = window.ethers;
-    const contractAdress = "0x2f7A46E679c88A7478544e16ee0bb66A51cb9e62";
+    const contractAdress = "0xE4387dA1d5636f1b4B88ef4a9e67BE05A02777d4";
     const abi = [
         {
             "inputs": [
@@ -38,7 +38,8 @@ export function initTournament(): void {
                     "components": [
                         { "internalType": "uint256", "name": "tournamentId", "type": "uint256" },
                         { "internalType": "uint256", "name": "playersCount", "type": "uint256" },
-                        { "internalType": "string", "name": "winnerName", "type": "string" }
+                        { "internalType": "string", "name": "winnerName", "type": "string" },
+                        { "internalType": "uint256", "name": "date", "type": "uint256" }
                     ],
                     "internalType": "struct TournamentStorage.Tournament[]",
                     "name": "",
@@ -51,7 +52,9 @@ export function initTournament(): void {
         {
             "inputs": [],
             "name": "getNextId",
-            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+            "outputs": [
+                { "internalType": "uint256", "name": "", "type": "uint256" }
+            ],
             "stateMutability": "view",
             "type": "function"
         }
@@ -270,7 +273,6 @@ export function initTournament(): void {
         gameManager.cleanup();
     };
 
-    //To save the result of the tournament in Avalanche
     async function saveTournamentResult(playersCount: number, winnerName: string) {
         if (!(window as any).ethereum) {
             alert("MetaMask n'est pas installé !");

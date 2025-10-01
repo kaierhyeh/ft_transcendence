@@ -2,7 +2,7 @@ export function initHistory(): void {
     //--- Avalanche & Remix structures ---
     // @ts-ignore
     const ethers = window.ethers;
-    const contractAdress = "0x2f7A46E679c88A7478544e16ee0bb66A51cb9e62";
+    const contractAdress = "0xE4387dA1d5636f1b4B88ef4a9e67BE05A02777d4";
     const abi = [
         {
             "inputs": [
@@ -23,7 +23,8 @@ export function initHistory(): void {
                     "components": [
                         { "internalType": "uint256", "name": "tournamentId", "type": "uint256" },
                         { "internalType": "uint256", "name": "playersCount", "type": "uint256" },
-                        { "internalType": "string", "name": "winnerName", "type": "string" }
+                        { "internalType": "string", "name": "winnerName", "type": "string" },
+                        { "internalType": "uint256", "name": "date", "type": "uint256" }
                     ],
                     "internalType": "struct TournamentStorage.Tournament[]",
                     "name": "",
@@ -36,7 +37,9 @@ export function initHistory(): void {
         {
             "inputs": [],
             "name": "getNextId",
-            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+            "outputs": [
+                { "internalType": "uint256", "name": "", "type": "uint256" }
+            ],
             "stateMutability": "view",
             "type": "function"
         }
@@ -65,18 +68,29 @@ export function initHistory(): void {
         }
     }
 
-    function renderTournaments(tournaments: Array<{ tournamentId: string | number, playersCount: string | number, winnerName: string }>) {
+    function formatDateUS(timestamp: bigint | number): string {
+        const ts = typeof timestamp === "bigint" ? Number(timestamp) : timestamp;
+        const date = new Date(ts * 1000);
+        return date.toLocaleDateString("en-US", {
+            month: "2-digit",
+            day: "2-digit",
+            year: "numeric"
+        });
+    }
+
+    function renderTournaments(tournaments: Array<{ tournamentId: string | number, playersCount: string | number, winnerName: string, date: bigint | number }>) {
         const list = document.getElementById('list-container');
         if (!list) return;
         if (!tournaments || tournaments.length === 0) {
             list.innerHTML = "<div class='tournament-empty'>Aucun tournoi trouvé.</div>";
             return;
         }
-        list.innerHTML = tournaments.map((t: { tournamentId: string | number, playersCount: string | number, winnerName: string }) => `
+        list.innerHTML = tournaments.map((t) => `
             <div class="tournament-item">
-                <div class="tournament-id">Tournoi #${t.tournamentId}</div>
-                <div class="tournament-players">Joueurs : ${t.playersCount}</div>
-                <div class="tournament-winner">Vainqueur : <span class="winner-name">${t.winnerName}</span></div>
+                <div class="tournament-id">Tournament #${t.tournamentId}</div>
+                <div class="tournament-date">${formatDateUS(t.date)}</div>
+                <div class="tournament-players">${t.playersCount}p.</div>
+                <div class="tournament-winner">Winner: <span class="winner-name">${t.winnerName}</span></div>
             </div>
         `).join('');
     }
