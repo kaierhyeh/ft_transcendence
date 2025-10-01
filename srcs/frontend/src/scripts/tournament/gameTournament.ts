@@ -4,7 +4,8 @@ import { initGame } from '../game.js';
 
 export class TournamentGameManager {
     private gameId: number | null = null;
-    private gameWebSocket: WebSocket | null = null;
+    private gameWebSockets: WebSocket[] = [];  // Multiple WebSockets for JWT auth
+    private jwtTickets: string[] = [];         // Store JWT tickets
     private currentGameWinner: string | null = null;
     private gameStarted: boolean = false;
     private gameEnded: boolean = false;
@@ -31,10 +32,16 @@ export class TournamentGameManager {
         this.cleanupGame();
         
         try {
-            this.gameId = await this.apiService.createGameSession(match.player1, match.player2);
+            // Get game session with JWT tickets from matchmaking service
+            const matchResult = await this.apiService.createGameSession(match.player1, match.player2);
+            this.gameId = matchResult.game_id;
+            this.jwtTickets = matchResult.jwt_tickets;
+
+            console.log('Tournament match created with ID:', this.gameId);
+            console.log('JWT tickets received:', this.jwtTickets.length);
 
             if (this.gameId !== null && this.gameId !== undefined)
-                this.connectTournamentWebSocket(this.gameId);
+                        this.connectTournamentWebSockets(this.gameId);
             else
                 throw new Error('Invalid game ID received');
 
@@ -72,10 +79,15 @@ export class TournamentGameManager {
         
         this.cleanupControls();
         
-        if (this.gameWebSocket) {
-            this.gameWebSocket.close();
-            this.gameWebSocket = null;
-        }
+        // Close all WebSocket connections
+        this.gameWebSockets.forEach((ws, index) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                console.log(`Closing tournament WebSocket ${index} during cleanup`);
+                ws.close();
+            }
+        });
+        this.gameWebSockets = [];
+        this.jwtTickets = [];
         
         this.gameId = null;
         this.currentGameWinner = null;
@@ -116,79 +128,83 @@ export class TournamentGameManager {
     }
 
     private sendCurrentInputs(): void {
-        if (!this.gameWebSocket || this.gameWebSocket.readyState !== WebSocket.OPEN || !this.currentMatch) return;
-        let move1 = 'stop';
-        if (this.keys['w'] || this.keys['W']) move1 = 'up';
-        else if (this.keys['s'] || this.keys['S']) move1 = 'down';
-        this.gameWebSocket.send(JSON.stringify({
-            type: 'input',
-            participant_id: `player_${this.currentMatch.player1}`,
-            move: move1
-        }));
-        let move2 = 'stop';
-        if (this.keys['ArrowUp']) move2 = 'up';
-        else if (this.keys['ArrowDown']) move2 = 'down';
-        this.gameWebSocket.send(JSON.stringify({
-            type: 'input',
-            participant_id: `player_${this.currentMatch.player2}`,
-            move: move2
-        }));
+        if (this.gameWebSockets.length === 0 || !this.currentMatch) return;
+        
+        // Player 1 (WebSocket 0)
+        if (this.gameWebSockets[0] && this.gameWebSockets[0].readyState === WebSocket.OPEN) {
+            let move1 = 'stop';
+            if (this.keys['w'] || this.keys['W']) move1 = 'up';
+            else if (this.keys['s'] || this.keys['S']) move1 = 'down';
+            
+            this.gameWebSockets[0].send(JSON.stringify({
+                type: 'input',
+                move: move1
+            }));
+        }
+        
+        // Player 2 (WebSocket 1)
+        if (this.gameWebSockets[1] && this.gameWebSockets[1].readyState === WebSocket.OPEN) {
+            let move2 = 'stop';
+            if (this.keys['ArrowUp']) move2 = 'up';
+            else if (this.keys['ArrowDown']) move2 = 'down';
+            
+            this.gameWebSockets[1].send(JSON.stringify({
+                type: 'input',
+                move: move2
+            }));
+        }
     }
 
-    private connectTournamentWebSocket(id: number): void {
-        if (!this.currentMatch) return;
+    private connectTournamentWebSockets(id: number): void {
+        if (!this.currentMatch || this.jwtTickets.length === 0) return;
 
-        this.gameWebSocket = this.apiService.createWebSocketConnection(id);
+        // Create multiple WebSocket connections (one per player)
+        this.gameWebSockets = this.apiService.createMultipleWebSocketConnections(id, this.jwtTickets);
         
-        this.gameWebSocket.onopen = () => {
-            console.log('Tournament WebSocket connected successfully');
-            
-            const player1Id = `player_${this.currentMatch!.player1}`;
-            const player2Id = `player_${this.currentMatch!.player2}`;
-            
-            console.log('Joining as players:', player1Id, player2Id);
-            
-            this.gameWebSocket?.send(JSON.stringify({ 
-                type: 'join',
-                participant_id: player1Id
-            }));
-            
-            setTimeout(() => {
-                this.gameWebSocket?.send(JSON.stringify({ 
-                    type: 'join',
-                    participant_id: player2Id
-                }));
-            }, 100);
-            
-            this.setupTournamentControls();
-        };
-
-        this.gameWebSocket.onmessage = (event: MessageEvent) => {
-            try {
-                const message: WebSocketMessage = JSON.parse(event.data);
+        // Setup each WebSocket connection
+        this.gameWebSockets.forEach((ws, index) => {
+            ws.onopen = () => {
+                console.log(`Tournament WebSocket ${index} connected successfully`);
                 
-                if (message.type === 'game_state')
-                    this.handleTournamentGameState(message.data);
-            } catch (error) {
-                console.error('Error parsing tournament game data:', error);
-            }
-        };
+                // Send join message with JWT ticket
+                const joinMessage = {
+                    type: "join",
+                    ticket: this.jwtTickets[index]
+                };
+                ws.send(JSON.stringify(joinMessage));
+                
+                // Setup controls only after first connection
+                if (index === 0) {
+                    this.setupTournamentControls();
+                }
+            };
 
-        this.gameWebSocket.onclose = (event: CloseEvent) => {
-            console.log('Tournament WebSocket disconnected:', event.code, event.reason);
-        };
+            ws.onmessage = (event: MessageEvent) => {
+                try {
+                    const message: WebSocketMessage = JSON.parse(event.data);
+                    if (message.type === 'game_state')
+                        this.handleTournamentGameState(message.data);
+                } catch (error) {
+                    console.error(`Error parsing tournament game data from WebSocket ${index}:`, error);
+                }
+            };
 
-        this.gameWebSocket.onerror = (error: Event) => {
-            console.error('Tournament WebSocket error:', error);
-            const canvas = document.getElementById('tournament-pong') as HTMLCanvasElement;
-            const ctx = canvas?.getContext('2d');
-            if (ctx) {
-                ctx.fillStyle = '#ef4444';
-                ctx.font = '16px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('WebSocket connection error - check server status', canvas.width / 2, canvas.height / 2 + 60);
-            }
-        };
+            ws.onclose = (event: CloseEvent) => {
+                console.log(`Tournament WebSocket ${index} disconnected:`, event.code, event.reason);
+            };
+
+            ws.onerror = (error: Event) => {
+                console.error(`Tournament WebSocket ${index} error:`, error);
+                const canvas = document.getElementById('tournament-pong') as HTMLCanvasElement;
+                const ctx = canvas?.getContext('2d');
+                if (ctx) {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('WebSocket connection error - check server status', canvas.width / 2, canvas.height / 2 + 60);
+                }
+            };
+        });
     }
 
     private handleTournamentGameState(gameState: GameState): void {
@@ -216,10 +232,15 @@ export class TournamentGameManager {
         
         this.cleanupControls();
         
-        if (this.gameWebSocket) {
-            this.gameWebSocket.close();
-            this.gameWebSocket = null;
-        }
+        // Close all WebSocket connections
+        this.gameWebSockets.forEach((ws, index) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                console.log(`Closing tournament WebSocket ${index}`);
+                ws.close();
+            }
+        });
+        this.gameWebSockets = [];
+        this.jwtTickets = [];
         
         if ((window as any).gameSystem) {
             const gameSystem = (window as any).gameSystem as GameSystem;

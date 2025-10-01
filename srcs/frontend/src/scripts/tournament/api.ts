@@ -1,44 +1,49 @@
 export class TournamentApiService {
     private readonly API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
+    private readonly API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
 
-    async createGameSession(player1: string, player2: string, tournamentId?: number): Promise<number> {
+    async createGameSession(player1: string, player2: string, tournamentId?: number): Promise<{ game_id: number; jwt_tickets: string[] }> {
         try {
-            const response = await fetch('/api/game/create', {
+            // Create participants array following matchmaking schema
+            const participants = [
+                {
+                    type: "guest" as const,  // Tournament players are guest users
+                    user_id: undefined       // No user_id for guest users
+                },
+                {
+                    type: "guest" as const,
+                    user_id: undefined
+                }
+            ];
+
+            // Use matchmaking service to create the match
+            const response = await fetch(`${this.API_MATCHMAKING_ENDPOINT}/make`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    type: 'tournament',
-                    tournament_id: tournamentId || Math.floor(Math.random() * 1000000),
-                    participants: [
-                        { 
-                            user_id: 1, 
-                            participant_id: `player_${player1}`,
-                            is_ai: false 
-                        },
-                        { 
-                            user_id: 2, 
-                            participant_id: `player_${player2}`,
-                            is_ai: false 
-                        }
-                    ]
+                    mode: 'pvp',           // Use 'pvp' mode for tournament matches
+                    participants: participants
                 })
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('API Error:', response.status, errorText);
-                throw new Error(`Failed to create game session: ${response.status}`);
+                console.error('Matchmaking API Error:', response.status, errorText);
+                throw new Error(`Failed to create tournament match: ${response.status}`);
             }
 
-            const gameData = await response.json();
-            const gameId = gameData.game_id;
-            console.log('Created game session with ID:', gameId);
+            const matchResult = await response.json();
+            console.log('Tournament match created with ID:', matchResult.game_id);
+            console.log('JWT tickets received:', matchResult.jwt_tickets.length);
 
-            await this.validateGameSession(gameId);
+            await this.validateGameSession(matchResult.game_id);
             
-            return gameId;
+            return {
+                game_id: matchResult.game_id,
+                jwt_tickets: matchResult.jwt_tickets
+            };
         } catch (error) {
             console.error('Error creating tournament game:', error);
             throw error;
@@ -61,11 +66,18 @@ export class TournamentApiService {
         }
     }
 
-    createWebSocketConnection(gameId: number): WebSocket {
+    createMultipleWebSocketConnections(gameId: number, jwtTickets: string[]): WebSocket[] {
+        const websockets: WebSocket[] = [];
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const url = `${protocol}://${window.location.host}/api/game/${gameId}/ws`;
         
-        console.log('Connecting to tournament WebSocket:', url);
-        return new WebSocket(url);
+        for (let i = 0; i < jwtTickets.length; i++) {
+            const url = `${protocol}://${window.location.host}/api/game/${gameId}/ws`;
+            console.log(`Connecting tournament WebSocket ${i} to:`, url);
+            
+            const ws = new WebSocket(url);
+            websockets.push(ws);
+        }
+        
+        return websockets;
     }
 }
