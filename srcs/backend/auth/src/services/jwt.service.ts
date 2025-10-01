@@ -7,6 +7,7 @@ import {
   InternalAccessPayload,
   JWTHeader 
 } from '../types';
+import { CONFIG } from '../config';
 
 // 使用 require 來避免 TypeScript 模組問題
 const crypto = require('crypto');
@@ -18,9 +19,6 @@ interface KeyPair {
 
 export class JWTService {
   private keys: Record<JWTType, KeyPair> = {} as Record<JWTType, KeyPair>;
-  private algorithm: Algorithm = 'RS256';
-  private issuer = 'auth-service';
-  private audience = 'my-app';
 
   constructor() {
     this.loadKeys();
@@ -75,12 +73,12 @@ export class JWTService {
     const fullPayload: UserSessionPayload = {
       ...payload,
       type: JWTType.USER_SESSION,
-      iss: this.issuer,
+      iss: CONFIG.JWT.USER.ISSUER,
     };
 
     const options: SignOptions = {
-      algorithm: this.algorithm,
-      expiresIn: '15m',
+      algorithm: CONFIG.JWT.USER.ALGORITHM,
+      expiresIn: CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY as any,
       keyid: this.generateKeyId(JWTType.USER_SESSION)
     };
 
@@ -92,12 +90,12 @@ export class JWTService {
     const fullPayload: GameSessionPayload = {
       ...payload,
       type: JWTType.GAME_SESSION,
-      iss: this.issuer,
+      iss: CONFIG.JWT.GAME.ISSUER,
     };
 
     const options: SignOptions = {
-      algorithm: this.algorithm,
-      expiresIn: '2h', // Game sessions last longer
+      algorithm: CONFIG.JWT.GAME.ALGORITHM,
+      expiresIn: CONFIG.JWT.GAME.ACCESS_TOKEN_EXPIRY as any, // Game sessions last longer
       keyid: this.generateKeyId(JWTType.GAME_SESSION)
     };
 
@@ -109,12 +107,12 @@ export class JWTService {
     const fullPayload: InternalAccessPayload = {
       ...payload,
       type: JWTType.INTERNAL_ACCESS,
-      iss: this.issuer,
+      iss: CONFIG.JWT.INTERNAL.ISSUER,
     };
 
     const options: SignOptions = {
-      algorithm: this.algorithm,
-      expiresIn: '1h', // Internal tokens have medium duration
+      algorithm: CONFIG.JWT.INTERNAL.ALGORITHM,
+      expiresIn: CONFIG.JWT.INTERNAL.ACCESS_TOKEN_EXPIRY as any, // Internal tokens have medium duration
       keyid: this.generateKeyId(JWTType.INTERNAL_ACCESS)
     };
 
@@ -140,10 +138,32 @@ export class JWTService {
 
       // Verify with the appropriate public key
       const publicKey = this.getPublicKey(payload.type);
+      
+      // Get the appropriate algorithm based on JWT type
+      let algorithm: Algorithm;
+      let expectedIssuer: string;
+      
+      switch (payload.type) {
+        case JWTType.USER_SESSION:
+          algorithm = CONFIG.JWT.USER.ALGORITHM;
+          expectedIssuer = CONFIG.JWT.USER.ISSUER;
+          break;
+        case JWTType.GAME_SESSION:
+          algorithm = CONFIG.JWT.GAME.ALGORITHM;
+          expectedIssuer = CONFIG.JWT.GAME.ISSUER;
+          break;
+        case JWTType.INTERNAL_ACCESS:
+          algorithm = CONFIG.JWT.INTERNAL.ALGORITHM;
+          expectedIssuer = CONFIG.JWT.INTERNAL.ISSUER;
+          break;
+        default:
+          return { valid: false, error: 'Unknown JWT type' };
+      }
+      
       const verifiedPayload = jwt.verify(token, publicKey, {
-        algorithms: [this.algorithm] as Algorithm[],
-        issuer: this.issuer,
-        audience: this.audience
+        algorithms: [algorithm],
+        issuer: expectedIssuer
+        // Note: No audience verification as requested
       }) as JWTPayload;
 
       return { valid: true, payload: verifiedPayload };

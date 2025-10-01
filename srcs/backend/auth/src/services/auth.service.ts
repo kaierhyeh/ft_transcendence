@@ -1,14 +1,11 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { CONFIG } from '../config';
 import jwksService from './jwks.service';
-import { JWTType, JWTPayload } from '../types';
+import { JWTType, JWTPayload, UserSessionPayload } from '../types/jwt.types';
 import { LocalUserCreationData, UserData, UserClient, UserProfile } from '../clients/UserClient';
 import { LoginRequest } from '../schemas/auth';
 import authUtils from '../utils/auth.utils';
 import redis from '../clients/RedisClient';
-
-// JWT Types for three-tier system - using imported enum
-export type { JWTType, JWTPayload } from '../types.js';
 
 export interface TokenValidationResult {
 	valid: boolean;
@@ -134,12 +131,22 @@ export class AuthService {
 
 		// Generate new access token if needed
 		if (!accessToken) {
+			const keyId = jwksService.getKeyIdForType(JWTType.USER_SESSION);
+			if (!keyId) {
+				throw new Error('USER_SESSION key ID not available in JWKS service');
+			}
+			
 			const signOptions: SignOptions = {
 				algorithm: CONFIG.JWT.USER.ALGORITHM,
 				expiresIn: CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY as any,
-				keyid: jwksService.getCurrentKeyId()
+				keyid: keyId
 			};
-			accessToken = jwt.sign({ userId, type: 'access' }, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
+			accessToken = jwt.sign({ 
+				sub: userId.toString(),  // JWT standard: sub as string
+				type: JWTType.USER_SESSION,  // Proper JWT type
+				token_type: 'access',  // Distinguish access vs refresh
+				iss: CONFIG.JWT.USER.ISSUER
+			}, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
 			// Convert expiry to seconds for Redis
 			const expiryInSeconds = CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
 			await redis.setex(`access_${userId}`, expiryInSeconds, accessToken);
@@ -147,12 +154,22 @@ export class AuthService {
 
 		// Generate new refresh token if needed
 		if (!refreshToken) {
+			const keyId = jwksService.getKeyIdForType(JWTType.USER_SESSION);
+			if (!keyId) {
+				throw new Error('USER_SESSION key ID not available in JWKS service');
+			}
+			
 			const signOptions: SignOptions = {
 				algorithm: CONFIG.JWT.USER.ALGORITHM,
 				expiresIn: CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY as any,
-				keyid: jwksService.getCurrentKeyId()
+				keyid: keyId
 			};
-			refreshToken = jwt.sign({ userId, type: 'refresh' }, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
+			refreshToken = jwt.sign({ 
+				sub: userId.toString(),  // JWT standard: sub as string
+				type: JWTType.USER_SESSION,  // Proper JWT type
+				token_type: 'refresh',  // Distinguish access vs refresh
+				iss: CONFIG.JWT.USER.ISSUER
+			}, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
 			// Convert expiry to seconds for Redis
 			const expiryInSeconds = CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY === '7d' ? 7 * 24 * 60 * 60 : parseInt(CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY);
 			await redis.setex(`refresh_${userId}`, expiryInSeconds, refreshToken);
@@ -239,7 +256,13 @@ export class AuthService {
 			fastify.log.info('ACCESS TOKEN CHECK...');
 
 			// Check if the token is valid using RSA public key
-			const decoded = jwt.verify(accessToken, CONFIG.JWT.USER.PUBLIC_KEY, { algorithms: [CONFIG.JWT.USER.ALGORITHM] }) as { userId: number; type: string };
+			const decoded = jwt.verify(accessToken, CONFIG.JWT.USER.PUBLIC_KEY, { 
+				algorithms: [CONFIG.JWT.USER.ALGORITHM],
+				issuer: CONFIG.JWT.USER.ISSUER
+			}) as UserSessionPayload;
+			
+			// Extract userId from sub field
+			const user_id = parseInt(decoded.sub);
 
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${accessToken}`);
@@ -250,17 +273,17 @@ export class AuthService {
 
 			// Check if user exists in the database
 			if (fastify.db) {
-				const userExists = fastify.db.prepare("SELECT id FROM users WHERE id = ?").get(decoded.userId);
+				const userExists = fastify.db.prepare("SELECT id FROM users WHERE id = ?").get(user_id);
 
 				if (!userExists) {
 					fastify.log.warn('User not found in the database, revoking tokens...');
-					await this.revokeTokens(decoded.userId);
+					await this.revokeTokens(user_id);
 					throw new Error('User not found in the database, tokens revoked.');
 				}
 			}
 
 			// Verify if the token is the latest
-			const currentAccessToken = await redis.get(`access_${decoded.userId}`);
+			const currentAccessToken = await redis.get(`access_${user_id}`);
 			if (accessToken !== currentAccessToken) {
 				fastify.log.warn(`Token is not the latest one.`);
 				throw new Error('Token is not the latest one.');
@@ -269,7 +292,7 @@ export class AuthService {
 			fastify.log.info('Access Token is valid.\n');
 			return {
 				success: true,
-				userId: decoded.userId
+				userId: user_id
 			};
 
 		} catch (error) {
@@ -304,7 +327,13 @@ export class AuthService {
 	async refreshAccessToken(fastify: any, refreshToken: string, oldAccessToken?: string) {
 		try {
 			// Check if the token is valid using RSA public key
-			const decoded = jwt.verify(refreshToken, CONFIG.JWT.USER.PUBLIC_KEY, { algorithms: [CONFIG.JWT.USER.ALGORITHM] }) as { userId: number; type: string };
+			const decoded = jwt.verify(refreshToken, CONFIG.JWT.USER.PUBLIC_KEY, { 
+				algorithms: [CONFIG.JWT.USER.ALGORITHM],
+				issuer: CONFIG.JWT.USER.ISSUER
+			}) as UserSessionPayload;
+			
+			// Extract userId from sub field
+			const user_id = parseInt(decoded.sub);
 
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${refreshToken}`);
@@ -315,17 +344,17 @@ export class AuthService {
 
 			// Check if user exists in the database
 			if (fastify.db) {
-				const userExists = fastify.db.prepare("SELECT id FROM users WHERE id = ?").get(decoded.userId);
+				const userExists = fastify.db.prepare("SELECT id FROM users WHERE id = ?").get(user_id);
 
 				if (!userExists) {
 					fastify.log.warn('User not found in the database, revoking tokens...');
-					await this.revokeTokens(decoded.userId);
+					await this.revokeTokens(user_id);
 					return { success: false, reason: 'User not found in the database, tokens revoked' };
 				}
 			}
 
 			// Check if it's the current refresh token
-			const currentRefreshToken = await redis.get(`refresh_${decoded.userId}`);
+			const currentRefreshToken = await redis.get(`refresh_${user_id}`);
 			if (refreshToken !== currentRefreshToken) {
 				fastify.log.warn(`Token is not the latest one.`);
 				return { success: false, reason: 'Token is not the latest one.' };
@@ -338,25 +367,35 @@ export class AuthService {
 			}
 
 			// Create a new access token using RSA private key
+			const keyId = jwksService.getKeyIdForType(JWTType.USER_SESSION);
+			if (!keyId) {
+				throw new Error('USER_SESSION key ID not available in JWKS service');
+			}
+			
 			const newAccessToken = jwt.sign(
-				{ userId: decoded.userId, type: 'access' },
+				{ 
+					sub: user_id.toString(),  // JWT standard: sub as string
+					type: JWTType.USER_SESSION,  // Proper JWT type
+					token_type: 'access',  // Distinguish access vs refresh
+					iss: CONFIG.JWT.USER.ISSUER
+				},
 				CONFIG.JWT.USER.PRIVATE_KEY,
 				{ 
 					algorithm: CONFIG.JWT.USER.ALGORITHM,
 					expiresIn: CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY,
-					keyid: jwksService.getCurrentKeyId() // Add key ID to JWT header
+					keyid: keyId
 				} as SignOptions
 			);
 
 			// Store the new token
 			const expiryInSeconds = CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
-			await redis.setex(`access_${decoded.userId}`, expiryInSeconds, newAccessToken);
+			await redis.setex(`access_${user_id}`, expiryInSeconds, newAccessToken);
 
-			return {
-				success: true,
-				userId: decoded.userId,
-				newAccessToken
-			};
+				return {
+					success: true,
+					userId: user_id,
+					newAccessToken
+				};
 		} catch (error) {
 			fastify.log.error(error, 'Fail to verify refresh token.');
 			return { success: false, reason: 'Fail to verify refresh token.' };
