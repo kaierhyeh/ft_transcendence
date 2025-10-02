@@ -1,0 +1,51 @@
+/* Language Switcher Styles */
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px; /* 與其他按鈕保持間距 */
+}
+
+.language-select {
+  background-color: transparent;
+  color: #aaa;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 7px 8px 7px 8px;
+  font-family: 'Bit5x3', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 108px;
+  max-width: 128px;
+  height: auto;
+  min-height: 40px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  line-height: 1.25;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  white-space: normal;
+}
+
+.language-select:hover {
+  color: #4ade80;
+  border-color: #4ade80;
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+}
+
+.language-select option {
+  background-color: #000;
+  color: #fff;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 2;
+}

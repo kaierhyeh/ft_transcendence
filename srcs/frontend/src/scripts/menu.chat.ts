@@ -1,4 +1,5 @@
 import { clearEvents, hideElementById, setElementActive, setMenuTitle, showElementById } from "./menu.utils.js";
+import { i18n } from './i18n/i18n.js';
 
 export interface Message {
 	id: number;
@@ -93,7 +94,7 @@ function resetChatSection(): void {
 	showElementById("usersSectionButton");
 	showElementById("friendsSectionButton");
 	showElementById("chatsSectionButton");
-	setMenuTitle("Chats");
+	setMenuTitle("chats");
 }
 
 /* =================================== CHATS SECTION ======================================== */
@@ -147,7 +148,7 @@ async function initChatSection(): Promise<void> {
 	resetChatSection();
 	showElementById("chatsList");
 	showElementById("chatsSection");
-	setMenuTitle("Chats");
+	setMenuTitle("chats");
 	await loadChats();
 }
 
@@ -251,7 +252,11 @@ async function initMessageSection(chatId: number, withUser: ChatUser): Promise<v
 		chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 		menuBackButton.addEventListener("click", () => goBackToChatsList());
 
-		setMenuTitle(`Chat with ${withUser.username}`);
+		// Manually set title with username (not using translation key)
+		const menuTitleElement = document.getElementById("menuTitle");
+		if (menuTitleElement) {
+			menuTitleElement.textContent = `${withUser.username}`;
+		}
 
 		const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${chatId}/${withUser.userId}`);
 		if (!res.ok) {

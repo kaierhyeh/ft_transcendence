@@ -4,6 +4,7 @@ import {initMenu} from "./menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import {initHistory} from "./history.js";
+import { i18n } from "./i18n/index.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -87,6 +88,8 @@ async function navigate(path: string, push: boolean = true)
 			if (push)
 				history.pushState({path}, "", path);
 			update_event();
+			// Initialize i18n for the new page
+			i18n.initializePage();
 			if (initScripts[path])
 				initScripts[path]();
 		}

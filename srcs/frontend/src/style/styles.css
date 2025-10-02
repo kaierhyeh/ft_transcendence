@@ -7,6 +7,7 @@
 @import "history.css";
 @import "tournament-game.css";
 @import "tournament-layout.css";
+@import "i18n.css";
 @import "./menu/menu.css";
 @import "./menu/menu.chats.css";
 @import "./menu/menu.friends.css";
@@ -24,6 +25,8 @@
 html, body, div, span, p, h1, h2, h3, h4, h5, h6,
 button, input, select, textarea, main {
   font-family: 'Bit5x3', monospace;
+  font-size: 16px;
+  line-height: 1.5;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -32,6 +35,8 @@ button, input, select, textarea, main {
 /* Clean font class for specific pages */
 .clean-font, .clean-font * {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -42,4 +47,34 @@ body {
 	color: #fff;
 	height: 100vh;
 	overflow: hidden;
+}
+
+/* Back to Home Button - Universal Style */
+.back-to-home-btn {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	z-index: 100;
+	padding: 12px 24px;
+	background-color: #222;
+	color: #fff;
+	border: 2px solid #fff;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: bold;
+	transition: all 0.3s ease;
+	text-transform: uppercase;
+	box-shadow: 4px 4px 0 #fff;
+}
+
+.back-to-home-btn:hover {
+	background-color: #fff;
+	color: #000;
+	transform: translate(2px, 2px);
+	box-shadow: 2px 2px 0 #fff;
+}
+
+.back-to-home-btn:active {
+	transform: translate(4px, 4px);
+	box-shadow: 0 0 0 #fff;
 }

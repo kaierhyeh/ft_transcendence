@@ -5,6 +5,9 @@ all: up
 up:
 	docker compose -f $(COMPOSE_FILE) up ${OPTS} --build $(ARGS)
 
+up-d:
+	docker compose -f $(COMPOSE_FILE) up -d ${OPTS} --build $(ARGS)
+
 
 stop:
 	docker compose -f $(COMPOSE_FILE) stop

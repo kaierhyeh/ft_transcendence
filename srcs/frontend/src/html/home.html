@@ -1,10 +1,10 @@
 <div class="home-container">
-	<div class="home-title">Pong 1972</div>
+	<div class="home-title" data-i18n="pongTitle">Pong 1972</div>
 	<div class="home-menu">
-		<button class="home-btn" data-route="/pong"> Play Pong </button>
-		<button class="home-btn" data-route="/tournament"> Launch a tournament </button>
-		<button class="home-btn" data-route="/profile"> My profile </button>
-		<button class="home-btn" data-route="/stats"> See stats </button>
+		<button class="home-btn" data-route="/pong" data-i18n="playPong"> Play Pong </button>
+		<button class="home-btn" data-route="/tournament" data-i18n="launchTournament"> Launch a tournament </button>
+		<button class="home-btn" data-route="/profile" data-i18n="myProfile"> My profile </button>
+		<button class="home-btn" data-route="/stats" data-i18n="seeStats"> See stats </button>
 	</div>
 </div>	
 
@@ -24,7 +24,7 @@
 		<div class="menu-header">
 
 			<!-- Menu Title : MENU, USERS, FRIENDS, FRIEND REQUESTS, BLOCKED USERS, CHATS, {USERNAME} -->
-			<h1 id="menuTitle" class="menu-header-title">MENU</h1>
+			<h1 id="menuTitle" class="menu-header-title" data-i18n="menu">MENU</h1>
 			<div class="menu-header-buttons">
 
 				<!-- Back Button for FRIEND REQUESTS, BLOCKED USERS, {USERNAME} menu windows -->
@@ -46,12 +46,12 @@
 		
 		<!-- Menu Users-List Body -->
 		<div id="usersSection" class="menu-section">
-			<h1 id="noUsers" class="empty-list-text hidden">No users</h1>
+			<h1 id="noUsers" class="empty-list-text hidden" data-i18n="noUsers">No users</h1>
 		</div>
 		
 		<!-- Menu Friends-List Body -->
 		<div id="friendsSection" class="menu-section hidden">
-			<h1 id="noFriends" class="empty-list-text hidden">No friends</h1>
+			<h1 id="noFriends" class="empty-list-text hidden" data-i18n="noFriends">No friends</h1>
 		</div>
 		
 		<!-- Menu Chats-List Body -->
@@ -59,7 +59,7 @@
 
 			<!-- Chat Users List: with whom this.user has chatted -->
 			<div id="chatsList" class="chat-list">
-				<h1 id="noChats" class="empty-list-text hidden">No chats</h1>
+				<h1 id="noChats" class="empty-list-text hidden" data-i18n="noChats">No chats</h1>
 			</div>
 
 			<!-- Chat Messages: between this.user and selected user -->
@@ -74,13 +74,13 @@
 						<svg class="invite-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 							<path fill="currentColor" d="M2 5h20v14H2V5zm18 12V7H4v10h16zM8 9h2v2h2v2h-2v2H8v-2H6v-2h2V9zm6 0h2v2h-2V9zm4 4h-2v2h2v-2z"></path>
 						</svg>
-						<span>Invite to game</span>
+						<span data-i18n="inviteToGame">Invite to game</span>
 					</button>
 				</div>
 				
 				<!-- Message input box and send button -->
 				<div class="chat-message-box">
-					<input id="chatMessageToSend" placeholder="Type a message..." type="text" class="chat-textbox">
+					<input id="chatMessageToSend" data-i18n-placeholder="typeMessage" placeholder="Type a message..." type="text" class="chat-textbox">
 					<button id="chatSendButton" class="send-btn">
 						<svg class="send-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5h-2v4H6v2H4v6h2v-2h6v4h2v-2h2v-2h2v-2h2v-2h-2V9h-2V7h-2V5z"/>
@@ -99,7 +99,7 @@
 				<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 					<path fill="currentColor" d="M5 3H3v18h18V3H5zm14 2v14H5V5h14zm-2 2H7v2h10V7zM7 11h10v2H7v-2zm7 4H7v2h7v-2z"/>
 				</svg>
-				<span>Users</span>
+				<span data-i18n="users">Users</span>
 			</button>
 		
 			<!-- Friends Button -->
@@ -107,7 +107,7 @@
 				<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 					<path fill="currentColor" d="M11 0H5v2H3v6h2v2h6V8H5V2h6V0zm0 2h2v6h-2V2zM0 14h2v4h12v2H0v-6zm2 0h12v-2H2v2zm14 0h-2v6h2v-6zM15 0h4v2h-4V0zm4 8h-4v2h4V8zm0-6h2v6h-2V2zm5 12h-2v4h-4v2h6v-6zm-6-2h4v2h-4v-2z"/>
 				</svg>
-				<span>Friends</span>
+				<span data-i18n="friends">Friends</span>
 			</button>
 		
 			<!-- Chats Button -->
@@ -115,7 +115,7 @@
 				<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 					<path fill="currentColor" d="M20 2H2v20h2V4h16v12H6v2H4v2h2v-2h16V2h-2zM6 7h12v2H6V7zm8 4H6v2h8v-2z"/>
 				</svg>
-				<span>Chats</span>
+				<span data-i18n="chats">Chats</span>
 			</button>
 		
 		</div>

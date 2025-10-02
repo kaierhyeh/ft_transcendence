@@ -1,3 +1,5 @@
+import { i18n } from './i18n/i18n.js';
+
 // Hide an element by its ID
 export function hideElementById(id: string): void {
 	const element = document.getElementById(id);
@@ -37,9 +39,9 @@ export function setElementActive(id: string, isActive: boolean): void {
 	}
 }
 
-export function setMenuTitle(title: string): void {
+export function setMenuTitle(translationKey: string): void {
 	const menuTitleElement = document.getElementById("menuTitle");
 	if (menuTitleElement) {
-		menuTitleElement.textContent = title;
+		menuTitleElement.textContent = i18n.t(translationKey as any);
 	}
 }
