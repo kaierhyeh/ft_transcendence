@@ -251,7 +251,7 @@ async function initMessageSection(chatId: number, withUser: ChatUser): Promise<v
 		chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 		menuBackButton.addEventListener("click", () => goBackToChatsList());
 
-		setMenuTitle(`Chat with ${withUser.username}`);
+		setMenuTitle(`${withUser.username}`);
 
 		const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${chatId}/${withUser.userId}`);
 		if (!res.ok) {

@@ -32,7 +32,7 @@
 	bottom: 20px;
 	right: 40px;
 	width: 400px;
-	height: 600px;
+	height: 800px;
 	background: #1a1a1a;
 	border: 2px solid #444;
 	color: white;
@@ -43,7 +43,13 @@
 	transition: all 0.3s ease;
 	z-index: 400;
 }
-
+/* Style for FRIENDS, USERS, CHATS bodies */
+.menu-section {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
 /* Menu Header */
 .menu-header {
 	display: flex;
@@ -72,6 +78,15 @@
 	gap: 0.5rem;
 }
 
+.menu-empty-list-text {
+	padding-top: 36px;
+	padding-bottom: 36px;
+	text-align: center;
+	color: #777;
+	padding: 1rem 0;
+	font-style: italic;
+}
+
 /* Menu Buttons Styles */
 .menu-button {
 	display: inline-block;
@@ -97,12 +112,16 @@
 	align-items: center;
 	display: flex;
 	padding-block: 1.4%;
+	padding-bottom: 5px;
+  	padding-top: 0px;
 	gap: 3%;
 }
 .menu-control-panel-button {
 	display: inline-flex;
 	align-items: center;
 	padding: 4%;
+	padding-bottom: 5px;
+	padding-top: 5px;
 	border-radius: 8px;
 	color: #aaa;
 	background: transparent;
@@ -118,3 +137,4 @@
 	transform: translateY(-2px);
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
+

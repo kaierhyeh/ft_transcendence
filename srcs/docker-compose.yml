@@ -127,7 +127,7 @@ services:
       - users:/app/data
     secrets:
       - users-service-client.env
-    env_file: .env
+    # env_file: .env
     networks:
       - pong_network
     init: true
