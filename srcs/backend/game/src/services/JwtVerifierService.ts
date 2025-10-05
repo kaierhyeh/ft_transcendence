@@ -43,8 +43,9 @@ export interface GameSessionPayload extends JWTPayload {
 
 // User Session JWT payload
 export interface UserSessionPayload extends JWTPayload {
-	type: JWTType.USER_SESSION;
-	sub: string;
+	  type: JWTType.USER_SESSION;
+	  token_type: "access";
+	  sub: string;
 }
 
 export class JWTVerifier {
