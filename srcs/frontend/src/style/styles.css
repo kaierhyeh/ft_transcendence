@@ -10,7 +10,7 @@
 @import "i18n.css";
 @import "browser-compat.css";
 @import "browser-warning.css";
-@import "responsive.css";
+@import "multi-device.css";
 @import "./menu/menu.css";
 @import "./menu/menu.chats.css";
 @import "./menu/menu.friends.css";

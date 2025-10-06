@@ -1,7 +1,5 @@
 # Accessibility Modules Implementation Summary
 
-## ✅ Completed Minor Modules (10 points total)
-
 ### 1. Multiple Language Support (5 points) ⭐
 **Status**: ✅ Complete
 - English, Chinese (中文), French (Français)
@@ -35,7 +33,7 @@
 - Touch-friendly UI (44px minimum)
 - Orientation support
 
-**Documentation**: [DEVICE_SUPPORT.md](./DEVICE_SUPPORT.md)
+**Documentation**: [DEVICE_SUPPORT.md](./srcs/frontend/tools/DEVICE_SUPPORT.md)
 
 ---
 

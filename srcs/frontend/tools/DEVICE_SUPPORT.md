@@ -50,7 +50,7 @@ srcs/frontend/src/
 │   └── utils/
 │       └── deviceDetect.ts           # Device detection utility
 └── style/
-    └── responsive.css                # Responsive design CSS
+    └── multi-device.css              # Multi-device responsive CSS
 ```
 
 ## Implementation Details
