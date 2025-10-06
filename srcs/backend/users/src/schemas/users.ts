@@ -114,22 +114,6 @@ export const userIdSchema = {
     additionalProperties: false,
 } as const;
 
-export const avatarDataSchema = {
-  consumes: ['multipart/form-data'],
-  body: {
-    type: 'object',
-    properties: {
-      avatar: { 
-        type: 'object',
-        properties: {
-          filename: { type: 'string' },
-          mimetype: { type: 'string', pattern: '^image/(jpeg|png|gif|webp)$' },
-          size: { type: 'number', maximum: CONFIG.AVATAR.MAX_SIZE } 
-        }
-      }
-    }
-  }
-} as const;
 
 export const avatarFilenameSchema = {
   type: 'object',

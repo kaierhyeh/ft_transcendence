@@ -73,12 +73,9 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   );
 
   // update avatar [Requires user authentication]
-  fastify.put<{  }>(
+  fastify.put(
     "/profile/me/avatar",
-    {
-      schema: { },
-      preHandler: userAuthMiddleware
-    },
+    { preHandler: userAuthMiddleware },
     userController.updateAvatar.bind(userController)
   );
 
