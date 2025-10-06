@@ -6,7 +6,6 @@
 }
 
 /* Floating Open Menu Button */
-
 .menu-open-button {
 	position: fixed;
 	right: 2%;
@@ -16,7 +15,7 @@
 	min-width: 56px;
 	min-height: 56px;
 	aspect-ratio: 1/1;
-	padding: 0;
+	padding: 0 !important;
 	margin: 0;
 	display: flex;
 	align-items: center;
@@ -29,7 +28,7 @@
 	transition: all 0.3s ease;
 	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 	box-sizing: border-box;
-	line-height: 1;
+	line-height: 0 !important;
 	font-size: 0;
 }
 
@@ -95,7 +94,6 @@
 }
 
 /* Menu Buttons Styles */
-
 .menu-button {
 	display: flex;
 	align-items: center;
@@ -105,7 +103,7 @@
 	min-width: 40px;
 	min-height: 40px;
 	aspect-ratio: 1/1;
-	padding: 0;
+	padding: 0 !important;
 	margin: 0;
 	border-radius: 8px;
 	color: #aaa;
@@ -114,7 +112,7 @@
 	transition: all 0.3s ease;
 	cursor: pointer;
 	box-sizing: border-box;
-	line-height: 1;
+	line-height: 0 !important;
 	font-size: 0;
 	flex-shrink: 0;
 }
