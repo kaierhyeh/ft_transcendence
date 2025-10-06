@@ -1,0 +1,95 @@
+/* Browser Warning Styles */
+.browser-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  font-family: 'Bit5x3', monospace;
+}
+
+.browser-warning-content {
+  background: #1a1a1a;
+  border: 2px solid #4ade80;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  color: #fff;
+  text-align: center;
+}
+
+.browser-warning-content h3 {
+  color: #4ade80;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.browser-warning-content p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.browser-warning-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.browser-warning-content ul li {
+  padding: 0.5rem;
+  background: #222;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+}
+
+.browser-warning-content button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #4ade80;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Bit5x3', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.browser-warning-content button:hover {
+  background: #22c55e;
+  transform: translateY(-2px);
+}
+
+/* Browser-specific fixes */
+.browser-safari .menu-open-button {
+  /* Safari may need position adjustments */
+  will-change: transform;
+}
+
+.browser-chrome .menu-open-button {
+  /* Chrome optimizations */
+  will-change: transform;
+}
+
+.browser-firefox .menu-open-button {
+  /* Firefox specific rendering */
+  will-change: transform;
+}
+
+.browser-edge .menu-open-button {
+  /* Edge compatibility */
+  will-change: transform;
+}
+
+/* Mobile specific styles */
+.is-mobile .menu-open-button {
+  /* Larger touch targets for mobile */
+  width: 64px;
+  height: 64px;
+}

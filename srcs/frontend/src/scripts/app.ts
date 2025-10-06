@@ -5,6 +5,7 @@ import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
+import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -105,5 +106,9 @@ window.onpopstate = (e) => {
 	const path = e.state?.path || location.pathname;
 	navigate(path, false);
 };
+
+// Initialize browser detection and compatibility
+addBrowserClass();
+logBrowserInfo();
 
 navigate(location.pathname, false);

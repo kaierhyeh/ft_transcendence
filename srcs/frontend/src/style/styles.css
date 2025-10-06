@@ -8,6 +8,8 @@
 @import "tournament-game.css";
 @import "tournament-layout.css";
 @import "i18n.css";
+@import "browser-compat.css";
+@import "browser-warning.css";
 @import "./menu/menu.css";
 @import "./menu/menu.chats.css";
 @import "./menu/menu.friends.css";
