@@ -46,26 +46,6 @@ export const signupFormSchema = {
   additionalProperties: false,
 } as const;
 
-export const passwordUpdateSchema = {
-  type: "object",
-  required: ["old_hash", "old_password", "new_password"],
-  properties: {
-    old_hash: {
-      type: "string",
-      description: "Current password hash from database"
-    },
-    old_password: {
-      ...passwordSchema,
-      description: "Current password provided by user"
-    },
-    new_password: {
-      ...passwordSchema,
-      description: "New password to be hashed"
-    }
-  },
-  additionalProperties: false
-} as const;
-
 export const gameSessionClaimsSchema = {
   type: "object",
   required: ["sub", "game_id"],
@@ -77,7 +57,6 @@ export const gameSessionClaimsSchema = {
 } as const;
 
 
-export type LoginRequest = FromSchema<typeof loginSchema>;
+export type LoginCredentials = FromSchema<typeof loginSchema>;
 export type SignupRequest = FromSchema<typeof signupFormSchema>;
 export type GameSessionClaims = FromSchema<typeof gameSessionClaimsSchema>;
-export type PasswordUpdateData = FromSchema<typeof passwordUpdateSchema>;

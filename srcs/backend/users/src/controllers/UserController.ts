@@ -1,12 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UserService } from '../services/UserService';
 import { 
-  LocalUserCreationData, 
+  LocalUserCreationRawData, 
   GoogleUserCreationData, 
   LoginParams, 
   UpdateRawData, 
   UserIdParams, 
-  AvatarParams 
+  AvatarParams, 
+  Credentials
 } from '../schemas';
 import fs from 'fs';
 import path from 'path';
@@ -18,7 +19,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   public async createLocalAccount(
-    request: FastifyRequest<{ Body: LocalUserCreationData }>, 
+    request: FastifyRequest<{ Body: LocalUserCreationRawData }>, 
     reply: FastifyReply
   ) {
     try {
@@ -51,6 +52,23 @@ export class UserController {
     }
   }
 
+  public async resolveLocalUser(
+    request: FastifyRequest<{ Body: Credentials}>,
+    reply: FastifyReply
+  ) {
+    try {
+      const result = await this.userService.resolveLocalUser(request.body);
+
+      reply.status(200).send({
+        success: true,
+        user_id: result.user_id,
+        two_fa_enabled: result.two_fa_enabled,
+        message: "Local user resolved successfully"
+      });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
 
 
   public async getUserByLogin(
@@ -281,9 +299,13 @@ export class UserController {
       reply.status(403).send({ 
         error: error.message || "Forbidden operation" 
       });
-    } else if (error.status === 401 ) {
+    } else if (error.status === 401 || error.code === 'INVALID_CREDENTIALS') {
       reply.status(401).send({ 
         error: error.message || "Unauthorized" 
+      });
+    } else if (error.status === 405 || error.code === 'NOT_A_LOCAL_USER') {
+      reply.status(405).send({
+        error: error.message || "Not a local user"
       });
     } else {
       reply.log.error(error);

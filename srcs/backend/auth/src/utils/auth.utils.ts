@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import { CONFIG } from '../config';
@@ -15,25 +14,6 @@ export class AuthUtils {
 		expiresAt: 0
 	};
 
-	// Hash password with bcrypt
-	async hashPassword(password: string, saltRounds: number = 10): Promise<string> {
-		try {
-			return await bcrypt.hash(password, saltRounds);
-		} catch (error) {
-			console.error('Password hashing error:', error);
-			throw new Error('Failed to hash password');
-		}
-	}
-
-	// Verify password with bcrypt
-	async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-		try {
-			return await bcrypt.compare(password, hashedPassword);
-		} catch (error) {
-			console.error('Password verification error:', error);
-			throw new Error('Failed to verify password');
-		}
-	}
 
 	// Configure and set cookies with flexible expiration time
 	ft_setCookie(reply: any, token: string, duration: number): void {

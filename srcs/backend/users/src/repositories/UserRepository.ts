@@ -1,5 +1,5 @@
 import { Database } from "better-sqlite3";
-import { GoogleUserCreationData, LocalUserCreationData } from "../schemas";
+import { GoogleUserCreationData, LocalUserCreationRawData } from "../schemas";
 import { TwoFa } from "../types";
 import { CONFIG } from "../config";
 import fs from "fs";
@@ -28,6 +28,10 @@ export interface UpdateData {
     avatar_filename?: string;
     settings?: string;
     two_fa?: TwoFa;
+}
+
+type LocalUserCreationData = Omit<LocalUserCreationRawData, "password"> & {
+    password_hash: string;
 }
 
 export class UserRepository {

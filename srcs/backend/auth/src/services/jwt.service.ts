@@ -8,6 +8,8 @@ import {
   JWTHeader 
 } from '../types';
 import { CONFIG } from '../config';
+import redis from '../clients/RedisClient';
+import jwksService from './jwks.service';
 
 // 使用 require 來避免 TypeScript 模組問題
 const crypto = require('crypto');
@@ -15,6 +17,11 @@ const crypto = require('crypto');
 interface KeyPair {
   privateKey: string;
   publicKey: string;
+}
+
+export interface TokenPair {
+	accessToken: string;
+	refreshToken: string;
 }
 
 export class JWTService {
@@ -193,6 +200,129 @@ export class JWTService {
   public decodeToken(token: string): any {
     return jwt.decode(token, { complete: true });
   }
+
+  async generateTempToken(payload: any, type = "generic", expiresInSeconds = 300) {
+    const token = jwt.sign({ ...payload, type }, CONFIG.JWT.USER.TEMP_SECRET, {
+      expiresIn: expiresInSeconds
+    });
+
+    await redis.setex(`temp_${token}`, expiresInSeconds, 'valid');
+
+    return token;
+	}
+
+  // Generate a new access token and refresh token for the user using the userId and JWT manager
+	// The access token is valid for 15 minutes and the refresh token for 7 days
+	// The tokens are stored in Redis with the userId as key
+	// The access token is used to authenticate the user and the refresh token is used to generate a new access token
+	async generateTokens(userId: number): Promise<TokenPair> {
+		// Check if tokens already exist for this user
+		const [existingAccessToken, existingRefreshToken] = await Promise.all([
+			redis.get(`access_${userId}`),
+			redis.get(`refresh_${userId}`)
+		]);
+
+		let accessToken = null;
+		let refreshToken = null;
+
+		// Handle existing access token
+		if (existingAccessToken) {
+			try {
+				// Verify if the token is still valid using RSA public key
+				jwt.verify(existingAccessToken, CONFIG.JWT.USER.PUBLIC_KEY, { algorithms: [CONFIG.JWT.USER.ALGORITHM] });
+				accessToken = existingAccessToken;
+			} catch (error) {
+				// If invalid, blacklist it and prepare to generate a new one
+				await this.blacklistToken(existingAccessToken);
+			}
+		}
+
+		// Handle existing refresh token
+		if (existingRefreshToken) {
+			try {
+				// Verify the token is still valid using RSA public key
+				jwt.verify(existingRefreshToken, CONFIG.JWT.USER.PUBLIC_KEY, { algorithms: [CONFIG.JWT.USER.ALGORITHM] });
+				refreshToken = existingRefreshToken;
+			} catch (error) {
+				// If invalid, blacklist it and prepare to generate a new one
+				await this.blacklistToken(existingRefreshToken);
+			}
+		}
+
+		// Generate new access token if needed
+		if (!accessToken) {
+			const keyId = jwksService.getKeyIdForType(JWTType.USER_SESSION);
+			if (!keyId) {
+				throw new Error('USER_SESSION key ID not available in JWKS service');
+			}
+			
+			const signOptions: SignOptions = {
+				algorithm: CONFIG.JWT.USER.ALGORITHM,
+				expiresIn: CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY as any,
+				keyid: keyId
+			};
+			accessToken = jwt.sign({ 
+				sub: userId.toString(),  // JWT standard: sub as string
+				type: JWTType.USER_SESSION,  // Proper JWT type
+				token_type: 'access',  // Distinguish access vs refresh
+				iss: CONFIG.JWT.USER.ISSUER
+			}, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
+			// Convert expiry to seconds for Redis
+			const expiryInSeconds = CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
+			await redis.setex(`access_${userId}`, expiryInSeconds, accessToken);
+		}
+
+		// Generate new refresh token if needed
+		if (!refreshToken) {
+			const keyId = jwksService.getKeyIdForType(JWTType.USER_SESSION);
+			if (!keyId) {
+				throw new Error('USER_SESSION key ID not available in JWKS service');
+			}
+			
+			const signOptions: SignOptions = {
+				algorithm: CONFIG.JWT.USER.ALGORITHM,
+				expiresIn: CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY as any,
+				keyid: keyId
+			};
+			refreshToken = jwt.sign({ 
+				sub: userId.toString(),  // JWT standard: sub as string
+				type: JWTType.USER_SESSION,  // Proper JWT type
+				token_type: 'refresh',  // Distinguish access vs refresh
+				iss: CONFIG.JWT.USER.ISSUER
+			}, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
+			// Convert expiry to seconds for Redis
+			const expiryInSeconds = CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY === '7d' ? 7 * 24 * 60 * 60 : parseInt(CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY);
+			await redis.setex(`refresh_${userId}`, expiryInSeconds, refreshToken);
+		}
+		
+		return { accessToken, refreshToken };
+	}
+
+  // Blacklist a token by adding it to the Redis blacklist with its remaining duration
+	async blacklistToken(token: string) {
+		try {
+			// Get the decoded token to check its expiry time
+			const decoded = jwt.decode(token) as { exp: number } | null;
+			if (!decoded) return false;
+
+			// Calculate the remaining duration of the token
+			const expiryTime = decoded.exp;
+			const now = Math.floor(Date.now() / 1000);
+			const timeRemaining = Math.max(expiryTime - now, 0);
+
+			// Add to the blacklist with the exact remaining duration
+			if (timeRemaining > 0) {
+				await redis.setex(`blacklist_${token}`, timeRemaining, 'true');
+				return true;
+			}
+
+			return false;
+		} catch (error) {
+			console.error('Token blacklisting error:', error);
+			return false;
+		}
+	}
+
 }
 
 export default new JWTService();

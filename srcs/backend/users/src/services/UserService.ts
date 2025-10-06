@@ -2,7 +2,8 @@ import { AuthClient } from '../clients/AuthClient';
 import { LiteStats, StatsClient } from '../clients/StatsClient';
 import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
-import { GoogleUserCreationData, LocalUserCreationData, PasswordUpdateData, UpdateRawData } from '../schemas';
+import { Credentials, GoogleUserCreationData, LocalUserCreationRawData, PasswordUpdateData, UpdateRawData } from '../schemas';
+import { hashPassword, verifyPassword } from '../utils/crypto';
 
 export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "google_sub" | "avatar_filename"> & LiteStats & {
   avatar_url: string | null;
@@ -21,11 +22,14 @@ export class UserService {
     this.statsClient = new StatsClient();
   }
 
-  public async createLocalUser(data: LocalUserCreationData) {
+  public async createLocalUser(data: LocalUserCreationRawData) {
+
+    const password_hash = await hashPassword(data.password);
+
     const user_data = {
       username: data.username,
       email: data.email,
-      password_hash: data.password_hash,
+      password_hash,
       alias: data.alias ?? data.username,
     };
 
@@ -45,7 +49,24 @@ export class UserService {
     return { user_id };
   }
 
-  
+  public async resolveLocalUser(credentials: Credentials) {
+    const user = await this.getUserByLogin(credentials.login);
+    if (user.google_sub) {
+      const error = new Error('Not a local user');
+      (error as any).code = 'NOT_A_LOCAL_USER';
+      throw error;
+    }
+    if (!user.password_hash) {
+     throw new Error("No password hash for local user"); 
+    }
+    const valid = await verifyPassword(credentials.password, user.password_hash)
+    if (!valid) {
+      const error = new Error('Invalid credentials');
+      (error as any).code = 'INVALID_CREDENTIALS';
+      throw error;
+    }
+    return user;
+  }
 
   public async getUserByLogin(login: string): Promise<UserRow> {
     const user = await this.userRepository.findByLogin(login);
@@ -108,7 +129,7 @@ export class UserService {
     return changes;
   }
 
-  private async updatePassword(user_id: number, update_data: PasswordUpdateData): Promise<string> {
+  private async updatePassword(user_id: number, password: PasswordUpdateData): Promise<string> {
 
     const user = await this.getUserById(user_id);
     if (!user.password_hash) {
@@ -116,8 +137,13 @@ export class UserService {
       (error as any).code = 'FORBIDDEN_OPERATION';
       throw error;
     }
-    const { password_hash } = await this.authClient.updatePasswordHash(update_data, user.password_hash);
-    return password_hash;
+    const valid = await verifyPassword(password.old, user.password_hash);
+    if (!valid) {
+      const error = new Error('Invalid credentials');
+      (error as any).code = 'INVALID_CREDENTIALS';
+      throw error;
+    }
+    return await hashPassword(password.new);
   } 
 
   public async getUserById(id: number): Promise<UserRow> {

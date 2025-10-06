@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from '../controllers/UserController';
 import { 
-  LocalUserCreationData, 
+  LocalUserCreationRawData, 
   GoogleUserCreationData, 
   createLocalUserSchema,
   createGoogleUserSchema, 
@@ -12,7 +12,9 @@ import {
   UserIdParams, 
   userIdSchema, 
   AvatarParams, 
-  avatarFilenameSchema 
+  avatarFilenameSchema, 
+  Credentials,
+  credentialsSchema
 } from "../schemas";
 import { userAuthMiddleware } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
@@ -21,13 +23,23 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
 
   // Create local user account (email/password signup)
-  fastify.post<{ Body: LocalUserCreationData }>(
+  fastify.post<{ Body: LocalUserCreationRawData }>(
     "/local",
     { 
-      schema: { body: createLocalUserSchema},
+      schema: { body: createLocalUserSchema },
       preHandler: internalAuthMiddleware 
     },
     userController.createLocalAccount.bind(userController)
+  );
+
+  // Resolve local user (email/password signin)
+  fastify.post<{ Body: Credentials }>(
+    "/local/resolve",
+    {
+      schema: { body: credentialsSchema },
+      preHandler: internalAuthMiddleware,
+    },
+    userController.resolveLocalUser.bind(userController)
   );
 
   // Create Google OAuth user account

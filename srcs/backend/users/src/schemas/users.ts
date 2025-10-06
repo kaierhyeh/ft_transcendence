@@ -16,14 +16,11 @@ const emailSchema = {
   maxLength: 254
 } as const;
 
+
 const passwordSchema = {
   type: "string",
-  minLength: 8
-} as const;
-
-const passwordHashSchema = {
-  type: "string",
-  minLength: 8
+  minLength: 8,
+  maxLength: 128,    // Reasonable password limit
 } as const;
 
 const aliasSchema = {
@@ -48,11 +45,11 @@ const twoFAEnabledSchema = {
 // For local user creation
 export const createLocalUserSchema = {
   type: "object",
-  required: ["username", "email", "password_hash"],
+  required: ["username", "email", "password"],
   properties: {
     username: usernameSchema,
     email: emailSchema,
-    password_hash: passwordHashSchema,
+    password: passwordSchema,
     alias: aliasSchema
   },
   additionalProperties: false,
@@ -147,10 +144,21 @@ export const avatarFilenameSchema = {
   additionalProperties: false,
 } as const;
 
-export type LocalUserCreationData = FromSchema<typeof createLocalUserSchema>;
+export const credentialsSchema = {
+  type: "object",
+  required: ["login", "password"],
+  properties: {
+    login: {type: "string"},
+    password: passwordSchema,
+  },
+  additionalProperties: false,
+} as const;
+
+export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
 export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
 export type AvatarParams = FromSchema<typeof avatarFilenameSchema>;
+export type Credentials = FromSchema<typeof credentialsSchema>;

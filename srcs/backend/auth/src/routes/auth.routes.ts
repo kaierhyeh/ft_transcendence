@@ -1,12 +1,13 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service';
 import authUtils from '../utils/auth.utils';
-import { GameSessionClaims, gameSessionClaimsSchema, LoginRequest, loginSchema, PasswordUpdateData, passwordUpdateSchema, signupFormSchema, SignupRequest } from '../schemas/auth';
+import { GameSessionClaims, gameSessionClaimsSchema, LoginCredentials, loginSchema, signupFormSchema, SignupRequest } from '../schemas/auth';
 import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service';
 import { CONFIG } from '../config';
 import { internalAuthMiddleware } from '../middleware/internal-auth.middleware';
+import jwtService from '../services/jwt.service';
 
 
 interface AuthenticatedRequest extends FastifyRequest {
@@ -20,35 +21,28 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 	const logger = (fastify as any).logger;
 
 	// Login route
-	fastify.post<{ Body: LoginRequest }>(
+	fastify.post<{ Body: LoginCredentials }>(
 		'/login',
 		{ schema: { body: loginSchema } },
 		async (request, reply) => {
 		try {
-			const data = request.body;
-			const user = await authService.validateLocalUser(data);
+			const credentials = request.body;
+			const result = await authService.loginLocalUser(credentials);
 
-			// Check for 2FA
-			if (user.two_fa_enabled) {
-				const tempToken = await authService.generateTempToken(
-					{ userId: user.user_id }, 
-					"2fa", 
-					300
-				);
-				
+			if (result.step === "2fa_required") {
 				return reply.code(202).send({
-					step: "2fa_required",
+					...result,
 					message: "2FA verification required",
-					temp_token: tempToken
 				});
 			}
 
-			// Generate tokens using new USER_SESSION method
-			const { accessToken, refreshToken } = await authService.generateTokens(user.user_id);
+			const { accessToken, refreshToken } = result;
 
 			// Set cookies
 			authUtils.ft_setCookie(reply, accessToken, 15);
 			authUtils.ft_setCookie(reply, refreshToken, 7);
+
+			const user = await authService.getUserProfileByLogin(credentials.login);
 
 			return reply.code(200).send({
 				success: true,
@@ -67,7 +61,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			}
 
 			 if (error.code === 'NOT_A_LOCAL_USER') {
-				reply.status(400).send({
+				reply.status(405).send({
 					error: "This account was created with Google. Please use Google Sign-In."
 				});
 				return;
@@ -80,6 +74,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 				});
 				return;
 			}
+
 
 			logger.error('Login error', error as Error, {
 				ip: (request as any).ip
@@ -124,19 +119,16 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 				});
 			}
 
-			// Hash password
-			const password_hash = await authUtils.hashPassword(password);
-			console.log("password hashed");
 			// Create user
 			const { user_id } = await authService.register({
 				username: checked_login,
 				email,
-				password_hash
+				password,
 			});
 			console.log("user created: ", user_id);
 
 			// Generate tokens using new USER_SESSION method
-			const { accessToken, refreshToken } = await authService.generateTokens(user_id);
+			const { accessToken, refreshToken } = await jwtService.generateTokens(user_id);
 
 			// Set cookies
 			authUtils.ft_setCookie(reply, accessToken, 15);
@@ -484,44 +476,5 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 		}
 	});
 
-	// Update password hash route - for internal service communication
-	fastify.put<{ Body: PasswordUpdateData }>(
-		"/hash-password",
-		{ 
-			schema: { body: passwordUpdateSchema },
-			preHandler: internalAuthMiddleware
-		},
-		async (request, reply) => {
-			try {
-				const data = request.body;
-				const password_hash = await authService.updatePasswordHash(
-					data.old_hash,
-					data.old_password,
-					data.new_password
-				);
-				
-				reply.send({ password_hash });
-			} catch (error: any) {
-				if (error.code === 'INVALID_CURRENT_PASSWORD') {
-					return reply.status(401).send({
-						error: "Invalid current password"
-					});
-				}
-
-				if (error.code === 'USER_NOT_FOUND') {
-					return reply.status(404).send({
-						error: "User not found"
-					});
-				}
-
-				logger.error('Password hash update error', error as Error, {
-					ip: (request as any).ip
-				});
-				return reply.status(500).send({
-					error: 'Internal server error during password hash update'
-				});
-			}
-		}
-	);
 
 }

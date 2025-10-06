@@ -1,4 +1,5 @@
 import { CONFIG } from "../config";
+import { LoginCredentials } from "../schemas/auth";
 import authUtils from "../utils/auth.utils";
 
 interface ErrorResponse {
@@ -7,22 +8,22 @@ interface ErrorResponse {
   validation?: any[];
 }
 
-export interface UserData {
+export interface UserProfile {
   user_id: number;
   username: string;
-  password_hash: string;
   avatar_url: string | null;
-  google_sub: string | null;
-  two_fa_enabled: boolean;
 }
 
-export type UserProfile = Omit<UserData, "google_sub">;
+export interface LocalUserResolution {
+  user_id: number;
+  two_fa_enabled: boolean;
+}
 
 
 export interface LocalUserCreationData {
   username: string;
   email: string;
-  password_hash: string;
+  password: string;
 }
 
 export class UserClient {
@@ -61,7 +62,7 @@ export class UserClient {
 
   async getUserByLogin(
     login: string
-  ): Promise< UserData > {
+  ): Promise< UserProfile > {
       const authHeaders = this.getAuthHeaders();
 
       const response = await fetch(`${this.base_url}/users/login/${login}`, {
@@ -78,7 +79,45 @@ export class UserClient {
         throw error;
       }
 
-      return await response.json() as UserData;
+      return await response.json() as UserProfile;
+  }
+
+  async resolveLocalUser(credentials: LoginCredentials): Promise<LocalUserResolution> {
+    const authHeaders = this.getAuthHeaders();
+
+    const response = await fetch(`${this.base_url}/users/local/resolve`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders
+      },
+      body: JSON.stringify(credentials)
+    });
+
+    
+    if (!response.ok) {
+      const errorBody = await response.json() as ErrorResponse;
+      const errorMessage = errorBody.message || errorBody.error || `Get user profile failed: ${response.status}`;
+      
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      (error as any).details = errorBody;
+      
+      if (response.status === 404) {
+        (error as any).code = 'USER_NOT_FOUND';
+      } else if (response.status === 401) {
+        (error as any).code = 'INVALID_CREDENTIALS';
+      } else if (response.status === 405) {
+        (error as any).code = 'NOT_A_LOCAL_USER';
+        error.message = "This account was created with Google. Please use Google Sign-In."
+      } else {
+        (error as any).code = 'INTERNAL_ERROR';
+      }
+      
+      throw error;
+    }
+    
+    return response.json() as Promise<LocalUserResolution>;
   }
 
   async getUserProfile(
@@ -105,6 +144,6 @@ export class UserClient {
     return await response.json() as UserProfile;
   }
 
-
-
 }
+
+export default new UserClient();
