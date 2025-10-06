@@ -1,11 +1,12 @@
 import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
-import {initMenu} from "./menu.js";
+import {initMenu} from "./menu/menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
 import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
+import { initDeviceDetection } from "./utils/deviceDetect.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -110,5 +111,8 @@ window.onpopstate = (e) => {
 // Initialize browser detection and compatibility
 addBrowserClass();
 logBrowserInfo();
+
+// Initialize device detection and responsive support
+initDeviceDetection();
 
 navigate(location.pathname, false);

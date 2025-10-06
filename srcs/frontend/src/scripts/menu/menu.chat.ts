@@ -1,5 +1,5 @@
 import { clearEvents, hideElementById, setElementActive, setMenuTitle, showElementById } from "./menu.utils.js";
-import { i18n } from './i18n/i18n.js';
+import { i18n } from '../i18n/i18n.js';
 
 export interface Message {
 	id: number;

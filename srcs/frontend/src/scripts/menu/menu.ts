@@ -2,7 +2,7 @@ import {openChatsSection} from "./menu.chat.js";
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
 import {openUsersSection} from "./menu.users.js";
 import {openFriendsSection} from "./menu.friends.js";
-import { initializeLanguageSwitcher } from "./i18n/index.js";
+import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
 
