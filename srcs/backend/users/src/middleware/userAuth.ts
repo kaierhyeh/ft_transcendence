@@ -24,16 +24,25 @@ export async function userAuthMiddleware(
 	reply: FastifyReply
 ): Promise<void> {
 	try {
+		let token: string | undefined;
+
 		// Extract token from Authorization header
 		const authHeader = request.headers.authorization;
-		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		if (authHeader?.startsWith("Bearer ")) {
+			token = authHeader.substring(7); // Remove 'Bearer ' prefix
+		}
+
+		if (!token && request.cookies?.accessToken) {
+			token = request.cookies.accessToken;
+		}
+
+		if (!token) {
 			return reply.code(401).send({
 				error: 'Unauthorized',
-				message: 'Missing or invalid Authorization header'
+				message: 'No access token provided',
 			});
 		}
 
-		const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
 		// Verify the user JWT token
 		const payload = await verifyUserSessionJWT(token);

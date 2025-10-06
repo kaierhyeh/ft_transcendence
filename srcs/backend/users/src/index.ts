@@ -6,6 +6,7 @@ import servicesPlugin from "./plugins/services";
 import multipart from "@fastify/multipart";
 import fs from "fs";
 import path from "path";
+import cookie from "@fastify/cookie";
 
 const fastify = Fastify({ logger: true });
 
@@ -17,6 +18,7 @@ async function run() {
     }
   });
   
+	await fastify.register(cookie);
   await fastify.register(repositoriesPlugin);
   await fastify.register(servicesPlugin);
 
