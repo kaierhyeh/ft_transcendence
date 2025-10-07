@@ -42,15 +42,11 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			authUtils.ft_setCookie(reply, accessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY, 'access');
 			authUtils.ft_setCookie(reply, refreshToken, CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY, 'refresh');
 
-			const user = await authService.getUserProfileByLogin(credentials.login);
 
 			return reply.code(200).send({
-				success: true,
-				id: user.user_id,
-				username: user.username,
-				avatar_url: user.avatar_url,
-				message: "Login successful"
-			});
+                success: true,
+                message: "Login successful"
+            });
 
 		} catch (error: any) {
 			 if (error.code === 'INVALID_CREDENTIALS') {
@@ -136,9 +132,6 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			return reply.code(201).send({
 				success: true,
-				id: user_id,
-				username: checked_login,
-				email: email,
 				message: 'User registered successfully'
 			});
 

@@ -4,6 +4,8 @@ import {initMenu} from "./menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import {loadHeader} from "./header.js";
+import { initSignup } from "./auth/signup.js";
+import { initLogin } from "./auth/login.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -21,8 +23,8 @@ const routes: Record<string, string> = {
 	"/user/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
 	"/user/block-list": "./html/user/block_list.html",
-	"/signup": "./html/signup.html",
-	"/login": "./html/login.html",
+	"/signup": "./html/auth/signup.html",
+	"/login": "./html/auth/login.html",
 };
 
 const initScripts: Record<string, () => void> = {
@@ -41,6 +43,14 @@ const initScripts: Record<string, () => void> = {
 	"/profile": () => {
 		if (typeof initProfile === "function")
 			initProfile();
+	},
+	"/signup": () => {
+		if (typeof initProfile === "function")
+			initSignup();
+	},
+	"/login": () => {
+		if (typeof initProfile === "function")
+			initLogin();
 	},
 	"/tournament": () => {
 		if (typeof initTournament === "function")
@@ -84,6 +94,14 @@ async function navigate(path: string, push: boolean = true)
 	if (file)
 	{
 		try {
+			// Store previous page before navigating to login
+			if (path === '/login' && push) {
+				const currentPath = window.location.pathname;
+				if (currentPath !== '/login' && currentPath !== '/signup') {
+					sessionStorage.setItem('previousPage', currentPath);
+				}
+			}
+
 			const res = await fetch(file);
 			if (!res.ok)
 				throw new Error("File not found.");

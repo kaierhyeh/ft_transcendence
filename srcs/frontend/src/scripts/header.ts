@@ -43,10 +43,15 @@ function removeHeader() {
 async function checkAuth(): Promise<boolean> {
     try {
         const response = await fetch('/api/auth/verify', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include'
         });
-        return response.ok;
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.success;
+        }
+        return false;
     } catch {
         return false;
     }
