@@ -1,3 +1,11 @@
+
+/*
+remaining bugs to fix : 
+
+les deux joueurs connectent et peuvent jouer ensemble mais laffichage des boutons 2/4players 
+ne sont pas coherant. Le j1 voit : match trouvé sur les 2 boutons
+Le j2 voit joining.... et le bouton 4players intact.
+Indique erreur de gestion mais pas grave. A FIXER */
 import { user } from './users.js';
 import { showInfo } from './notifications.js'; 
 
@@ -5,6 +13,8 @@ let gameWebSocket: WebSocket | null = null;
 let currentGameId: number | null = null;
 let currentParticipantId: string | null = null;
 let matchmakingWebSocket: WebSocket | null = null;
+let gameCanvas: HTMLCanvasElement | null = null;
+let gameContext: CanvasRenderingContext2D | null = null;
 
 export default function initRemoteGame():void {
     console.log("create remote interface");
@@ -120,7 +130,7 @@ function openMatchmakingWebSocket(): void {
     }
     
     const host = window.location.host;
-    const wsUrl = protocol + '//' + host + '/game/matchmaking/ws?participant_id=' + currentParticipantId;
+    const wsUrl = protocol + '//' + host + '/game/ws?participant_id=' + currentParticipantId;
     
     console.log('Ouverture WebSocket matchmaking: ' + wsUrl);
     
@@ -137,7 +147,7 @@ function openMatchmakingWebSocket(): void {
             const data = JSON.parse(event.data);
             
             if (data.type === 'game_ready') {
-                console.log('MATCH TROUVÉ! game_id: ' + data.game_id);
+                console.log('Match found, game_id: ' + data.game_id);
                 
                 if (matchmakingWebSocket != null) {
                     matchmakingWebSocket.close();
@@ -206,7 +216,14 @@ function connectToGame(gameId: number): void {
     };
     
     gameWebSocket.onmessage = function(event) {
-        console.log("Msg from serveur:", event.data);
+        try {
+          const msg = JSON.parse(event.data);  
+            if (msg.type === "game_state") {
+                drawRemoteGame(msg.data);
+            }
+        } catch (error) {
+         console.error("Erreur parsing:", error);
+        }
     };
     
     gameWebSocket.onclose = function(event) {
@@ -274,7 +291,7 @@ function onKeyReleased(event: KeyboardEvent): void {
         console.log("debug: stop bracket");
     }
 }
-
+/*
 function matchFound(gameId: number): void {
     console.log("debug before show match found, game id is :", gameId);
     const button = document.getElementById('remote-2p-btn');
@@ -282,4 +299,80 @@ function matchFound(gameId: number): void {
         button.textContent = "Match found! Connecting...";
     }
     connectToGame(gameId);
+}*/
+
+function drawRemoteGame(state: any): void {
+    if (gameCanvas == null) {
+        gameCanvas = document.getElementById("pong") as HTMLCanvasElement;
+        if (gameCanvas == null) return;
+        
+        gameContext = gameCanvas.getContext("2d");
+        if (gameContext == null) return;
+    }
+    if (gameContext == null) return;
+    const ctx = gameContext;
+    const canvas = gameCanvas;
+    
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.strokeStyle = "white";
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    let is4PlayerMode = false;
+    if (state.players) {
+        if (state.players["top-left"]) {
+            is4PlayerMode = true;
+        }
+    }
+    ctx.fillStyle = "white";
+    
+    if (is4PlayerMode) {
+        const positions = ["top-left", "bottom-left", "top-right", "bottom-right"];
+        for (let i = 0; i < positions.length; i++) {
+            const player = state.players[positions[i]];
+            if (player && player.paddle) {
+                ctx.fillRect(player.paddle.x, player.paddle.y, 10, 50);
+            }
+        }
+    } else {
+        if (state.players.left) {
+            const paddle = state.players.left.paddle;
+            ctx.fillRect(paddle.x, paddle.y, 10, 50);
+        }
+        if (state.players.right) {
+            const paddle = state.players.right.paddle;
+            ctx.fillRect(paddle.x, paddle.y, 10, 50);
+        }
+    }
+    if (state.ball) {
+        ctx.fillRect(state.ball.x - 5, state.ball.y - 5, 10, 10);
+    }
+    
+    ctx.font = "40px Arial";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    
+    let leftScore = 0;
+    let rightScore = 0;
+    
+    if (state.score && state.score.left) {
+        leftScore = state.score.left;
+    }
+    if (state.score && state.score.right) {
+        rightScore = state.score.right;
+    }
+    
+    ctx.fillText(leftScore.toString(), canvas.width / 4, 50);
+    ctx.fillText(rightScore.toString(), (3 * canvas.width) / 4, 50);
+    
+    if (state.winner) {
+        ctx.font = "60px Arial";
+        ctx.fillText("WINNER : 🏆 🏆 \n   Team " + state.winner, canvas.width / 2, canvas.height / 2);
+    }
 }
