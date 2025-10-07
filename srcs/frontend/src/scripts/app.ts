@@ -14,7 +14,14 @@ const routes: Record<string, string> = {
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/profile": "./html/profile.html",
-	"/oauth-callback": "./html/profile.html"
+	"/user/profile": "./html/user/profile.html",
+	"/oauth-callback": "./html/profile.html",
+	"/user/settings":"./html/user/settings.html",
+	"/user/match-history": "./html/user/match_history.html",
+	"/user/friends": "./html/user/friends.html",
+	"/user/block-list": "./html/user/block_list.html",
+	"/signup": "./html/signup.html",
+	"/login": "./html/login.html",
 };
 
 const initScripts: Record<string, () => void> = {
