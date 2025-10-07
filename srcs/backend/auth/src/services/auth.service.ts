@@ -55,7 +55,7 @@ export class AuthService {
 		return { step: "done", ...tokens };
 	}
 
-	async checkUserExistence(login: string): Promise<boolean> {
+	async checkUserExistenceByLogin(login: string): Promise<boolean> {
 		try {
 			await userClient.getUserByLogin(login);
 		} catch(error) {
@@ -67,6 +67,31 @@ export class AuthService {
 				// Authentication issue with users service - log for debugging
 				console.error('🔐 Internal auth failed when checking user existence:', {
 					login,
+					status,
+					message: (error as any).message,
+					details: (error as any).details
+				});
+				// Treat as "user not found" for now, but log the issue
+				return false;
+			}
+			// Re-throw other errors (500, network issues, etc.)
+			throw error;
+		}
+		return true;
+    }
+
+	async checkUserExistenceById(user_id: number): Promise<boolean> {
+		try {
+			await userClient.getUserProfile(user_id);
+		} catch(error) {
+			const status = (error as any).status;
+			if (status === 404) {
+				return false; // User not found
+			}
+			if (status === 401) {
+				// Authentication issue with users service - log for debugging
+				console.error('🔐 Internal auth failed when checking user existence:', {
+					login: user_id,
 					status,
 					message: (error as any).message,
 					details: (error as any).details
@@ -148,10 +173,10 @@ export class AuthService {
 	async validate_and_refresh_Tokens(fastify: any, accessToken: string, refreshToken: string) {
 		try {
 			if (!accessToken) {
-				fastify.log.warn('No access token provided.');
+				console.warn('⚠️ No access token provided.');
 				throw new Error('No access token provided.');
 			}
-			fastify.log.info('ACCESS TOKEN CHECK...');
+			console.log('🔍 ACCESS TOKEN CHECK...');
 
 			// Check if the token is valid using RSA public key
 			const decoded = jwt.verify(accessToken, CONFIG.JWT.USER.PUBLIC_KEY, { 
@@ -165,57 +190,57 @@ export class AuthService {
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${accessToken}`);
 			if (isBlacklisted) {
-				fastify.log.warn('Token is blacklisted.');
+				console.warn('⚠️ Token is blacklisted.');
 				throw new Error('Token is blacklisted.');
 			}
 
 			// Check if user exists in the database
-			if (fastify.db) {
-				const userExists = fastify.db.prepare("SELECT id FROM users WHERE id = ?").get(user_id);
-
-				if (!userExists) {
-					fastify.log.warn('User not found in the database, revoking tokens...');
+			try {
+				await this.checkUserExistenceById(user_id);
+			} catch(error) {
+				if ((error as any).status === 404) {
+					console.warn('⚠️ User not found in the users service, revoking tokens...');
 					await this.revokeTokens(user_id);
-					throw new Error('User not found in the database, tokens revoked.');
+					throw new Error('User not found in the users service, tokens revoked.');
 				}
 			}
 
 			// Verify if the token is the latest
 			const currentAccessToken = await redis.get(`access_${user_id}`);
 			if (accessToken !== currentAccessToken) {
-				fastify.log.warn(`Token is not the latest one.`);
+				console.warn(`⚠️ Token is not the latest one.`);
 				throw new Error('Token is not the latest one.');
 			}
 
-			fastify.log.info('Access Token is valid.\n');
+			console.log('✅ Access Token is valid.\n');
 			return {
 				success: true,
 				userId: user_id
 			};
 
 		} catch (error) {
-			fastify.log.warn('Access token invalid, Attempting to refresh it...');
-			fastify.log.info('REFRESH TOKEN CHECK...');
+			console.warn('⚠️ Access token invalid, Attempting to refresh it...');
+			console.log('🔍 REFRESH TOKEN CHECK...');
 			// If the access token is expired, try to refresh it using the refresh token
 			if (!refreshToken) {
-				fastify.log.error(error, 'No refresh token provided.');
+				console.error('❌ No refresh token provided.', error);
 				return { success: false, reason: 'No refresh token provided.' };
 			}
 
 			try {
 				const result = await this.refreshAccessToken(fastify, refreshToken, accessToken);
 				if (!result.success) {
-					fastify.log.warn(`Failed to refresh access token, invalid refresh token.`);
+					console.warn(`⚠️ Failed to refresh access token, invalid refresh token.`);
 					return { success: false, reason: 'Failed to refresh access token, invalid refresh token.' };
 				}
-				fastify.log.info(`New access token generated successfully.`);
+				console.log(`✅ New access token generated successfully.`);
 				return {
 					success: true,
 					userId: result.userId,
 					newAccessToken: result.newAccessToken,
 				};
 			} catch (refreshError) {
-				fastify.log.error(refreshError, 'Fail to verify refresh token.');
+				console.error('❌ Fail to verify refresh token.', refreshError);
 				return { success: false, reason: 'Fail to verify refresh token.' };
 			}
 		}
@@ -236,16 +261,16 @@ export class AuthService {
 			// Check if the token is blacklisted
 			const isBlacklisted = await redis.get(`blacklist_${refreshToken}`);
 			if (isBlacklisted) {
-				fastify.log.warn('refreshToken is blacklisted.');
+				console.warn('⚠️ refreshToken is blacklisted.');
 				return { success: false, reason: 'refreshToken is blacklisted.' };
 			}
 
 			// Check if user exists in the database
-			if (fastify.db) {
-				const userExists = fastify.db.prepare("SELECT id FROM users WHERE id = ?").get(user_id);
-
-				if (!userExists) {
-					fastify.log.warn('User not found in the database, revoking tokens...');
+			try {
+				await this.checkUserExistenceById(user_id);
+			} catch(error) {
+				if ((error as any).status === 404) {
+					console.warn('⚠️ User not found in the users service, revoking tokens...');
 					await this.revokeTokens(user_id);
 					return { success: false, reason: 'User not found in the database, tokens revoked' };
 				}
@@ -254,14 +279,14 @@ export class AuthService {
 			// Check if it's the current refresh token
 			const currentRefreshToken = await redis.get(`refresh_${user_id}`);
 			if (refreshToken !== currentRefreshToken) {
-				fastify.log.warn(`Token is not the latest one.`);
+				console.warn(`⚠️ Token is not the latest one.`);
 				return { success: false, reason: 'Token is not the latest one.' };
 			}
 
 			// Blacklist the old access token (if provided)
 			if (oldAccessToken) {
 				await jwtService.blacklistToken(oldAccessToken);
-				fastify.log.info('Old access token has been blacklisted.');
+				console.log('🗑️ Old access token has been blacklisted.');
 			}
 
 			// Create a new access token using RSA private key
@@ -295,7 +320,7 @@ export class AuthService {
 					newAccessToken
 				};
 		} catch (error) {
-			fastify.log.error(error, 'Fail to verify refresh token.');
+			console.error('❌ Fail to verify refresh token.', error);
 			return { success: false, reason: 'Fail to verify refresh token.' };
 		}
 	}

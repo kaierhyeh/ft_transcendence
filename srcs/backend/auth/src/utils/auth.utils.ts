@@ -16,34 +16,31 @@ export class AuthUtils {
 
 
 	// Configure and set cookies with flexible expiration time
-	ft_setCookie(reply: any, token: string, duration: number): void {
-		const cookieOptions = {
-			path: '/',
-			secure: true,
-			httpOnly: true,
-			sameSite: 'none' as const,
-		};
+	ft_setCookie(reply: any, token: string, duration: string, tokenType: 'access' | 'refresh' = 'access'): void {
+		const maxAge = this.parseDuration(duration) / 1000; // seconds
+		const cookieName = tokenType === 'access' ? 'accessToken' : 'refreshToken';
+		
+		reply.setCookie(cookieName, token, {
+			path: CONFIG.COOKIE.OPTIONS.PATH,
+			secure: CONFIG.COOKIE.OPTIONS.SECURE,
+			httpOnly: CONFIG.COOKIE.OPTIONS.HTTP_ONLY,
+			sameSite: CONFIG.COOKIE.OPTIONS.SAME_SITE,
+			maxAge
+		});
+	}
 
-		// Accepted cases: 1min (debug), 5min, 15min or 7days
-		if (duration === 1) { // 🔧 Debug purpose only
-			reply.setCookie('accessToken', token, {
-				...cookieOptions,
-				maxAge: 60 // 1 minute
-			});
-		} else if (duration === 5 || duration === 15) {
-			reply.setCookie('accessToken', token, {
-				...cookieOptions,
-				maxAge: duration * 60
-			});
-		} else if (duration === 7) {
-			reply.setCookie('refreshToken', token, {
-				...cookieOptions,
-				maxAge: duration * 24 * 60 * 60
-			});
-		} else {
-			throw new Error("Invalid duration: only 1 (debug), 5, 15 (minutes) or 7 (days) are allowed.");
+	private parseDuration(duration: string): number {
+		// Supports "15m", "7d", "1h", "30s"
+		const match = /^(\d+)([smhd])$/.exec(duration);
+		if (!match) throw new Error(`Invalid duration format: ${duration}`);
+		const value = parseInt(match[1], 10);
+		switch (match[2]) {
+			case 's': return value * 1000;
+			case 'm': return value * 60 * 1000;
+			case 'h': return value * 60 * 60 * 1000;
+			case 'd': return value * 24 * 60 * 60 * 1000;
+			default: throw new Error(`Unknown duration unit: ${match[2]}`);
 		}
-		return reply;
 	}
 
 	/**

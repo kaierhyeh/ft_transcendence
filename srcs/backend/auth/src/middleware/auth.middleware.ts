@@ -25,6 +25,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import authService from '../services/auth.service';
 import authUtils from '../utils/auth.utils';
 import { JWTType, UserSessionPayload, GameSessionPayload, InternalAccessPayload } from '../types';
+import { CONFIG } from '../config';
 
 interface AuthenticatedRequest {
 	cookies?: { accessToken?: string; refreshToken?: string };
@@ -110,7 +111,7 @@ async function validateUserSession(
 	// If access token was refreshed, update cookie
 	if (result.newAccessToken) {
 		request.log.info('User access token refreshed.');
-		authUtils.ft_setCookie(reply, result.newAccessToken, 15);
+		authUtils.ft_setCookie(reply, result.newAccessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
 	}
 
 	// Store user info with JWT type

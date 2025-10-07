@@ -38,9 +38,9 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			const { accessToken, refreshToken } = result;
 
-			// Set cookies
-			authUtils.ft_setCookie(reply, accessToken, 15);
-			authUtils.ft_setCookie(reply, refreshToken, 7);
+			// Set cookies with proper token types
+			authUtils.ft_setCookie(reply, accessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY, 'access');
+			authUtils.ft_setCookie(reply, refreshToken, CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY, 'refresh');
 
 			const user = await authService.getUserProfileByLogin(credentials.login);
 
@@ -111,7 +111,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			const email = isEmail ? login : `${login}@localhost.local`;
 
 			// Check if user already exists (check both username and email fields)
-			const existingUser = await authService.checkUserExistence(login);
+			const existingUser = await authService.checkUserExistenceByLogin(login);
 			if (existingUser) {
 				return reply.code(409).send({
 					success: false,
@@ -130,9 +130,9 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			// Generate tokens using new USER_SESSION method
 			const { accessToken, refreshToken } = await jwtService.generateTokens(user_id);
 
-			// Set cookies
-			authUtils.ft_setCookie(reply, accessToken, 15);
-			authUtils.ft_setCookie(reply, refreshToken, 7);
+			// Set cookies with proper token types
+			authUtils.ft_setCookie(reply, accessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY, 'access');
+			authUtils.ft_setCookie(reply, refreshToken, CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY, 'refresh');
 
 			return reply.code(201).send({
 				success: true,
@@ -276,60 +276,86 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 	// 	}
 	// });
 
-	// // Verify token route - check if user is authenticated
-	// fastify.post('/verify', async (request, reply) => {
-	// 	try {
-	// 		const accessToken = request.cookies?.accessToken;
-	// 		const refreshToken = request.cookies?.refreshToken;
+	// Verify token route - check if user is authenticated
+	fastify.post('/verify', async (request, reply) => {
+		try {
+			const accessToken = request.cookies?.accessToken;
+			const refreshToken = request.cookies?.refreshToken;
 			
-	// 		if (!accessToken && !refreshToken) {
-	// 			return reply.code(401).send({
-	// 				success: false,
-	// 				error: 'No authentication token provided'
-	// 			});
-	// 		}
-
-	// 		const verification = await authService.validate_and_refresh_Tokens(fastify, accessToken || '', refreshToken || '');
+			console.log('🔍 Token verification attempt:', {
+				hasAccessToken: !!accessToken,
+				hasRefreshToken: !!refreshToken,
+				accessTokenLength: accessToken ? accessToken.length : 0,
+				refreshTokenLength: refreshToken ? refreshToken.length : 0
+			});
 			
-	// 		if (!verification.success) {
-	// 			return reply.code(401).send({
-	// 				success: false,
-	// 				error: 'Invalid or expired token'
-	// 			});
-	// 		}
+			if (!accessToken && !refreshToken) {
+				console.warn('⚠️ No tokens provided for verification');
+				return reply.code(401).send({
+					success: false,
+					error: 'No authentication token provided'
+				});
+			}
 
-	// 		// If the access token was refreshed, update the cookie
-	// 		if (verification.newAccessToken) {
-	// 			authUtils.ft_setCookie(reply, verification.newAccessToken, 15);
-	// 		}
-
-	// 		// Get user profile from users service
-	// 		const user = await authService.getUserProfile(verification.userId!);
-
-	// 		return reply.code(200).send({
-	// 			success: true,
-	// 			id: user.user_id,
-	// 			username: user.username,
-	// 			avatar_url: user.avatar_url
-	// 		});
-
-	// 	} catch (error: any) {
-	// 		if (error.code === 'USER_NOT_FOUND') {
-	// 			return reply.code(404).send({
-	// 				success: false,
-	// 				error: 'User not found'
-	// 			});
-	// 		}
+			const verification = await authService.validate_and_refresh_Tokens(fastify, accessToken || '', refreshToken || '');
 			
-	// 		logger.error('Token verification error', error as Error, {
-	// 			ip: (request as any).ip
-	// 		});
-	// 		return reply.code(500).send({
-	// 			success: false,
-	// 			error: 'Internal server error during token verification'
-	// 		});
-	// 	}
-	// });
+			if (!verification.success) {
+				console.warn('⚠️ Token validation failed:', {
+					reason: verification.reason,
+					hasAccessToken: !!accessToken,
+					hasRefreshToken: !!refreshToken
+				});
+				return reply.code(401).send({
+					success: false,
+					error: verification.reason || 'Invalid or expired token'
+				});
+			}
+
+			// If the access token was refreshed, update the cookie
+			if (verification.newAccessToken) {
+				console.log('🔄 Access token refreshed, updating cookie');
+				authUtils.ft_setCookie(reply, verification.newAccessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY, 'access');
+			}
+
+			// Get user profile from users service
+			const user = await authService.getUserProfileById(verification.userId!);
+
+			console.log('✅ Token verification successful:', {
+				userId: verification.userId,
+				tokenRefreshed: !!verification.newAccessToken
+			});
+
+			return reply.code(200).send({
+				success: true,
+				id: user.user_id,
+				username: user.username,
+				avatar_url: user.avatar_url
+			});
+
+		} catch (error: any) {
+			if (error.code === 'USER_NOT_FOUND') {
+				console.warn('⚠️ User not found during token verification:', {
+					userId: error.userId
+				});
+				return reply.code(404).send({
+					success: false,
+					error: 'User not found'
+				});
+			}
+			
+			console.error('❌ Token verification error:', {
+				ip: (request as any).ip,
+				errorCode: error.code,
+				errorStatus: error.status,
+				errorMessage: error.message,
+				stack: error.stack
+			});
+			return reply.code(500).send({
+				success: false,
+				error: 'Internal server error during token verification'
+			});
+		}
+	});
 
 
 	// fastify.get('/account_type', async (request: FastifyRequest, reply: FastifyReply) => {
