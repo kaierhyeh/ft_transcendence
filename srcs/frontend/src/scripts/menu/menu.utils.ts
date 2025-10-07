@@ -1,4 +1,4 @@
-import { i18n } from './i18n/i18n.js';
+import { i18n } from '../i18n/i18n.js';
 
 // Hide an element by its ID
 export function hideElementById(id: string): void {

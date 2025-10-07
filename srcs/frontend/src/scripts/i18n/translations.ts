@@ -113,7 +113,7 @@ export const translations = {
 
     // Home Page
     "pongTitle": "乒乓球 1972",
-    "playPong": "玩乒乓球",
+    "playPong": "開始遊戲",
     "launchTournament": "開始比賽",
     "myProfile": "個人資料",
     "seeStats": "統計資料",

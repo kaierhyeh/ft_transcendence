@@ -10,7 +10,7 @@
   color: #aaa;
   border: 2px solid transparent;
   border-radius: 8px;
-  padding: 7px 8px 7px 8px;
+  padding: 8px;
   font-family: 'Bit5x3', monospace;
   font-size: 14px;
   cursor: pointer;
@@ -25,8 +25,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  overflow: visible;
-  white-space: normal;
 }
 
 .language-select:hover {
