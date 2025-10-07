@@ -4,6 +4,8 @@ import {initMenu} from "./menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import initRemoteGame from "./remoteGame.js";
+import {initHistory} from "./history.js";
+import { i18n } from "./i18n/index.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -15,7 +17,8 @@ const routes: Record<string, string> = {
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/profile": "./html/profile.html",
-	"/oauth-callback": "./html/profile.html"
+	"/oauth-callback": "./html/profile.html",
+	"/history": "./html/history.html"
 };
 
 const initScripts: Record<string, () => void> = {
@@ -42,6 +45,10 @@ const initScripts: Record<string, () => void> = {
 	"/pong/online": () => {
 		if (typeof initRemoteGame === "function")
 			initRemoteGame();
+	},
+	"/history": () => {
+		if (typeof initHistory === "function")
+			initHistory();
 	},
 	"/oauth-callback": () => {
 		if (typeof handleOAuthCallback === "function")
@@ -86,6 +93,8 @@ async function navigate(path: string, push: boolean = true)
 			if (push)
 				history.pushState({path}, "", path);
 			update_event();
+			// Initialize i18n for the new page
+			i18n.initializePage();
 			if (initScripts[path])
 				initScripts[path]();
 		}

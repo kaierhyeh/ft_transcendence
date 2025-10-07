@@ -1,8 +1,10 @@
 import { user } from './users.js';
+import { showInfo } from './notifications.js'; 
 
 let gameWebSocket: WebSocket | null = null;
 let currentGameId: number | null = null;
 let currentParticipantId: string | null = null;
+let matchmakingWebSocket: WebSocket | null = null;
 
 export default function initRemoteGame():void {
     console.log("create remote interface");
@@ -39,13 +41,19 @@ function generateParticipantId(): string {
 }
 
 async function joinQueue(mode: "2p" | "4p"): Promise<void> {
+    const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
+    const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
+    
+    if (btn2p) btn2p.disabled = true;
+    if (btn4p) btn4p.disabled = true;
+    
     let buttonId;
     if (mode === "2p") {
         buttonId = "remote-2p-btn";
     } else {
         buttonId = "remote-4p-btn";
     }
-
+    
     const participantId = generateParticipantId();
     currentParticipantId = participantId;
     
@@ -53,7 +61,7 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
     if (button != null) {
         button.textContent = "Joining...";
     }
-
+    
     try {
         const response = await fetch('/game/join', {
             method: 'POST',
@@ -64,66 +72,149 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
                 participant_id: participantId
             })
         });
-
+        
         const data = await response.json();
-        //2line for test to remove
         console.log("Réponse complète du serveur:", data);
-        console.log("Status de la réponse:", response.status);
-    if (data.type === "game_ready") {
-        console.log("Match found, game_id =", data.game_id);
-        connectToGame(data.game_id);
-    } else if (data.type === "queue_joined") {
-        console.log("En attente dans la queue, position:", data.position);
-        if (button != null) {
-            button.textContent = "Waiting...";
+        
+        if (data.type === "game_ready") {
+            console.log("Match found, game_id =", data.game_id);
+            connectToGame(data.game_id);
+        } else if (data.type === "queue_joined") {
+            console.log("En attente dans la queue, position:", data.position);
+            if (button != null) {
+                button.textContent = "Waiting...";
+            }
+            openMatchmakingWebSocket();
+        } else if (data.type === "error") {
+            console.log("Erreur:", data.message);
+            if (btn2p) {
+                btn2p.disabled = false;
+                btn2p.textContent = "Join 2 Players";
+            }
+            if (btn4p) {
+                btn4p.disabled = false;
+                btn4p.textContent = "Join 4 Players";
+            }
         }
-    } else {
-        console.log("Réponse inattendue:", data);
-    }
     } catch (error) {
         console.log("Connection error:", error);
-        if (button != null) {
-            if (mode === "2p") {
-                button.textContent = "Join 2P";
-            } else {
-                button.textContent = "Join 4P";
-            }
+        if (btn2p) {
+            btn2p.disabled = false;
+            btn2p.textContent = "Join 2 Players";
+        }
+        if (btn4p) {
+            btn4p.disabled = false;
+            btn4p.textContent = "Join 4 Players";
         }
     }
 }
 
+function openMatchmakingWebSocket(): void {
+    if (matchmakingWebSocket != null) {
+        return;
+    }
+    
+    let protocol = 'ws:';
+    if (window.location.protocol === 'https:') {
+        protocol = 'wss:';
+    }
+    
+    const host = window.location.host;
+    const wsUrl = protocol + '//' + host + '/game/matchmaking/ws?participant_id=' + currentParticipantId;
+    
+    console.log('Ouverture WebSocket matchmaking: ' + wsUrl);
+    
+    matchmakingWebSocket = new WebSocket(wsUrl);
+    
+    matchmakingWebSocket.onopen = function() {
+        console.log('WebSocket matchmaking connectée');
+    };
+    
+    matchmakingWebSocket.onmessage = function(event) {
+        console.log('Message matchmaking reçu:', event.data);
+        
+        try {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'game_ready') {
+                console.log('MATCH TROUVÉ! game_id: ' + data.game_id);
+                
+                if (matchmakingWebSocket != null) {
+                    matchmakingWebSocket.close();
+                    matchmakingWebSocket = null;
+                }
+                
+                const btn2p = document.getElementById('remote-2p-btn');
+                const btn4p = document.getElementById('remote-4p-btn');
+                
+                if (btn2p != null) {
+                    btn2p.textContent = 'Match found!';
+                }
+                if (btn4p != null) {
+                    btn4p.textContent = 'Match found!';
+                }
+                
+                connectToGame(data.game_id);
+            }
+        } catch (error) {
+            console.error('Erreur parsing message matchmaking:', error);
+        }
+    };
+    
+    matchmakingWebSocket.onclose = function(event) {
+        console.log('WebSocket matchmaking fermée: ' + event.code + ' ' + event.reason);
+        matchmakingWebSocket = null;
+    };
+    
+    matchmakingWebSocket.onerror = function(error) {
+        console.error('Erreur WebSocket matchmaking:', error);
+        matchmakingWebSocket = null;
+    };
+}
+
 function connectToGame(gameId: number): void {
+
     currentGameId = gameId;
     
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    //ws/wss security, might need to add it on the other module
+    let protocol = 'ws:';
+    if (window.location.protocol === 'https:')  
+        protocol = 'wss:';
+
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/game/${gameId}/ws`;
+    const wsUrl = protocol + '//' + host + '/game/' + gameId + '/ws';
     
-    console.log(`Connexion WebSocket vers: ${wsUrl}`);
+     console.log('connexion websocket vers lurl : ' + wsUrl);
     
     gameWebSocket = new WebSocket(wsUrl);
     
-    gameWebSocket.onopen = () => {
-        console.log(`Connecté au jeu ${gameId}`);
+    gameWebSocket.onopen = function() {
+        console.log('Connecté au jeu ' + gameId);
         
-        gameWebSocket!.send(JSON.stringify({
+        const message = {
             type: "join",
             participant_id: currentParticipantId
-        }));
+        };
+        const jsonMessage = JSON.stringify(message);
+        
+        if (gameWebSocket != null) {
+            gameWebSocket.send(jsonMessage);
+        }
+        
         document.addEventListener('keydown', onKeyPressed);
         document.addEventListener('keyup', onKeyReleased);
     };
     
-    gameWebSocket.onmessage = (event) => {
+    gameWebSocket.onmessage = function(event) {
         console.log("Msg from serveur:", event.data);
     };
     
-    gameWebSocket.onclose = (event) => {
-        console.log("WebSocket fermé:", event.code, event.reason);
+    gameWebSocket.onclose = function(event) {
+        console.log("websocket fermé :", event.code, event.reason);
     };
     
-    gameWebSocket.onerror = (error) => {
-        console.error("Erreur WebSocket:", error);
+    gameWebSocket.onerror = function(error) {
+        console.error("erreur de websocket :", error);
     };
 }
 
@@ -143,7 +234,7 @@ function onKeyPressed(event: KeyboardEvent): void {
     }
     
     if (movement != "") {
-        event.preventDefault(); //stop page scrolling 
+        event.preventDefault();
         
         const message = JSON.stringify({
             type: "input",
@@ -182,4 +273,13 @@ function onKeyReleased(event: KeyboardEvent): void {
         gameWebSocket.send(message);
         console.log("debug: stop bracket");
     }
+}
+
+function matchFound(gameId: number): void {
+    console.log("debug before show match found, game id is :", gameId);
+    const button = document.getElementById('remote-2p-btn');
+    if (button) {
+        button.textContent = "Match found! Connecting...";
+    }
+    connectToGame(gameId);
 }
