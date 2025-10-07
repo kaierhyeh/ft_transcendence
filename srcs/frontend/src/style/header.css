@@ -1,0 +1,108 @@
+/* Simple Header */
+header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Auth Buttons (Unauthenticated) */
+.auth-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.auth-btn {
+    background: #333;
+    border: 2px solid #666;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Bit5x3', monospace;
+    text-transform: uppercase;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.auth-btn:hover {
+    background: #555;
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.auth-btn.primary {
+    background: #4ade80;
+    border-color: #4ade80;
+    color: #000;
+}
+
+.auth-btn.primary:hover {
+    background: #fff;
+    border-color: #fff;
+}
+
+/* User Menu (Authenticated) */
+.user-menu {
+    position: relative;
+}
+
+.user-btn {
+    background: #333;
+    border: 2px solid #666;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    font-family: 'Bit5x3', monospace;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.user-btn:hover {
+    background: #555;
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #333;
+    border: 2px solid #666;
+    border-radius: 4px;
+    min-width: 120px;
+    display: none;
+    margin-top: 0.5rem;
+}
+
+.dropdown.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Bit5x3', monospace;
+    text-transform: uppercase;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #555;
+    color: #4ade80;
+}
+
+/* Body padding when header exists */
+body:has(header:not(:empty)) {
+    padding-top: 80px;
+}

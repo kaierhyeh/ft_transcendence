@@ -3,6 +3,7 @@ import {initStats} from "./stats.js";
 import {initMenu} from "./menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
+import {loadHeader} from "./header.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -57,6 +58,8 @@ async function load404(push: boolean)
 	app.innerHTML = await res.text();
 	if (push)
 		history.pushState({path: "404"}, "", "/404.");
+	
+	await loadHeader();
 	update_event();
 }
 
@@ -87,6 +90,8 @@ async function navigate(path: string, push: boolean = true)
 			app.innerHTML = await res.text();
 			if (push)
 				history.pushState({path}, "", path);
+			
+			await loadHeader();
 			update_event();
 			if (initScripts[path])
 				initScripts[path]();
