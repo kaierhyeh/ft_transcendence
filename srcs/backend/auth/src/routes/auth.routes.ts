@@ -181,6 +181,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 		}
 	});
 
+	// TODO - That route might need to be removed
 	// // Refresh token route
 	// fastify.post('/refresh', async (request, reply) => {
 	// 	try {
@@ -223,58 +224,72 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 	// 	}
 	// });
 
-	// // Logout route - requires USER_SESSION authentication
-	// fastify.post('/logout', async (request: AuthenticatedRequest, reply: FastifyReply) => {
-	// 	try {
-	// 		// Check for access token
-	// 		const accessToken = request.cookies?.accessToken;
+	// Logout route - requires USER_SESSION authentication
+	fastify.post('/logout', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+		try {
+			// Check for access token
+			const accessToken = request.cookies?.accessToken;
 			
-	// 		if (!accessToken) {
-	// 			return reply.code(401).send({ 
-	// 				success: false, 
-	// 				error: 'No access token provided' 
-	// 			});
-	// 		}
+			if (!accessToken) {
+				console.warn('⚠️ No access token provided for logout');
+				return reply.code(401).send({ 
+					success: false, 
+					error: 'No access token provided' 
+				});
+			}
 
-	// 		// Verify the token
-	// 		const result = await authService.validate_and_refresh_Tokens(fastify, accessToken, request.cookies?.refreshToken || '');
+			console.log('🔍 Logout attempt - validating token...');
+
+			// Verify the token
+			const result = await authService.validate_and_refresh_Tokens(fastify, accessToken, request.cookies?.refreshToken || '');
 			
-	// 		if (!result.success || !result.userId) {
-	// 			return reply.code(401).send({ 
-	// 				success: false, 
-	// 				error: result.reason || 'Invalid or expired user session' 
-	// 			});
-	// 		}
+			if (!result.success || !result.userId) {
+				console.warn('⚠️ Invalid token during logout:', {
+					reason: result.reason,
+					hasUserId: !!result.userId
+				});
+				return reply.code(401).send({ 
+					success: false, 
+					error: result.reason || 'Invalid or expired user session' 
+				});
+			}
 
-	// 		// Revoke tokens
-	// 		await authService.revokeTokens(result.userId);
+			console.log('🗑️ Revoking tokens for user:', { userId: result.userId });
 
-	// 		const cookieOptions = {
-	// 			path: '/',
-	// 			secure: true,
-	// 			httpOnly: true,
-	// 			sameSite: 'none' as const
-	// 		};
+			// Revoke tokens
+			await authService.revokeTokens(result.userId);
 
-	// 		reply.clearCookie('accessToken', cookieOptions);
-	// 		reply.clearCookie('refreshToken', cookieOptions);
+			const cookieOptions = {
+				path: '/',
+				secure: true,
+				httpOnly: true,
+				sameSite: 'none' as const
+			};
+
+			reply.clearCookie('accessToken', cookieOptions);
+			reply.clearCookie('refreshToken', cookieOptions);
 			
-	// 		return reply.code(200).send({
-	// 			success: true,
-	// 			message: 'Logged out successfully!'
-	// 		});
+			console.log('✅ Logout successful for user:', { userId: result.userId });
 
-	// 	} catch (error) {
-	// 		logger.error('Logout error', error as Error, {
-	// 			userId: (request as any).user?.userId,
-	// 			ip: (request as any).ip
-	// 		});
-	// 		return reply.code(500).send({
-	// 			success: false,
-	// 			error: 'Internal server error during logout'
-	// 		});
-	// 	}
-	// });
+			return reply.code(200).send({
+				success: true,
+				message: 'Logged out successfully!'
+			});
+
+		} catch (error: any) {
+			console.error('❌ Logout error:', {
+				userId: (request as any).user?.userId,
+				ip: (request as any).ip,
+				errorMessage: error.message,
+				errorCode: error.code,
+				stack: error.stack
+			});
+			return reply.code(500).send({
+				success: false,
+				error: 'Internal server error during logout'
+			});
+		}
+	});
 
 	// Verify token route - check if user is authenticated
 	fastify.post('/verify', async (request, reply) => {
@@ -358,6 +373,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 	});
 
 
+	// TODO - That route might need to be removed
 	// fastify.get('/account_type', async (request: FastifyRequest, reply: FastifyReply) => {
 	// 	try {
 	// 		const userId = (request as any).user.userId;
