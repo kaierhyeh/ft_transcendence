@@ -80,6 +80,40 @@
 	gap: 1rem;
 }
 
+/* Styling for "Or" text */
+.auth-container p {
+	text-align: center;
+	color: #ffffff;
+	font-size: 14px;
+	font-weight: 500;
+	margin: 1.5rem 0;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+/* Link group styling */
+.link-group {
+	margin-top: 2rem;
+	text-align: center;
+}
+
+.auth-link {
+	color: #4ade80;
+	text-decoration: underline;
+	font-size: 14px;
+	font-weight: 500;
+	transition: all 0.15s ease;
+	letter-spacing: 0.02em;
+}
+
+.auth-link:hover {
+	color: #ffffff;
+}
+
+.auth-link:visited {
+	color: #4ade80;
+}
+
 .auth-btn, .profile-btn {
 	padding: 12px 24px;
 	border: 1px solid #4ade80;
