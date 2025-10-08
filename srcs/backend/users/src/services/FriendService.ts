@@ -3,6 +3,15 @@ import { FriendRepository } from '../repositories';
 export class FriendService {
 	constructor(private friendRepository: FriendRepository) {}
 
+	// if no users, return empty array
+	public async getAllUsers(userId: number | null) {
+		if (userId === null) {
+			return this.friendRepository.listAllUsers();
+		} else {
+			return this.friendRepository.listAllUsersExcept(userId);
+		}
+	}
+
 	// if no friends, return empty array
 	// user(id, nickname, isOnline)
 	public async getFriends(userId: number) {

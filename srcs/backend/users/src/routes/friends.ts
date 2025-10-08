@@ -13,6 +13,12 @@ import { userAuthMiddleware } from "../middleware/userAuth";
 export default async function friendsRoutes(fastify: FastifyInstance) {
 	const friendController = new FriendController(fastify.services.friends);
 
+	// List all users (for searching)
+	fastify.get(
+		"/allusers",
+		friendController.getAllUsers.bind(friendController)
+	);
+
 	// List current friends [Requires user authentication]
 	fastify.get(
 		"/",

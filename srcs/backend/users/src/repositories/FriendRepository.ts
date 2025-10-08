@@ -1,19 +1,39 @@
 import { Database } from "better-sqlite3";
 
-export interface FriendRow {
-	id: number;
-	nickname: string;
-	isOnline: boolean;
+export interface UserListRow {
+	user_id: number;
+	username: string;
+	alias: string | null;
+	avatar_filename: string | null;
+	user_status: string;
+	friendship_status: string | null;
 }
 
-export interface IncomingRequestRow {
-	fromUserId: number;
-	nickname: string;
+export interface FriendListRow {
+	user_id: number;
+	username: string;
+	alias: string | null;
+	avatar_filename: string | null;
+	user_status: string;
+	friendship_status: string;
 }
 
-export interface OutgoingRequestRow {
-	toUserId: number;
-	nickname: string;
+export interface IncomingRequestListRow {
+	user_id: number;
+	username: string;
+	alias: string | null;
+	avatar_filename: string | null;
+	user_status: string;
+	friendship_status: string;
+}
+
+export interface OutgoingRequestListRow {
+	user_id: number;
+	username: string;
+	alias: string | null;
+	avatar_filename: string | null;
+	user_status: string;
+	friendship_status: string;
 }
 
 export class FriendRepository {
@@ -21,36 +41,101 @@ export class FriendRepository {
 		this.db = db;
 	}
 
+	public async listAllUsers() {
+		const stmt = this.db.prepare(`
+			SELECT
+				user_id,
+				username,
+				alias,
+				avatar_filename,
+				status AS user_status
+			FROM users
+			ORDER BY username ASC
+		`);
+		return stmt.all() as UserListRow[];
+	}
+
+	public async listAllUsersExcept(userId: number) {
+		const stmt = this.db.prepare(`
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status
+			FROM users AS u
+			LEFT JOIN friendships AS f
+				ON f.status = 'accepted'
+				AND (
+					(f.user_id = ? AND f.friend_id = u.user_id)
+					OR
+					(f.friend_id = ? AND f.user_id = u.user_id)
+				)
+			WHERE u.user_id != ?
+			ORDER BY u.username ASC
+		`);
+		return stmt.all(userId, userId, userId) as UserListRow[];
+	}
+
 	public async listFriends(userId: number) {
 		const stmt = this.db.prepare(`
-			SELECT u.id, u.nickname, u.isOnline
-			FROM friendships f
-			JOIN users u ON (f.user_id = u.id OR f.friend_id = u.id)
-			WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status = 'accepted' AND u.id != ?
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status
+			FROM users AS u
+			JOIN friendships AS f
+				ON f.status = 'accepted'
+				AND (
+					(f.user_id = ? AND f.friend_id = u.user_id)
+					OR
+					(f.friend_id = ? AND f.user_id = u.user_id)
+				);
+			WHERE u.user_id != ?
 		`);
-		return stmt.all(userId, userId, userId) as FriendRow[];
+		return stmt.all(userId, userId, userId) as FriendListRow[];
 	}
 
 	/* INCOMING requests */
 	public async listPendingIncomingRequests(userId: number) {
 		const stmt = this.db.prepare(`
-			SELECT f.user_id AS fromUserId, u.nickname
-			FROM friendships f
-			JOIN users u ON u.id = f.user_id
-			WHERE f.friend_id = ? AND f.status = 'pending'
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status
+			FROM users AS u
+			JOIN friendships AS f
+				ON f.status = 'pending'
+				AND (f.friend_id = ? AND f.user_id = u.user_id);
+			WHERE u.user_id != ?
 		`);
-		return stmt.all(userId) as IncomingRequestRow[];
+		return stmt.all(userId, userId) as IncomingRequestListRow[];
 	}
 
 	/* OUTGOING requests */
 	public async listPendingOutgoingRequests(userId: number) {
 		const stmt = this.db.prepare(`
-			SELECT f.friend_id AS toUserId, u.nickname
-			FROM friendships f
-			JOIN users u ON u.id = f.friend_id
-			WHERE f.user_id = ? AND f.status = 'pending'
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status
+			FROM users AS u
+			JOIN friendships AS f
+				ON f.status = 'pending'
+				AND (f.user_id = ? AND f.friend_id = u.user_id);
+			WHERE u.user_id != ?
 		`);
-		return stmt.all(userId) as OutgoingRequestRow[];
+		return stmt.all(userId, userId) as OutgoingRequestListRow[];
 	}
 
 	// IGNORE duplicates

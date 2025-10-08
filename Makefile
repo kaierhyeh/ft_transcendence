@@ -67,6 +67,9 @@ fclean:
 	@docker system prune --all --force --volumes
 	@echo "Full system cleanup completed!"
 
+clean-srcs-volumes:
+	@docker volume ls -q | grep '^srcs_' | xargs -r docker volume rm
+
 re: down up
 
 

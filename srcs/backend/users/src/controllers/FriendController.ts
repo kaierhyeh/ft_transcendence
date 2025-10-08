@@ -6,6 +6,21 @@ import { toInteger } from '../utils/type-converters';
 export class FriendController {
 	constructor(private friendService: FriendService) {}
 
+	public async getAllUsers(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const sub = request.user?.sub;
+			if (!sub) {
+				console.log("request all users without auth");
+				reply.status(200).send(await this.friendService.getAllUsers(null));
+			} else {
+				console.log("request all users with auth, user id:", sub);	
+				reply.status(200).send(await this.friendService.getAllUsers(toInteger(sub)));
+			}
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
 	public async getFriends(request: FastifyRequest, reply: FastifyReply) {
 		try {
 			const sub = request.user?.sub;
