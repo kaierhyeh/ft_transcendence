@@ -147,7 +147,6 @@ async function initChatSection(): Promise<void> {
 	resetChatSection();
 	showElementById("chatsList");
 	showElementById("chatsSection");
-	setMenuTitle("Chats");
 	await loadChats();
 }
 

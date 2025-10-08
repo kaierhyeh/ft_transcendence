@@ -60,7 +60,7 @@ function openUsers(): void {
 	document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
 	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
 
-	openUsersSection();
+	openUsersSection(1);
 }
 
 function openFriends(): void {
