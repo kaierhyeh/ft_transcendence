@@ -1,11 +1,9 @@
-// Profile page functionality
 import user from '../user/User.js';
 
 export function initLogin() {
 	// Check if user is already logged in and redirect if so
 	checkAuthStatusAndRedirect();
 
-	const authForm = document.getElementById('auth-form');
 	const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
 	const googleLoginBtn = document.getElementById('google-login-btn') as HTMLButtonElement;
 	const twofaBtn = document.getElementById('2fa-btn') as HTMLButtonElement;
@@ -184,27 +182,6 @@ export function initLogin() {
 		} else {
 			// Default redirect to homepage
 			window.location.href = '/';
-		}
-	}
-
-	async function checkAuthStatus() {
-		try {
-			const response = await fetch('/api/auth/verify', {
-				method: 'POST',
-				credentials: 'include'
-			});
-
-			if (response.ok) {
-				const data = await response.json();
-				if (data.success) {
-					// User is logged in but not redirecting here since this is just a status check
-					return true;
-				}
-			}
-			return false;
-		} catch (error) {
-			console.error('Auth check error:', error);
-			return false;
 		}
 	}
 
