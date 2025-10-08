@@ -19,5 +19,5 @@ import { setMenuTitle } from "./menu.utils.js";
 export function openUsersSection(): void {
 	console.log("USERS: Users Section opened (test function)");
 	document.getElementById("usersSection")!.classList.remove("hidden");
-	setMenuTitle("Users");
+	setMenuTitle("users");
 }

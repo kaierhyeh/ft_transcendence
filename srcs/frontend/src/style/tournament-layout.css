@@ -163,6 +163,17 @@ body.tournament-page {
     box-shadow: 0 0 20px rgba(102, 102, 102, 0.3);
 }
 
+#see-history.tournament-btn {
+  border-color: #ffd700 !important;
+  color: #ffd700 !important;
+  background: transparent !important;
+}
+#see-history.tournament-btn:hover {
+  background: #ffd700 !important;
+  color: #222 !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
 @media (max-width: 768px) {
     .player-inputs-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

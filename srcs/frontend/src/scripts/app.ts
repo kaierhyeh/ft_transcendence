@@ -1,8 +1,12 @@
 import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
-import {initMenu} from "./menu.js";
+import {initMenu} from "./menu/menu.js";
 import {initProfile} from "./profile.js";
 import {initTournament} from "./tournament.js";
+import {initHistory} from "./history.js";
+import { i18n } from "./i18n/index.js";
+import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
+import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin } from "./auth/login.js";
@@ -19,6 +23,7 @@ const routes: Record<string, string> = {
 	"/profile": "./html/profile.html",
 	"/user/profile": "./html/user/profile.html",
 	"/oauth-callback": "./html/profile.html",
+	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
 	"/user/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
@@ -55,6 +60,10 @@ const initScripts: Record<string, () => void> = {
 	"/tournament": () => {
 		if (typeof initTournament === "function")
 			initTournament();
+	},
+	"/history": () => {
+		if (typeof initHistory === "function")
+			initHistory();
 	},
 	// "/oauth-callback": () => {
 	// 	if (typeof handleOAuthCallback === "function")
@@ -111,6 +120,8 @@ async function navigate(path: string, push: boolean = true)
 			
 			await loadHeader();
 			update_event();
+			// Initialize i18n for the new page
+			i18n.initializePage();
 			if (initScripts[path])
 				initScripts[path]();
 		}
@@ -126,5 +137,12 @@ window.onpopstate = (e) => {
 	const path = e.state?.path || location.pathname;
 	navigate(path, false);
 };
+
+// Initialize browser detection and compatibility
+addBrowserClass();
+logBrowserInfo();
+
+// Initialize device detection and responsive support
+initDeviceDetection();
 
 navigate(location.pathname, false);
