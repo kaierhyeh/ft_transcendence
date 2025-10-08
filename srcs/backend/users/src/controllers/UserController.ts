@@ -6,7 +6,6 @@ import {
   LoginParams, 
   UpdateRawData, 
   UserIdParams, 
-  AvatarParams, 
   Credentials
 } from '../schemas';
 import fs from 'fs';
@@ -179,11 +178,12 @@ export class UserController {
   }
 
   public async getAvatar(
-    request: FastifyRequest<{ Params: AvatarParams }>,
+    request: FastifyRequest<{ Params: UserIdParams }>,
     reply: FastifyReply
   ) {
     try {
-      const { filename } = request.params;
+      const user_id = request.params.id;
+      const filename = await this.userService.getAvatar(user_id);
       const filepath = path.join(CONFIG.AVATAR.BASE_URL, filename);
 
       if (!fs.existsSync(filepath) || !filepath.startsWith(CONFIG.AVATAR.BASE_URL)) {
@@ -291,7 +291,12 @@ export class UserController {
       reply.status(404).send({ 
         error: "User not found" 
       });
-    } else if (error.code === 'LITE_STATS_NOT_FOUND') {
+    } else if (error.code === 'DELETED_USER') {
+      reply.status(410).send({ 
+        error: "User account has been deleted" 
+      });
+    } 
+    else if (error.code === 'LITE_STATS_NOT_FOUND') {
       reply.status(503).send({ 
         error: "Statistics service unavailable" 
       });

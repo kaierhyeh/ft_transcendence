@@ -1,4 +1,6 @@
 // Simple header management
+import user from './user/User.js';
+
 const EXCLUDED_ROUTES = ['/login', '/signup'];
 
 async function loadHeader() {
@@ -14,11 +16,19 @@ async function loadHeader() {
     }
 
     try {
-        // Check if user is authenticated
-        const isAuthenticated = await checkAuth();
+        // Check if user is authenticated using User singleton
+        const isAuthenticated = user.isLoggedIn();
+        
+        // If not authenticated, check with server and update user data
+        if (!isAuthenticated) {
+            const serverAuthenticated = await checkAuth();
+            if (serverAuthenticated) {
+                await user.fetchAndUpdate();
+            }
+        }
         
         // Load appropriate template
-        const templatePath = isAuthenticated 
+        const templatePath = (user.isLoggedIn()) 
             ? '/html/header/authenticated.html'
             : '/html/header/unauthenticated.html';
             
@@ -58,15 +68,31 @@ async function checkAuth(): Promise<boolean> {
 }
 
 function setupHeaderEvents() {
-    // Setup avatar error handling
+    // Update user display elements
+    const usernameSpan = document.querySelector('.username');
+    if (usernameSpan && user.isLoggedIn()) {
+        usernameSpan.textContent = user.getDisplayName() || 'User';
+    }
+
+    // Setup avatar with user data
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
-    if (userAvatar) {
+    if (userAvatar && user.isLoggedIn()) {
+        const userData = user.getData();
+        if (userData && userData.avatar_url) {
+            userAvatar.src = userData.avatar_url;
+            userAvatar.style.display = 'block';
+        } else {
+            userAvatar.style.display = 'none';
+        }
+        
         userAvatar.addEventListener('error', () => {
             // Fallback to a default avatar or user initials
             userAvatar.style.display = 'none';
             const avatarContainer = userAvatar.parentElement;
             if (avatarContainer) {
-                avatarContainer.innerHTML = '<div class="avatar-fallback">U</div>';
+                const displayName = user.getDisplayName() || 'U';
+                const initial = displayName.charAt(0).toUpperCase();
+                avatarContainer.innerHTML = `<div class="avatar-fallback">${initial}</div>`;
             }
         });
     }
@@ -96,6 +122,11 @@ function setupHeaderEvents() {
                     method: 'POST',
                     credentials: 'include'
                 });
+                
+                // Clear user data from singleton
+                user.logout();
+                
+                // Redirect to home
                 window.location.href = '/';
             } catch (error) {
                 console.error('Logout failed:', error);

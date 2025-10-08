@@ -1,5 +1,4 @@
 import { FromSchema } from "json-schema-to-ts";
-import { CONFIG } from "../config";
 
 // Elementary field schemas (reusable building blocks)
 const usernameSchema = {
@@ -114,20 +113,6 @@ export const userIdSchema = {
     additionalProperties: false,
 } as const;
 
-
-export const avatarFilenameSchema = {
-  type: 'object',
-  required: ['filename'],
-  properties: {
-    filename: {
-      type: 'string',
-      pattern: `^(user_\\d+_\\d+\\.(jpg|jpeg|png|gif|webp)|${CONFIG.AVATAR.DEFAULT_FILENAME.replace('.', '\\.')})$`,
-      description: `Filename of avatar image: user_<userId>_<timestamp>.<extension> or ${CONFIG.AVATAR.DEFAULT_FILENAME}`
-    },
-  },
-  additionalProperties: false,
-} as const;
-
 export const credentialsSchema = {
   type: "object",
   required: ["login", "password"],
@@ -144,5 +129,4 @@ export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
-export type AvatarParams = FromSchema<typeof avatarFilenameSchema>;
 export type Credentials = FromSchema<typeof credentialsSchema>;

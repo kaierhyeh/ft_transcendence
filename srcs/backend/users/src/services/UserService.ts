@@ -93,7 +93,7 @@ export class UserService {
     return {
       ...cleanUser,
       avatar_url: avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/avatar/${avatar_filename}` :
+        `${CONFIG.API.BASE_URL}/users/profile/id/${user.user_id}/avatar` :
         null,
       ...lite_stats
     };
@@ -104,6 +104,16 @@ export class UserService {
     const { email, two_fa_enabled, updated_at, ...publicProfile } = userProfile;
     
     return publicProfile;
+  }
+
+  public async getAvatar(user_id: number): Promise<string> {
+    const { avatar_filename } = await this.getUserById(user_id);
+    if (!avatar_filename) {
+      const error = new Error('Deleted user');
+      (error as any).code = 'DELETED_USER';
+      throw error;
+    }
+    return avatar_filename;
   }
 
   public async updateUser(user_id: number, raw_data: UpdateRawData): Promise<number> {

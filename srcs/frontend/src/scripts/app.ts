@@ -1,7 +1,7 @@
 import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
 import {initMenu} from "./menu.js";
-import {initProfile, handleOAuthCallback} from "./profile.js";
+import {initProfile} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
@@ -56,10 +56,10 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initTournament === "function")
 			initTournament();
 	},
-	"/oauth-callback": () => {
-		if (typeof handleOAuthCallback === "function")
-			handleOAuthCallback();
-	}
+	// "/oauth-callback": () => {
+	// 	if (typeof handleOAuthCallback === "function")
+	// 		handleOAuthCallback();
+	// }
 }
 
 async function load404(push: boolean)
