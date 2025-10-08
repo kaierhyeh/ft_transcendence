@@ -1,7 +1,6 @@
 import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
-import {initProfile} from "./profile.js";
 import {initTournament} from "./tournament.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
@@ -20,9 +19,8 @@ const routes: Record<string, string> = {
 	"/pong/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
-	"/profile": "./html/profile.html",
 	"/user/profile": "./html/user/profile.html",
-	"/oauth-callback": "./html/profile.html",
+	// "/oauth-callback": "./html/profile.html",
 	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
 	"/user/match-history": "./html/user/match_history.html",
@@ -45,16 +43,12 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initStats === "function")
 			initStats();
 	},
-	"/profile": () => {
-		if (typeof initProfile === "function")
-			initProfile();
-	},
 	"/signup": () => {
-		if (typeof initProfile === "function")
+		if (typeof initSignup === "function")
 			initSignup();
 	},
 	"/login": () => {
-		if (typeof initProfile === "function")
+		if (typeof initLogin === "function")
 			initLogin();
 	},
 	"/tournament": () => {

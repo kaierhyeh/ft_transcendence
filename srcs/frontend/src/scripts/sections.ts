@@ -1,3 +1,5 @@
+// TODO - file to remove when we are sure we don't need it anymore
+
 // import { add_online, user, get_user_messages, OtherUser, Message, add_message, update_user_data } from './users.js';
 // import { t_DirectMessage, update } from './api.js';
 // import { get_direct_messages, ChatResponse, login, register, logout, unregister, add, remove, search, send, get_blocked_users, block, unblock, setup2fa, activate2fa, verify2fa, disable2fa, get2faStatus, getUserAccountType, initiateGoogleLogin, updateAvatar, getGameHistory } from './api.js';

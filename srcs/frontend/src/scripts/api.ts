@@ -1,3 +1,5 @@
+// TODO - file to remove when we are sure we don't need it anymore
+
 // import { user, User, update_user, OtherUser } from './users.js';
 // import { ASection, go_section, sections, get_type_index, get_url_type, show2FAVerificationModal, update_sections } from './sections.js';
 // import { showSuccess, showError, showInfo } from './notifications.js';

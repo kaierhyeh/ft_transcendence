@@ -1,3 +1,5 @@
+// TODO - file to remove when we are sure we don't need it anymore
+
 // import { update_status, DirectMessage, update_sections, Chat, Actions, get_type_index, sections, section_index, set_section_index, GameSection, go_section,  showInviteOverlay, get_url_option } from "./sections.js";
 // import { get_direct_messages } from "./api.js";
 // import { showError } from "./notifications.js";
