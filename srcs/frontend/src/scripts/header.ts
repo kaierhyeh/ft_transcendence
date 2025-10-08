@@ -58,6 +58,19 @@ async function checkAuth(): Promise<boolean> {
 }
 
 function setupHeaderEvents() {
+    // Setup avatar error handling
+    const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
+    if (userAvatar) {
+        userAvatar.addEventListener('error', () => {
+            // Fallback to a default avatar or user initials
+            userAvatar.style.display = 'none';
+            const avatarContainer = userAvatar.parentElement;
+            if (avatarContainer) {
+                avatarContainer.innerHTML = '<div class="avatar-fallback">U</div>';
+            }
+        });
+    }
+
     // Dropdown toggle
     const userBtn = document.querySelector('.user-btn');
     const dropdown = document.querySelector('.dropdown');
