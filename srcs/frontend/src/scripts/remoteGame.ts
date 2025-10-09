@@ -1,13 +1,6 @@
-
-/*
-remaining bugs to fix : 
-
-les deux joueurs connectent et peuvent jouer ensemble mais laffichage des boutons 2/4players 
-ne sont pas coherant. Le j1 voit : match trouvé sur les 2 boutons
-Le j2 voit joining.... et le bouton 4players intact.
-Indique erreur de gestion mais pas grave. A FIXER */
-import { user } from './users.js';
-import { showInfo } from './notifications.js'; 
+/* add merge user and uncomment the nxt line*/
+// import { user } from './users.js';
+import { showError } from './notifications.js'; 
 
 let gameWebSocket: WebSocket | null = null;
 let currentGameId: number | null = null;
@@ -15,6 +8,9 @@ let currentParticipantId: string | null = null;
 let matchmakingWebSocket: WebSocket | null = null;
 let gameCanvas: HTMLCanvasElement | null = null;
 let gameContext: CanvasRenderingContext2D | null = null;
+let remotePartyMode: string = '';
+let keyDownHandler: any = null;
+let keyUpHandler: any = null; 
 
 export default function initRemoteGame():void {
     console.log("create remote interface");
@@ -51,6 +47,8 @@ function generateParticipantId(): string {
 }
 
 async function joinQueue(mode: "2p" | "4p"): Promise<void> {
+    remotePartyMode = mode;
+    
     const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
     const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
     
@@ -107,7 +105,9 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
             }
         }
     } catch (error) {
-        console.log("Connection error:", error);
+        console.log("Connection failed with error : ", error);
+        showError("Connection failed, please try again");
+
         if (btn2p) {
             btn2p.disabled = false;
             btn2p.textContent = "Join 2 Players";
@@ -153,14 +153,13 @@ function openMatchmakingWebSocket(): void {
                     matchmakingWebSocket.close();
                     matchmakingWebSocket = null;
                 }
-                
+
                 const btn2p = document.getElementById('remote-2p-btn');
                 const btn4p = document.getElementById('remote-4p-btn');
-                
-                if (btn2p != null) {
+
+                if (remotePartyMode === '2p' && btn2p != null) {
                     btn2p.textContent = 'Match found!';
-                }
-                if (btn4p != null) {
+                } else if (remotePartyMode === '4p' && btn4p != null) {
                     btn4p.textContent = 'Match found!';
                 }
                 
@@ -186,7 +185,6 @@ function connectToGame(gameId: number): void {
 
     currentGameId = gameId;
     
-    //ws/wss security, might need to add it on the other module
     let protocol = 'ws:';
     if (window.location.protocol === 'https:')  
         protocol = 'wss:';
@@ -210,9 +208,12 @@ function connectToGame(gameId: number): void {
         if (gameWebSocket != null) {
             gameWebSocket.send(jsonMessage);
         }
-        
-        document.addEventListener('keydown', onKeyPressed);
-        document.addEventListener('keyup', onKeyReleased);
+
+        keyDownHandler = onKeyPressed;
+        keyUpHandler = onKeyReleased;
+
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
     };
     
     gameWebSocket.onmessage = function(event) {
@@ -228,6 +229,15 @@ function connectToGame(gameId: number): void {
     
     gameWebSocket.onclose = function(event) {
         console.log("websocket fermé :", event.code, event.reason);
+
+        if (keyDownHandler != null) {
+            document.removeEventListener('keydown', keyDownHandler);
+            keyDownHandler = null;
+        }
+        if (keyUpHandler != null) {
+            document.removeEventListener('keyup', keyUpHandler);
+            keyUpHandler = null;
+        }
     };
     
     gameWebSocket.onerror = function(error) {
@@ -291,15 +301,6 @@ function onKeyReleased(event: KeyboardEvent): void {
         console.log("debug: stop bracket");
     }
 }
-/*
-function matchFound(gameId: number): void {
-    console.log("debug before show match found, game id is :", gameId);
-    const button = document.getElementById('remote-2p-btn');
-    if (button) {
-        button.textContent = "Match found! Connecting...";
-    }
-    connectToGame(gameId);
-}*/
 
 function drawRemoteGame(state: any): void {
     if (gameCanvas == null) {
@@ -373,6 +374,6 @@ function drawRemoteGame(state: any): void {
     
     if (state.winner) {
         ctx.font = "60px Arial";
-        ctx.fillText("WINNER : 🏆 🏆 \n   Team " + state.winner, canvas.width / 2, canvas.height / 2);
+        ctx.fillText(" 🏆 WINNER 🏆  :  " + state.winner, canvas.width / 2, canvas.height / 2);
     }
 }
