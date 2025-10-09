@@ -1,18 +1,15 @@
 # Game Service
 
-**⚠️⚠️⚠️ No more up to do date as for now ⚠️⚠️⚠️**
-
-
 This service manages concurrent live Pong game sessions, match history, and provides a REST API and WebSocket interface for players and viewers.
 
 ## Features
 
 - Server-side Pong game logic
-- Supports multiple players (PvP, tournament, multi)
+- Supports multiple players (PvP, multi-player)
 - Real-time game updates via WebSocket
-- Player and viewer connections (local, remote, or AI)
+- Player connections (registered, guest, or AI)
 - Match history and session repository
-- Extensible API with pagination, filtering, and sorting
+- Simple API with pagination and filtering
 
 ---
 
@@ -25,24 +22,33 @@ Example: `https://localhost:4443/api/game`
 
 ## API Endpoints
 
-### Live Game
+All endpoints are under the `/game` prefix:
+
+### Live Game Routes
 
 #### `POST /game/create`
 
-Create a new game session.
+Create a new game session [protected - internal service only].
+
+**Note:** Game creation is typically handled through the matchmaking service, which provides JWT match tickets for players.
 
 **Request Body:**
 ```json
 {
-  "type": "pvp" | "tournament" | "multi",
+  "mode": "pvp" | "multi",
   "participants": [
-    { "user_id": number, "participant_id": string },
-    ...
+    {
+      "player_id": number,
+      "type": "registered" | "guest" | "ai",
+      "team": "left" | "right",
+      "slot": "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right",
+      "user_id"?: number
+    }
   ]
 }
 ```
-- `type`: Game mode
-- `participants`: Array of 2-4 players, each with a unique `user_id` and `participant_id`
+- `mode`: Game mode
+- `participants`: Array of 2-4 players
 
 **Response:**
 ```json
@@ -80,41 +86,75 @@ Establish a WebSocket connection for real-time game updates.
 
 ---
 
+### Match History Routes
+
+#### `GET /game/sessions`
+
+Get match history with pagination and filtering.
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description                                                 |
+| --------- | ------ | -------- | ----------------------------------------------------------- |
+| `page`    | number | optional | Default `1`.                                                |
+| `limit`   | number | optional | Default `10`, max `20`.                                     |
+| `user_id` | number | optional | Filter to sessions that include a specific registered user. |
+
+**Examples:**
+```
+GET /game/sessions?page=1&limit=10
+GET /game/sessions?user_id=7&page=3
+```
+
+**Response:**
+```json
+{
+  "sessions": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total_items": 87,
+    "total_pages": 9
+  }
+}
+```
+
+---
+
+---
+
 ## WebSocket Protocol
 
-All messages are JSON objects.  
-Below are the supported message types:
+All messages are JSON objects. WebSocket connections require JWT authentication for players.
 
 ### Client → Server
 
-#### **Join Game**
+#### **Join Game (Players)**
 ```json
 {
   "type": "join",
-  "participant_id": "string"
+  "ticket": "<jwt_game_session_token>"
 }
 ```
-- Used by players to join a game session using their participant id.
+- Requires a valid JWT game session token (provided by matchmaking service)
+- JWT must contain `game_id` matching the WebSocket endpoint
 
-#### **Send Input**
+#### **Send Input (Players)**
 ```json
 {
   "type": "input",
-  "participant_id": "string",
   "move": "up" | "down" | "stop"
 }
 ```
-- Used by players to send paddle movement input.
+- Only available after successful join with valid JWT
 
-#### **View Game**
+#### **View Game (Viewers)**
 ```json
 {
   "type": "view"
 }
 ```
-- Used by viewers to subscribe to game state updates.
-
----
+- No authentication required for viewers
 
 ### Server → Client
 
@@ -129,18 +169,8 @@ Below are the supported message types:
     "dy": number
   },
   "players": {
-    "left": {
-      "slot": "left",
-      "paddle": {x: number, y: number},
-      "velocity": number,
-      "connected": boolean,
-      "team": "left"
-    },
-    "right": { ... },
-    "bottom-left": { ... },
-    "bottom-right": { ... },
-    "top-left": { ... },
-    "top-right": { ... }
+    "left": { "slot": "left", "paddle": {"x": number, "y": number}, "velocity": number, "connected": boolean, "team": "left" },
+    "right": { ... }
   },
   "score": {
     "left": number,
@@ -149,46 +179,19 @@ Below are the supported message types:
   "winner": "left" | "right" | undefined
 }
 ```
-- Sent periodically to all connected players and viewers.
 
 ---
 
-## Match History & Repository Pattern
+## Authentication & Flow
 
-The service uses a repository pattern for database access:
-
-- **SessionRepository**: Handles saving, finding, and querying game sessions and player sessions.
-
-### Example Query Parameters for History Endpoints
-
-```
-?page=1&limit=10&sort=created_at&order=desc&type=pvp&player_id=123
-```
-- `page`, `limit`: Pagination
-- `sort`, `order`: Sorting
-- `type`: Filter by game type
-- `player_id`: Filter by player
-
----
-
-## Database Schema
-
-- **sessions**: Stores game session metadata
-- **player_sessions**: Stores per-player session data
-
----
+1. **Game Creation**: Games are created through the matchmaking service (not directly)
+2. **JWT Tickets**: Matchmaking provides JWT game session tokens to players
+3. **Player Connection**: Players use JWT tickets to join specific game sessions via WebSocket
+4. **Viewer Access**: Viewers can connect without authentication to watch games
 
 ## Development Notes
 
 - Modular codebase: `src/db`, `src/game`, `src/routes`, `src/types`
 - Repository pattern for DB access
-- Extensible for more game modes and features
-
----
-
-## Contributing
-
-- See `src/types/` for shared interfaces
-- See `src/routes/` for API endpoints
-- See `src/game/` for game logic and session management
-- See `src/db/` for database and repository code
+- All routes under `/game` prefix: live sessions and match history
+- JWT-based authentication for player connections

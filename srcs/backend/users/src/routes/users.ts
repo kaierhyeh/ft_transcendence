@@ -20,7 +20,7 @@ import { internalAuthMiddleware } from "../middleware/internalAuth";
 export default async function usersRoutes(fastify: FastifyInstance) {
   const userController = new UserController(fastify.services.user);
 
-  // Create local user account (email/password signup)
+  // POST /local - Create local user account (email/password signup) [protected]
   fastify.post<{ Body: LocalUserCreationRawData }>(
     "/local",
     { 
@@ -30,7 +30,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.createLocalAccount.bind(userController)
   );
 
-  // Resolve local user (email/password signin)
+  // POST /local/resolve - Resolve local user credentials (email/password signin) [protected]
   fastify.post<{ Body: Credentials }>(
     "/local/resolve",
     {
@@ -40,7 +40,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.resolveLocalUser.bind(userController)
   );
 
-  // Create Google OAuth user account
+  // POST /google - Create Google OAuth user account [protected]
   fastify.post<{ Body: GoogleUserCreationData }>(
     "/google",
     {
@@ -50,7 +50,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.createGoogleAccount.bind(userController)
   );
 
-  // get all user data via its login [SHOULD be accessible only to backend micro services]
+  // GET /login/:login - Get all user data via login identifier [protected]
   fastify.get<{ Params: LoginParams }>(
     "/login/:login",
     {
@@ -60,7 +60,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserByLogin.bind(userController)
   );
 
-  // update some user data (email, password, 2fa, alias, settings) [Requires user authentication]
+  // PUT /profile/me - Update user profile data
   fastify.put<{ Body: UpdateRawData }>(
     "/profile/me",
     {
@@ -70,49 +70,49 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.updateMe.bind(userController)
   );
 
-  // update avatar [Requires user authentication]
+  // PUT /profile/me/avatar - Update user avatar
   fastify.put(
     "/profile/me/avatar",
     { preHandler: userAuthMiddleware },
     userController.updateAvatar.bind(userController)
   );
 
-  // get user profile (most of user data + stats summary) [Requires user authentication]
+  // GET /profile/me - Get current user profile with stats
   fastify.get(
     "/profile/me",
     { preHandler: userAuthMiddleware },
     userController.getMe.bind(userController)
   );
 
-  // delete user account (soft delete) [Requires user authentication]
+  // DELETE /me - Delete user account (soft delete)
   fastify.delete(
     "/me",
     { preHandler: userAuthMiddleware },
     userController.deleteMe.bind(userController)
   );
 
-  // reset avatar to default [Requires user authentication]
+  // DELETE /profile/me/avatar - Reset avatar to default
   fastify.delete(
     "/profile/me/avatar",
     { preHandler: userAuthMiddleware },
     userController.resetAvatar.bind(userController)
   );
 
-  // Retrieve avatar image file
+  // GET /profile/id/:id/avatar - Retrieve avatar image file
   fastify.get<{ Params: UserIdParams }> (
     "/profile/id/:id/avatar",
     { schema: { params: userIdSchema }  },
     userController.getAvatar.bind(userController)
   );
 
-  // get public user profile (no sensitive data + stats summary)
+  // GET /profile/id/:id - Get public user profile
   fastify.get<{ Params: UserIdParams }>(
     "/profile/id/:id",
     { schema: { params: userIdSchema } },
     userController.getPublicProfile.bind(userController)
   );
 
-  // get all user data by id [SHOULD be accessible only to backend micro services]
+  // GET /id/:id - Get all user data by id [protected]
   fastify.get<{ Params: UserIdParams }>(
     "/id/:id",
     {
@@ -122,7 +122,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserById.bind(userController)
   );
 
-  // get match-history aka game sessions via game service
+  // GET /match-history - Get match history via game service (TODO)
   fastify.get("/match-history", async (request, reply) => {
     // TODO - implement match history retrieval
   });

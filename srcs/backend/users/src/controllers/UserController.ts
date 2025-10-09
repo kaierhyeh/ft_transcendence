@@ -87,7 +87,7 @@ export class UserController {
     reply: FastifyReply
   ) {
     try {
-      const sub = request.user?.sub; // `sub` is the user ID in the JWT payload
+      const sub = request.authUser?.sub; // `sub` is the user ID in the JWT payload
       
       if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
@@ -108,7 +108,7 @@ export class UserController {
     reply: FastifyReply
   ) {
     try {
-      const sub = request.user?.sub;
+      const sub = request.authUser?.sub;
       if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
       }
@@ -163,7 +163,7 @@ export class UserController {
 
   public async getMe(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const sub = request.user?.sub;
+      const sub = request.authUser?.sub;
       
       if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
@@ -244,7 +244,7 @@ export class UserController {
 
   public async deleteMe(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const sub = request.user?.sub;
+      const sub = request.authUser?.sub;
       
       if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
@@ -264,7 +264,7 @@ export class UserController {
 
   public async resetAvatar(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const sub = request.user?.sub;
+      const sub = request.authUser?.sub;
       
       if (!sub) {
         return reply.status(401).send({ error: "Unauthorized: No user context" });
