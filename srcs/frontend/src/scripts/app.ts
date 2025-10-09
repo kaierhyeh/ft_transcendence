@@ -1,8 +1,11 @@
 import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
-import {initMenu} from "./menu.js";
-import {initProfile, handleOAuthCallback} from "./profile.js";
+import {initMenu} from "./menu/menu.js";
 import {initTournament} from "./tournament.js";
+import {initHistory} from "./history.js";
+import { i18n } from "./i18n/index.js";
+import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
+import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin } from "./auth/login.js";
@@ -16,9 +19,9 @@ const routes: Record<string, string> = {
 	"/pong/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
-	"/profile": "./html/profile.html",
 	"/user/profile": "./html/user/profile.html",
-	"/oauth-callback": "./html/profile.html",
+	// "/oauth-callback": "./html/profile.html",
+	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
 	"/user/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
@@ -40,26 +43,26 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initStats === "function")
 			initStats();
 	},
-	"/profile": () => {
-		if (typeof initProfile === "function")
-			initProfile();
-	},
 	"/signup": () => {
-		if (typeof initProfile === "function")
+		if (typeof initSignup === "function")
 			initSignup();
 	},
 	"/login": () => {
-		if (typeof initProfile === "function")
+		if (typeof initLogin === "function")
 			initLogin();
 	},
 	"/tournament": () => {
 		if (typeof initTournament === "function")
 			initTournament();
 	},
-	"/oauth-callback": () => {
-		if (typeof handleOAuthCallback === "function")
-			handleOAuthCallback();
-	}
+	"/history": () => {
+		if (typeof initHistory === "function")
+			initHistory();
+	},
+	// "/oauth-callback": () => {
+	// 	if (typeof handleOAuthCallback === "function")
+	// 		handleOAuthCallback();
+	// }
 }
 
 async function load404(push: boolean)
@@ -111,6 +114,8 @@ async function navigate(path: string, push: boolean = true)
 			
 			await loadHeader();
 			update_event();
+			// Initialize i18n for the new page
+			i18n.initializePage();
 			if (initScripts[path])
 				initScripts[path]();
 		}
@@ -126,5 +131,12 @@ window.onpopstate = (e) => {
 	const path = e.state?.path || location.pathname;
 	navigate(path, false);
 };
+
+// Initialize browser detection and compatibility
+addBrowserClass();
+logBrowserInfo();
+
+// Initialize device detection and responsive support
+initDeviceDetection();
 
 navigate(location.pathname, false);

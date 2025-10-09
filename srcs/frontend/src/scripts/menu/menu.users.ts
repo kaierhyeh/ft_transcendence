@@ -1,7 +1,7 @@
 // imports
-import { send } from "./api.js";
+// import { send } from "../api.js";
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
-import { user } from "./users.js";
+// import { user } from "../users.js";
 
 // data structures
 

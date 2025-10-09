@@ -1,4 +1,4 @@
-import { TournamentTree, TournamentBracket } from './types.js';
+import { TournamentBracket } from './types.js';
 import { TournamentBracketManager } from './bracket.js';
 
 export class TournamentUIManager {
@@ -30,7 +30,7 @@ export class TournamentUIManager {
                 input.id = `player-${i}`;
                 input.name = `player-${i}`;
                 input.placeholder = `Enter name`;
-                input.maxLength = 16;
+                input.maxLength = 14;
                 input.required = true;
                 
                 input.addEventListener('keypress', (e) => {
@@ -210,6 +210,7 @@ export class TournamentUIManager {
 
     private setupTournamentEndButtons(): void {
         const goHomeBtn = document.getElementById('go-home') as HTMLButtonElement;
+        const seeHistory = document.getElementById('see-history') as HTMLButtonElement;
         const newTournamentBtn = document.getElementById('new-tournament') as HTMLButtonElement;
         
         if (goHomeBtn) {
@@ -218,6 +219,14 @@ export class TournamentUIManager {
                 e.stopPropagation();
                 this.goToHomePage();
             });
+        }
+
+        if (seeHistory) {
+            seeHistory.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.seeHistory();
+            })
         }
         
         if (newTournamentBtn) {
@@ -234,6 +243,13 @@ export class TournamentUIManager {
             (window as any).navigate('/');
         else
             window.location.href = '/';
+    }
+
+    private seeHistory(): void {
+        if ((window as any).navigate)
+            (window as any).navigate('/history');
+        else
+            window.location.href = '/history';
     }
 
     private startNewTournament(): void {

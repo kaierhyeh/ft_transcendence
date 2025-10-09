@@ -1,5 +1,4 @@
 export class TournamentApiService {
-    private readonly API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
     private readonly API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
 
     async createGameSession(player1: string, player2: string, tournamentId?: number): Promise<{ game_id: number; jwt_tickets: string[] }> {

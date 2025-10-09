@@ -1,5 +1,8 @@
 # Game Service
 
+**⚠️⚠️⚠️ No more up to do date as for now ⚠️⚠️⚠️**
+
+
 This service manages concurrent live Pong game sessions, match history, and provides a REST API and WebSocket interface for players and viewers.
 
 ## Features

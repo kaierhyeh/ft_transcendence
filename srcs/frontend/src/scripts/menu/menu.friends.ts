@@ -25,5 +25,5 @@ import { setMenuTitle } from "./menu.utils.js";
 export function openFriendsSection(): void {
 	console.log("FRIENDS: Friends Section opened (test function)");
 	document.getElementById("friendsSection")!.classList.remove("hidden");
-	setMenuTitle("Friends");
+	setMenuTitle("friends");
 }

@@ -11,8 +11,6 @@ import {
   updateSchema, 
   UserIdParams, 
   userIdSchema, 
-  AvatarParams, 
-  avatarFilenameSchema, 
   Credentials,
   credentialsSchema
 } from "../schemas";
@@ -101,9 +99,9 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   );
 
   // Retrieve avatar image file
-  fastify.get<{ Params: AvatarParams }> (
-    "/avatar/:filename",
-    { schema: { params: avatarFilenameSchema }  },
+  fastify.get<{ Params: UserIdParams }> (
+    "/profile/id/:id/avatar",
+    { schema: { params: userIdSchema }  },
     userController.getAvatar.bind(userController)
   );
 
