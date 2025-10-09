@@ -17,12 +17,48 @@ export default function initRemoteGame():void {
     createRemoteInterface();
 }
 
+function resetRemoteUI(message?: string): void {
+    if (matchmakingWebSocket != null) {
+        matchmakingWebSocket.close();
+        matchmakingWebSocket = null;
+    }
+    if (gameWebSocket != null) {
+        gameWebSocket.close();
+        gameWebSocket = null;
+    }
+    currentGameId = null;
+    currentParticipantId = null;
+    remotePartyMode = '';
+
+    const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
+    const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
+    const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
+
+    if (btn2p != null) {
+        btn2p.disabled = false;
+        btn2p.textContent = "Join 2 Players";
+    }
+    if (btn4p != null) {
+        btn4p.disabled = false;
+        btn4p.textContent = "Join 4 Players";
+    }
+    if (btnCancel != null) {
+        btnCancel.style.display = 'none';
+    }
+
+    if (message != null && message !== '') {
+        showError(message);
+    }
+}
+
 function createRemoteInterface(): void {
     const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
     const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
+    const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
 
     if (btn2p != null) btn2p.style.display = 'block';
     if (btn4p != null) btn4p.style.display = 'block';
+    if (btnCancel != null) btnCancel.style.display = 'none';
 
     setupRemoteEvents();
 }
@@ -30,6 +66,7 @@ function createRemoteInterface(): void {
 function setupRemoteEvents(): void {
     const btn2p = document.getElementById('remote-2p-btn');
     const btn4p = document.getElementById('remote-4p-btn');
+    const btnCancel = document.getElementById('remote-cancel-btn');
 
     if (btn2p != null) {
         btn2p.addEventListener('click', function() { joinQueue("2p"); });
@@ -37,6 +74,12 @@ function setupRemoteEvents(): void {
 
     if (btn4p != null) {
         btn4p.addEventListener('click', function() { joinQueue("4p");  });
+    }
+
+    if (btnCancel != null) {
+        btnCancel.addEventListener('click', function() {
+            resetRemoteUI();
+        });
     }
 }
 
@@ -47,8 +90,8 @@ function generateParticipantId(): string {
 }
 
 async function joinQueue(mode: "2p" | "4p"): Promise<void> {
-    remotePartyMode = mode;
     
+    remotePartyMode = mode;
     const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
     const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
     
@@ -92,6 +135,12 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
             if (button != null) {
                 button.textContent = "Waiting...";
             }
+
+            const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
+            if (btnCancel != null) {
+                btnCancel.style.display = 'block';
+            }
+
             openMatchmakingWebSocket();
         } else if (data.type === "error") {
             console.log("Erreur:", data.message);
@@ -105,17 +154,8 @@ async function joinQueue(mode: "2p" | "4p"): Promise<void> {
             }
         }
     } catch (error) {
-        console.log("Connection failed with error : ", error);
-        showError("Connection failed, please try again");
-
-        if (btn2p) {
-            btn2p.disabled = false;
-            btn2p.textContent = "Join 2 Players";
-        }
-        if (btn4p) {
-            btn4p.disabled = false;
-            btn4p.textContent = "Join 4 Players";
-        }
+        console.log("Connection error:", error);
+        resetRemoteUI("Connection failed , please try again.");
     }
 }
 
@@ -150,7 +190,7 @@ function openMatchmakingWebSocket(): void {
                 console.log('Match found, game_id: ' + data.game_id);
                 
                 if (matchmakingWebSocket != null) {
-                    matchmakingWebSocket.close();
+                    matchmakingWebSocket.close(1000, "Match found");
                     matchmakingWebSocket = null;
                 }
 
@@ -173,11 +213,15 @@ function openMatchmakingWebSocket(): void {
     matchmakingWebSocket.onclose = function(event) {
         console.log('WebSocket matchmaking fermée: ' + event.code + ' ' + event.reason);
         matchmakingWebSocket = null;
+
+        if (event.code !== 1000 && event.code !== 1001) {
+            resetRemoteUI("Connection closed. Please try again.");
+        }
     };
-    
+
     matchmakingWebSocket.onerror = function(error) {
         console.error('Erreur WebSocket matchmaking:', error);
-        matchmakingWebSocket = null;
+        resetRemoteUI("Connection lost. Please try again.");
     };
 }
 
@@ -238,10 +282,15 @@ function connectToGame(gameId: number): void {
             document.removeEventListener('keyup', keyUpHandler);
             keyUpHandler = null;
         }
+
+        if (event.code !== 1000 && event.code !== 1001) {
+            showError("Game ended unexpectedly.");
+        }
     };
-    
+
     gameWebSocket.onerror = function(error) {
         console.error("erreur de websocket :", error);
+        showError("Game connection lost.");
     };
 }
 
