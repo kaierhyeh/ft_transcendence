@@ -27,13 +27,13 @@ CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
 VALUES
   ('alice', 'alice@ya.com', 'hash1', 'A_lice', 'alice.png', 'online'),
-  ('bob', 'bob@ya.com', 'hash2', 'B_ob', 'bob.png', 'offline'),
-  ('charlie', 'charlie@ya.com', 'hash3', 'C_harlie', 'charlie.png', 'away'),
+  ('bob', 'bob@ya.com', 'hash2', 'B_ob', 'test1.jpg', 'offline'),
+  ('charlie', 'charlie@ya.com', 'hash3', 'C_harlie', 'default.png', 'away'),
   ('dave', 'dave@ya.com', 'hash4', NULL, 'dave.png', 'online'),
   ('eve', 'eve@ya.com', 'hash5', 'E_ve', 'eve.png', 'offline'),
   ('frank', 'frank@ya.com', 'hash6', NULL, 'frank.png', 'online'),
-  ('grace', 'grace@ya.com', 'hash7', 'G_race', 'grace.png', 'offline'),
-  ('heidi', 'heidi@ya.com', 'hash8', 'H_eidi', 'heidi.png', 'online');
+  ('grace', 'grace@ya.com', 'hash7', 'G_race', 'test2.gif', 'offline'),
+  ('heidi', 'heidi@ya.com', 'hash8', 'H_eidi', 'default.png', 'online');
 
 -- Insert friendships (alice ↔ bob accepted, alice → charlie pending)
 

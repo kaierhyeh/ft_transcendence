@@ -2,6 +2,7 @@
 // import { send } from "../api.js";
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 // import { user } from "../users.js";
+import currentUser from '../user/User.js';
 
 // data structures
 
@@ -390,10 +391,9 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 function renderUserInfo(user: UserInfo): void {
 	prepareUserInfoSection();
 	console.log(`USER INFO: rendering user info for user: [${user.user_id}] [${user.username}], aka:[${user.alias}], avatar:[${user.avatar_filename}], online:[${user.user_status}], friendship:[${user.friendship_status}]`);
+        const userData = currentUser.getData();
 
-	const avatarSrc = user.avatar_filename
-		? `/uploads/avatars/${user.avatar_filename}`
-		: '/images/image.png';
+	const avatarSrc = `https://localhost:4443/api/users/profile/id/${user.user_id}/avatar`;
 
 	const userAlias = user.alias
 		? `<div id="userAlias" class="user-info-alias">aka ${user.alias}</div>`
@@ -459,9 +459,7 @@ function renderUserList(users: UserListRow[]): void {
 	});
 
 	usersList.innerHTML = users.map(user => {
-		const avatarSrc = user.avatar_filename 
-			? `/uploads/avatars/${user.avatar_filename}` 
-			: '/images/image.png';
+		const avatarSrc = `https://localhost:4443/api/users/profile/id/${user.user_id}/avatar`;
 
 		const userName = user.alias
 			? `${user.username} aka ${user.alias}`
