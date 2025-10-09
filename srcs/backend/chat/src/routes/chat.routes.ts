@@ -15,6 +15,7 @@ import	{
 		deleteMessageController
 		} from "../controllers/messages.controller";
 import { colorLog } from "../utils/logger";
+import { userAuthMiddleware } from "../middleware/userAuth";
 
 export const chatRoutes: FastifyPluginAsync = async (fastify:FastifyInstance): Promise<void> => {
 
@@ -24,8 +25,15 @@ export const chatRoutes: FastifyPluginAsync = async (fastify:FastifyInstance): P
 
 	// chat routes
 	// colorLog("cyan", fastify)
-	fastify.post("/messages", postMessagesController);
-	fastify.get("/messages/:chatId/:userId", getMessagesController);
+	fastify.post<{Body:{msg:{fromId:number, toId:number, msg:string}}}>(
+		"/messages",
+		{ preHandler: userAuthMiddleware }, 
+		postMessagesController);
+	fastify.get<{ Params: { chatId: string; userId: string } }>(
+		"/messages/:chatId/:userId", 
+		{ preHandler: userAuthMiddleware }, 
+		getMessagesController
+	);
 	fastify.delete("/messages/:id", deleteMessageController);
 	fastify.get("/chats/:userId", getChatPartnersController);
 

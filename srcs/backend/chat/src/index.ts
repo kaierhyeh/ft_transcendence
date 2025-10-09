@@ -1,11 +1,12 @@
 import fastify, { FastifyInstance } from "fastify";
-import fastifyJwt from "@fastify/jwt";
 import FastifyWebsocket from "@fastify/websocket";
 
 import { chatRoutes } from "./routes/chat.routes";
 import { wsRoutes } from "./routes/ws.routes";
 import { logError } from "./utils/errorHandler";
 import { colorLog, redLogError } from "./utils/logger";
+import cookie from "@fastify/cookie";
+
 import { CONFIG } from "./config";
 
 import "./db/database";
@@ -23,10 +24,10 @@ chatServer.setErrorHandler((error, request, reply) => {
 		});
 });
 
-chatServer.register(chatRoutes, { prefix: "/chat" });
-chatServer.register(wsRoutes);
-chatServer.register(fastifyJwt, { secret: CONFIG.SECURITY.JWT_SECRET });
+chatServer.register(cookie);
 chatServer.register(FastifyWebsocket);
+chatServer.register(wsRoutes);
+chatServer.register(chatRoutes, { prefix: "/chat" });
 
 // Health check endpoint
 chatServer.get('/health', async () => {

@@ -9,7 +9,6 @@
 		"serve": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"@fastify/jwt": "^10.0.0",
 		"@fastify/mongodb": "^9.0.2",
 		"@fastify/websocket": "^11.2.0",
 		"better-sqlite3": "^12.2.0",
@@ -21,9 +20,13 @@
 		"sqlite3": "^5.1.7",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.9.2",
-		"ws": "^8.18.3"
+		"ws": "^8.18.3",
+		"@fastify/cookie": "^11.0.2",
+		"jsonwebtoken": "^9.0.0",
+		"dotenv": "^16.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^24.3.1"
+		"@types/node": "^24.3.1",
+		"@types/jsonwebtoken": "^9.0.0"
 	}
 }

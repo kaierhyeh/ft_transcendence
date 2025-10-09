@@ -49,8 +49,20 @@ export const createGameSchema = {
   additionalProperties: false,
 } as const;
 
+export const gameSessionQuerySchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      page: { type: 'integer', minimum: 1, default: 1},
+      limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+      user_id: {type: ['integer', 'null'], nullable: true}
+    }
+  }
+} as const;
+
 // 👇 Types derived from schemas
 export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 export type GameMode = GameCreationBody["mode"];
+export type GameSessionQuery = FromSchema<typeof gameSessionQuerySchema.querystring>;

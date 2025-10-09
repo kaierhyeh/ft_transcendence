@@ -8,7 +8,7 @@ export class BlockController {
 
 	public async getBlockedUsers(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
@@ -22,7 +22,7 @@ export class BlockController {
 
 	public async blockUser(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetUserId = request.params.id;
 
 			if (!sub) {
@@ -41,7 +41,7 @@ export class BlockController {
 
 	public async unblockUser(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetUserId = request.params.id;
 
 			if (!sub) {
@@ -60,7 +60,7 @@ export class BlockController {
 
 	public async isBlocked(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetUserId = request.params.id;
 
 			if (!sub) {
