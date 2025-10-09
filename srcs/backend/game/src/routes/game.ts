@@ -3,7 +3,7 @@ import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema } from ".
 import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
-  // Protected route - only internal services can create games
+  // POST /create - Create a new game session [protected]
   fastify.post<{ Body: GameCreationBody }>(
     "/create",
     { 
@@ -16,6 +16,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
       reply.status(201).send({game_id: game_id});
   });
 
+  // GET /:id/conf - Get game session configuration
   fastify.get<{ Params: GameIdParams }>(
     "/:id/conf", 
     { schema: { params: gameIdSchema } },
@@ -26,7 +27,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
       reply.send(conf);
   });
 
-  // WebSocket endpoint for real-time game updates
+  // GET /:id/ws - WebSocket endpoint for real-time game updates
   fastify.get<{ Params: GameIdParams }>(
     "/:id/ws",
     { schema: { params: gameIdSchema }, websocket: true },

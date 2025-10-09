@@ -13,8 +13,8 @@ async function run() {
   await fastify.register(sessionRepositoryPlugin);
   await fastify.register(liveSessionManagerPlugin);
   
-  for (const { route, prefix } of routes) {
-    await fastify.register(route, { prefix });
+  for (const { route } of routes) {
+    await fastify.register(route, { prefix: "/game" });
   }
   
   // Health check endpoint
