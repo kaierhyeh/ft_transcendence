@@ -1,5 +1,7 @@
 # Auth Service API Usage Guide
 
+**⚠️⚠️⚠️ No more up to do date as for now ⚠️⚠️⚠️**
+
 ## Three JWT Types Explained
 
 This authentication service provides three different JWT types, each with its specific purpose and use case:
