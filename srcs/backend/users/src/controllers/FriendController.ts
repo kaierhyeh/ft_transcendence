@@ -10,11 +10,29 @@ export class FriendController {
 		try {
 			const sub = request.user?.sub;
 			if (!sub) {
-				console.log("request all users without auth");
-				reply.status(200).send(await this.friendService.getAllUsers(null));
+				console.log("request all users without auth for ID=1");
+				reply.status(200).send(await this.friendService.getAllUsers(1));
 			} else {
 				console.log("request all users with auth, user id:", sub);	
 				reply.status(200).send(await this.friendService.getAllUsers(toInteger(sub)));
+			}
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async getUserById(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
+		try {
+			const targetUserId = request.params.id;
+			const sub = request.user?.sub;
+			if (!sub) {
+				console.log("request user by id without auth for ID=1");
+				const user = await this.friendService.getUserById(1, targetUserId);
+				reply.status(200).send(user);
+			} else {
+				console.log("request user by id with auth, user id:", sub);
+				const user = await this.friendService.getUserById(toInteger(sub), targetUserId);
+				reply.status(200).send(user);
 			}
 		} catch (error) {
 			this.handleError(error, reply);

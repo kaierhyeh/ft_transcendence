@@ -7,6 +7,8 @@ export interface UserListRow {
 	avatar_filename: string | null;
 	user_status: string;
 	friendship_status: string | null;
+	from_id: number | null;
+	to_id: number | null;
 }
 
 export interface FriendListRow {
@@ -44,13 +46,12 @@ export class FriendRepository {
 	public async listAllUsers() {
 		const stmt = this.db.prepare(`
 			SELECT
-				user_id,
-				username,
-				alias,
-				avatar_filename,
-				status AS user_status
-			FROM users
-			ORDER BY username ASC
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+			FROM users as u
+			ORDER BY u.username ASC
 		`);
 		return stmt.all() as UserListRow[];
 	}
@@ -76,6 +77,42 @@ export class FriendRepository {
 			ORDER BY u.username ASC
 		`);
 		return stmt.all(userId, userId, userId) as UserListRow[];
+	}
+
+	public async getUserById(userId: number, targetUserId: number) {
+		const stmt = this.db.prepare(`
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+			FROM users AS u
+			WHERE u.user_id = ?
+		`);
+		return stmt.get(targetUserId) as UserListRow | undefined;
+	}
+
+	public async getUserByIdForUser(thisUserId: number, targetUserId: number) {
+		const stmt = this.db.prepare(`
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status,
+				f.user_id AS from_id,
+				f.friend_id AS to_id
+			FROM users AS u
+			LEFT JOIN friendships AS f
+				ON (
+					(f.user_id = ? AND f.friend_id = u.user_id)
+					OR
+					(f.friend_id = ? AND f.user_id = u.user_id)
+				)
+			WHERE u.user_id = ?
+		`);
+		return stmt.get(thisUserId, thisUserId, targetUserId) as UserListRow | undefined;
 	}
 
 	public async listFriends(userId: number) {

@@ -12,6 +12,14 @@ export class FriendService {
 		}
 	}
 
+	public async getUserById(thisUserId: number | null, targetUserId: number) {
+		if (thisUserId === null) {
+			return this.friendRepository.getUserById(1, targetUserId);
+		} else {
+			return this.friendRepository.getUserByIdForUser(thisUserId, targetUserId);
+		}
+	}
+
 	// if no friends, return empty array
 	// user(id, nickname, isOnline)
 	public async getFriends(userId: number) {

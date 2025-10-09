@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { FriendController } from "../controllers/FriendController";
 import { FriendshipIdParams, friendshipIdSchema, UserIdParams, userIdSchema } from "../schemas/friends";
-import { userAuthMiddleware } from "../middleware/userAuth";
+import { userAuthMiddleware, userAuthSwitcher } from "../middleware/userAuth";
 
 
 /* 
@@ -13,12 +13,6 @@ import { userAuthMiddleware } from "../middleware/userAuth";
 export default async function friendsRoutes(fastify: FastifyInstance) {
 	const friendController = new FriendController(fastify.services.friends);
 
-	// List all users (for searching)
-	fastify.get(
-		"/allusers",
-		friendController.getAllUsers.bind(friendController)
-	);
-
 	// List current friends [Requires user authentication]
 	fastify.get(
 		"/",
@@ -26,6 +20,24 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 			preHandler: userAuthMiddleware
 		},
 		friendController.getFriends.bind(friendController)
+	);
+
+	// Get user by id
+	fastify.get<{ Params: UserIdParams }>(
+		"/:id",
+		{
+			preHandler: userAuthSwitcher
+		},
+		friendController.getUserById.bind(friendController)
+	);
+
+	// List all users (for searching)
+	fastify.get(
+		"/allusers",
+		{
+			preHandler: userAuthSwitcher
+		},
+		friendController.getAllUsers.bind(friendController)
 	);
 
 	// List pending requests to this user (in) [Requires user authentication]
@@ -77,7 +89,7 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	);
 
 	// Decline friend request [Requires user authentication]
-	fastify.post<{ Params: UserIdParams }>(
+	fastify.delete<{ Params: UserIdParams }>(
 		"/decline/:id",
 		{
 			schema: { params: userIdSchema },
