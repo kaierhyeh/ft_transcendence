@@ -50,7 +50,7 @@ function seedData() {
 				[u.id, u.username, u.wins, u.losses],
 				function (err) {
 					if (err) console.error("Error inserting user:", err.message);
-					else console.log(`Inserted user: ${u.id}`);
+					// else console.log(`Inserted user: ${u.id}`);
 				}
 			);
 		});
@@ -69,7 +69,7 @@ function seedData() {
 				[c.id, c.user_id_a, c.user_id_b],
 				function (err) {
 					if (err) console.error("Error inserting chat:", err.message);
-					else console.log(`Inserted chat: ${c.id}`);
+					// else console.log(`Inserted chat: ${c.id}`);
 				}
 			);
 		});
@@ -94,7 +94,7 @@ function seedData() {
 				[m.chat_id, m.from_id, m.to_id, m.msg],
 				function (err) {
 					if (err) console.error("Error inserting message:", err.message);
-					else console.log(`Inserted message: ${m.chat_id}`);
+					// else console.log(`Inserted message: ${m.chat_id}`);
 				}
 			);
 		});

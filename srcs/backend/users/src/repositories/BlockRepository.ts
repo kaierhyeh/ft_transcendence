@@ -24,7 +24,7 @@ export class BlockRepository {
 	// first delete any friendship or pending request between the two users
 	// try add block line
 	// if exists block line in opposite direction - do nothing
-	public async blockUser(userId: number, targetUserId: number) {
+	public async blockUser(userId: number, targetUserId: number) { 									// HERE TO DO 
 		const stmt = this.db.prepare(`
 			WITH removed AS (
 				DELETE FROM friendships
