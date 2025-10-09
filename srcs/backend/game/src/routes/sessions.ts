@@ -8,7 +8,8 @@ export default async function sessionsRoutes(fastify: FastifyInstance) {
     { schema: gameSessionQuerySchema },
     async (request, reply) => {
       const { page, limit, user_id } = request.query;
+      const payload = fastify.session_repo.get(page, limit, user_id);
       
-      reply.send({ page, limit, user_id });
+      reply.send(payload);
   });
 }
