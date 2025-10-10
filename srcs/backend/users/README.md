@@ -142,7 +142,6 @@ Update current user profile [requires user authentication].
 **Request Body:**
 ```json
 {
-  "email"?: "string",
   "password"?: {
     "old": "string",
     "new": "string"
@@ -196,6 +195,8 @@ Get current user profile with sensitive data [requires user authentication].
   "updated_at": "datetime",
   "wins": number,
   "losses": number,
+  "curr_winstreak": number,
+  "best_winstreak": number,
   "total_games": number
 }
 ```

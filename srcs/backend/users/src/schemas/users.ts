@@ -1,20 +1,13 @@
 import { FromSchema } from "json-schema-to-ts";
 
 // Elementary field schemas (reusable building blocks)
-const usernameSchema = {
-  type: "string",
-  minLength: 3,
-  maxLength: 30,
-  pattern: "^[a-zA-Z0-9_-]+$"
-} as const;
 
-const emailSchema = {
-  type: "string",
-  format: "email",
-  minLength: 5,
-  maxLength: 254
+const loginSchema = {
+    type: "string",
+    minLength: 1,      // Allow any identifier length
+    maxLength: 254,    // Max email length
+    description: "Username, email address, or Google sub"
 } as const;
-
 
 const passwordSchema = {
   type: "string",
@@ -46,8 +39,8 @@ export const createLocalUserSchema = {
   type: "object",
   required: ["username", "email", "password"],
   properties: {
-    username: usernameSchema,
-    email: emailSchema,
+    username: loginSchema,
+    email: loginSchema,
     password: passwordSchema,
     alias: aliasSchema
   },
@@ -60,15 +53,15 @@ export const createGoogleUserSchema = {
   required: ["google_sub", "email", "username"],
   properties: {
     google_sub: googleSubSchema,
-    email: emailSchema,
-    username: usernameSchema,
+    email: loginSchema,
+    username: loginSchema,
     alias: aliasSchema
   },
   additionalProperties: false,
 } as const;
 
 
-export const loginSchema = {
+export const loginParamsSchema = {
   type: "object",
   required: ["login"],
   properties: {
@@ -95,7 +88,6 @@ export const updatePasswordSchema = {
 export const updateSchema = {
   type: "object", 
   properties: {
-    email: emailSchema,
     password: updatePasswordSchema,
     alias: aliasSchema,
     settings: settingsSchema,
@@ -125,7 +117,7 @@ export const credentialsSchema = {
 
 export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
-export type LoginParams = FromSchema<typeof loginSchema>;
+export type LoginParams = FromSchema<typeof loginParamsSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;

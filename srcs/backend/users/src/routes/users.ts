@@ -6,7 +6,7 @@ import {
   createLocalUserSchema,
   createGoogleUserSchema, 
   LoginParams, 
-  loginSchema, 
+  loginParamsSchema, 
   UpdateRawData, 
   updateSchema, 
   UserIdParams, 
@@ -54,7 +54,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: LoginParams }>(
     "/login/:login",
     {
-      schema: { params: loginSchema},
+      schema: { params: loginParamsSchema},
       preHandler: internalAuthMiddleware,
     },
     userController.getUserByLogin.bind(userController)

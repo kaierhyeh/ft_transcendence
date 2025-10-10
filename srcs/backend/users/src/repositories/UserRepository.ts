@@ -22,7 +22,6 @@ export interface UserRow {
 }
 
 export interface UpdateData {
-    email?: string;
     password_hash?: string;
     alias?: string;
     avatar_filename?: string;
@@ -83,10 +82,6 @@ export class UserRepository {
         const params: Record<string, any> = { user_id };
 
         // Handle regular fields
-        if (data.email !== undefined) {
-            set_clauses.push("email = @email");
-            params.email = data.email;
-        }
         if (data.password_hash !== undefined) {
             set_clauses.push("password_hash = @password_hash");
             params.password_hash = data.password_hash;

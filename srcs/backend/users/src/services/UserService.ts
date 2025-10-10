@@ -119,7 +119,6 @@ export class UserService {
   public async updateUser(user_id: number, raw_data: UpdateRawData): Promise<number> {
     // Transform raw user input to database format
     const data: UpdateData = {
-      email: raw_data.email,
       alias: raw_data.alias,
       settings: raw_data.settings,
       // Extract just the hash string from the auth service response
