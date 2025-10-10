@@ -10,10 +10,10 @@ export class FriendController {
 		try {
 			const sub = request.authUser?.sub;
 			if (!sub) {
-				console.log("request all users without auth for ID=1");
+				console.log("[DEBUG] request all users NO auth");
 				reply.status(200).send(await this.friendService.getAllUsers(null));
 			} else {
-				console.log("request all users with auth, user id:", sub);	
+				console.log("[DEBUG] request all users WITH auth user id:", sub);
 				reply.status(200).send(await this.friendService.getAllUsers(toInteger(sub)));
 			}
 		} catch (error) {
@@ -26,11 +26,11 @@ export class FriendController {
 			const targetUserId = request.params.id;
 			const sub = request.authUser?.sub;
 			if (!sub) {
-				console.log("request user by id without auth for ID=1");
+				console.log("[DEBUG] request user by id NO auth");
 				const user = await this.friendService.getUserById(null, targetUserId);
 				reply.status(200).send(user);
 			} else {
-				console.log("request user by id with auth, user id:", sub);
+				console.log("[DEBUG] request user by id WITH auth user id:", sub);
 				const user = await this.friendService.getUserById(toInteger(sub), targetUserId);
 				reply.status(200).send(user);
 			}
