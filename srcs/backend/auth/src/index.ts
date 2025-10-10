@@ -4,6 +4,7 @@ import { CONFIG } from './config';
 import routes from "./routes"
 import jwksService from "./services/jwks.service";
 import ajvErrors from "ajv-errors";
+import { fastifyErrorHandler } from "./errors";
 
 
 const fastify = Fastify({
@@ -18,24 +19,8 @@ const fastify = Fastify({
 
 async function run() {
 
-	fastify.setErrorHandler((error, request, reply) => {
-		if (error.validation) {
-			// Just take the FIRST error, ignore the rest
-			const firstError = error.validation[0];
-			
-			// Strip 'body/' prefix
-			const field = firstError.instancePath
-			.replace(/^\/body\//, '')
-			.replace(/^\//, '') || firstError.params?.missingProperty;
-			
-			return reply.status(400).send({
-				error: firstError.message || 'Validation failed',
-				field: field
-			});
-		}
-		
-		reply.send(error);
-	});
+	// Register global error handler
+	fastify.setErrorHandler(fastifyErrorHandler);
 
 	// Register plugins
 	await fastify.register(cookie);
