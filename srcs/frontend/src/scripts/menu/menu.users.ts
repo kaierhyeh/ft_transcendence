@@ -34,7 +34,7 @@ let menuBackButton: HTMLElement;
 // sections
 let menuControlPanel: HTMLElement;
 let usersSectionButton: HTMLElement;
-let friendsSectionButton: HTMLElement;
+// let friendsSectionButton: HTMLElement;
 let chatsSectionButton: HTMLElement;
 // users section
 let usersSection: HTMLElement;
@@ -62,7 +62,7 @@ function initializeGlobals(userId: number): boolean {
 	// sections
 	menuControlPanel = document.getElementById("menuControlPanel")!;
 	usersSectionButton = document.getElementById("usersSectionButton")!;
-	friendsSectionButton = document.getElementById("friendsSectionButton")!;
+	// friendsSectionButton = document.getElementById("friendsSectionButton")!;
 	chatsSectionButton = document.getElementById("chatsSectionButton")!;
 	// users section
 	usersSection = document.getElementById("usersSection")!;
@@ -88,7 +88,7 @@ function initializeGlobals(userId: number): boolean {
 		!menuBackButton ||
 		!menuControlPanel ||
 		!usersSectionButton ||
-		!friendsSectionButton ||
+		// !friendsSectionButton ||
 		!chatsSectionButton ||
 		!usersSection ||
 		!usersList ||
@@ -137,7 +137,7 @@ function resetUsersSection(): void {
 
 	showElementById("menuControlPanel");
 	showElementById("usersSectionButton");
-	showElementById("friendsSectionButton");
+	// showElementById("friendsSectionButton");
 	showElementById("chatsSectionButton");
 
 	setMenuTitle("Users");
@@ -520,7 +520,14 @@ async function initUsersSection(): Promise<void> {
 export async function openUsersSection(userId: number): Promise<void> {
 	console.log("USERS: Users Section opened");
 	initializeGlobals(userId);
-	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !friendsSectionButton || !chatsSectionButton
+	// if (!menuBackButton || !menuControlPanel || !usersSectionButton || !friendsSectionButton || !chatsSectionButton
+	// 	|| !usersSection || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
+	// 	|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
+	// 	|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {
+	// 	console.error("One or more required elements not found, cannot open Users section");
+	// 	return;
+	// }
+	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
 		|| !usersSection || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
 		|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
 		|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {

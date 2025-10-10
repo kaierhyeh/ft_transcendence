@@ -10,7 +10,7 @@ let menuWindow: HTMLElement;
 let menuCloseButton: HTMLElement;
 let menuButton: HTMLElement;
 let usersButton: HTMLElement;
-let friendsButton: HTMLElement;
+// let friendsButton: HTMLElement;
 let chatsButton: HTMLElement;
 
 function initializeGlobals(): boolean {
@@ -18,9 +18,10 @@ function initializeGlobals(): boolean {
 	menuCloseButton = document.getElementById("menuCloseButton")!;
 	menuButton = document.getElementById("menuButton")!;
 	usersButton = document.getElementById("usersSectionButton")!;
-	friendsButton = document.getElementById("friendsSectionButton")!;
+	// friendsButton = document.getElementById("friendsSectionButton")!;
 	chatsButton = document.getElementById("chatsSectionButton")!;
-	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !friendsButton || !chatsButton) {
+	// if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !friendsButton || !chatsButton) {
+	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !chatsButton) {
 		return false;
 	}
 	return true;
@@ -58,11 +59,11 @@ function openUsers(): void {
 	hideSectionsElements();
 
 	setElementActive("usersSectionButton", true);
-	setElementActive("friendsSectionButton", false);
+	// setElementActive("friendsSectionButton", false);
 	setElementActive("chatsSectionButton", false);
 
 	clearEvents("#menuControlPanel");
-	document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
+	// document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
 	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
 
 	openUsersSection(1);
@@ -74,7 +75,7 @@ function openFriends(): void {
 	hideSectionsElements();
 
 	setElementActive("usersSectionButton", false);
-	setElementActive("friendsSectionButton", true);
+	// setElementActive("friendsSectionButton", true);
 	setElementActive("chatsSectionButton", false);
 
 	clearEvents("#menuControlPanel");
@@ -90,12 +91,12 @@ function openChats(): void {
 	hideSectionsElements();
 
 	setElementActive("usersSectionButton", false);
-	setElementActive("friendsSectionButton", false);
+	// setElementActive("friendsSectionButton", false);
 	setElementActive("chatsSectionButton", true);
 
 	clearEvents("#menuControlPanel");
 	document.getElementById("usersSectionButton")!.addEventListener("click", openUsers);
-	document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
+	// document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
 
 	openChatsSection(1); // Replace 1 with actual current user ID
 }
@@ -150,7 +151,7 @@ export async function initMenu(): Promise<void> {
 	menuButton.addEventListener("click", openMenuWindow);
 	menuCloseButton.addEventListener("click", closeMenuWindow);
 	usersButton.addEventListener("click", openUsers);
-	friendsButton.addEventListener("click", openFriends);
+	// friendsButton.addEventListener("click", openFriends);
 	chatsButton.addEventListener("click", openChats);
 
 	// call Users event (as home page for menu)

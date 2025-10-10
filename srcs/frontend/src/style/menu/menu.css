@@ -96,6 +96,33 @@
 	color: #fff;
 	text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
 }
+
+.menu-section-switcher {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: auto;
+	height: 40px;
+	padding-left: 16px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	padding-right: 16px;
+	margin: 0;
+	border-radius: 8px;
+	color: #aaa;
+	background: transparent;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	box-sizing: border-box;
+	font-size: 14px;
+}
+.menu-section-switcher:hover {
+	color: #4ade80;
+	border-color: #4ade80;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
 .menu-header-buttons {
 	display: flex;
 	gap: 0.5rem;
@@ -141,21 +168,30 @@
 .menu-button:hover {
 	color: #4ade80;
 	border-color: #4ade80;
-	transform: translateY(-2px);
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
 
 /* Menu Control Panel Styles*/
 .menu-control-panel {
-	justify-content: center;
-	align-items: center;
-	display: flex;
-	padding-block: 1.4%;
+	border-top: 2px solid #444;
 	padding-bottom: 5px;
-  	padding-top: 0px;
-	gap: 3%;
+	padding-top: 5px;
+	padding-left: 8px;
+	padding-right: 8px;
+	display: flex;
+	gap: 5px;
+
+	/* justify-content: center; */
+	/* align-items: center; */
+	/* display: flex; */
+	/* padding-block: 1.4%;
+	padding-bottom: 5px;
+  	padding-top: 0px; */
+	/* gap: 3%; */
 }
 .menu-control-panel-button {
+	justify-content: center;
+	flex: 1;
 	display: inline-flex;
 	align-items: center;
 	padding: 4%;
@@ -168,7 +204,21 @@
 	transition: all 0.3s ease;
 	cursor: pointer;
 	width: 30%;
-	gap : 6px;
+	gap : 5px;
+
+	/* display: inline-flex;
+	align-items: center;
+	padding: 4%;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	border-radius: 8px;
+	color: #aaa;
+	background: transparent;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	width: 30%;
+	gap : 6px; */
 }
 .menu-control-panel-button:hover {
 	color: #4ade80;
