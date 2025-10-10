@@ -77,9 +77,8 @@ function setupHeaderEvents() {
     // Setup avatar with user data
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
     if (userAvatar && user.isLoggedIn()) {
-        const userData = user.getData();
-        if (userData && userData.avatar_url) {
-            userAvatar.src = userData.avatar_url;
+        if (user.avatar_url) {
+            userAvatar.src = user.avatar_url;
             userAvatar.style.display = 'block';
         } else {
             userAvatar.style.display = 'none';
@@ -90,8 +89,7 @@ function setupHeaderEvents() {
             userAvatar.style.display = 'none';
             const avatarContainer = userAvatar.parentElement;
             if (avatarContainer) {
-                const displayName = user.getDisplayName() || 'U';
-                const initial = displayName.charAt(0).toUpperCase();
+                const initial = user.getInitials();
                 avatarContainer.innerHTML = `<div class="avatar-fallback">${initial}</div>`;
             }
         });

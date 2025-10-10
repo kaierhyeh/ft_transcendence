@@ -2,7 +2,6 @@
 // import { send } from "../api.js";
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 // import { user } from "../users.js";
-import currentUser from '../user/User.js';
 
 // data structures
 
@@ -391,7 +390,6 @@ function updateButtonsForUserInfo(userInfo: UserInfo): void {
 function renderUserInfo(userInfo: UserInfo): void {
 	prepareUserInfoSection();
 	console.log(`USER INFO: rendering user info for user: [${userInfo.user_id}] [${userInfo.username}], aka:[${userInfo.alias}], avatar:[${userInfo.avatar_filename}], online:[${userInfo.user_status}], friendship:[${userInfo.friendship_status}]`);
-        const userData = currentUser.getData();
 
 	const avatarSrc = `https://localhost:4443/api/users/profile/id/${userInfo.user_id}/avatar`;
 
