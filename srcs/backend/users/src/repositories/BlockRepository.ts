@@ -8,7 +8,6 @@ export interface BlockedRow {
 export class BlockRepository {
     constructor(private db: Database) {
         this.db = db;
-
     }
 
 	public async listBlockedUsers(userId: number) {
@@ -21,29 +20,32 @@ export class BlockRepository {
 		return stmt.all(userId) as BlockedRow[];
 	}
 
-	// first delete any friendship or pending request between the two users
-	// try add block line
-	// if exists block line in opposite direction - do nothing
-	public async blockUser(userId: number, targetUserId: number) { 									// HERE TO DO 
-		const stmt = this.db.prepare(`
-			WITH removed AS (
-				DELETE FROM friendships
-				WHERE (
-					(user_id = ? AND friend_id = ?)
-					OR (user_id = ? AND friend_id = ?)
-				)
-				AND status IN ('pending', 'accepted')
-			)
+	public async blockUser(userId: number, targetUserId: number) {
+
+		const deleteStmt = this.db.prepare(`
+			DELETE FROM friendships
+			WHERE ((user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?))
+			AND status IN ('pending', 'accepted')
+		`);
+
+		const insertStmt = this.db.prepare(`
 			INSERT OR IGNORE INTO friendships (user_id, friend_id, status)
 			VALUES (?, ?, 'blocked')
 		`);
-		stmt.run(userId, targetUserId, targetUserId, userId, userId, targetUserId);
+
+		const operation = this.db.transaction(() => {
+			deleteStmt.run(userId, targetUserId, targetUserId, userId);
+			insertStmt.run(userId, targetUserId);
+		});
+
+		operation();
+
 	}
 
 	public async unblockUser(userId: number, targetUserId: number) {
 		const stmt = this.db.prepare(`
 			DELETE FROM friendships
-			WHERE user_id = ? AND targetUserId = ? AND status = 'blocked'
+			WHERE user_id = ? AND friend_id = ? AND status = 'blocked'
 		`);
 		stmt.run(userId, targetUserId);
 	}

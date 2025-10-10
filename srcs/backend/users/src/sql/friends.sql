@@ -10,9 +10,17 @@ CREATE TABLE IF NOT EXISTS friendships (
     FOREIGN KEY(friend_id) REFERENCES users(user_id) ON DELETE CASCADE,
     
     -- Prevent self-friendship
-    CONSTRAINT no_self_friendship CHECK (user_id <> friend_id),
-    -- Prevent duplicate relationships in the same direction
-    CONSTRAINT unique_relationship UNIQUE (user_id, friend_id)
+    CONSTRAINT no_self_friendship CHECK (user_id <> friend_id)
+    -- Prevent duplicate relationships
+    -- user_low   INTEGER GENERATED ALWAYS AS (CASE WHEN user_id < friend_id THEN user_id ELSE friend_id END) STORED,
+    -- user_high  INTEGER GENERATED ALWAYS AS (CASE WHEN user_id > friend_id THEN user_id ELSE friend_id END) STORED,
+    -- CONSTRAINT unique_pair UNIQUE (user_low, user_high)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_friend_pair
+ON friendships(
+    CASE WHEN user_id < friend_id THEN user_id ELSE friend_id END,
+    CASE WHEN user_id < friend_id THEN friend_id ELSE user_id END
 );
 
 -- Indexes for performance
