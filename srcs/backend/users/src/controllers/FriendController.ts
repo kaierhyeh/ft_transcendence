@@ -11,7 +11,7 @@ export class FriendController {
 			const sub = request.user?.sub;
 			if (!sub) {
 				console.log("request all users without auth for ID=1");
-				reply.status(200).send(await this.friendService.getAllUsers(1));
+				reply.status(200).send(await this.friendService.getAllUsers(null));
 			} else {
 				console.log("request all users with auth, user id:", sub);	
 				reply.status(200).send(await this.friendService.getAllUsers(toInteger(sub)));
@@ -27,7 +27,7 @@ export class FriendController {
 			const sub = request.user?.sub;
 			if (!sub) {
 				console.log("request user by id without auth for ID=1");
-				const user = await this.friendService.getUserById(1, targetUserId);
+				const user = await this.friendService.getUserById(null, targetUserId);
 				reply.status(200).send(user);
 			} else {
 				console.log("request user by id with auth, user id:", sub);
