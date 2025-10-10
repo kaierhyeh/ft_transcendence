@@ -15,7 +15,7 @@ const error_404_path = "./html/404.html";
 const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
-	"/pong/online": "./html/pong.html", //temporary
+	"/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/profile": "./html/profile.html",
@@ -44,7 +44,7 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initTournament === "function")
 			initTournament();
 	},
-	"/pong/online": () => {
+	"/online": () => {
 		if (typeof initRemoteGame === "function")
 			initRemoteGame();
 	},
