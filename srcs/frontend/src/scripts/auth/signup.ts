@@ -5,8 +5,9 @@ export function initSignup() {
 	checkAuthStatusAndRedirect();
 
 	const registerBtn = document.getElementById('register-btn') as HTMLButtonElement;
-	const googleLoginBtn = document.getElementById('google-login-btn') as HTMLButtonElement;
-	const loginInput = document.getElementById('login') as HTMLInputElement;
+	const googleSignupBtn = document.getElementById('google-signup-btn') as HTMLButtonElement;
+	const usernameInput = document.getElementById('username') as HTMLInputElement;
+	const emailInput = document.getElementById('email') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
 
@@ -14,20 +15,21 @@ export function initSignup() {
 	if (registerBtn)
 		registerBtn.addEventListener('click', handleRegister);
 
-	// if (googleLoginBtn)
-	// 	googleLoginBtn.addEventListener('click', handleGoogleLogin);
+	// if (googleSignupBtn)
+	// 	googleSignupBtn.addEventListener('click', handleGoogleSignup);
 
 	async function handleRegister() {
-		const login = loginInput?.value.trim();
+		const username = usernameInput?.value.trim();
+		const email = emailInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
-		if (!login || !password) {
-			alert('Please enter both username and password.');
+		if (!username || !email || !password) {
+			alert('Please enter username, email, and password.');
 			return;
 		}
 
-		if (login.length > 50 || password.length > 50) {
-			alert('Username or password too long.');
+		if (username.length > 50 || email.length > 100 || password.length > 50) {
+			alert('Username, email, or password too long.');
 			return;
 		}
 
@@ -36,7 +38,7 @@ export function initSignup() {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ login, password })
+				body: JSON.stringify({ username, email, password })
 			});
 
 			const data = await response.json();
@@ -53,7 +55,7 @@ export function initSignup() {
 		}
 	}
 
-	// async function handleGoogleLogin() { await initiateGoogleLogin(); }
+	// async function handleGoogleSignup() { await initiateGoogleSignup(); }
 
 	async function checkAuthStatusAndRedirect() {
 		try {
