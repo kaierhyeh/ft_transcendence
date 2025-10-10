@@ -49,6 +49,7 @@ export const createGameSchema = {
   additionalProperties: false,
 } as const;
 
+
 // 👇 Types derived from schemas
 export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;

@@ -10,14 +10,45 @@ export interface DbPlayerSession {
     winner: boolean
 }
 
+interface SessionRow {
+    mode: GameMode,
+    created_at: string,
+    started_at: string,
+    ended_at: string,
+}
+
 export interface DbSession {
-    session: {
-        mode: GameMode,
-        created_at: string,
-        started_at: string,
-        ended_at: string,
-    },
+    session: SessionRow,
     player_sessions: DbPlayerSession[]
+}
+
+type SessionData = SessionRow & {
+    player_sessions: DbPlayerSession[]
+}
+
+interface SessionQueryRow {
+    mode: GameMode;
+    created_at: string;
+    started_at: string;
+    ended_at: string;
+    player_sessions: string;
+}
+
+interface CountResult {
+    total_records: number;
+}
+
+interface Pagination {
+    total_records: number;
+    current_page: number;
+    total_pages: number;
+    next_page: number | null;
+    prev_page: number | null;
+}
+
+export interface SessionsPayload {
+    data: SessionData[];
+    pagination: Pagination;
 }
 
 export class SessionRepository {
@@ -56,5 +87,69 @@ export class SessionRepository {
         });
 
         saveTransaction(session);
+    }
+
+    public get(page: number, limit: number, user_id: number | null): SessionsPayload {
+        const offset = (page - 1) * limit;
+
+        // Get total records
+        const countStmt = this.db.prepare(`
+            SELECT COUNT(*) AS total_records
+            FROM sessions s
+            WHERE (:user_id IS NULL
+                    OR s.id IN (SELECT session_id FROM player_sessions WHERE user_id = :user_id)
+            );
+        `);
+
+        const { total_records } = countStmt.get({ user_id }) as CountResult;
+
+        // Retrieve data
+        const dataStmt = this.db.prepare(`
+            WITH filtered_sessions AS (
+                SELECT s.id, s.mode, s.created_at, s.started_at, s.ended_at
+                FROM sessions s
+                WHERE (:user_id IS NULL OR s.id IN (SELECT session_id FROM player_sessions WHERE user_id = :user_id))
+                ORDER BY s.created_at DESC
+                LIMIT :limit OFFSET :offset
+            )
+            SELECT
+                fs.mode,
+                fs.created_at,
+                fs.started_at,
+                fs.ended_at,
+                json_group_array(
+                json_object(
+                    'user_id', ps.user_id,
+                    'type', ps.type,
+                    'team', ps.team,
+                    'score', ps.score,
+                    'winner', ps.winner
+                )
+                ) AS player_sessions
+            FROM filtered_sessions fs
+            JOIN player_sessions ps ON fs.id = ps.session_id
+            GROUP BY fs.id
+            ORDER BY fs.created_at DESC;
+        `);
+        
+        const rows = dataStmt.all({ user_id, limit, offset}) as SessionQueryRow[];
+
+        const data: SessionData[] = rows.map((row) => ({
+            ...row,
+            player_sessions: JSON.parse(row.player_sessions) as DbPlayerSession[]
+        }));
+
+        // Pagination meta
+        const total_pages = Math.ceil(total_records / limit);
+        const pagination: Pagination = {
+            total_records,
+            current_page: page,
+            total_pages,
+            next_page: page < total_pages ? page + 1 : null,
+            prev_page: page > 1 ? page - 1 : null
+        };
+
+        return {data, pagination};
+
     }
 }

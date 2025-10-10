@@ -41,7 +41,7 @@ export class FriendController {
 
 	public async getFriends(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
@@ -55,7 +55,7 @@ export class FriendController {
 
 	public async getPendingIncomingRequests(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
@@ -69,7 +69,7 @@ export class FriendController {
 
 	public async getPendingOutgoingRequests(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
@@ -83,7 +83,7 @@ export class FriendController {
 
 	public async sendFriendRequest(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetUserId = request.params.id;
 
 			if (!sub) {
@@ -105,7 +105,7 @@ export class FriendController {
 
 	public async cancelFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetFriendshipId = request.params.id;
 
 			if (!sub) {
@@ -124,7 +124,7 @@ export class FriendController {
 
 	public async acceptFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetFriendshipId = request.params.id;
 
 			if (!sub) {
@@ -146,7 +146,7 @@ export class FriendController {
 
 	public async declineFriendRequest(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetFriendshipId = request.params.id;
 
 			if (!sub) {
@@ -169,7 +169,7 @@ export class FriendController {
 
 	public async removeFriend(request: FastifyRequest<{ Params: FriendshipIdParams }>, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			const targetFriendshipId = request.params.id;
 
 			if (!sub) {
