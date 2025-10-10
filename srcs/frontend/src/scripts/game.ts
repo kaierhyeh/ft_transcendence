@@ -1,4 +1,5 @@
 import "./types.js";
+import user from "./user/User.js";
 
 export function initGame(): void {
     // --- Constants & State ---
@@ -601,11 +602,12 @@ export function initGame(): void {
 
     // Create participants array based on game mode and AI setting
     function createParticipantsArray() {
+
         if (gameMode === 'pvp') {
             const participants = [
                 {
-                    type: "guest",        // Player 1 is always a guest user
-                    user_id: undefined    // No user_id for guest users
+                    type: user.isLoggedIn() ? "registered" : "guest",        // Player 1 is always registered or guest user
+                    user_id: user.isLoggedIn() ? user.getData()?.user_id : undefined    // Use actual user ID if logged in
                 }
             ];
             

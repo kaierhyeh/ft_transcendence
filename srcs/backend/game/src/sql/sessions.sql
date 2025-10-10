@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sessions (
     id                     INTEGER     PRIMARY KEY AUTOINCREMENT,
-    type                   TEXT        NOT NULL CHECK (type IN ('pvp', 'multi')),
+    mode                   TEXT        NOT NULL CHECK (mode IN ('pvp', 'multi')),
     created_at             DATETIME,
     started_at             DATETIME,
     ended_at               DATETIME

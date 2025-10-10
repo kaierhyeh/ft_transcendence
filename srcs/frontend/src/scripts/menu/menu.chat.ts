@@ -103,15 +103,15 @@ function renderChatList(users: ChatUser[]): void {
 
 	showElementById("chatsList");
 
-	users.map(user => {
-		console.log(`CHAT: user: ${user.userId} (${user.username}), chatId: ${user.chatId}, avatar: ${user.avatar}, W:${user.wins} L:${user.losses}`);
+	users.map(u => {
+		console.log(`CHAT: user: ${u.userId} (${u.username}), chatId: ${u.chatId}, avatar: ${u.avatar}, W:${u.wins} L:${u.losses}`);
 	});
 
-	chatsList.innerHTML = users.map(user => `
-		<div class="chat-with" data-chat-id="${user.chatId}" data-user-id="${user.userId}">
-		<img class="chat-avatar" src="${user.avatar || '/images/image.png'}">
+	chatsList.innerHTML = users.map(u => `
+		<div class="chat-with" data-chat-id="${u.chatId}" data-user-id="${u.userId}">
+		<img class="chat-avatar" src="${u.avatar || '/images/image.png'}">
 		<span>
-		${user.username} ( <span class="green-text">${user.wins}:W</span> / <span class="red-text">${user.losses}:L</span> )
+		${u.username} ( <span class="green-text">${u.wins}:W</span> / <span class="red-text">${u.losses}:L</span> )
 		</span>
 		</div>
 		`).join("");

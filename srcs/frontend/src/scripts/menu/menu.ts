@@ -2,7 +2,7 @@ import {openChatsSection} from "./menu.chat.js";
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
 import {openUsersSection} from "./menu.users.js";
 import {openFriendsSection} from "./menu.friends.js";
-import { initializeLanguageSwitcher } from "../i18n/index.js";
+// import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -39,7 +39,7 @@ function openMenuWindow(): void {
 	hideElementById("menuButton");
 
 	// Initialize language switcher when menu opens
-	initializeLanguageSwitcher();
+	// initializeLanguageSwitcher();
 
 	openUsers();
 }

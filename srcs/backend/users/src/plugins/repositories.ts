@@ -55,6 +55,8 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
     }
   }
 
+  // somewhere here I can I add SEED DATA
+
   fastify.decorate("repositories", {
     users: new UserRepository(db),
     friends: new FriendRepository(db),

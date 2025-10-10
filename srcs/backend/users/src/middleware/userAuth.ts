@@ -101,7 +101,7 @@ export async function userAuthSwitcher(
 
 		const payload = await verifyUserSessionJWT(token);
 		
-		request.user = payload as UserSessionPayload;
+		request.authUser = payload as UserSessionPayload;
 		
 		request.log.info({
 			user_id: payload.sub,

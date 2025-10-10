@@ -1,6 +1,7 @@
 import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
+import { initLanguages } from "./i18n/index.js";
 import {initTournament} from "./tournament.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
@@ -34,6 +35,8 @@ const initScripts: Record<string, () => void> = {
 	"/": () => {
 		if (typeof initMenu === "function")
 			initMenu();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/pong": () => {
 		if (typeof initGame === "function")

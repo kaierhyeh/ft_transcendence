@@ -49,7 +49,7 @@ export class FriendRepository {
 				u.user_id,
 				u.username,
 				u.alias,
-				u.avatar_filename,
+				u.avatar_filename
 			FROM users as u
 			ORDER BY u.username ASC
 		`);
@@ -85,7 +85,7 @@ export class FriendRepository {
 				u.user_id,
 				u.username,
 				u.alias,
-				u.avatar_filename,
+				u.avatar_filename
 			FROM users AS u
 			WHERE u.user_id = ?
 		`);

@@ -2,6 +2,7 @@
 // import { send } from "../api.js";
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 // import { user } from "../users.js";
+import currentUser from '../user/User.js';
 
 // data structures
 
@@ -163,10 +164,10 @@ function resetUserinfoButtons(): void {
 
 // events for user info section
 
-async function sendFriendRequest(user: UserInfo): Promise<void> {
+async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Sending friend request to user id: ${user.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/request/${user.user_id}`, {
+		console.log(`USERS: Sending friend request to user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -175,13 +176,13 @@ async function sendFriendRequest(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: sendFriendRequest failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
-async function cancelFriendRequest(user: UserInfo): Promise<void> {
+async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Cancelling friend request to user id: ${user.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/request/${user.user_id}`, {
+		console.log(`USERS: Cancelling friend request to user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -190,13 +191,13 @@ async function cancelFriendRequest(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: cancelFriendRequest failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
-async function acceptFriendRequest(user: UserInfo): Promise<void> {
+async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Accepting friend request from user id: ${user.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/accept/${user.user_id}`, {
+		console.log(`USERS: Accepting friend request from user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_FRIENDS}/accept/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -205,13 +206,13 @@ async function acceptFriendRequest(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: acceptFriendRequest failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
-async function declineFriendRequest(user: UserInfo): Promise<void> {
+async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Declining friend request from user id: ${user.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/decline/${user.user_id}`, {
+		console.log(`USERS: Declining friend request from user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_FRIENDS}/decline/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -220,13 +221,13 @@ async function declineFriendRequest(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: declineFriendRequest failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
-async function removeFriend(user: UserInfo): Promise<void> {
+async function removeFriend(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Removing friend user id: ${user.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/${user.user_id}`, {
+		console.log(`USERS: Removing friend user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_FRIENDS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -235,17 +236,17 @@ async function removeFriend(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: removeFriend failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
-async function openChatWithUser(user: UserInfo): Promise<void> {
-	console.log(`USERS: Opening chat with user id: ${user.user_id}`);
+async function openChatWithUser(userInfo: UserInfo): Promise<void> {
+	console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
 }
 
-async function blockUser(user: UserInfo): Promise<void> {
+async function blockUser(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Blocking user id: ${user.user_id}`);
-		await fetch(`${API_USERS_BLOCKS}/${user.user_id}`, {
+		console.log(`USERS: Blocking user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -254,13 +255,13 @@ async function blockUser(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: blockUser failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
-async function unblockUser(user: UserInfo): Promise<void> {
+async function unblockUser(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Unblocking user id: ${user.user_id}`);
-		await fetch(`${API_USERS_BLOCKS}/${user.user_id}`, {
+		console.log(`USERS: Unblocking user id: ${userInfo.user_id}`);
+		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
 				// Authorization: Bearer <user-session-jwt>
@@ -269,7 +270,7 @@ async function unblockUser(user: UserInfo): Promise<void> {
 	} catch (err) {
 		console.error("USERS: unblockUser failed", err);
 	}
-	await initUserInfoSection(user.user_id);
+	await initUserInfoSection(userInfo.user_id);
 }
 
 // user info section
@@ -285,9 +286,9 @@ function prepareUserInfoSection(): void {
 	showElementById("secondLine");
 }
 
-function updateButtonsForUserInfo(user: UserInfo): void {
+function updateButtonsForUserInfo(userInfo: UserInfo): void {
 	resetUserinfoButtons();
-	switch (user.friendship_status) {
+	switch (userInfo.friendship_status) {
 		// No friendship exists
 		case null:
 			showElementById("firstLine");
@@ -300,12 +301,12 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 			showElementById("secondLine");
 			showElementById("openChatButton");
 			showElementById("blockUserButton");
-			sendFriendRequestButton.addEventListener("click", () => sendFriendRequest(user));
-			openChatButton.addEventListener("click", () => openChatWithUser(user));
-			blockUserButton.addEventListener("click", () => blockUser(user));
+			sendFriendRequestButton.addEventListener("click", () => sendFriendRequest(userInfo));
+			openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
+			blockUserButton.addEventListener("click", () => blockUser(userInfo));
 			break;
 		case 'pending':
-			if (user.user_id === user.to_id) {
+			if (userInfo.user_id === userInfo.to_id) {
 				// thisUser sent friend request to target user (cancel request)
 				showElementById("firstLine");
 				hideElementById("sendFriendRequestButton");
@@ -317,9 +318,9 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 				showElementById("secondLine");
 				showElementById("openChatButton");
 				showElementById("blockUserButton");
-				cancelFriendRequestButton.addEventListener("click", () => cancelFriendRequest(user));
-				openChatButton.addEventListener("click", () => openChatWithUser(user));
-				blockUserButton.addEventListener("click", () => blockUser(user));
+				cancelFriendRequestButton.addEventListener("click", () => cancelFriendRequest(userInfo));
+				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
+				blockUserButton.addEventListener("click", () => blockUser(userInfo));
 			} else {
 				// target user sent friend request to thisUser (accept/decline request)
 				showElementById("firstLine");
@@ -332,10 +333,10 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 				showElementById("secondLine");
 				showElementById("openChatButton");
 				showElementById("blockUserButton");
-				acceptFriendRequestButton.addEventListener("click", () => acceptFriendRequest(user));
-				declineFriendRequestButton.addEventListener("click", () => declineFriendRequest(user));
-				openChatButton.addEventListener("click", () => openChatWithUser(user));
-				blockUserButton.addEventListener("click", () => blockUser(user));
+				acceptFriendRequestButton.addEventListener("click", () => acceptFriendRequest(userInfo));
+				declineFriendRequestButton.addEventListener("click", () => declineFriendRequest(userInfo));
+				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
+				blockUserButton.addEventListener("click", () => blockUser(userInfo));
 			}
 			break;
 		case 'accepted':
@@ -349,12 +350,12 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 			showElementById("secondLine");
 			showElementById("openChatButton");
 			showElementById("blockUserButton");
-			removeFriendButton.addEventListener("click", () => removeFriend(user));
-			openChatButton.addEventListener("click", () => openChatWithUser(user));
-			blockUserButton.addEventListener("click", () => blockUser(user));
+			removeFriendButton.addEventListener("click", () => removeFriend(userInfo));
+			openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
+			blockUserButton.addEventListener("click", () => blockUser(userInfo));
 			break;
 		case 'blocked':
-			if (user.user_id === user.to_id) {
+			if (userInfo.user_id === userInfo.to_id) {
 				// thisUser blocked target user (unblock)
 				showElementById("firstLine");
 				hideElementById("sendFriendRequestButton");
@@ -366,8 +367,8 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 				showElementById("secondLine");
 				showElementById("openChatButton");
 				hideElementById("blockUserButton");
-				unblockUserButton.addEventListener("click", () => unblockUser(user));
-				openChatButton.addEventListener("click", () => openChatWithUser(user));
+				unblockUserButton.addEventListener("click", () => unblockUser(userInfo));
+				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 			} else {
 				// target user blocked thisUser (no actions)
 				hideElementById("firstLine");
@@ -380,34 +381,33 @@ function updateButtonsForUserInfo(user: UserInfo): void {
 				showElementById("secondLine");
 				showElementById("openChatButton");
 				hideElementById("blockUserButton");
-				openChatButton.addEventListener("click", () => openChatWithUser(user));
+				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 			}
 			break;
 	}
 
 }
 
-function renderUserInfo(user: UserInfo): void {
+function renderUserInfo(userInfo: UserInfo): void {
 	prepareUserInfoSection();
-	console.log(`USER INFO: rendering user info for user: [${user.user_id}] [${user.username}], aka:[${user.alias}], avatar:[${user.avatar_filename}], online:[${user.user_status}], friendship:[${user.friendship_status}]`);
+	console.log(`USER INFO: rendering user info for user: [${userInfo.user_id}] [${userInfo.username}], aka:[${userInfo.alias}], avatar:[${userInfo.avatar_filename}], online:[${userInfo.user_status}], friendship:[${userInfo.friendship_status}]`);
+        const userData = currentUser.getData();
 
-	const avatarSrc = user.avatar_filename
-		? `/uploads/avatars/${user.avatar_filename}`
-		: '/images/image.png';
+	const avatarSrc = `https://localhost:4443/api/users/profile/id/${userInfo.user_id}/avatar`;
 
-	const userAlias = user.alias
-		? `<div id="userAlias" class="user-info-alias">aka ${user.alias}</div>`
+	const userAlias = userInfo.alias
+		? `<div id="userAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
 		: '';
 
-	const statusHtml = (user.friendship_status === 'accepted')
+	const statusHtml = (userInfo.friendship_status === 'accepted')
 		? `<div id="userOnlineStatus" class="user-info-online-status">
-				Status: <span class="user-status-${user.user_status.toLowerCase()}">${user.user_status}</span>
+				Status: <span class="user-status-${userInfo.user_status.toLowerCase()}">${userInfo.user_status}</span>
 			</div>`
 		: '';
 
 	usersInfo.innerHTML = `
 		<img id="selectedUserAvatar" class="user-info-avatar" src="${avatarSrc}">
-		<div id="userName" class="user-info-username">${user.username}</div>
+		<div id="userName" class="user-info-username">${userInfo.username}</div>
 		${userAlias}
 		${statusHtml}
 		<div id="userStats" class="user-info-stats">
@@ -416,7 +416,7 @@ function renderUserInfo(user: UserInfo): void {
 			<span class="user-info-losses">L: ?</span>
 		</div>
 	`;
-	updateButtonsForUserInfo(user);
+	updateButtonsForUserInfo(userInfo);
 }
 
 async function initUserInfoSection(targetUserId: number): Promise<void> {
@@ -426,13 +426,13 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 		if (!res.ok) {
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
 		}
-		const user: UserInfo = await res.json();
-		if (!user) {
+		const userInfo: UserInfo = await res.json();
+		if (!userInfo) {
 			console.error(`USER INFO: No user data received for user id: ${targetUserId}`);
 			initUsersSection();
 		} else {
-			console.log(`USER INFO: user data received:`, user);
-			renderUserInfo(user);
+			console.log(`USER INFO: user data received:`, userInfo);
+			renderUserInfo(userInfo);
 		}
 
 	} catch (err) {
@@ -454,26 +454,24 @@ function renderUserList(users: UserListRow[]): void {
 		return;
 	}
 
-	users.map(user => {
-		console.log(`USER: user: [${user.user_id}] [${user.username}], aka:[${user.alias}], avatar:[${user.avatar_filename}], online:[${user.user_status}], friendship:[${user.friendship_status}]`);
+	users.map(u => {
+		console.log(`USER: user: [${u.user_id}] [${u.username}], aka:[${u.alias}], avatar:[${u.avatar_filename}], online:[${u.user_status}], friendship:[${u.friendship_status}]`);
 	});
 
-	usersList.innerHTML = users.map(user => {
-		const avatarSrc = user.avatar_filename 
-			? `/uploads/avatars/${user.avatar_filename}` 
-			: '/images/image.png';
+	usersList.innerHTML = users.map(u => {
+		const avatarSrc = `https://localhost:4443/api/users/profile/id/${u.user_id}/avatar`;
 
-		const userName = user.alias
-			? `${user.username} aka ${user.alias}`
-			: user.username;
+		const userName = u.alias
+			? `${u.username} aka ${u.alias}`
+			: u.username;
 
   		// Only show user_status if friendship exists
-		const statusHtml = user.friendship_status 
-			? `<span class="user-status-${user.user_status.toLowerCase()}">${user.user_status}</span>`
+		const statusHtml = u.friendship_status
+			? `<span class="user-status-${u.user_status.toLowerCase()}">${u.user_status}</span>`
 			: `<span class="user-status-unknown"></span>`;
 
 		return `
-			<div class="user-list-element" data-user-id="${user.user_id}">
+			<div class="user-list-element" data-user-id="${u.user_id}">
 				<img class="user-info-avatar-small" src="${avatarSrc}">
 				<div class="user-list-element-info">
 					<span>${userName}</span>
@@ -483,11 +481,11 @@ function renderUserList(users: UserListRow[]): void {
 		`;
 	}).join("");
 
-	document.querySelectorAll(".user-list-element").forEach(user => {
-		user.addEventListener("click", () => {
-			const userId = (user as HTMLElement).dataset.userId;
+	document.querySelectorAll(".user-list-element").forEach(u => {
+		u.addEventListener("click", () => {
+			const userId = (u as HTMLElement).dataset.userId;
 			console.log(`User TARGET id: ${userId}=`, userId);
-			console.log("Full dataset:", (user as HTMLElement).dataset);
+			console.log("Full dataset:", (u as HTMLElement).dataset);
 			if (userId) {
 				initUserInfoSection(parseInt(userId));
 			}

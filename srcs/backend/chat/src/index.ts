@@ -1,4 +1,5 @@
 import fastify, { FastifyInstance } from "fastify";
+import fastifyJwt from "@fastify/jwt";
 import FastifyWebsocket from "@fastify/websocket";
 
 import { chatRoutes } from "./routes/chat.routes";
@@ -24,10 +25,14 @@ chatServer.setErrorHandler((error, request, reply) => {
 		});
 });
 
+// Register plugins first so they decorate request before routes are registered
 chatServer.register(cookie);
 chatServer.register(FastifyWebsocket);
+// Register routes after plugins
 chatServer.register(wsRoutes);
+chatServer.register(fastifyJwt, { secret: CONFIG.SECURITY.JWT_SECRET });
 chatServer.register(chatRoutes, { prefix: "/chat" });
+
 
 // Health check endpoint
 chatServer.get('/health', async () => {

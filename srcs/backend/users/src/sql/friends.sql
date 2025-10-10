@@ -10,9 +10,17 @@ CREATE TABLE IF NOT EXISTS friendships (
     FOREIGN KEY(friend_id) REFERENCES users(user_id) ON DELETE CASCADE,
     
     -- Prevent self-friendship
-    CONSTRAINT no_self_friendship CHECK (user_id <> friend_id),
-    -- Prevent duplicate relationships in the same direction
-    CONSTRAINT unique_relationship UNIQUE (user_id, friend_id)
+    CONSTRAINT no_self_friendship CHECK (user_id <> friend_id)
+    -- Prevent duplicate relationships
+    -- user_low   INTEGER GENERATED ALWAYS AS (CASE WHEN user_id < friend_id THEN user_id ELSE friend_id END) STORED,
+    -- user_high  INTEGER GENERATED ALWAYS AS (CASE WHEN user_id > friend_id THEN user_id ELSE friend_id END) STORED,
+    -- CONSTRAINT unique_pair UNIQUE (user_low, user_high)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_friend_pair
+ON friendships(
+    CASE WHEN user_id < friend_id THEN user_id ELSE friend_id END,
+    CASE WHEN user_id < friend_id THEN friend_id ELSE user_id END
 );
 
 -- Indexes for performance
@@ -24,28 +32,28 @@ CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 
 -- Insert sample users
 
-INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
-VALUES
-  ('alice', 'alice@ya.com', 'hash1', 'A_lice', 'alice.png', 'online'),
-  ('bob', 'bob@ya.com', 'hash2', 'B_ob', 'bob.png', 'offline'),
-  ('charlie', 'charlie@ya.com', 'hash3', 'C_harlie', 'charlie.png', 'away'),
-  ('dave', 'dave@ya.com', 'hash4', NULL, 'dave.png', 'online'),
-  ('eve', 'eve@ya.com', 'hash5', 'E_ve', 'eve.png', 'offline'),
-  ('frank', 'frank@ya.com', 'hash6', NULL, 'frank.png', 'online'),
-  ('grace', 'grace@ya.com', 'hash7', 'G_race', 'grace.png', 'offline'),
-  ('heidi', 'heidi@ya.com', 'hash8', 'H_eidi', 'heidi.png', 'online');
+-- INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
+-- VALUES
+--   ('alice', 'alice@ya.com', 'hash1', 'A_lice', 'alice.png', 'online'),
+--   ('bob', 'bob@ya.com', 'hash2', 'B_ob', 'test1.jpg', 'offline'),
+--   ('charlie', 'charlie@ya.com', 'hash3', 'C_harlie', 'default.png', 'away'),
+--   ('dave', 'dave@ya.com', 'hash4', NULL, 'dave.png', 'online'),
+--   ('eve', 'eve@ya.com', 'hash5', 'E_ve', 'eve.png', 'offline'),
+--   ('frank', 'frank@ya.com', 'hash6', NULL, 'frank.png', 'online'),
+--   ('grace', 'grace@ya.com', 'hash7', 'G_race', 'test2.gif', 'offline'),
+--   ('heidi', 'heidi@ya.com', 'hash8', 'H_eidi', 'default.png', 'online');
 
 -- Insert friendships (alice ↔ bob accepted, alice → charlie pending)
 
-INSERT INTO friendships (user_id, friend_id, status)
-VALUES
-  (1, 2, 'accepted'),
-  (1, 3, 'pending'),
-  (4, 1, 'pending'),
-  (5, 1, 'blocked'),
-  (2, 3, 'accepted'),
-  (3, 4, 'pending'),
-  (6, 7, 'accepted'),
-  (7, 8, 'blocked'),
-  (8, 1, 'accepted'),
-  (1, 6, 'blocked');
+-- INSERT INTO friendships (user_id, friend_id, status)
+-- VALUES
+--   (1, 2, 'accepted'),
+--   (1, 3, 'pending'),
+--   (4, 1, 'pending'),
+--   (5, 1, 'blocked'),
+--   (2, 3, 'accepted'),
+--   (3, 4, 'pending'),
+--   (6, 7, 'accepted'),
+--   (7, 8, 'blocked'),
+--   (8, 1, 'accepted'),
+--   (1, 6, 'blocked');
