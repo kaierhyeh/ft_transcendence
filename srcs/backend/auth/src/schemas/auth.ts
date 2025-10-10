@@ -1,3 +1,30 @@
+// Username validation rules
+export const usernameSchema = {
+  type: "string",
+  minLength: 3,
+  maxLength: 15,
+  pattern: "^(?!.*(.)\\1{6,})[a-zA-Z][a-zA-Z0-9_]{2,14}$",
+  description: "Username (3-15 chars, letters/numbers/underscores, no 7+ repeats)",
+  errorMessage: {
+    type: "Username must be a string",
+    minLength: "Username must be at least 3 characters long",
+    maxLength: "Username cannot exceed 15 characters",
+    pattern: "Username must be 3-15 characters, letters/numbers/underscores, and cannot contain 7 or more repeated characters in a row.",
+  },
+} as const;
+
+// Email validation rules
+export const emailSchema = {
+  type: "string",
+  format: "email",
+  maxLength: 254,
+  description: "Valid email address",
+  errorMessage: {
+    type: "Email must be a string",
+    format: "Email must be a valid email address",
+    maxLength: "Email cannot exceed 254 characters",
+  },
+} as const;
 import { FromSchema } from "json-schema-to-ts";
 
 // Password validation rules
@@ -21,18 +48,14 @@ export const loginSchema = {
       minLength: 3,      // Shortest username
       maxLength: 254,    // Longest email (RFC 5321)
       pattern: "^(?:[a-zA-Z][a-zA-Z0-9_]{2,14}|[^\\s@]+@[^\\s@]+\\.[^\\s@]+)$",
-      description: "Username (3-15 chars, letters/numbers/underscores) or valid email address",
       errorMessage: {
         type: "Login must be a string",
         minLength: "Login must be at least 3 characters long",
         maxLength: "Login cannot exceed 254 characters",
-        pattern: "Login must be a valid username or email address",
+        pattern: "Username (3-15 chars, letters/numbers/underscores) or valid email address",
       },
     },
-    password: {
-      ...passwordSchema,
-      description: "Password must be at least 8 characters",
-    },
+    password: { ...passwordSchema },
   },
   additionalProperties: false,
   errorMessage: {
@@ -46,32 +69,22 @@ export const loginSchema = {
 
 // NOTE - Currently, signupFormSchema is identical to loginSchema.
 // Defined separately to allow for future changes specific to signup requirements.
+// NOTE: passwordSchema is assumed to be defined elsewhere in your file.
+// const passwordSchema = { ... }; 
+
 export const signupFormSchema = {
   type: "object",
-  required: ["login", "password"],
+  required: ["username", "email", "password"],
   properties: {
-    login: {
-      type: "string",
-      minLength: 3,      // Shortest username
-      maxLength: 254,    // Longest email (RFC 5321)
-      pattern: "^(?:[a-zA-Z][a-zA-Z0-9_]{2,14}|[^\\s@]+@[^\\s@]+\\.[^\\s@]+)$",
-      description: "Username (3-15 chars, letters/numbers/underscores) or valid email address",
-      errorMessage: {
-        type: "Login must be a string",
-        minLength: "Login must be at least 3 characters long",
-        maxLength: "Login cannot exceed 254 characters",
-        pattern: "Login must be a valid username or email address",
-      },
-    },
-    password: {
-      ...passwordSchema,
-      description: "Password must be at least 8 characters",
-    },
+    username: { ...usernameSchema },
+    email: { ...emailSchema },
+    password: { ...passwordSchema },
   },
   additionalProperties: false,
   errorMessage: {
     required: {
-      login: "Login is required",
+      username: "Username is required",
+      email: "Email is required",
       password: "Password is required",
     },
     additionalProperties: "Unknown field in request body",

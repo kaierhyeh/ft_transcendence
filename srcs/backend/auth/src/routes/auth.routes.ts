@@ -71,6 +71,12 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 				return;
 			}
 
+			if (error.code === "UNSAFE_INPUT") {
+				reply.status(400).send({
+					error: error.message || 'Unsafe input detected'
+				});
+				return;
+			}
 
 			logger.error('Login error', error as Error, {
 				ip: (request as any).ip
@@ -88,26 +94,19 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 		{ schema: { body: signupFormSchema } },
 		async (request, reply) => {
 		try {
-			const { login, password } = request.body;
 
-			// Security validation (JSON schema handles format/length validation)
-			const checked_login = authUtils.checkLoginInput(fastify, login);
-			if (typeof checked_login !== 'string') {
-					return reply.code(400).send({ 
-						success: false, 
-						error: checked_login.error 
-					});
-			}
+			const { username, email, password } = request.body;
 
-			// Determine if the username is an email address
-			const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(login);
+			// Security validation (control chars, XSS)
+			authUtils.checkInputSafety('username', username);
+			authUtils.checkInputSafety('email', email);
 
-			// If it's an email, use it as both username and email
-			// If it's a traditional username, create a dummy email
-			const email = isEmail ? login : `${login}@localhost.local`;
+			// Normalize email
+			const normalizedEmail = authUtils.normalizeEmail(email);
 
-			// Check if user already exists (check both username and email fields)
-			const existingUser = await authService.checkUserExistenceByLogin(login);
+			// Check if user already exists (by username or email)
+			const existingUser = await authService.checkUserExistenceByLogin(username) ||
+								 await authService.checkUserExistenceByLogin(normalizedEmail);
 			if (existingUser) {
 				return reply.code(409).send({
 					success: false,
@@ -117,8 +116,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			// Create user
 			const { user_id } = await authService.register({
-				username: checked_login,
-				email,
+				username,
+				email: normalizedEmail,
 				password,
 			});
 			console.log("user created: ", user_id);
@@ -136,13 +135,13 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			});
 
 		} catch (error: any) {
-			logger.error('Registration error', error as Error, {
-				ip: (request as any).ip,
-				login: request.body?.login,
-				errorStatus: error.status,
-				errorMessage: error.message,
-				errorDetails: error.details
-			});
+
+			if (error.code === "UNSAFE_INPUT") {
+				reply.status(400).send({
+					error: error.message || 'Unsafe input detected'
+				});
+				return;
+			}
 			
 			// Handle specific error cases
 			if (error.status === 401) {
