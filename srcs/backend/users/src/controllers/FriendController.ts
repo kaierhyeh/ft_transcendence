@@ -8,7 +8,7 @@ export class FriendController {
 
 	public async getAllUsers(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			if (!sub) {
 				console.log("request all users without auth for ID=1");
 				reply.status(200).send(await this.friendService.getAllUsers(null));
@@ -24,7 +24,7 @@ export class FriendController {
 	public async getUserById(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
 		try {
 			const targetUserId = request.params.id;
-			const sub = request.user?.sub;
+			const sub = request.authUser?.sub;
 			if (!sub) {
 				console.log("request user by id without auth for ID=1");
 				const user = await this.friendService.getUserById(null, targetUserId);
