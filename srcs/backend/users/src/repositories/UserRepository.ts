@@ -66,13 +66,13 @@ export class UserRepository {
         return result.lastInsertRowid as number;
     }
 
-    public findByLogin(login: string): UserRow | null {
+    public find(identifier: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE (username = ? OR email = ? OR google_sub = ?) 
+            WHERE (user_id = ? OR username = ? OR email = ?) 
               AND status != 'deleted'
         `);
-        const result = stmt.get(login, login, login) as UserRow | undefined;
+        const result = stmt.get(identifier, identifier, identifier) as UserRow | undefined;
         return result || null;
     }
 

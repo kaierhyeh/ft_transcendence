@@ -53,7 +53,7 @@ export class UserService {
   }
 
   public async resolveLocalUser(credentials: Credentials) {
-    const user = await this.getUserByLogin(credentials.login);
+    const user = await this.getUser(credentials.login);
     if (user.google_sub) {
       const error = new Error('Not a local user');
       (error as any).code = 'NOT_A_LOCAL_USER';
@@ -71,8 +71,8 @@ export class UserService {
     return user;
   }
 
-  public async getUserByLogin(login: string): Promise<UserRow> {
-    const user = await this.userRepository.findByLogin(login);
+  public async getUser(identifier: string): Promise<UserRow> {
+    const user = await this.userRepository.find(identifier);
     if (!user) {
       const error = new Error('User not found');
       (error as any).code = 'USER_NOT_FOUND';
@@ -96,7 +96,7 @@ export class UserService {
     return {
       ...cleanUser,
       avatar_url: avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/profile/id/${user.user_id}/avatar` :
+        `${CONFIG.API.BASE_URL}/users/${user.user_id}/avatar` :
         null,
       ...lite_stats
     };

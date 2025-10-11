@@ -104,9 +104,9 @@ Resolve and authenticate local user credentials [protected - internal service on
 
 ---
 
-#### `GET /users/login/:login`
+#### `GET /users/:identifier`
 
-Get user data by login identifier (username, email, or Google sub) [protected - internal service only].
+Get user data by an identifier (user_id, username, email) [protected - internal service only].
 
 **Response:**
 ```json
@@ -129,15 +129,7 @@ Get user data by login identifier (username, email, or Google sub) [protected - 
 
 ---
 
-#### `GET /users/id/:id`
-
-Get all user data by ID [protected - internal service only].
-
-**Response:** Same as `/users/login/:login`
-
----
-
-#### `PUT /users/profile/me`
+#### `PUT /users/me`
 
 Update current user profile [requires user authentication].
 
@@ -163,7 +155,7 @@ Update current user profile [requires user authentication].
 
 ---
 
-#### `PUT /users/profile/me/avatar`
+#### `PUT /users/me/avatar`
 
 Update user avatar [requires user authentication].
 
@@ -178,7 +170,7 @@ Update user avatar [requires user authentication].
 
 ---
 
-#### `GET /users/profile/me`
+#### `GET /users/me`
 
 Get current user profile with sensitive data [requires user authentication].
 
@@ -220,7 +212,7 @@ Delete current user account (soft delete) [requires user authentication].
 
 ---
 
-#### `DELETE /users/profile/me/avatar`
+#### `DELETE /users/me/avatar`
 
 Reset avatar to default [requires user authentication].
 
@@ -235,7 +227,7 @@ Reset avatar to default [requires user authentication].
 
 ---
 
-#### `GET /users/profile/id/:id/avatar`
+#### `GET /users/:uid/avatar`
 
 Retrieve avatar image file.
 
@@ -243,7 +235,7 @@ Retrieve avatar image file.
 
 ---
 
-#### `GET /users/profile/id/:id`
+#### `GET /users/:uid/profile`
 
 Get public user profile (no sensitive data).
 

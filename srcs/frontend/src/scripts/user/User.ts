@@ -162,7 +162,7 @@ export class User {
      */
     public async fetchAndUpdate(): Promise<boolean> {
         try {
-            const response = await fetch('https://localhost:4443/api/users/profile/me', {
+            const response = await fetch('https://localhost:4443/api/users/me', {
                 method: 'GET',
                 credentials: 'include'
             });

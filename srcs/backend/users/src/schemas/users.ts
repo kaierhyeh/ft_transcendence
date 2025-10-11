@@ -60,21 +60,6 @@ export const createGoogleUserSchema = {
   additionalProperties: false,
 } as const;
 
-
-export const loginParamsSchema = {
-  type: "object",
-  required: ["login"],
-  properties: {
-    login: { 
-      type: "string",
-      minLength: 1,      // Allow any identifier length
-      maxLength: 254,    // Max email length
-      description: "Username, email address, or Google sub"
-    },
-  },
-  additionalProperties: false
-} as const;
-
 export const updatePasswordSchema = {
   type: "object",
   required: ["old", "new"],
@@ -98,9 +83,18 @@ export const updateSchema = {
 
 export const userIdSchema = {
   type: "object",
-    required: ["id"],
+    required: ["uid"],
     properties: {
-      id: { type: "number" },
+      uid: { type: "number" },
+    },
+    additionalProperties: false,
+} as const;
+
+export const userLookupSchema = {
+  type: "object",
+    required: ["identifier"],
+    properties: {
+      identifier: { type: "string" },
     },
     additionalProperties: false,
 } as const;
@@ -128,9 +122,9 @@ export const matchHistoryQuerySchema = {
 
 export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
-export type LoginParams = FromSchema<typeof loginParamsSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
+export type UserLookupParams = FromSchema<typeof userLookupSchema>;
 export type Credentials = FromSchema<typeof credentialsSchema>;
 export type MatchHistoryQuery = FromSchema<typeof matchHistoryQuerySchema.querystring>;

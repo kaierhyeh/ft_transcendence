@@ -105,8 +105,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			const normalizedEmail = authUtils.normalizeEmail(email);
 
 			// Check if user already exists (by username or email)
-			const existingUser = await authService.checkUserExistenceByLogin(username) ||
-								 await authService.checkUserExistenceByLogin(normalizedEmail);
+			const existingUser = await authService.checkUserExistence(username) ||
+								 await authService.checkUserExistence(normalizedEmail);
 			if (existingUser) {
 				return reply.code(409).send({
 					success: false,

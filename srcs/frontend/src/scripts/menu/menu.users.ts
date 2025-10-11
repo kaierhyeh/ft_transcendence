@@ -391,7 +391,7 @@ function renderUserInfo(userInfo: UserInfo): void {
 	prepareUserInfoSection();
 	console.log(`USER INFO: rendering user info for user: [${userInfo.user_id}] [${userInfo.username}], aka:[${userInfo.alias}], avatar:[${userInfo.avatar_filename}], online:[${userInfo.user_status}], friendship:[${userInfo.friendship_status}]`);
 
-	const avatarSrc = `https://localhost:4443/api/users/profile/id/${userInfo.user_id}/avatar`;
+	const avatarSrc = `https://localhost:4443/api/users/${userInfo.user_id}/avatar`;
 
 	const userAlias = userInfo.alias
 		? `<div id="userAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
@@ -457,7 +457,7 @@ function renderUserList(users: UserListRow[]): void {
 	});
 
 	usersList.innerHTML = users.map(u => {
-		const avatarSrc = `https://localhost:4443/api/users/profile/id/${u.user_id}/avatar`;
+		const avatarSrc = `https://localhost:4443/api/users/${u.user_id}/avatar`;
 
 		const userName = u.alias
 			? `${u.username} aka ${u.alias}`
