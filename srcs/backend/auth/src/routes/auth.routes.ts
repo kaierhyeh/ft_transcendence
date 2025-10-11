@@ -173,48 +173,47 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 		}
 	});
 
-	// TODO - That route might need to be removed
-	// // Refresh token route
-	// fastify.post('/refresh', async (request, reply) => {
-	// 	try {
-	// 		const refreshToken = request.cookies?.refreshToken;
+	// Refresh token route
+	fastify.post('/refresh', async (request, reply) => {
+		try {
+			const refreshToken = request.cookies?.refreshToken;
 			
-	// 		if (!refreshToken) {
-	// 			return reply.code(401).send({
-	// 				success: false,
-	// 				error: 'Refresh token required'
-	// 			});
-	// 		}
+			if (!refreshToken) {
+				return reply.code(401).send({
+					success: false,
+					error: 'Refresh token required'
+				});
+			}
 
-	// 		const result = await authService.refreshAccessToken(fastify, refreshToken);
+			const result = await authService.refreshAccessToken(fastify, refreshToken);
 			
-	// 		if (!result.success) {
-	// 			return reply.code(401).send({
-	// 				success: false,
-	// 				error: result.reason || 'Invalid refresh token'
-	// 			});
-	// 		}
+			if (!result.success) {
+				return reply.code(401).send({
+					success: false,
+					error: result.reason || 'Invalid refresh token'
+				});
+			}
 
-	// 		// Set new access token cookie
-	// 		if (result.newAccessToken) {
-	// 			authUtils.ft_setCookie(reply, result.newAccessToken, 15);
-	// 		}
+			// Set new access token cookie
+			if (result.newAccessToken) {
+				authUtils.ft_setCookie(reply, result.newAccessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY, 'access');
+			}
 
-	// 		return reply.code(200).send({
-	// 			success: true,
-	// 			message: 'Token refreshed successfully'
-	// 		});
+			return reply.code(200).send({
+				success: true,
+				message: 'Token refreshed successfully'
+			});
 
-	// 	} catch (error) {
-	// 		logger.error('Token refresh error', error as Error, {
-	// 			ip: (request as any).ip
-	// 		});
-	// 		return reply.code(500).send({
-	// 			success: false,
-	// 			error: 'Internal server error during token refresh'
-	// 		});
-	// 	}
-	// });
+		} catch (error) {
+			logger.error('Token refresh error', error as Error, {
+				ip: (request as any).ip
+			});
+			return reply.code(500).send({
+				success: false,
+				error: 'Internal server error during token refresh'
+			});
+		}
+	});
 
 	// Logout route - requires USER_SESSION authentication
 	fastify.post('/logout', async (request: AuthenticatedRequest, reply: FastifyReply) => {
