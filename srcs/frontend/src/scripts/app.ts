@@ -9,6 +9,7 @@ import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin } from "./auth/login.js";
+import { initMatchHistory } from "./user/match_history.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -23,7 +24,7 @@ const routes: Record<string, string> = {
 	// "/oauth-callback": "./html/profile.html",
 	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
-	"/user/me/match-history": "./html/user/match_history.html",
+	"/user/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
 	"/user/block-list": "./html/user/block_list.html",
 	"/signup": "./html/auth/signup.html",
@@ -58,6 +59,10 @@ const initScripts: Record<string, () => void> = {
 	"/history": () => {
 		if (typeof initHistory === "function")
 			initHistory();
+	},
+	"/user/match-history": () => {
+		if (typeof initMatchHistory === "function")
+			initMatchHistory();
 	},
 	// "/oauth-callback": () => {
 	// 	if (typeof handleOAuthCallback === "function")
