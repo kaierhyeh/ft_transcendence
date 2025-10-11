@@ -20,7 +20,9 @@ Routes are distributed across different prefixes:
 - **Friends management**: `/friends`
 - **Block management**: `/blocks`
 
-Example: `https://localhost:4443/users`, `https://localhost:4443/friends`
+All the prefixes above are under the main API prefix `/api`.
+
+Example: `https://localhost:4443/api/users`, `https://localhost:4443/api/friends`
 
 ---
 
@@ -255,6 +257,8 @@ Get public user profile (no sensitive data).
   "avatar_url": "string",
   "created_at": "datetime",
   "wins": number,
+  "curr_winstreak": number,
+  "best_winstreak": number,
   "losses": number,
   "total_games": number
 }
@@ -345,7 +349,6 @@ Check if user is blocked [protected - internal service only].
 ### Auth Service Integration
 - **User Creation**: Called by auth service during signup
 - **User Resolution**: Called by auth service during login
-- **Password Hashing**: Delegated to auth service for security
 - **2FA Management**: Coordinated with auth service
 
 ### Stats Service Integration  

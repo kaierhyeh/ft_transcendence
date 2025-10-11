@@ -23,7 +23,7 @@ const routes: Record<string, string> = {
 	// "/oauth-callback": "./html/profile.html",
 	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
-	"/user/match-history": "./html/user/match_history.html",
+	"/user/me/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
 	"/user/block-list": "./html/user/block_list.html",
 	"/signup": "./html/auth/signup.html",

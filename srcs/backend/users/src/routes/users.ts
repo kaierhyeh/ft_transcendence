@@ -12,7 +12,9 @@ import {
   UserIdParams, 
   userIdSchema, 
   Credentials,
-  credentialsSchema
+  credentialsSchema,
+  MatchHistoryQuery,
+  matchHistoryQuerySchema
 } from "../schemas";
 import { userAuthMiddleware } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
@@ -122,8 +124,12 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUserById.bind(userController)
   );
 
-  // GET /match-history - Get match history via game service (TODO)
-  fastify.get("/match-history", async (request, reply) => {
-    // TODO - implement match history retrieval
-  });
+  // GET /me/match-history - Get match history via game service (TODO)
+  fastify.get<{ Querystring: MatchHistoryQuery}>(
+    "/me/match-history", 
+    { schema: matchHistoryQuerySchema,
+      preHandler: userAuthMiddleware,
+    },
+    userController.getMatchHistory.bind(userController)
+  );
 }

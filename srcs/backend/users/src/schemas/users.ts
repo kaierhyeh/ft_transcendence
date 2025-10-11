@@ -115,6 +115,17 @@ export const credentialsSchema = {
   additionalProperties: false,
 } as const;
 
+export const matchHistoryQuerySchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      page: { type: 'integer', minimum: 1, default: 1},
+      limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+    }
+  }
+} as const;
+
+
 export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
 export type LoginParams = FromSchema<typeof loginParamsSchema>;
@@ -122,3 +133,4 @@ export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
 export type Credentials = FromSchema<typeof credentialsSchema>;
+export type MatchHistoryQuery = FromSchema<typeof matchHistoryQuerySchema.querystring>;

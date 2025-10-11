@@ -1,4 +1,5 @@
 import { AuthClient } from '../clients/AuthClient';
+import { GameClient, SessionsPayload } from '../clients/GameClient';
 import { LiteStats, StatsClient } from '../clients/StatsClient';
 import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
@@ -14,12 +15,14 @@ export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "upda
 export class UserService {
   private authClient: AuthClient;
   private statsClient: StatsClient;
+  private gameClient: GameClient;
 
   constructor(
     private userRepository: UserRepository,
   ) {
     this.authClient = new AuthClient();
     this.statsClient = new StatsClient();
+    this.gameClient = new GameClient();
   }
 
   public async createLocalUser(data: LocalUserCreationRawData) {
@@ -171,5 +174,9 @@ export class UserService {
 
   public async resetAvatarToDefault(userId: number): Promise<number> {
     return this.userRepository.resetAvatarToDefault(userId);
+  }
+
+  public async getMatchHistory(user_id: number, page: number, limit: number): Promise<SessionsPayload> {
+    return this.gameClient.getMatchHistory(user_id, page, limit);
   }
 }

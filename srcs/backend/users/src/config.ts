@@ -49,6 +49,11 @@ export const CONFIG = {
     BASE_URL: process.env.STATS_SERVICE_URL || "http://backend-stats:3000"
   },
 
+  GAME_SERVICE: {
+    BASE_URL: process.env.STATS_SERVICE_URL || "http://backend-game:3000"
+  },
+
+
   API: {
     BASE_URL: process.env.API_URL || "https://localhost:4443/api"
   },

@@ -23,7 +23,7 @@ export interface DbSession {
 }
 
 type SessionData = SessionRow & {
-    player_sessions: DbPlayerSession[]
+    players: DbPlayerSession[]
 }
 
 interface SessionQueryRow {
@@ -134,11 +134,11 @@ export class SessionRepository {
         
         const rows = dataStmt.all({ user_id, limit, offset}) as SessionQueryRow[];
 
-        const data: SessionData[] = rows.map((row) => ({
-            ...row,
-            player_sessions: JSON.parse(row.player_sessions) as DbPlayerSession[]
+        const data: SessionData[] = rows.map(({ player_sessions, ...rest }) => ({
+            ...rest,
+            players: JSON.parse(player_sessions) as DbPlayerSession[]
         }));
-
+        
         // Pagination meta
         const total_pages = Math.ceil(total_records / limit);
         const pagination: Pagination = {

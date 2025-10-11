@@ -6,7 +6,8 @@ import {
   LoginParams, 
   UpdateRawData, 
   UserIdParams, 
-  Credentials
+  Credentials,
+  MatchHistoryQuery
 } from '../schemas';
 import fs from 'fs';
 import path from 'path';
@@ -277,6 +278,24 @@ export class UserController {
         changes,
         message: "Avatar reset to default successfully"
       });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async getMatchHistory(request: FastifyRequest<{ Querystring: MatchHistoryQuery }>, reply: FastifyReply) {
+    try {
+      const sub = request.authUser?.sub;
+       if (!sub) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      const user_id = toInteger(sub);
+      const { page, limit } = request.query;
+
+      const game_sessions = await this.userService.getMatchHistory(user_id, page, limit);
+
+      return reply.send(game_sessions);
+
     } catch (error) {
       this.handleError(error, reply);
     }
