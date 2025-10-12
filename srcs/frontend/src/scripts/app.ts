@@ -3,7 +3,7 @@ import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
-import initRemoteGame from "./remoteGame.js";
+import initRemoteGame, { cleanupRemoteGame } from "./remoteGame.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
 import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
@@ -83,6 +83,12 @@ function update_event()
 
 async function navigate(path: string, push: boolean = true)
 {
+	// Cleanup remote game connections when leaving /online page
+	const currentPath = window.location.pathname;
+	if (currentPath === "/online" && path !== "/online") {
+		cleanupRemoteGame();
+	}
+
 	const file = routes[path];
 
 	if (file)

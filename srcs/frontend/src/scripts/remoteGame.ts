@@ -2,19 +2,49 @@
 // import { user } from './users.js';
 import { showError } from './notifications.js';
 
+// --- Module-level variables for cleanup ---
+let gameWebSocket: WebSocket | null = null;
+let matchmakingWebSocket: WebSocket | null = null;
+let keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
+let keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
+let gameDisconnected: boolean = false;
+
+export function cleanupRemoteGame(): void {
+    console.log("Cleaning up remote game connections");
+
+    // Remove event listeners
+    if (keyDownHandler != null) {
+        document.removeEventListener('keydown', keyDownHandler);
+        keyDownHandler = null;
+    }
+    if (keyUpHandler != null) {
+        document.removeEventListener('keyup', keyUpHandler);
+        keyUpHandler = null;
+    }
+
+    // Close websockets
+    if (gameWebSocket != null) {
+        gameWebSocket.close(1000, "Page navigation");
+        gameWebSocket = null;
+    }
+    if (matchmakingWebSocket != null) {
+        matchmakingWebSocket.close(1000, "Page navigation");
+        matchmakingWebSocket = null;
+    }
+
+    // Reset disconnection flag
+    gameDisconnected = false;
+}
+
 export default function initRemoteGame():void {
     console.log("create remote interface");
 
     // --- Variables ---
-    let gameWebSocket: WebSocket | null = null;
     let currentGameId: number | null = null;
     let currentParticipantId: string | null = null;
-    let matchmakingWebSocket: WebSocket | null = null;
     let gameCanvas: HTMLCanvasElement | null = null;
     let gameContext: CanvasRenderingContext2D | null = null;
     let remotePartyMode: string = '';
-    let keyDownHandler: any = null;
-    let keyUpHandler: any = null;
 
     // --- Functions ---
     function resetRemoteUI(message?: string): void {
@@ -29,6 +59,7 @@ export default function initRemoteGame():void {
         currentGameId = null;
         currentParticipantId = null;
         remotePartyMode = '';
+        gameDisconnected = false;
 
         const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
         const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
@@ -264,7 +295,35 @@ export default function initRemoteGame():void {
             try {
               const msg = JSON.parse(event.data);
                 if (msg.type === "game_state") {
-                    drawRemoteGame(msg.data);
+                    // Don't draw game state if disconnected
+                    if (!gameDisconnected) {
+                        drawRemoteGame(msg.data);
+                    }
+                } else if (msg.type === "player_disconnected") {
+                    console.log("Player disconnected:", msg.data);
+                } else if (msg.type === "game_ended") {
+                    console.log("Game ended:", msg.data);
+                    if (msg.data.reason === "player_disconnected") {
+                        gameDisconnected = true;
+                        drawDisconnectionMessage();
+
+                        // Close websocket and clean up after 5 seconds
+                        setTimeout(() => {
+                            if (gameWebSocket != null) {
+                                gameWebSocket.close(1000, "Game ended");
+                                gameWebSocket = null;
+                            }
+                            if (keyDownHandler != null) {
+                                document.removeEventListener('keydown', keyDownHandler);
+                                keyDownHandler = null;
+                            }
+                            if (keyUpHandler != null) {
+                                document.removeEventListener('keyup', keyUpHandler);
+                                keyUpHandler = null;
+                            }
+                            resetRemoteUI();
+                        }, 5000);
+                    }
                 }
             } catch (error) {
              console.error("Erreur parsing:", error);
@@ -295,6 +354,12 @@ export default function initRemoteGame():void {
     }
 
     function onKeyPressed(event: KeyboardEvent): void {
+        // Prevent any input when game is disconnected (waiting for auto-reset)
+        if (gameDisconnected) {
+            event.preventDefault();
+            return;
+        }
+
         if (gameWebSocket == null) {
             return;
         }
@@ -427,6 +492,26 @@ export default function initRemoteGame():void {
         }
     }
 
-    // --- Initialize ---
+    function drawDisconnectionMessage(): void {
+        let canvas = document.getElementById("pong") as HTMLCanvasElement;
+        if (canvas == null) return;
+
+        let ctx = canvas.getContext("2d");
+        if (ctx == null) return;
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+
+        ctx.font = "48px Arial";
+        ctx.fillText("Your opponent disconnected", canvas.width / 2, canvas.height / 2 - 20);
+
+        ctx.font = "32px Arial";
+        ctx.fillText("Please select a new game", canvas.width / 2, canvas.height / 2 + 40);
+    }
+
+   
     createRemoteInterface();
 }
