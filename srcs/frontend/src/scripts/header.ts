@@ -2,6 +2,7 @@
 import user from './user/User.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
+const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 
 async function loadHeader() {
     const currentPath = window.location.pathname;
@@ -52,7 +53,7 @@ function removeHeader() {
 
 async function checkAuth(): Promise<boolean> {
     try {
-        const response = await fetch('/api/auth/verify', {
+        const response = await fetch(`${API_AUTH_ENDPOINT}/verify`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -116,7 +117,7 @@ function setupHeaderEvents() {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             try {
-                await fetch('/api/auth/logout', {
+                await fetch(`${API_AUTH_ENDPOINT}/logout`, {
                     method: 'POST',
                     credentials: 'include'
                 });

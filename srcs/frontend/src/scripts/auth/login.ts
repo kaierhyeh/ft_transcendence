@@ -1,5 +1,8 @@
 import user from '../user/User.js';
 
+const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
+const API_TWOFA_ENDPOINT = `${window.location.origin}/api/auth/2fa`;
+
 export function initLogin() {
 	// Check if user is already logged in and redirect if so
 	checkAuthStatusAndRedirect();
@@ -30,7 +33,7 @@ export function initLogin() {
 		}
 
 		try {
-			const response = await fetch('/api/auth/login', {
+			const response = await fetch(`${API_AUTH_ENDPOINT}/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -58,7 +61,7 @@ export function initLogin() {
 
 	async function handle2FA(token: string, tempToken: string) {
 		try {
-			const response = await fetch('/api/auth/2fa/verify', {
+			const response = await fetch(`${API_TWOFA_ENDPOINT}/verifiy`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -151,7 +154,7 @@ export function initLogin() {
 
 	async function checkAuthStatusAndRedirect() {
 		try {
-			const response = await fetch('/api/auth/verify', {
+			const response = await fetch(`${API_AUTH_ENDPOINT}/verify`, {
 				method: 'POST',
 				credentials: 'include'
 			});

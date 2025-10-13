@@ -1,5 +1,7 @@
 import user from './User.js';
 
+const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
+
 export async function initMatchHistory(): Promise<void> {
 	// Check if user is already logged in and redirect if so
 	checkAuthStatusAndRedirect();
@@ -8,7 +10,7 @@ export async function initMatchHistory(): Promise<void> {
 
 async function checkAuthStatusAndRedirect() {
     try {
-        const response = await fetch('/api/auth/verify', {
+        const response = await fetch(`${API_AUTH_ENDPOINT}/verify`, {
             method: 'POST',
             credentials: 'include'
         });

@@ -24,9 +24,12 @@ export function initStats() {
 	let users: User[] = [];
 	let playerChart: any = null;
 
+	const API_USERS_ENDPOINT = `${window.location.origin}/api/users`;
+
+
 	async function loadUsers() {
 		try {
-			const response = await fetch('/api/users');
+			const response = await fetch(`${API_USERS_ENDPOINT}`);
 
 			if (!response.ok) {
 				throw new Error('Network error');
@@ -89,7 +92,7 @@ export function initStats() {
 		if (evt?.target)
 			(evt.target as HTMLElement).classList.add('selected');
 		try {
-			const response = await fetch('/api/users/' + userId);
+			const response = await fetch(`${API_USERS_ENDPOINT}/${userId}`);
 
 			if (!response.ok) {
 				throw new Error('User not found');

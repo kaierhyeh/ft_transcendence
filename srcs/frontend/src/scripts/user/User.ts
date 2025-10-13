@@ -22,6 +22,8 @@ export type PartialUserData = Partial<UserData>;
 export class User {
     private data: UserData | null = null;
     private isAuthenticated: boolean = false;
+    private readonly API_USERS_ENDPOINT = `${window.location.origin}/api/users`;
+
 
     /**
      * Check if user is authenticated and has data
@@ -162,7 +164,7 @@ export class User {
      */
     public async fetchAndUpdate(): Promise<boolean> {
         try {
-            const response = await fetch('https://localhost:4443/api/users/me', {
+            const response = await fetch(`${this.API_USERS_ENDPOINT}/me`, {
                 method: 'GET',
                 credentials: 'include'
             });

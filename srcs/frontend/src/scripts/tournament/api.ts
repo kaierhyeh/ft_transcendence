@@ -1,5 +1,6 @@
 export class TournamentApiService {
     private readonly API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
+    private readonly API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
     async createGameSession(player1: string, player2: string, tournamentId?: number): Promise<{ game_id: number; jwt_tickets: string[] }> {
         try {
@@ -51,7 +52,7 @@ export class TournamentApiService {
 
     async validateGameSession(gameId: number): Promise<void> {
         try {
-            const configResponse = await fetch(`/api/game/${gameId}/conf`);
+            const configResponse = await fetch(`${this.API_GAME_ENDPOINT}/${gameId}/conf`);
             if (configResponse.ok) {
                 const config = await configResponse.json();
                 console.log('Game config retrieved:', config);

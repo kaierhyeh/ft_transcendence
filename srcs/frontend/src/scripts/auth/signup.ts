@@ -1,5 +1,7 @@
 import user from "../user/User.js";
 
+const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
+
 export function initSignup() {
 	// Check if user is already logged in and redirect if so
 	checkAuthStatusAndRedirect();
@@ -34,7 +36,7 @@ export function initSignup() {
 		}
 
 		try {
-			const response = await fetch('/api/auth/register', {
+			const response = await fetch(`${API_AUTH_ENDPOINT}/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -59,7 +61,7 @@ export function initSignup() {
 
 	async function checkAuthStatusAndRedirect() {
 		try {
-			const response = await fetch('/api/auth/verify', {
+			const response = await fetch(`${API_AUTH_ENDPOINT}/verify`, {
 				method: 'POST',
 				credentials: 'include'
 			});
