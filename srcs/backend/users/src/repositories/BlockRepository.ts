@@ -1,8 +1,10 @@
 import { Database } from "better-sqlite3";
 
 export interface BlockedRow {
-	id: number;
-	nickname: number;
+	user_id: number;
+	username: string;
+	alias: string;
+	avatar_filename: string;
 }
 
 export class BlockRepository {
@@ -11,12 +13,18 @@ export class BlockRepository {
     }
 
 	public async listBlockedUsers(userId: number) {
+		console.log("[INFO] REPO - listBlockedUsers 0");
 		const stmt = this.db.prepare(`
-			SELECT u.user_id AS id, u.nickname
-			FROM friendships f
-			JOIN users u ON f.friend_id = u.user_id
+			SELECT
+				u.user_id AS user_id,
+				u.username AS username,
+				u.alias AS alias,
+				u.avatar_filename AS avatar_filename
+			FROM users u
+			JOIN friendships f ON f.friend_id = u.user_id
 			WHERE f.user_id = ? AND f.status = 'blocked'
 		`);
+		console.log("[INFO] REPO - listBlockedUsers 1");
 		return stmt.all(userId) as BlockedRow[];
 	}
 

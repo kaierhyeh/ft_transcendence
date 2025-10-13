@@ -156,14 +156,6 @@
 	padding-right: 8px;
 	display: flex;
 	gap: 5px;
-
-	/* justify-content: center; */
-	/* align-items: center; */
-	/* display: flex; */
-	/* padding-block: 1.4%;
-	padding-bottom: 5px;
-  	padding-top: 0px; */
-	/* gap: 3%; */
 }
 .menu-control-panel-button {
 	justify-content: center;
@@ -181,20 +173,6 @@
 	cursor: pointer;
 	width: 30%;
 	gap : 5px;
-
-	/* display: inline-flex;
-	align-items: center;
-	padding: 4%;
-	padding-bottom: 5px;
-	padding-top: 5px;
-	border-radius: 8px;
-	color: #aaa;
-	background: transparent;
-	border: 2px solid transparent;
-	transition: all 0.3s ease;
-	cursor: pointer;
-	width: 30%;
-	gap : 6px; */
 }
 .menu-control-panel-button:hover {
 	color: #4ade80;

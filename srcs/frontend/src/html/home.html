@@ -30,14 +30,14 @@
 			<h1 id="menuTitle" class="menu-header-title" data-i18n="menu">MENU</h1>
 			<div class="menu-header-buttons">
 
-				<div class="menu-dropdown">
-					<button class="menu-dropbtn">Filter</button>
+				<div id="menuDropdown" class="menu-dropdown hidden">
+					<button id="menuDropdownButton" class="menu-dropbtn">Filter</button>
 					<div class="menu-dropdown-content">
-						<a>All</a>
-						<a>Friends</a>
-						<a>Req. In</a>
-						<a>Req. Out</a>
-						<a>Blocked</a>
+						<a id="menuDropdownAll">All</a>
+						<a id="menuDropdownFriends">Friends</a>
+						<a id="menuDropdownRequestsIn">Req. In</a>
+						<a id="menuDropdownRequestsOut">Req. Out</a>
+						<a id="menuDropdownBlocked">Blocked</a>
 					</div>
 				</div>
 
@@ -130,11 +130,6 @@
 
 		</div>
 
-		<!-- Menu Friends-List Body -->
-		<!-- <div id="friendsSection" class="menu-section hidden">
-			<h1 id="noFriends" class="menu-empty-list-text" data-i18n="noFriends">No friends</h1>
-		</div> -->
-		
 		<!-- Menu Chats-List Body -->
 		<div id="chatsSection" class="menu-section hidden">
 
@@ -179,18 +174,9 @@
 			<button id="usersSectionButton" class="menu-control-panel-button">
 				<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 					<path fill="currentColor" d="M11 0H5v2H3v6h2v2h6V8H5V2h6V0zm0 2h2v6h-2V2zM0 14h2v4h12v2H0v-6zm2 0h12v-2H2v2zm14 0h-2v6h2v-6zM15 0h4v2h-4V0zm4 8h-4v2h4V8zm0-6h2v6h-2V2zm5 12h-2v4h-4v2h6v-6zm-6-2h4v2h-4v-2z"/>
-					<!-- <path fill="currentColor" d="M5 3H3v18h18V3H5zm14 2v14H5V5h14zm-2 2H7v2h10V7zM7 11h10v2H7v-2zm7 4H7v2h7v-2z"/> -->
 				</svg>
 				<span data-i18n="users">Users</span>
 			</button>
-		
-			<!-- Friends Button -->
-			<!-- <button id="friendsSectionButton" class="menu-control-panel-button">
-				<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-					<path fill="currentColor" d="M11 0H5v2H3v6h2v2h6V8H5V2h6V0zm0 2h2v6h-2V2zM0 14h2v4h12v2H0v-6zm2 0h12v-2H2v2zm14 0h-2v6h2v-6zM15 0h4v2h-4V0zm4 8h-4v2h4V8zm0-6h2v6h-2V2zm5 12h-2v4h-4v2h6v-6zm-6-2h4v2h-4v-2z"/>
-				</svg>
-				<span data-i18n="friends">Friends</span>
-			</button> -->
 		
 			<!-- Chats Button -->
 			<button id="chatsSectionButton" class="menu-control-panel-button">

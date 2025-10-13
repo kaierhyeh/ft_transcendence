@@ -31,8 +31,12 @@
     width: 90px;
     z-index: 1;
 }
+.menu-dropdown-content.show {
+	display: block;
+}	
 /* style of each option */
 .menu-dropdown-content a {
+	display: block;
 	font-size: 14px;
     color: #aaa;
     padding: 12px 16px;
@@ -45,8 +49,14 @@
 	color: #4ade80;
 	background-color: #333;
 }
-.menu-dropdown:hover .menu-dropdown-content {
+.menu-dropbtn.show {
 	display: block;
+	background-color: transparent;
+	color: #4ade80;
+	border-color: #4ade80;
+	border-radius: 12px;
+	background-color: #333;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
 .menu-dropdown:hover .menu-dropbtn {
 	background-color: transparent;

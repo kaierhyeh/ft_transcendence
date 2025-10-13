@@ -92,7 +92,6 @@ function resetChatSection(): void {
 	hideElementById("chatMessages");
 	hideElementById("menuBackButton");
 	showElementById("usersSectionButton");
-	// showElementById("friendsSectionButton");
 	showElementById("chatsSectionButton");
 	setMenuTitle("chats");
 }
