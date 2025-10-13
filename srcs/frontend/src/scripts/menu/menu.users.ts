@@ -161,6 +161,7 @@ async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
+				credentials: 'include' // ADD IT EVERYWHERE (((
 			}
 		});
 	} catch (err) {
@@ -262,6 +263,7 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 function prepareUserInfoSection(): void {
 	hideElementById("usersList");
 	hideElementById("menuControlPanel");
+	hideElementById("menuDropdown");
 	setMenuTitle("User info");
 	showElementById("menuBackButton");
 	showElementById("usersInfo");
@@ -522,6 +524,7 @@ async function initUsersSection(): Promise<void> {
 	resetUsersSection();
 	showElementById("usersList");
 	showElementById("usersSection");
+	showElementById("menuDropdown");
 	await loadUsers();
 }
 
