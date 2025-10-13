@@ -97,7 +97,7 @@
 	text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
 }
 
-.menu-section-switcher {
+/* .menu-section-switcher {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -110,18 +110,76 @@
 	margin: 0;
 	border-radius: 8px;
 	color: #aaa;
-	background: transparent;
+	background: #1e1e1e;
 	border: 2px solid transparent;
 	transition: all 0.3s ease;
 	cursor: pointer;
 	box-sizing: border-box;
 	font-size: 14px;
+	font-family: 'Bit5x3', monospace;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23aaa'><path d='M7 10l5 5 5-5'/></svg>");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 12px;
 }
+.menu-section-switcher:focus,
 .menu-section-switcher:hover {
 	color: #4ade80;
 	border-color: #4ade80;
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	outline: none;
 }
+.menu-section-switcher option {
+  background-color: #461313;
+  color: #dade5f;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+}
+
+.menu-section-switcher option:hover {
+  background-color: #d0d626;
+  color: #000000;
+} */
+
+/* .menu-section-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 8px 16px;
+  margin: 0;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  background: transparent;
+}
+
+.menu-section-switcher .switch-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-color: #1e1e1e;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.menu-section-switcher .switch-btn:hover {
+  color: #4ade80;
+  border-color: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+.menu-section-switcher .switch-btn.active {
+  color: #000;
+  background-color: #4ade80;
+  border-color: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+} */
 
 .menu-header-buttons {
 	display: flex;

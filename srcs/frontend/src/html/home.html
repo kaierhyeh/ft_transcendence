@@ -30,13 +30,16 @@
 			<h1 id="menuTitle" class="menu-header-title" data-i18n="menu">MENU</h1>
 			<div class="menu-header-buttons">
 
-				<select id="menuUserSectionSwitcher" class="menu-section-switcher">
-					<option value="users">All</option>
-					<option value="friends">Friends</option>
-					<option value="requests">Req. In</option>
-					<option value="requests">Req. Out</option>
-					<option value="blocked">Blocked</option>
-				</select>
+				<div class="menu-dropdown">
+					<button class="menu-dropbtn">Filter</button>
+					<div class="menu-dropdown-content">
+						<a>All</a>
+						<a>Friends</a>
+						<a>Req. In</a>
+						<a>Req. Out</a>
+						<a>Blocked</a>
+					</div>
+				</div>
 
 				<!-- Back Button for FRIEND REQUESTS, BLOCKED USERS, {USERNAME} menu windows -->
 				<button id="menuBackButton" class="menu-button hidden">

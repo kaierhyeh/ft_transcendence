@@ -154,6 +154,22 @@ export async function initMenu(): Promise<void> {
 	// friendsButton.addEventListener("click", openFriends);
 	chatsButton.addEventListener("click", openChats);
 
+
+	let X = 'users';
+	const switchBtns = document.querySelectorAll('.menu-section-switcher .switch-btn');
+
+	switchBtns.forEach(btn => {
+	btn.addEventListener('click', () => {
+		switchBtns.forEach(b => b.classList.remove('active'));
+		btn.classList.add('active');
+		X = (btn as HTMLElement).dataset.section!;
+		console.log("Switch to section: X=", X);
+		document.querySelectorAll('.menu-section').forEach(sec => {
+			sec.classList.toggle('hidden', sec.id !== X);
+		});
+	});
+	});
+
 	// call Users event (as home page for menu)
 	openUsers();
 }
