@@ -3,11 +3,24 @@ import cookie from "@fastify/cookie";
 import { CONFIG } from './config';
 import routes from "./routes"
 import jwksService from "./services/jwks.service";
+import ajvErrors from "ajv-errors";
+import { fastifyErrorHandler } from "./errors";
 
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({
+	logger: true,
+	ajv: {
+		customOptions: {
+			allErrors: true, // 👈 REQUIRED for ajv-errors
+		},
+		plugins: [ajvErrors], // 👈 enables `errorMessage` support
+	},
+});
 
 async function run() {
+
+	// Register global error handler
+	fastify.setErrorHandler(fastifyErrorHandler);
 
 	// Register plugins
 	await fastify.register(cookie);

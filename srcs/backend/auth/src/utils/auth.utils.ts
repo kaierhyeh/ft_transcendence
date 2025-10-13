@@ -43,49 +43,34 @@ export class AuthUtils {
 		}
 	}
 
-	/**
-	 * Security validation for login input (username or email)
-	 * Performs security checks that can't be handled by JSON schema
-	 * 
-	 * @param fastify - Fastify instance for logging
-	 * @param login - The login input (username or email)
-	 * @returns Sanitized login string or error object
+		/**
+	 * Security validation for input fields (control chars, XSS)
+	 * Throws error with code/message if unsafe
 	 */
-	checkLoginInput(fastify: any, login: string): { error: string } | string {
-		fastify.log.info(`Security check for login: ${login}`);
-
-		// Note: Basic format validation is handled by JSON schema
-		// This function focuses on security concerns
-
-		// Check for control characters and escape sequences
-		if (/[\x00-\x1F\x7F]/.test(login)) {
-			fastify.log.warn("Security check failed: login contains control characters");
-			return { error: "Login contains invalid characters" };
+	public checkInputSafety(field: string, value: string): void {
+		// Control characters (ASCII 0-31 and 127)
+		if (/[^\x20-\x7E]/.test(value)) {
+			const error: any = new Error(`${field} contains invalid characters`);
+			error.code = 'UNSAFE_INPUT';
+			error.field = field;
+			throw error;
 		}
-
-		// Check for XSS patterns
-		if (/<[^>]*>|script|alert|onerror|onclick|javascript:|&lt;|\"|\'|%3C/.test(login.toLowerCase())) {
-			fastify.log.warn("Security check failed: login contains potentially malicious patterns");
-			return { error: "Login contains invalid characters" };
-		}
-
-		// Check for excessive repetition of characters (security concern)
-		if (/(.)\1{6,}/.test(login)) {
-			fastify.log.warn("Security check failed: login contains excessive repeated characters");
-			return { error: "Login cannot contain more than 6 repeated characters in a row" };
-		}
-
-		// Normalize the login:
-		// - Email addresses: lowercase
-		// - Usernames: capitalize first letter
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (emailRegex.test(login)) {
-			return login.toLowerCase();
-		} else {
-			// Traditional username normalization
-			return login.charAt(0).toUpperCase() + login.slice(1).toLowerCase();
+		// XSS patterns
+		if (/<[^>]*>|script|alert|onerror|onclick|javascript:|&lt;|\"|\'|%3C/.test(value.toLowerCase())) {
+			const error: any = new Error(`${field} contains potentially malicious patterns`);
+			error.code = 'UNSAFE_INPUT';
+			error.field = field;
+			throw error;
 		}
 	}
+
+	/**
+	 * Normalize email to lowercase
+	 */
+	public normalizeEmail(email: string): string {
+		return email.trim().toLowerCase();
+	}
+
 
 	/**
 	 * Generate internal JWT for service-to-service communication

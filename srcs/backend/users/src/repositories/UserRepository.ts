@@ -22,7 +22,6 @@ export interface UserRow {
 }
 
 export interface UpdateData {
-    email?: string;
     password_hash?: string;
     alias?: string;
     avatar_filename?: string;
@@ -67,13 +66,13 @@ export class UserRepository {
         return result.lastInsertRowid as number;
     }
 
-    public findByLogin(login: string): UserRow | null {
+    public find(identifier: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE (username = ? OR email = ? OR google_sub = ?) 
+            WHERE (user_id = ? OR username = ? OR email = ?) 
               AND status != 'deleted'
         `);
-        const result = stmt.get(login, login, login) as UserRow | undefined;
+        const result = stmt.get(identifier, identifier, identifier) as UserRow | undefined;
         return result || null;
     }
 
@@ -83,10 +82,6 @@ export class UserRepository {
         const params: Record<string, any> = { user_id };
 
         // Handle regular fields
-        if (data.email !== undefined) {
-            set_clauses.push("email = @email");
-            params.email = data.email;
-        }
         if (data.password_hash !== undefined) {
             set_clauses.push("password_hash = @password_hash");
             params.password_hash = data.password_hash;

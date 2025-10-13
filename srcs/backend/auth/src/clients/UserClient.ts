@@ -60,12 +60,12 @@ export class UserClient {
     return await response.json() as { user_id: number };
   }
 
-  async getUserByLogin(
-    login: string
+  async getUser(
+    identifier: string
   ): Promise< UserProfile > {
       const authHeaders = this.getAuthHeaders();
 
-      const response = await fetch(`${this.base_url}/users/login/${login}`, {
+      const response = await fetch(`${this.base_url}/users/${identifier}`, {
         headers: authHeaders
       });
 
@@ -124,7 +124,7 @@ export class UserClient {
     user_id: number
   ): Promise<UserProfile> {
     // This route is public, no auth needed
-    const response = await fetch(`${this.base_url}/users/profile/id/${user_id}`);
+    const response = await fetch(`${this.base_url}/users/${user_id}/profile`);
 
     if (!response.ok) {
       const errorBody = await response.json() as ErrorResponse;

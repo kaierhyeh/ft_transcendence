@@ -1,4 +1,5 @@
 import { AuthClient } from '../clients/AuthClient';
+import { GameClient, SessionsPayload } from '../clients/GameClient';
 import { LiteStats, StatsClient } from '../clients/StatsClient';
 import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
@@ -14,12 +15,14 @@ export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "upda
 export class UserService {
   private authClient: AuthClient;
   private statsClient: StatsClient;
+  private gameClient: GameClient;
 
   constructor(
     private userRepository: UserRepository,
   ) {
     this.authClient = new AuthClient();
     this.statsClient = new StatsClient();
+    this.gameClient = new GameClient();
   }
 
   public async createLocalUser(data: LocalUserCreationRawData) {
@@ -50,7 +53,7 @@ export class UserService {
   }
 
   public async resolveLocalUser(credentials: Credentials) {
-    const user = await this.getUserByLogin(credentials.login);
+    const user = await this.getUser(credentials.login);
     if (user.google_sub) {
       const error = new Error('Not a local user');
       (error as any).code = 'NOT_A_LOCAL_USER';
@@ -68,8 +71,8 @@ export class UserService {
     return user;
   }
 
-  public async getUserByLogin(login: string): Promise<UserRow> {
-    const user = await this.userRepository.findByLogin(login);
+  public async getUser(identifier: string): Promise<UserRow> {
+    const user = await this.userRepository.find(identifier);
     if (!user) {
       const error = new Error('User not found');
       (error as any).code = 'USER_NOT_FOUND';
@@ -93,7 +96,7 @@ export class UserService {
     return {
       ...cleanUser,
       avatar_url: avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/profile/id/${user.user_id}/avatar` :
+        `${CONFIG.API.BASE_URL}/users/${user.user_id}/avatar` :
         null,
       ...lite_stats
     };
@@ -119,7 +122,6 @@ export class UserService {
   public async updateUser(user_id: number, raw_data: UpdateRawData): Promise<number> {
     // Transform raw user input to database format
     const data: UpdateData = {
-      email: raw_data.email,
       alias: raw_data.alias,
       settings: raw_data.settings,
       // Extract just the hash string from the auth service response
@@ -172,5 +174,9 @@ export class UserService {
 
   public async resetAvatarToDefault(userId: number): Promise<number> {
     return this.userRepository.resetAvatarToDefault(userId);
+  }
+
+  public async getMatchHistory(user_id: number, page: number, limit: number): Promise<SessionsPayload> {
+    return this.gameClient.getMatchHistory(user_id, page, limit);
   }
 }

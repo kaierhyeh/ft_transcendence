@@ -22,6 +22,8 @@ export type PartialUserData = Partial<UserData>;
 export class User {
     private data: UserData | null = null;
     private isAuthenticated: boolean = false;
+    private readonly API_USERS_ENDPOINT = `${window.location.origin}/api/users`;
+
 
     /**
      * Check if user is authenticated and has data
@@ -37,11 +39,77 @@ export class User {
         return this.data;
     }
 
-    /**
-     * Get specific user property safely
-     */
-    public get<K extends keyof UserData>(key: K): UserData[K] | null {
-        return this.data ? this.data[key] : null;
+    // Individual getters for each property - return null when no data available
+    public get user_id(): number | null {
+        return this.data?.user_id ?? null;
+    }
+
+    public get username(): string | null {
+        return this.data?.username ?? null;
+    }
+
+    public get email(): string | null {
+        return this.data?.email ?? null;
+    }
+
+    public get alias(): string | null {
+        return this.data?.alias ?? null;
+    }
+
+    public get avatar_url(): string | null {
+        return this.data?.avatar_url ?? null;
+    }
+
+    public get two_fa_enabled(): boolean | null {
+        return this.data?.two_fa_enabled ?? null;
+    }
+
+    public get status(): "online" | "offline" | "away" | "deleted" | null {
+        return this.data?.status ?? null;
+    }
+
+    public get created_at(): string | null {
+        return this.data?.created_at ?? null;
+    }
+
+    public get updated_at(): string | null {
+        return this.data?.updated_at ?? null;
+    }
+
+    public get last_seen(): string | null {
+        return this.data?.last_seen ?? null;
+    }
+
+    // Stats getters - return null when no data available, not 0
+    public get wins(): number | null {
+        return this.data?.wins ?? null;
+    }
+
+    public get losses(): number | null {
+        return this.data?.losses ?? null;
+    }
+
+    public get curr_winstreak(): number | null {
+        return this.data?.curr_winstreak ?? null;
+    }
+
+    public get best_winstreak(): number | null {
+        return this.data?.best_winstreak ?? null;
+    }
+
+    public get total_point_scored(): number | null {
+        return this.data?.total_point_scored ?? null;
+    }
+
+    // Computed property - returns null if no data available
+    public get winRate(): number | null {
+        if (!this.data) return null;
+        
+        const wins = this.data.wins;
+        const losses = this.data.losses;
+        const total = wins + losses;
+        
+        return total > 0 ? (wins / total) * 100 : 0;
     }
 
     /**
@@ -96,7 +164,7 @@ export class User {
      */
     public async fetchAndUpdate(): Promise<boolean> {
         try {
-            const response = await fetch('https://localhost:4443/api/users/profile/me', {
+            const response = await fetch(`${this.API_USERS_ENDPOINT}/me`, {
                 method: 'GET',
                 credentials: 'include'
             });

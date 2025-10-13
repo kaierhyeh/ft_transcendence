@@ -2,6 +2,7 @@
 import user from './user/User.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
+const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 
 async function loadHeader() {
     const currentPath = window.location.pathname;
@@ -52,7 +53,7 @@ function removeHeader() {
 
 async function checkAuth(): Promise<boolean> {
     try {
-        const response = await fetch('/api/auth/verify', {
+        const response = await fetch(`${API_AUTH_ENDPOINT}/verify`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -77,9 +78,8 @@ function setupHeaderEvents() {
     // Setup avatar with user data
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
     if (userAvatar && user.isLoggedIn()) {
-        const userData = user.getData();
-        if (userData && userData.avatar_url) {
-            userAvatar.src = userData.avatar_url;
+        if (user.avatar_url) {
+            userAvatar.src = user.avatar_url;
             userAvatar.style.display = 'block';
         } else {
             userAvatar.style.display = 'none';
@@ -90,8 +90,7 @@ function setupHeaderEvents() {
             userAvatar.style.display = 'none';
             const avatarContainer = userAvatar.parentElement;
             if (avatarContainer) {
-                const displayName = user.getDisplayName() || 'U';
-                const initial = displayName.charAt(0).toUpperCase();
+                const initial = user.getInitials();
                 avatarContainer.innerHTML = `<div class="avatar-fallback">${initial}</div>`;
             }
         });
@@ -118,7 +117,7 @@ function setupHeaderEvents() {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             try {
-                await fetch('/api/auth/logout', {
+                await fetch(`${API_AUTH_ENDPOINT}/logout`, {
                     method: 'POST',
                     credentials: 'include'
                 });

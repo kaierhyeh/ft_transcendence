@@ -607,7 +607,7 @@ export function initGame(): void {
             const participants = [
                 {
                     type: user.isLoggedIn() ? "registered" : "guest",        // Player 1 is always registered or guest user
-                    user_id: user.isLoggedIn() ? user.getData()?.user_id : undefined    // Use actual user ID if logged in
+                    user_id: user.isLoggedIn() ? user.user_id : undefined    // Use actual user ID if logged in
                 }
             ];
             

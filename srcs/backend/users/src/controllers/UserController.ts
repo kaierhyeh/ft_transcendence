@@ -3,10 +3,11 @@ import { UserService } from '../services/UserService';
 import { 
   LocalUserCreationRawData, 
   GoogleUserCreationData, 
-  LoginParams, 
   UpdateRawData, 
   UserIdParams, 
-  Credentials
+  Credentials,
+  MatchHistoryQuery,
+  UserLookupParams
 } from '../schemas';
 import fs from 'fs';
 import path from 'path';
@@ -64,19 +65,6 @@ export class UserController {
         two_fa_enabled: result.two_fa_enabled,
         message: "Local user resolved successfully"
       });
-    } catch (error) {
-      this.handleError(error, reply);
-    }
-  }
-
-
-  public async getUserByLogin(
-    request: FastifyRequest<{ Params: LoginParams }>, 
-    reply: FastifyReply
-  ) {
-    try {
-      const user = await this.userService.getUserByLogin(request.params.login);
-      reply.send(user);
     } catch (error) {
       this.handleError(error, reply);
     }
@@ -182,7 +170,7 @@ export class UserController {
     reply: FastifyReply
   ) {
     try {
-      const user_id = request.params.id;
+      const user_id = request.params.uid;
       const filename = await this.userService.getAvatar(user_id);
       const filepath = path.join(CONFIG.AVATAR.BASE_URL, filename);
 
@@ -219,7 +207,7 @@ export class UserController {
     reply: FastifyReply
   ) {
     try {
-      const user_id = request.params.id;
+      const user_id = request.params.uid;
       
       const publicProfile = await this.userService.getPublicProfile(user_id);
       return reply.send(publicProfile);
@@ -228,14 +216,14 @@ export class UserController {
     }
   }
 
-  public async getUserById(
-    request: FastifyRequest<{ Params: UserIdParams }>,
+  public async getUser(
+    request: FastifyRequest<{ Params: UserLookupParams }>,
     reply: FastifyReply
   ) {
     try {
-      const user_id = request.params.id;
+      const identifier = request.params.identifier;
       
-      const user = await this.userService.getUserById(user_id);
+      const user = await this.userService.getUser(identifier);
       return reply.send(user);
     } catch (error) {
       this.handleError(error, reply);
@@ -277,6 +265,24 @@ export class UserController {
         changes,
         message: "Avatar reset to default successfully"
       });
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async getMatchHistory(request: FastifyRequest<{ Querystring: MatchHistoryQuery }>, reply: FastifyReply) {
+    try {
+      const sub = request.authUser?.sub;
+       if (!sub) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      const user_id = toInteger(sub);
+      const { page, limit } = request.query;
+
+      const game_sessions = await this.userService.getMatchHistory(user_id, page, limit);
+
+      return reply.send(game_sessions);
+
     } catch (error) {
       this.handleError(error, reply);
     }

@@ -1,20 +1,13 @@
 import { FromSchema } from "json-schema-to-ts";
 
 // Elementary field schemas (reusable building blocks)
-const usernameSchema = {
-  type: "string",
-  minLength: 3,
-  maxLength: 30,
-  pattern: "^[a-zA-Z0-9_-]+$"
-} as const;
 
-const emailSchema = {
-  type: "string",
-  format: "email",
-  minLength: 5,
-  maxLength: 254
+const loginSchema = {
+    type: "string",
+    minLength: 1,      // Allow any identifier length
+    maxLength: 254,    // Max email length
+    description: "Username, email address, or Google sub"
 } as const;
-
 
 const passwordSchema = {
   type: "string",
@@ -46,8 +39,8 @@ export const createLocalUserSchema = {
   type: "object",
   required: ["username", "email", "password"],
   properties: {
-    username: usernameSchema,
-    email: emailSchema,
+    username: loginSchema,
+    email: loginSchema,
     password: passwordSchema,
     alias: aliasSchema
   },
@@ -60,26 +53,11 @@ export const createGoogleUserSchema = {
   required: ["google_sub", "email", "username"],
   properties: {
     google_sub: googleSubSchema,
-    email: emailSchema,
-    username: usernameSchema,
+    email: loginSchema,
+    username: loginSchema,
     alias: aliasSchema
   },
   additionalProperties: false,
-} as const;
-
-
-export const loginSchema = {
-  type: "object",
-  required: ["login"],
-  properties: {
-    login: { 
-      type: "string",
-      minLength: 1,      // Allow any identifier length
-      maxLength: 254,    // Max email length
-      description: "Username, email address, or Google sub"
-    },
-  },
-  additionalProperties: false
 } as const;
 
 export const updatePasswordSchema = {
@@ -95,7 +73,6 @@ export const updatePasswordSchema = {
 export const updateSchema = {
   type: "object", 
   properties: {
-    email: emailSchema,
     password: updatePasswordSchema,
     alias: aliasSchema,
     settings: settingsSchema,
@@ -106,9 +83,18 @@ export const updateSchema = {
 
 export const userIdSchema = {
   type: "object",
-    required: ["id"],
+    required: ["uid"],
     properties: {
-      id: { type: "number" },
+      uid: { type: "number" },
+    },
+    additionalProperties: false,
+} as const;
+
+export const userLookupSchema = {
+  type: "object",
+    required: ["identifier"],
+    properties: {
+      identifier: { type: "string" },
     },
     additionalProperties: false,
 } as const;
@@ -123,10 +109,22 @@ export const credentialsSchema = {
   additionalProperties: false,
 } as const;
 
+export const matchHistoryQuerySchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      page: { type: 'integer', minimum: 1, default: 1},
+      limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+    }
+  }
+} as const;
+
+
 export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
-export type LoginParams = FromSchema<typeof loginSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
+export type UserLookupParams = FromSchema<typeof userLookupSchema>;
 export type Credentials = FromSchema<typeof credentialsSchema>;
+export type MatchHistoryQuery = FromSchema<typeof matchHistoryQuerySchema.querystring>;

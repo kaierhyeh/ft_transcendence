@@ -20,7 +20,9 @@ Routes are distributed across different prefixes:
 - **Friends management**: `/friends`
 - **Block management**: `/blocks`
 
-Example: `https://localhost:4443/users`, `https://localhost:4443/friends`
+All the prefixes above are under the main API prefix `/api`.
+
+Example: `https://localhost:4443/api/users`, `https://localhost:4443/api/friends`
 
 ---
 
@@ -102,9 +104,9 @@ Resolve and authenticate local user credentials [protected - internal service on
 
 ---
 
-#### `GET /users/login/:login`
+#### `GET /users/:identifier`
 
-Get user data by login identifier (username, email, or Google sub) [protected - internal service only].
+Get user data by an identifier (user_id, username, email) [protected - internal service only].
 
 **Response:**
 ```json
@@ -127,22 +129,13 @@ Get user data by login identifier (username, email, or Google sub) [protected - 
 
 ---
 
-#### `GET /users/id/:id`
-
-Get all user data by ID [protected - internal service only].
-
-**Response:** Same as `/users/login/:login`
-
----
-
-#### `PUT /users/profile/me`
+#### `PUT /users/me`
 
 Update current user profile [requires user authentication].
 
 **Request Body:**
 ```json
 {
-  "email"?: "string",
   "password"?: {
     "old": "string",
     "new": "string"
@@ -162,7 +155,7 @@ Update current user profile [requires user authentication].
 
 ---
 
-#### `PUT /users/profile/me/avatar`
+#### `PUT /users/me/avatar`
 
 Update user avatar [requires user authentication].
 
@@ -177,7 +170,7 @@ Update user avatar [requires user authentication].
 
 ---
 
-#### `GET /users/profile/me`
+#### `GET /users/me`
 
 Get current user profile with sensitive data [requires user authentication].
 
@@ -196,6 +189,8 @@ Get current user profile with sensitive data [requires user authentication].
   "updated_at": "datetime",
   "wins": number,
   "losses": number,
+  "curr_winstreak": number,
+  "best_winstreak": number,
   "total_games": number
 }
 ```
@@ -217,7 +212,7 @@ Delete current user account (soft delete) [requires user authentication].
 
 ---
 
-#### `DELETE /users/profile/me/avatar`
+#### `DELETE /users/me/avatar`
 
 Reset avatar to default [requires user authentication].
 
@@ -232,7 +227,7 @@ Reset avatar to default [requires user authentication].
 
 ---
 
-#### `GET /users/profile/id/:id/avatar`
+#### `GET /users/:uid/avatar`
 
 Retrieve avatar image file.
 
@@ -240,7 +235,7 @@ Retrieve avatar image file.
 
 ---
 
-#### `GET /users/profile/id/:id`
+#### `GET /users/:uid/profile`
 
 Get public user profile (no sensitive data).
 
@@ -254,6 +249,8 @@ Get public user profile (no sensitive data).
   "avatar_url": "string",
   "created_at": "datetime",
   "wins": number,
+  "curr_winstreak": number,
+  "best_winstreak": number,
   "losses": number,
   "total_games": number
 }
@@ -344,7 +341,6 @@ Check if user is blocked [protected - internal service only].
 ### Auth Service Integration
 - **User Creation**: Called by auth service during signup
 - **User Resolution**: Called by auth service during login
-- **Password Hashing**: Delegated to auth service for security
 - **2FA Management**: Coordinated with auth service
 
 ### Stats Service Integration  

@@ -1,3 +1,59 @@
-<!-- Header -->
-<header></header>
+<div class="settings-container">
+	<button class="back-to-home-btn" data-route="/">Back to Home</button>
 
+	<div id="loading" class="settings-loading">
+		Loading profile...
+	</div>
+
+	<div id="error" class="settings-error" style="display: none;">
+		Error while loading profile
+	</div>
+
+	<div id="content" style="display: none;">
+		<div class="profile-section">
+			<h1 class="settings-title">SETTINGS</h1>
+			<div class="profile-header">
+				<div class="avatar-section">
+					<div class="settings-avatar-container">
+						<div id="profileAvatar" class="settings-profile-avatar"></div>
+						<div class="settings-avatar-overlay">
+							<label for="avatarInput" class="settings-change-avatar-btn">Change Avatar</label>
+						</div>
+						<input type="file" id="avatarInput" accept="image/*" style="display: none;">
+					</div>
+				</div>
+				<div class="info-section">
+					<div class="username" id="profileUsername"></div>
+					<div class="email" id="profileEmail"></div>
+					<div class="alias" id="profileAlias"></div>
+				</div>
+			</div>
+
+			<div class="settings-form">
+				<div class="form-group">
+					<label for="aliasInput">ALIAS</label>
+					<div class="input-group">
+						<input type="text" id="aliasInput" class="form-input">
+						<button id="updateAliasBtn" class="update-btn">Update</button>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label>Change Password</label>
+					<div id="passwordFields" class="password-fields" style="display: none;">
+						<input type="password" id="oldPassword" placeholder="Old Password" class="form-input">
+						<div class="input-group">
+							<input type="password" id="newPassword" placeholder="New Password" class="form-input">
+							<button id="updatePasswordBtn" class="update-btn">Update</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="bottom-actions">
+				<button id="changePasswordBtn" class="action-btn">Change Password</button>
+				<button id="twoFABtn" class="action-btn">Enable 2FA</button>
+			</div>
+		</div>
+	</div>
+</div>

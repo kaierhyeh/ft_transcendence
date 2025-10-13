@@ -5,14 +5,16 @@ import {
   GoogleUserCreationData, 
   createLocalUserSchema,
   createGoogleUserSchema, 
-  LoginParams, 
-  loginSchema, 
   UpdateRawData, 
   updateSchema, 
   UserIdParams, 
   userIdSchema, 
   Credentials,
-  credentialsSchema
+  credentialsSchema,
+  MatchHistoryQuery,
+  matchHistoryQuerySchema,
+  UserLookupParams,
+  userLookupSchema
 } from "../schemas";
 import { userAuthMiddleware } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
@@ -50,19 +52,9 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.createGoogleAccount.bind(userController)
   );
 
-  // GET /login/:login - Get all user data via login identifier [protected]
-  fastify.get<{ Params: LoginParams }>(
-    "/login/:login",
-    {
-      schema: { params: loginSchema},
-      preHandler: internalAuthMiddleware,
-    },
-    userController.getUserByLogin.bind(userController)
-  );
-
-  // PUT /profile/me - Update user profile data
+  // PUT /me - Update user profile data
   fastify.put<{ Body: UpdateRawData }>(
-    "/profile/me",
+    "/me",
     {
       schema: { body: updateSchema },
       preHandler: userAuthMiddleware
@@ -70,16 +62,16 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.updateMe.bind(userController)
   );
 
-  // PUT /profile/me/avatar - Update user avatar
+  // PUT /me/avatar - Update user avatar
   fastify.put(
-    "/profile/me/avatar",
+    "/me/avatar",
     { preHandler: userAuthMiddleware },
     userController.updateAvatar.bind(userController)
   );
 
-  // GET /profile/me - Get current user profile with stats
+  // GET /me - Get current user profile with stats
   fastify.get(
-    "/profile/me",
+    "/me",
     { preHandler: userAuthMiddleware },
     userController.getMe.bind(userController)
   );
@@ -91,39 +83,43 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.deleteMe.bind(userController)
   );
 
-  // DELETE /profile/me/avatar - Reset avatar to default
+  // DELETE /me/avatar - Reset avatar to default
   fastify.delete(
-    "/profile/me/avatar",
+    "/me/avatar",
     { preHandler: userAuthMiddleware },
     userController.resetAvatar.bind(userController)
   );
 
-  // GET /profile/id/:id/avatar - Retrieve avatar image file
+  // GET /:uid/avatar - Retrieve avatar image file
   fastify.get<{ Params: UserIdParams }> (
-    "/profile/id/:id/avatar",
+    "/:uid/avatar",
     { schema: { params: userIdSchema }  },
     userController.getAvatar.bind(userController)
   );
 
-  // GET /profile/id/:id - Get public user profile
+  // GET /:uid/profile - Get public user profile
   fastify.get<{ Params: UserIdParams }>(
-    "/profile/id/:id",
+    "/:uid/profile",
     { schema: { params: userIdSchema } },
     userController.getPublicProfile.bind(userController)
   );
 
-  // GET /id/:id - Get all user data by id [protected]
-  fastify.get<{ Params: UserIdParams }>(
-    "/id/:id",
+  // GET /:identifier - Get all user data by identifier (id, username, email) [protected]
+  fastify.get<{ Params: UserLookupParams }>(
+    "/:identifier",
     {
-      schema: { params: userIdSchema },
+      schema: { params: userLookupSchema },
       preHandler: internalAuthMiddleware,
     },
-    userController.getUserById.bind(userController)
+    userController.getUser.bind(userController)
   );
 
-  // GET /match-history - Get match history via game service (TODO)
-  fastify.get("/match-history", async (request, reply) => {
-    // TODO - implement match history retrieval
-  });
+  // GET /me/match-history - Get match history via game service (TODO)
+  fastify.get<{ Querystring: MatchHistoryQuery}>(
+    "/me/match-history", 
+    { schema: matchHistoryQuerySchema,
+      preHandler: userAuthMiddleware,
+    },
+    userController.getMatchHistory.bind(userController)
+  );
 }

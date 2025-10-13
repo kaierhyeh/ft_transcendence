@@ -90,7 +90,7 @@ Establish a WebSocket connection for real-time game updates.
 
 #### `GET /game/sessions`
 
-Get match history with pagination and filtering.
+Get match history with pagination and filtering [protected - internal service only].
 
 **Query Parameters:**
 
@@ -109,7 +109,7 @@ GET /game/sessions?user_id=7&page=3
 **Response:**
 ```json
 {
-  "sessions": [...],
+  "data": [...],
   "pagination": {
     "page": 1,
     "limit": 10,

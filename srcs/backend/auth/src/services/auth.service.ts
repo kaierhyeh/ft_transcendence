@@ -55,9 +55,9 @@ export class AuthService {
 		return { step: "done", ...tokens };
 	}
 
-	async checkUserExistenceByLogin(login: string): Promise<boolean> {
+	async checkUserExistence(identifier: string): Promise<boolean> {
 		try {
-			await userClient.getUserByLogin(login);
+			await userClient.getUser(identifier);
 		} catch(error) {
 			const status = (error as any).status;
 			if (status === 404) {
@@ -66,32 +66,7 @@ export class AuthService {
 			if (status === 401) {
 				// Authentication issue with users service - log for debugging
 				console.error('🔐 Internal auth failed when checking user existence:', {
-					login,
-					status,
-					message: (error as any).message,
-					details: (error as any).details
-				});
-				// Treat as "user not found" for now, but log the issue
-				return false;
-			}
-			// Re-throw other errors (500, network issues, etc.)
-			throw error;
-		}
-		return true;
-    }
-
-	async checkUserExistenceById(user_id: number): Promise<boolean> {
-		try {
-			await userClient.getUserProfile(user_id);
-		} catch(error) {
-			const status = (error as any).status;
-			if (status === 404) {
-				return false; // User not found
-			}
-			if (status === 401) {
-				// Authentication issue with users service - log for debugging
-				console.error('🔐 Internal auth failed when checking user existence:', {
-					login: user_id,
+					identifier: identifier,
 					status,
 					message: (error as any).message,
 					details: (error as any).details
@@ -196,7 +171,7 @@ export class AuthService {
 
 			// Check if user exists in the database
 			try {
-				await this.checkUserExistenceById(user_id);
+				await this.checkUserExistence(user_id.toString());
 			} catch(error) {
 				if ((error as any).status === 404) {
 					console.warn('⚠️ User not found in the users service, revoking tokens...');
@@ -267,7 +242,7 @@ export class AuthService {
 
 			// Check if user exists in the database
 			try {
-				await this.checkUserExistenceById(user_id);
+				await this.checkUserExistence(user_id.toString());
 			} catch(error) {
 				if ((error as any).status === 404) {
 					console.warn('⚠️ User not found in the users service, revoking tokens...');
@@ -360,7 +335,7 @@ export class AuthService {
 	}
 
 	async getUserProfileByLogin(login: string): Promise<UserProfile> {
-		return await userClient.getUserByLogin(login);
+		return await userClient.getUser(login);
 	}
 	
 }
