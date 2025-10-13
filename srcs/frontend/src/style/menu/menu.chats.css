@@ -99,6 +99,7 @@
 	background: #333;
 	border-color: #4ade80;
 	color: #4ade80;
+	background-color: #333;
 	transform: translateY(-2px);
 	box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
 }
@@ -141,6 +142,7 @@
 .send-btn:hover {
 	background: #333;
 	border-color: #4ade80;
+	background-color: #333;
 	color: #4ade80;
 	transform: translateY(-2px);
 	box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);

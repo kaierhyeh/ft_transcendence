@@ -22,6 +22,7 @@
 .user-list-element:hover {
 	color: #4ade80;
 	border-color: #4ade80;
+	background-color: #333;
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
 .user-list-element-info {
@@ -130,6 +131,7 @@
 	color: #4ade80;
 	border-color: #4ade80;
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	background-color: #333;
 }
 .user-action-button-red {
 	justify-content: center;
@@ -152,6 +154,7 @@
 	color: #ff0000;
 	border-color: #ff0000;
 	box-shadow: 0 0 10px rgba(222, 74, 74, 0.5);
+	background-color: #333;
 }
 .user-pixel-icon {
 	width: 24px;

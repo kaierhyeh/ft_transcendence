@@ -43,7 +43,7 @@
 /* 'action' styles */
 .menu-dropdown-content a:hover {
 	color: #4ade80;
-	background-color: rgba(74, 222, 128, 0.139)
+	background-color: #333;
 }
 .menu-dropdown:hover .menu-dropdown-content {
 	display: block;
@@ -53,5 +53,6 @@
 	color: #4ade80;
 	border-color: #4ade80;
 	border-radius: 12px;
+	background-color: #333;
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
