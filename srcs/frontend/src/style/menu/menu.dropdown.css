@@ -8,8 +8,9 @@
 	background-color: #1a1a1a;
 	border-radius: 12px;
 }
+/* style of the button that opens the box with options */
 .menu-dropbtn {
-    height: 40px;
+	height: 40px;
 	width: auto;
 	width: 90px;
 	padding: 0px;
@@ -19,7 +20,9 @@
     border: 2px solid transparent;
 	border-radius: 12px;
 }
+/* style of the box with options */
 .menu-dropdown-content {
+	overflow: hidden;
     display: none;
     position: absolute;
     background-color: #1a1a1a;
@@ -28,16 +31,19 @@
     width: 90px;
     z-index: 1;
 }
+/* style of each option */
 .menu-dropdown-content a {
 	font-size: 14px;
     color: #aaa;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
-	border-radius: 12px;
 }
+
+/* 'action' styles */
 .menu-dropdown-content a:hover {
 	color: #4ade80;
+	background-color: rgba(74, 222, 128, 0.139)
 }
 .menu-dropdown:hover .menu-dropdown-content {
 	display: block;
