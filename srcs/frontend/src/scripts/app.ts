@@ -10,6 +10,7 @@ import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin } from "./auth/login.js";
 import { initMatchHistory } from "./user/match_history.js";
+import { initSettings } from "./user/settings.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -64,6 +65,10 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initMatchHistory === "function")
 			initMatchHistory();
 	},
+	"/user/settings": () => {
+		if (typeof initSettings === "function")
+			initSettings();
+	},
 	// "/oauth-callback": () => {
 	// 	if (typeof handleOAuthCallback === "function")
 	// 		handleOAuthCallback();
@@ -102,7 +107,6 @@ async function navigate(path: string, push: boolean = true)
 	if (file)
 	{
 		try {
-			// Store previous page before navigating to login
 			if (path === '/login' && push) {
 				const currentPath = window.location.pathname;
 				if (currentPath !== '/login' && currentPath !== '/signup') {
@@ -119,7 +123,6 @@ async function navigate(path: string, push: boolean = true)
 			
 			await loadHeader();
 			update_event();
-			// Initialize i18n for the new page
 			i18n.initializePage();
 			if (initScripts[path])
 				initScripts[path]();
@@ -137,11 +140,9 @@ window.onpopstate = (e) => {
 	navigate(path, false);
 };
 
-// Initialize browser detection and compatibility
 addBrowserClass();
 logBrowserInfo();
 
-// Initialize device detection and responsive support
 initDeviceDetection();
 
 navigate(location.pathname, false);
