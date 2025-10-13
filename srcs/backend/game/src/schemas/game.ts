@@ -18,6 +18,7 @@ export const playerSchema = {
       enum: ["left", "right", "top-left", "bottom-left", "top-right", "bottom-right"],
     },
     user_id: { type: "number" },
+    username: { type: "string" },
   },
   additionalProperties: false,
 } as const;
@@ -33,12 +34,17 @@ export const gameIdSchema = {
 
 export const createGameSchema = {
   type: "object",
-  required: ["mode", "participants"],
+  required: ["format", "mode", "participants"],
   properties: {
+    format : {
+        type: "string",
+        enum: ["1v1", "2v2"]
+    },
     mode: {
       type: "string",
-      enum: ["pvp", "multi"],
+      enum: ["solo", "pvp", "tournament"],
     },
+    tournament_id: { type: "number"},
     participants: {
       type: "array",
       minItems: 2,
@@ -53,5 +59,6 @@ export const createGameSchema = {
 // 👇 Types derived from schemas
 export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;
-export type GameCreationBody = FromSchema<typeof createGameSchema>;
-export type GameMode = GameCreationBody["mode"];
+export type GameCreationData = FromSchema<typeof createGameSchema>;
+export type GameMode = GameCreationData["mode"];
+export type GameFormat = GameCreationData["format"];

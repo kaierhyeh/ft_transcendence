@@ -1,5 +1,5 @@
 import { SocketStream } from '@fastify/websocket';
-import { GameParticipant, GameMode } from '../schemas';
+import { GameParticipant, GameMode, GameFormat, GameCreationData } from '../schemas';
 import { Team, GameMessage } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
@@ -16,6 +16,8 @@ type PlayerMap = Map<number, Player>;
 export type SessionPlayerMap = PlayerMap;
 
 export class GameSession {
+    private game_format: GameFormat;
+    private tournament_id: number | undefined;
     private game_mode: GameMode;
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
@@ -28,13 +30,15 @@ export class GameSession {
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
 
-    constructor(game_mode: GameMode, participants: GameParticipant[], logger: FastifyBaseLogger) {
-        this.game_mode = game_mode;
-        this.players = this.initPlayers_(participants);
+    constructor(data: GameCreationData, logger: FastifyBaseLogger) {
+        this.game_format = data.format;
+        this.game_mode = data.mode;
+        this.tournament_id = data.tournament_id;
+        this.players = this.initPlayers_(data.participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.last_activity = Date.now();
-        this.game_engine = new GameEngine(this.game_mode, this.players);
+        this.game_engine = new GameEngine(this.game_format, this.players);
         this.logger = logger;
     }
 
@@ -47,6 +51,7 @@ export class GameSession {
                 team: p.team,
                 slot: p.slot,
                 user_id: p.user_id,
+                username: p.username,
                 socket: undefined,
             });
         });
@@ -176,7 +181,7 @@ export class GameSession {
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (this.game_mode === "multi" || !this.started_at || !this.ended_at || !game_state.winner)
+        if (this.game_format === "2v2" || !this.started_at || !this.ended_at || !game_state.winner)
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
@@ -191,14 +196,18 @@ export class GameSession {
         
         return {
             session: {
+                format: this.game_format,
                 mode: this.game_mode,
+                tournament_id: this.tournament_id ?? null,
                 created_at: toSqlDate(this.created_at),
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),
             },
             player_sessions: players.map((p) => {
+
                 const player_session: DbPlayerSession = {
                     user_id: p.user_id ?? null,
+                    username: p.username ?? null,
                     type: p.type,
                     team: p.team,
                     score: game_state.score[p.team],

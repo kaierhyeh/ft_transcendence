@@ -101,12 +101,19 @@ interface CreateGameResponse {
 }
 
 interface CreateGameRequest {
-    type: "pvp";
+    type: "1v1";
     participants: Participant[];
 }
 
 interface CreateGameRequest4p {
-    type: "multi";
+    type: "2v2";
     participants: Participant4p[];
 }
 
+type GameMode = 'solo' | 'pvp' | 'tournament';
+type GameFormat = '1v1' | '2v2';
+type PlayerType = "registered" | "guest" | "ai";
+interface GameParticipant {
+    type: PlayerType;
+    user_id?: number;
+}

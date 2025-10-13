@@ -1,5 +1,5 @@
 import { SocketStream } from "@fastify/websocket";
-import { GameParticipant, GameMode } from "../schemas";
+import { GameParticipant, GameMode, GameCreationData } from "../schemas";
 import { GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
@@ -18,10 +18,10 @@ export class LiveSessionManager {
         this.game_sessions = new Map();
     }
 
-    public createGameSession(mode: GameMode, participants: GameParticipant[]): number {
+    public createGameSession(data: GameCreationData): number {
         const game_id = next_id++;
 
-        const new_game = new GameSession(mode, participants, this.logger);
+        const new_game = new GameSession(data, this.logger);
         this.game_sessions.set(game_id, new_game);
 
         return game_id;
@@ -76,6 +76,7 @@ export class LiveSessionManager {
             if (dto) this.session_repo.save(dto); // save in db with db plugin I guess, taking dto: DbSession as argument
         } catch(err) {
             this.logger.warn({ game_id: game_id, error: err instanceof Error ? err.message : String(err) }, "Failed to save game session");
+            return;
         }
         this.logger.info({ game_id: game_id }, "Game session saved");
     }

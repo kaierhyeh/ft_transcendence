@@ -1,5 +1,6 @@
 import { AuthClient, GameSessionClaims } from '../clients/AuthClient';
-import { GameClient, GameCreationData } from '../clients/GameClient';
+import { GameClient, GameCreationData, Player } from '../clients/GameClient';
+import { UsersClient } from '../clients/UsersClient';
 import { MatchMakingData } from '../schemas';
 
 type Team = "left" | "right";
@@ -13,32 +14,45 @@ export interface Match {
 export class MatchMakingService {
   private authClient: AuthClient;
   private gameClient: GameClient;
+  private usersClient: UsersClient;
 
   constructor(
   ) {
     this.authClient = new AuthClient();
     this.gameClient = new GameClient();
+    this.usersClient = new UsersClient();
   }
 
   public async make(data: MatchMakingData): Promise<Match> {
-    if (data.mode === "multi") {
-      return this.makeMultiGame(data);
+    if (data.format === "2v2") {
+      return this.make2v2Game(data);
     } 
-    return this.makePvpGame(data);
+    return this.make1v1Game(data);
   }
 
-  private async makePvpGame(data: MatchMakingData): Promise<Match> {
+  private async make1v1Game(data: MatchMakingData): Promise<Match> {
     // Map participants to game players for game creation
-    const players = data.participants.map((participant, index) => ({
-      player_id: index + 1, // Sequential player IDs
-      team: index % 2 === 0 ? "left" as Team : "right" as Team, // Alternate teams (player vs AI)
-      slot: index % 2 === 0 ? "left" as PlayerSlots : "right" as PlayerSlots, // Match slots to teams
-      user_id: participant.user_id,
-      type: participant.type // Include the participant type
-    }));
+    const players: Player[] = await Promise.all(
+      data.participants.map(async (participant, index) => {
+        const username = participant.user_id 
+          ? (await this.usersClient.getUserName(participant.user_id)).username 
+          : undefined;
+
+        return {
+          player_id: index + 1, // Sequential player IDs
+          team: index % 2 === 0 ? "left" as Team : "right" as Team, // Alternate teams (player vs AI)
+          slot: index % 2 === 0 ? "left" as PlayerSlots : "right" as PlayerSlots, // Match slots to teams
+          user_id: participant.user_id,
+          username,
+          type: participant.type // Include the participant type
+        };
+      })
+    );
 
     const game_creation_data: GameCreationData = {
+      format: data.format,
       mode: data.mode,
+      tournament_id: data.tournament_id,
       players
     };
 
@@ -63,30 +77,38 @@ export class MatchMakingService {
   }
 
 
-  private async makeMultiGame(data: MatchMakingData): Promise<Match> {
+  private async make2v2Game(data: MatchMakingData): Promise<Match> {
     // Validate we have exactly 4 participants for multi-player
     if (data.participants.length !== 4) {
       throw new Error(`Multi-player games require exactly 4 participants, got ${data.participants.length}`);
     }
 
     // Map participants to game players with specific team/slot assignments
-    const players = data.participants.map((participant, index) => {
-      // Team assignment: first 2 players = "left", last 2 players = "right"
-      const team: Team = index < 2 ? "left" : "right";
-      
-      // Slot assignment based on array order
-      const slot: PlayerSlots = this.getMultiPlayerSlot(index);
-      
-      return {
-        player_id: index + 1,
-        team,
-        slot,
-        user_id: participant.user_id,
-        type: participant.type
-      };
-    });
+    const players = await Promise.all(
+      data.participants.map(async (participant, index) => {
+        // Team assignment: first 2 players = "left", last 2 players = "right"
+        const team: Team = index < 2 ? "left" : "right";
+        
+        // Slot assignment based on array order
+        const slot: PlayerSlots = this.getMultiPlayerSlot(index);
+        
+        const username = participant.user_id 
+          ? (await this.usersClient.getUserName(participant.user_id)).username 
+          : undefined;
+        
+        return {
+          player_id: index + 1,
+          team,
+          slot,
+          user_id: participant.user_id,
+          username,
+          type: participant.type
+        };
+      })
+    );
 
     const game_creation_data: GameCreationData = {
+      format: data.format,
       mode: data.mode,
       players
     };

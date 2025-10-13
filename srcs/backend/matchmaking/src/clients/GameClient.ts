@@ -1,5 +1,5 @@
 import { CONFIG } from "../config";
-import { GameMode, PlayerType } from "../schemas";
+import { GameFormat, GameMode, PlayerType } from "../schemas";
 import { InternalAuthClient } from "./InternalAuthClient";
 
 interface ErrorResponse {
@@ -11,16 +11,19 @@ interface ErrorResponse {
 type Team = "left" | "right";
 type PlayerSlots = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right";
 
-interface Player {
+export interface Player {
   player_id: number;
   team: Team;
   slot: PlayerSlots;
   user_id?: number;
+  username?: string;
   type: PlayerType;
 }
 
 export interface GameCreationData {
+  format: GameFormat;
   mode: GameMode;
+  tournament_id?: number;
   players: Player[];
 };
 
@@ -41,6 +44,8 @@ export class GameClient {
         },
         body: JSON.stringify({
           mode: data.mode,
+          format: data.format,
+          tournament_id: data.tournament_id,
           participants: data.players  // Adjust field name to match game service
         })
       });

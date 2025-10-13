@@ -32,6 +32,11 @@ export const CONFIG = {
     BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-game:3000"
   },
 
+  USERS_SERVICE: {
+    BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-users:3000"
+  },
+
+
   JWT: {
     ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
   },

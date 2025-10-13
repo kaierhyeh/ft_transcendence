@@ -23,7 +23,8 @@ export class TournamentApiService {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    mode: 'pvp',           // Use 'pvp' mode for tournament matches
+                    mode: 'tournament',           // Use 'pvp' mode for tournament matches
+                    format: '1v1',
                     participants: participants
                 })
             });

@@ -26,7 +26,7 @@ export interface LocalUserCreationData {
   password: string;
 }
 
-export class UserClient {
+export class UsersClient {
   private base_url = CONFIG.CLIENTS.USER.BASE_URL;
 
   private getAuthHeaders(): { Authorization: string } {
@@ -146,4 +146,4 @@ export class UserClient {
 
 }
 
-export default new UserClient();
+export default new UsersClient();

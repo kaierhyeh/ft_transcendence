@@ -1,6 +1,7 @@
 import "./types.js";
 import user from "./user/User.js";
 
+
 export function initGame(): void {
     // --- Constants & State ---
     const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
@@ -14,7 +15,8 @@ export function initGame(): void {
     let game_conf: GameConfig | null = null;
     let websockets: WebSocket[] = [];  // Array of websockets, one per player
     let game_id: number | null = null;
-    let gameMode: 'pvp' | 'multi' = 'pvp';
+    let gameMode: 'solo' | 'pvp' | 'tournament';
+    let gameFormat: '1v1' | '2v2';
     let jwtTickets: string[] = [];  // Store JWT tickets for each player
     let aiInterval: number | null = null;
     let inputInterval: number | null = null;
@@ -42,7 +44,8 @@ export function initGame(): void {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    mode: gameMode === 'multi' ? 'multi' : 'pvp',
+                    format: gameFormat,
+                    mode: gameMode,
                     participants: participants
                 })
             });
@@ -206,9 +209,9 @@ export function initGame(): void {
         cleanupCurrentGame();
         await new Promise(resolve => setTimeout(resolve, 100));
         isAI = mode;
-        gameMode = 'pvp';
+        gameFormat = '1v1';
         
-        console.log("Starting new game - AI:", isAI, "Mode:", gameMode);
+        console.log("Starting new game - AI:", isAI, "Format:", gameFormat);
         await startGame();
         
         isTransitioning = false;
@@ -223,7 +226,7 @@ export function initGame(): void {
         isTransitioning = true;        
         cleanupCurrentGame();
         await new Promise(resolve => setTimeout(resolve, 100));
-        gameMode = 'multi';
+        gameFormat = '2v2';
         isAI = false;
         
         console.log("Starting new 4-player game");
@@ -245,15 +248,15 @@ export function initGame(): void {
         }
         
         isTransitioning = true;        
-        const savedMode = gameMode;
+        const savedFormat = gameFormat;
         const savedAI = isAI;
         
         cleanupCurrentGame();
         await new Promise(resolve => setTimeout(resolve, 100));
-        gameMode = savedMode;
+        gameFormat = savedFormat;
         isAI = savedAI;
         
-        console.log("Restarting with mode:", gameMode, "AI:", isAI);
+        console.log("Restarting with format:", gameFormat, "AI:", isAI);
         await startGame();
         
         isTransitioning = false;
@@ -275,7 +278,7 @@ export function initGame(): void {
         });
         websockets = [];
         
-        const numPlayers = gameMode === 'pvp' ? 2 : 4;
+        const numPlayers = gameFormat === '1v1' ? 2 : 4;
         console.log(`Creating ${numPlayers} WebSocket connections for game ${id}`);
         
         // Create WebSocket connections for each player
@@ -297,7 +300,7 @@ export function initGame(): void {
                 ws.send(JSON.stringify(joinMessage));
                 
                 // Start AI logic if this is an AI player (index 1 for PvP mode)
-                if (isAI && gameMode === 'pvp' && i === 1 && aiInterval === null) {
+                if (isAI && gameFormat === '1v1' && i === 1 && aiInterval === null) {
                     console.log("Starting AI interval for player", i);
                     aiInterval = setInterval(() => {
                         AIDecision();
@@ -308,8 +311,9 @@ export function initGame(): void {
             ws.onmessage = function (event: MessageEvent) {
                 try {
                     const message: GameStateMessage | GameStateMessage4p | ServerResponseMessage = JSON.parse(event.data);
+                    
                     if (message.type === "game_state") {
-                        if (gameMode === 'pvp') {
+                        if (gameFormat === '1v1') {
                             game_state = (message as GameStateMessage).data;
                             game_state_4p = null;
                         } else {
@@ -318,7 +322,7 @@ export function initGame(): void {
                         }
                         draw();
                     } else if (message.type === "server_message") {
-                        handleServerMessage(message);
+                        handleServerMessage(message as ServerResponseMessage);
                     }
                 } catch (error) {
                     console.error(`Failed to parse WebSocket ${i} message:`, error);
@@ -348,12 +352,12 @@ export function initGame(): void {
                 }
                 
                 // Check if game finished
-                if (gameMode === 'pvp' && game_state?.winner) {
+                if (gameFormat === '1v1' && game_state?.winner) {
                     gameEnded = true;
                     const winner = document.getElementById("winner.");
                     if (winner && winner.innerText.length === 0)
                         winner.innerText = "Player " + game_state.winner + " won!";
-                } else if (gameMode === 'multi' && game_state_4p?.winner) {
+                } else if (gameFormat === '2v2' && game_state_4p?.winner) {
                     gameEnded = true;
                     const winner = document.getElementById("winner.");
                     if (winner && winner.innerText.length === 0)
@@ -380,7 +384,7 @@ export function initGame(): void {
         console.log(`Starting input sending for ${websockets.length} WebSocket connections`);
         
         inputInterval = setInterval(() => {
-            if (gameMode === 'pvp') {
+            if (gameFormat === '1v1') {
                 // Player 1 (Human) - WebSocket 0
                 if (websockets[0] && websockets[0].readyState === WebSocket.OPEN) {
                     let move = "stop";
@@ -441,7 +445,7 @@ export function initGame(): void {
         console.log("Input interval started:", inputInterval);
     }
 
-    function handleServerMessage(message: ServerMessage): void {
+    function handleServerMessage(message: ServerResponseMessage): void {
         switch (message.level) {
             case "info":
                 console.info(`[Server] ${message.message}`);
@@ -475,7 +479,7 @@ export function initGame(): void {
     }
     
     function AIDecision(): void {
-        if (!game_state || !game_conf || gameMode !== 'pvp') return;
+        if (!game_state || !game_conf || gameFormat !== '1v1') return;
         const ball = game_state.ball;
         if (ball.dx < 0)
             AITarg = -1;
@@ -484,7 +488,7 @@ export function initGame(): void {
     }
     
     function moveAIPaddle(playerIndex: number): void {
-        if (!game_state || !game_conf || gameMode !== 'pvp') return;
+        if (!game_state || !game_conf || gameFormat !== '1v1') return;
         if (playerIndex >= websockets.length) return;
         
         const ws = websockets[playerIndex];
@@ -536,7 +540,7 @@ export function initGame(): void {
             return;
         }
 
-        if (gameMode === 'pvp') {
+        if (gameFormat === '1v1') {
             if (!game_state || !game_conf) return;
             ctx.fillStyle = "white";
             drawCenterLine();
@@ -603,7 +607,7 @@ export function initGame(): void {
     // Create participants array based on game mode and AI setting
     function createParticipantsArray() {
 
-        if (gameMode === 'pvp') {
+        if (gameFormat === '1v1') {
             const participants = [
                 {
                     type: user.isLoggedIn() ? "registered" : "guest",        // Player 1 is always registered or guest user
@@ -617,15 +621,18 @@ export function initGame(): void {
                     type: "ai",
                     user_id: undefined
                 });
+                gameMode = 'solo';
             } else {
                 participants.push({
                     type: "guest",
                     user_id: undefined
                 });
+                gameMode = 'pvp';
             }
             
             return participants;
         } else {
+            gameMode = 'pvp';
             // 4-player mode - all guest users for now
             return [
                 { type: "guest", user_id: undefined },
@@ -650,7 +657,7 @@ export function initGame(): void {
             
             game_id = matchResult.game_id;
             jwtTickets = matchResult.jwt_tickets;
-            console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} match created with ID:`, game_id);
+            console.log(`${gameFormat === '1v1' ? '2-player' : '4-player'} match created with ID:`, game_id);
             console.log("JWT tickets received:", jwtTickets.length);
             
             // 2. Get game configuration
@@ -661,12 +668,12 @@ export function initGame(): void {
             game_conf = await response.json() as GameConfig;
             canvas.width = game_conf.canvas_width;
             canvas.height = game_conf.canvas_height;
-            console.log(`${gameMode === 'pvp' ? '2-player' : '4-player'} game initialized:`, game_conf);
+            console.log(`${gameFormat === '1v1' ? '2-player' : '4-player'} game initialized:`, game_conf);
             
             // 3. Connect WebSockets with JWT authentication
             connectWebSockets(game_id);
         } catch (error) {
-            console.error(`Failed to initialize ${gameMode === 'pvp' ? '2-player' : '4-player'} game:`, error);
+            console.error(`Failed to initialize ${gameFormat === '1v1' ? '2-player' : '4-player'} game:`, error);
             gameStarted = false;
             gameEnded = true;
         }
