@@ -178,6 +178,13 @@ export class GameSession {
         const player = this.players.get(participant_id);
         if (!player) return;
 
+        // Don't broadcast disconnection if game already ended normally
+        if (this.ended_at !== undefined) {
+            player.socket = undefined;
+            this.game_engine.setConnected(player.slot, false);
+            return;
+        }
+
         let remainingPlayers = 0;
         for (const p of this.players.values()) {
             if (p.socket !== undefined && p.participant_id !== participant_id) {

@@ -97,6 +97,19 @@
 	color: #000;
 }
 
+/* Remote mode: hide local buttons, show remote buttons */
+.pong-header .remote-game-btn {
+	display: none;
+}
+
+.pong-header.remote-mode .local-game-btn {
+	display: none;
+}
+
+.pong-header.remote-mode .remote-game-btn {
+	display: block;
+}
+
 .pong-game-wrapper {
 	background: #1a1a1a;
 	border: 2px solid #444;
