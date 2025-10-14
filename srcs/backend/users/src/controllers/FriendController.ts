@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { FriendService } from '../services/FriendService';
-import { FriendshipIdParams, UserIdParams } from '../schemas/friends';
+import { FriendshipIdParams, UserIdParams, UserIdsBody } from '../schemas/friends';
 import { toInteger } from '../utils/type-converters';
 
 export class FriendController {
@@ -182,6 +182,21 @@ export class FriendController {
 			await this.friendService.removeFriendship(thisUserId, targetFriendshipId);
 			reply.status(204).send();
 
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async getUsersByIds(request: FastifyRequest<{ Body: UserIdsBody }>, reply: FastifyReply) {
+		try {
+			// const sub = request.authUser?.sub;
+			// if (!sub) {
+			// 	return reply.status(401).send({ error: "Unauthorized: No user context" });
+			// }
+			const thisUserId = request.body.id;
+			const userIds = request.body.ids;
+			const users = await this.friendService.getUsersByIds(thisUserId, userIds);
+			reply.status(200).send(users);
 		} catch (error) {
 			this.handleError(error, reply);
 		}

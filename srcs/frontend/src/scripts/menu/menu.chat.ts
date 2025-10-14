@@ -28,8 +28,9 @@ export interface ChatUser {
 	user_id: number;
 	username: string;
 	alias: string | null;
-	user_status: string;
+	user_status: string | null;
 	friendship_status: string | null;
+	from: number | null;
 }
 
 /* ============================================ GLOBALS ===================================== */
@@ -103,8 +104,10 @@ function renderChatList(users: ChatUser[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
+		const userStatus = u.user_status ? u.user_status : "unknown";
+
 		const statusHtml = u.friendship_status
-			? `<span class="user-status-${u.user_status.toLowerCase()}">${u.user_status}</span>`
+			? `<span class="user-status-${userStatus.toLowerCase()}">${userStatus}</span>`
 			: `<span class="user-status-unknown"></span>`;
 
 		return `
@@ -134,7 +137,12 @@ function renderChatList(users: ChatUser[]): void {
 
 async function loadChats(): Promise<void> {
 	try {
-		const res = await fetch(`${API_CHAT_ENDPOINT}/chats/${thisUserId}`);
+		const res = await fetch(`${API_CHAT_ENDPOINT}/`, {
+			method: "GET",
+			headers: {
+				credentials: "include"
+			}
+		});
 		if (!res.ok) {
 			throw new Error("Failed to load chats");
 		}

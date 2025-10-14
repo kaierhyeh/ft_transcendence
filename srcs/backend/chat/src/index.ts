@@ -1,54 +1,30 @@
-import fastify, { FastifyInstance } from "fastify";
-import fastifyJwt from "@fastify/jwt";
-import FastifyWebsocket from "@fastify/websocket";
-
-import { chatRoutes } from "./routes/chat.routes";
-import { wsRoutes } from "./routes/ws.routes";
-import { logError } from "./utils/errorHandler";
-import { colorLog, redLogError } from "./utils/logger";
+import Fastify from "fastify";
+import { CONFIG } from "./config";
+import routes from "./routes/index.routes" // from index file where discribed all prefixes
+import repositoriesPlugin from "./plugins/repositories";
+import servicesPlugin from "./plugins/services";
 import cookie from "@fastify/cookie";
 
-import { CONFIG } from "./config";
+const fastify = Fastify({ logger: true });
 
-import "./db/database";
+async function run() {
+	await fastify.register(cookie);
+	await fastify.register(repositoriesPlugin);
+	await fastify.register(servicesPlugin);
 
-const chatServer: FastifyInstance = fastify({ logger: true });
-
-chatServer.setErrorHandler((error, request, reply) => {
-	logError(error, "Chat server");
-	redLogError("Handling error:", error);
-	reply
-		.status(error.statusCode || 500)
-		.send({
-			error: error.message || "Chat server error",
-			statusCode: error.statusCode || 500,
-		});
-});
-
-// Register plugins first so they decorate request before routes are registered
-chatServer.register(cookie);
-chatServer.register(FastifyWebsocket);
-// Register routes after plugins
-chatServer.register(wsRoutes);
-chatServer.register(fastifyJwt, { secret: CONFIG.SECURITY.JWT_SECRET });
-chatServer.register(chatRoutes, { prefix: "/chat" });
-
-
-// Health check endpoint
-chatServer.get('/health', async () => {
-	return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
-});
-
-const run = async () => {
-	try {
-		colorLog("cyan", "Start Chat service");
-		await chatServer.listen({ port: CONFIG.SERVER.PORT, host: CONFIG.SERVER.HOST });
-		colorLog("green", "Chat service is ready");
-	} catch (e) {
-		logError(e, "Can not run chat server");
-		redLogError("Chat server error:", e);
-		process.exit(1);
+	for (const { route, prefix } of routes) {
+		await fastify.register(route, { prefix });
 	}
-};
 
-run();
+	// Health check endpoint
+	fastify.get('/health', async () => {
+		return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
+	});
+
+	await fastify.listen({ 
+		port: CONFIG.SERVER.PORT, 
+		host: CONFIG.SERVER.HOST 
+	});
+}
+
+run().catch(console.error);

@@ -18,7 +18,7 @@ async function run() {
     }
   });
   
-	await fastify.register(cookie);
+  await fastify.register(cookie);
   await fastify.register(repositoriesPlugin);
   await fastify.register(servicesPlugin);
 

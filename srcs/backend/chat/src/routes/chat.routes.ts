@@ -1,49 +1,28 @@
-// registers endpoints (fastify.get(...), fastify.post(...)) and maps them to controller functions.
-
-import	{
-		FastifyInstance,
-		FastifyPluginAsync
-		} from "fastify";
-
-import	{
-		getChatPartnersController
-		} from "../controllers/chats.controller";
-
-import	{
-		postMessagesController,
-		getMessagesController,
-		deleteMessageController
-		} from "../controllers/messages.controller";
+import { FastifyInstance } from "fastify";
+import { ChatController } from "../controllers/chats.controller";
+import { UserIdParams, userIdSchema } from "../schemas/users.schema";
 import { userAuthMiddleware } from "../middleware/userAuth";
 
-export const chatRoutes: FastifyPluginAsync = async (fastify:FastifyInstance): Promise<void> => {
+export default async function chatsRoutes(fastify: FastifyInstance) {
+	const chatController = new ChatController(fastify.services.chat);
 
-	fastify.post<{Body:{msg:{fromId:number, toId:number, msg:string}}}>(
-		"/messages",
-		{ 
-			preHandler: userAuthMiddleware 
-		}, 
-		postMessagesController);
-
-	fastify.get<{ Params: { chatId: string; userId: string } }>(
-		"/messages/:chatId/:userId", 
+	// List current user's chats [Requires user authentication]
+	fastify.get(
+		"/",
 		{
-			preHandler: userAuthMiddleware 
-		}, 
-		getMessagesController
+			preHandler: userAuthMiddleware
+		},
+		chatController.getUserChats.bind(chatController)
 	);
 
-	fastify.delete("/messages/:id", deleteMessageController);
-
-	fastify.get("/chats/:userId", getChatPartnersController);
-
-
-	// fastify.get(
-	// 	"/chats", 
+	// Get chat by id [Requires user authentication]
+	// fastify.get<{ Params: UserIdParams }>(
+	// 	"/:id",
 	// 	{
-	// 		preHandler: userAuthMiddleware 
-	// 	}, 
-	// 	getChatPartnersController
+	// 		schema: { params: userIdSchema },
+	// 		preHandler: userAuthMiddleware
+	// 	},
+	// 	chatController.getChatById.bind(chatController)
 	// );
 
-};
+}

@@ -1,12 +1,26 @@
 import { FromSchema } from "json-schema-to-ts";
 
-export const userId = {
+export const userIdSchema = {
 	type: "object",
 	required: ["id"],
 	properties: {
-		id: { type: "number" },
+		id: { type: "number", minimum: 0 },
 	},
 	additionalProperties: false,
 } as const;
 
-export type GameParticipant = FromSchema<typeof userId>;
+export const idArraySchema = {
+	type: "object",
+	required: ["ids"],
+	properties: {
+		ids: {
+			type: "array",
+			items: { type: "number", minimum: 0 },
+			minItems: 1,
+		},
+	},
+	additionalProperties: false,
+} as const;
+
+export type UserIdParams = FromSchema<typeof userIdSchema>;
+export type IdArrayParams = FromSchema<typeof idArraySchema>;

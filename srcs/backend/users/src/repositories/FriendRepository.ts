@@ -220,4 +220,37 @@ export class FriendRepository {
 		const result = stmt.get(userId, friendId, friendId, userId, status) as { count: number };
 		return result.count > 0;
 	}
+
+	public async getUsersByIds(thisUserId: number, userIds: number[]) {
+		if (!userIds.length) {
+			return [];
+		}
+
+		// Dynamically build placeholders (?, ?, ?, ...)
+		const placeholders = userIds.map(() => "?").join(", ");
+
+		const stmt = this.db.prepare(`
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status,
+				f.user_id AS from_id,
+				f.friend_id AS to_id
+			FROM users AS u
+			LEFT JOIN friendships AS f
+				ON (
+					(f.user_id = ? AND f.friend_id = u.user_id)
+					OR
+					(f.friend_id = ? AND f.user_id = u.user_id)
+				)
+			WHERE u.user_id IN (${placeholders})
+		`);
+
+		const params = [thisUserId, thisUserId, ...userIds];
+
+		return stmt.all(...params) as UserListRow[];
+	}
 }
