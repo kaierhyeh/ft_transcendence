@@ -65,6 +65,186 @@ export function initGame(): void {
     setTimeout(setupGameButtons, 100);
     draw();
 
+    // --- Mini Stats ---
+    let miniChart: any = null;
+    let miniInterval: number | null = null;
+    let lastLeftScoreForMini: number | null = null;
+    let lastRightScoreForMini: number | null = null;
+    let touchesSinceLastPoint = 0;
+    const touchesHistory: number[] = [];
+    let previousBallForMini: any = null;
+
+    const MINI_STATS_KEY = 'pong_mini_stats';
+    const PERSISTENT_STATS_KEY = 'pong_persistent_stats';
+    let persistentLeft = 0;
+    let persistentRight = 0;
+    let previousLeft = 0;
+    let previousRight = 0;
+
+    try {
+        const raw = localStorage.getItem(MINI_STATS_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed.touchesHistory))
+                touchesHistory.push(...parsed.touchesHistory);
+            if (typeof parsed.lastLeft === 'number') lastLeftScoreForMini = parsed.lastLeft;
+            if (typeof parsed.lastRight === 'number') lastRightScoreForMini = parsed.lastRight;
+        }
+    } catch (e) { }
+
+    try {
+        const raw = localStorage.getItem(PERSISTENT_STATS_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (typeof parsed.left === 'number') persistentLeft = parsed.left;
+            if (typeof parsed.right === 'number') persistentRight = parsed.right;
+        }
+    } catch (e) { }
+
+    function resetPersistentStats(): void {
+        localStorage.removeItem(PERSISTENT_STATS_KEY);
+        localStorage.removeItem(MINI_STATS_KEY);
+        persistentLeft = 0;
+        persistentRight = 0;
+        previousLeft = 0;
+        previousRight = 0;
+        touchesHistory.length = 0;
+        lastLeftScoreForMini = null;
+        lastRightScoreForMini = null;
+        touchesSinceLastPoint = 0;
+        if (miniChart) {
+            miniChart.data.datasets[0].data = [50];
+            miniChart.data.datasets[1].data = [50];
+            miniChart.update();
+        }
+        updateMiniStats();
+    }
+
+    (window as any).resetPersistentStats = resetPersistentStats;
+
+    function ensureMiniChart(): void {
+        if (miniChart || typeof (window as any).Chart === 'undefined') return;
+        const canvasEl = document.getElementById('pong-mini-stats-chart') as HTMLCanvasElement | null;
+        if (!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+        if (!ctx) return;
+        miniChart = new (window as any).Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [''],
+                datasets: [
+                    { label: 'Scored', data: [50], backgroundColor: '#22c55e', barThickness: 18, stack: 'stack1', borderRadius: 6 },
+                    { label: 'Conceded', data: [50], backgroundColor: '#ef4444', barThickness: 18, stack: 'stack1', borderRadius: 6 }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false, max: 100, stacked: true },
+                    y: { display: false, stacked: true }
+                }
+            }
+        });
+
+        try {
+            const total = persistentLeft + persistentRight;
+            let pctLeft = 50;
+            if (total > 0) pctLeft = Math.round((persistentLeft / total) * 100);
+            miniChart.data.datasets[0].data = [pctLeft];
+            miniChart.data.datasets[1].data = [100 - pctLeft];
+            miniChart.options.scales.x.max = 100;
+            miniChart.update();
+        } catch (e) { }
+    }
+
+    function updateMiniStats(): void {
+        ensureMiniChart();
+        const gs = (gameMode === 'pvp') ? game_state : game_state_4p;
+        const gconf = game_conf;
+        if (!gs) {
+            if (miniChart) {
+                const total = persistentLeft + persistentRight;
+                let pctLeft = 50;
+                if (total > 0) pctLeft = Math.round((persistentLeft / total) * 100);
+                miniChart.data.datasets[0].data = [pctLeft];
+                miniChart.data.datasets[1].data = [100 - pctLeft];
+                miniChart.options.scales.x.max = 100;
+                miniChart.update();
+            }
+            const breakdownElInit = document.getElementById('pong-points-breakdown');
+            if (breakdownElInit) breakdownElInit.textContent = `Left: ${persistentLeft}  ·  Right: ${persistentRight}`;
+            return;
+        }
+
+        const leftPoints = gs.score?.left ?? 0;
+        const rightPoints = gs.score?.right ?? 0;
+
+        if (leftPoints > previousLeft) {
+            persistentLeft += (leftPoints - previousLeft);
+            previousLeft = leftPoints;
+        }
+        if (rightPoints > previousRight) {
+            persistentRight += (rightPoints - previousRight);
+            previousRight = rightPoints;
+        }
+
+        try {
+            localStorage.setItem(PERSISTENT_STATS_KEY, JSON.stringify({ left: persistentLeft, right: persistentRight }));
+        } catch (e) { }
+
+        if (miniChart) {
+            const total = persistentLeft + persistentRight;
+            let pctLeft = 50;
+            if (total > 0) pctLeft = Math.round((persistentLeft / total) * 100);
+            miniChart.data.datasets[0].data = [pctLeft];
+            miniChart.data.datasets[1].data = [100 - pctLeft];
+            miniChart.options.scales.x.max = 100;
+            miniChart.update();
+        }
+
+        const ball = gs.ball || null;
+        if (ball && previousBallForMini && gconf) {
+            if (Math.sign(ball.dx) !== Math.sign(previousBallForMini.dx))
+                touchesSinceLastPoint++;
+        }
+        previousBallForMini = ball ? { x: ball.x, y: ball.y, dx: ball.dx, dy: ball.dy } : null;
+
+        if (lastLeftScoreForMini === null) lastLeftScoreForMini = leftPoints;
+        if (lastRightScoreForMini === null) lastRightScoreForMini = rightPoints;
+
+        if (leftPoints !== lastLeftScoreForMini || rightPoints !== lastRightScoreForMini) {
+            touchesHistory.push(touchesSinceLastPoint);
+            touchesSinceLastPoint = 0;
+            lastLeftScoreForMini = leftPoints;
+            lastRightScoreForMini = rightPoints;
+            if (touchesHistory.length > 200) touchesHistory.shift();
+
+            try {
+                localStorage.setItem(MINI_STATS_KEY, JSON.stringify({ touchesHistory: touchesHistory.slice(-200), lastLeft: lastLeftScoreForMini, lastRight: lastRightScoreForMini }));
+            } catch (e) { }
+        }
+
+        const totalPoints = touchesHistory.length;
+        const avgEl = document.getElementById('pong-rebounds-avg');
+        if (avgEl) {
+            if (totalPoints === 0)
+                avgEl.textContent = 'Avg rebounds before point: —';
+            else {
+                const sum = touchesHistory.reduce((a, b) => a + b, 0);
+                const avg = (sum / totalPoints).toFixed(2);
+                avgEl.textContent = `Avg rebounds before point: ${avg}`;
+            }
+        }
+
+        const breakdownEl = document.getElementById('pong-points-breakdown');
+        if (breakdownEl)
+            breakdownEl.textContent = `Left: ${persistentLeft}  ·  Right: ${persistentRight}`;
+    }
+
+    miniInterval = window.setInterval(() => { try { updateMiniStats(); } catch (e) { } }, 300);
+
     function setupGameButtons(): void {
         const onePlayerBtn = document.getElementById('one-player-btn') as HTMLButtonElement;
         const twoPlayersBtn = document.getElementById('two-players-btn') as HTMLButtonElement;
@@ -97,6 +277,7 @@ export function initGame(): void {
                 start4PlayerGame();
             });
         }
+        try { ensureMiniChart(); } catch (e) { }
     }
 
     function updateButtonStates(activeButton: 'one' | 'two' | 'four'): void {
@@ -177,6 +358,8 @@ export function initGame(): void {
         isTransitioning = true;        
         cleanupCurrentGame();
         await new Promise(resolve => setTimeout(resolve, 100));
+        previousLeft = 0;
+        previousRight = 0;
         isAI = mode;
         gameMode = 'pvp';
         
@@ -195,6 +378,8 @@ export function initGame(): void {
         isTransitioning = true;        
         cleanupCurrentGame();
         await new Promise(resolve => setTimeout(resolve, 100));
+        previousLeft = 0;
+        previousRight = 0;
         gameMode = 'multi';
         isAI = false;
         
@@ -222,6 +407,8 @@ export function initGame(): void {
         
         cleanupCurrentGame();
         await new Promise(resolve => setTimeout(resolve, 100));
+        previousLeft = 0;
+        previousRight = 0;
         gameMode = savedMode;
         isAI = savedAI;
         
@@ -274,6 +461,7 @@ export function initGame(): void {
                         game_state = null;
                     }
                     draw();
+                    try { updateMiniStats(); } catch (e) { }
                 } else if (message.type === "server_message")
                     handleServerMessage(message);
             } catch (error) {
