@@ -1,7 +1,6 @@
 import {openChatsSection} from "./menu.chat.js";
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
 import {openUsersSection} from "./menu.users.js";
-import {openFriendsSection} from "./menu.friends.js";
 // import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
@@ -10,7 +9,6 @@ let menuWindow: HTMLElement;
 let menuCloseButton: HTMLElement;
 let menuButton: HTMLElement;
 let usersButton: HTMLElement;
-// let friendsButton: HTMLElement;
 let chatsButton: HTMLElement;
 
 function initializeGlobals(): boolean {
@@ -18,9 +16,7 @@ function initializeGlobals(): boolean {
 	menuCloseButton = document.getElementById("menuCloseButton")!;
 	menuButton = document.getElementById("menuButton")!;
 	usersButton = document.getElementById("usersSectionButton")!;
-	// friendsButton = document.getElementById("friendsSectionButton")!;
 	chatsButton = document.getElementById("chatsSectionButton")!;
-	// if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !friendsButton || !chatsButton) {
 	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !chatsButton) {
 		return false;
 	}
@@ -59,30 +55,12 @@ function openUsers(): void {
 	hideSectionsElements();
 
 	setElementActive("usersSectionButton", true);
-	// setElementActive("friendsSectionButton", false);
 	setElementActive("chatsSectionButton", false);
 
 	clearEvents("#menuControlPanel");
-	// document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
 	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
 
 	openUsersSection(1);
-}
-
-function openFriends(): void {
-	console.log("MENU: button Friends pressed");
-	clearEventsInSections();
-	hideSectionsElements();
-
-	setElementActive("usersSectionButton", false);
-	// setElementActive("friendsSectionButton", true);
-	setElementActive("chatsSectionButton", false);
-
-	clearEvents("#menuControlPanel");
-	document.getElementById("usersSectionButton")!.addEventListener("click", openUsers);
-	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
-
-	openFriendsSection();
 }
 
 function openChats(): void {
@@ -91,12 +69,10 @@ function openChats(): void {
 	hideSectionsElements();
 
 	setElementActive("usersSectionButton", false);
-	// setElementActive("friendsSectionButton", false);
 	setElementActive("chatsSectionButton", true);
 
 	clearEvents("#menuControlPanel");
 	document.getElementById("usersSectionButton")!.addEventListener("click", openUsers);
-	// document.getElementById("friendsSectionButton")!.addEventListener("click", openFriends);
 
 	openChatsSection(1); // Replace 1 with actual current user ID
 }
@@ -151,7 +127,6 @@ export async function initMenu(): Promise<void> {
 	menuButton.addEventListener("click", openMenuWindow);
 	menuCloseButton.addEventListener("click", closeMenuWindow);
 	usersButton.addEventListener("click", openUsers);
-	// friendsButton.addEventListener("click", openFriends);
 	chatsButton.addEventListener("click", openChats);
 
 

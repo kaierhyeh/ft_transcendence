@@ -8,14 +8,20 @@ export class BlockController {
 
 	public async getBlockedUsers(request: FastifyRequest, reply: FastifyReply) {
 		try {
+			console.log("[INFO] CONTROLLER - getBlockedUsers 0");
 			const sub = request.authUser?.sub;
+			console.log("[INFO] CONTROLLER - getBlockedUsers 1");
 			if (!sub) {
 				return reply.status(401).send({ error: "Unauthorized: No user context" });
 			}
+			console.log("[INFO] CONTROLLER - getBlockedUsers 2");
 			const thisUserId = toInteger(sub);
+			console.log("[INFO] CONTROLLER - getBlockedUsers 3");
 			const blockedUsers = await this.blockService.getBlockedUsers(thisUserId);
+			console.log("[INFO] CONTROLLER - getBlockedUsers 4");
 			reply.status(200).send(blockedUsers);
 		} catch (error) {
+			console.log("[INFO] CONTROLLER - getBlockedUsers ERROR");
 			this.handleError(error, reply);
 		}
 	}

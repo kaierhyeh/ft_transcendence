@@ -17,7 +17,6 @@ export interface FriendListRow {
 	alias: string | null;
 	avatar_filename: string | null;
 	user_status: string;
-	friendship_status: string;
 }
 
 export interface IncomingRequestListRow {
@@ -25,8 +24,6 @@ export interface IncomingRequestListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
-	user_status: string;
-	friendship_status: string;
 }
 
 export interface OutgoingRequestListRow {
@@ -34,8 +31,6 @@ export interface OutgoingRequestListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
-	user_status: string;
-	friendship_status: string;
 }
 
 export class FriendRepository {
@@ -115,64 +110,63 @@ export class FriendRepository {
 		return stmt.get(thisUserId, thisUserId, targetUserId) as UserListRow | undefined;
 	}
 
+	// user_id: number;
+	// username: string;
+	// alias: string | null;
+	// avatar_filename: string | null;
+	// user_status: string;
+	// 	user_status: string;
+	// friendship_status: string | null;
+
 	public async listFriends(userId: number) {
 		const stmt = this.db.prepare(`
 			SELECT
-				u.user_id,
-				u.username,
-				u.alias,
-				u.avatar_filename,
+				u.user_id AS user_id,
+				u.username AS username,
+				u.alias AS alias,
+				u.avatar_filename AS avatar_filename,
 				u.status AS user_status,
 				f.status AS friendship_status
-			FROM users AS u
-			JOIN friendships AS f
-				ON f.status = 'accepted'
-				AND (
-					(f.user_id = ? AND f.friend_id = u.user_id)
+			FROM users u
+			JOIN friendships f
+				ON (
+					(f.friend_id = u.user_id AND f.user_id = ?)
 					OR
-					(f.friend_id = ? AND f.user_id = u.user_id)
-				);
-			WHERE u.user_id != ?
+					(f.user_id = u.user_id AND f.friend_id = ?)
+				)
+			WHERE f.status = 'accepted'
 		`);
-		return stmt.all(userId, userId, userId) as FriendListRow[];
+		return stmt.all(userId, userId) as FriendListRow[];
 	}
 
 	/* INCOMING requests */
 	public async listPendingIncomingRequests(userId: number) {
 		const stmt = this.db.prepare(`
 			SELECT
-				u.user_id,
-				u.username,
-				u.alias,
-				u.avatar_filename,
-				u.status AS user_status,
-				f.status AS friendship_status
-			FROM users AS u
-			JOIN friendships AS f
-				ON f.status = 'pending'
-				AND (f.friend_id = ? AND f.user_id = u.user_id);
-			WHERE u.user_id != ?
+				u.user_id AS user_id,
+				u.username AS username,
+				u.alias AS alias,
+				u.avatar_filename AS avatar_filename
+			FROM users u
+			JOIN friendships f ON f.user_id = u.user_id
+			WHERE f.friend_id = ? AND f.status = 'pending'
 		`);
-		return stmt.all(userId, userId) as IncomingRequestListRow[];
+		return stmt.all(userId) as IncomingRequestListRow[];
 	}
 
 	/* OUTGOING requests */
 	public async listPendingOutgoingRequests(userId: number) {
 		const stmt = this.db.prepare(`
 			SELECT
-				u.user_id,
-				u.username,
-				u.alias,
-				u.avatar_filename,
-				u.status AS user_status,
-				f.status AS friendship_status
-			FROM users AS u
-			JOIN friendships AS f
-				ON f.status = 'pending'
-				AND (f.user_id = ? AND f.friend_id = u.user_id);
-			WHERE u.user_id != ?
+				u.user_id AS user_id,
+				u.username AS username,
+				u.alias AS alias,
+				u.avatar_filename AS avatar_filename
+			FROM users u
+			JOIN friendships f ON f.friend_id = u.user_id
+			WHERE f.user_id = ? AND f.status = 'pending'
 		`);
-		return stmt.all(userId, userId) as OutgoingRequestListRow[];
+		return stmt.all(userId) as OutgoingRequestListRow[];
 	}
 
 	// IGNORE duplicates

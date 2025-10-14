@@ -40,8 +40,7 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
   const sql_dir = join(__dirname, '../sql');
   const sql_files = [
     'users.sql',
-    'friends.sql',
-    'blocks.sql'
+    'friends.sql'
   ];
 
   for (const file of sql_files) {

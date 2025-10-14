@@ -7,6 +7,7 @@ export class BlockService {
 		private friendRepository: FriendRepository) {}
 
 	public async getBlockedUsers(userId: number) {
+		console.log("[INFO] SERVICE - getBlockedUsers 0");
 		return this.blockRepository.listBlockedUsers(userId);
 	}
 

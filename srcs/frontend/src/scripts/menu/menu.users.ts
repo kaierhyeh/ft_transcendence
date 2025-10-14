@@ -1,7 +1,4 @@
-// imports
-// import { send } from "../api.js";
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
-// import { user } from "../users.js";
 
 // data structures
 
@@ -33,7 +30,6 @@ let menuBackButton: HTMLElement;
 // sections
 let menuControlPanel: HTMLElement;
 let usersSectionButton: HTMLElement;
-// let friendsSectionButton: HTMLElement;
 let chatsSectionButton: HTMLElement;
 // users section
 let usersSection: HTMLElement;
@@ -53,6 +49,7 @@ let openChatButton: HTMLElement;
 let blockUserButton: HTMLElement;
 
 let thisUserId: number;
+let currentFilter: string = 'all';
 
 function initializeGlobals(userId: number): boolean {
 	API_USERS_FRIENDS = `${window.location.origin}/api/friends`;
@@ -61,7 +58,6 @@ function initializeGlobals(userId: number): boolean {
 	// sections
 	menuControlPanel = document.getElementById("menuControlPanel")!;
 	usersSectionButton = document.getElementById("usersSectionButton")!;
-	// friendsSectionButton = document.getElementById("friendsSectionButton")!;
 	chatsSectionButton = document.getElementById("chatsSectionButton")!;
 	// users section
 	usersSection = document.getElementById("usersSection")!;
@@ -87,7 +83,6 @@ function initializeGlobals(userId: number): boolean {
 		!menuBackButton ||
 		!menuControlPanel ||
 		!usersSectionButton ||
-		// !friendsSectionButton ||
 		!chatsSectionButton ||
 		!usersSection ||
 		!usersList ||
@@ -126,7 +121,6 @@ function clearBeforeOpenUsersSection(): void {
 }
 
 function resetUsersSection(): void {
-	// hideElementById("usersSection");
 	hideElementById("friendsSection");
 	hideElementById("chatsSection");
 
@@ -136,10 +130,8 @@ function resetUsersSection(): void {
 
 	showElementById("menuControlPanel");
 	showElementById("usersSectionButton");
-	// showElementById("friendsSectionButton");
 	showElementById("chatsSectionButton");
 
-	setMenuTitle("Users");
 }
 
 function resetUserinfoButtons(): void {
@@ -169,7 +161,7 @@ async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
+				credentials: 'include' // ADD IT EVERYWHERE (((
 			}
 		});
 	} catch (err) {
@@ -184,7 +176,6 @@ async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
 			}
 		});
 	} catch (err) {
@@ -199,7 +190,6 @@ async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/accept/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
 			}
 		});
 	} catch (err) {
@@ -214,7 +204,6 @@ async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/decline/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
 			}
 		});
 	} catch (err) {
@@ -229,7 +218,6 @@ async function removeFriend(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
 			}
 		});
 	} catch (err) {
@@ -248,7 +236,6 @@ async function blockUser(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
 			}
 		});
 	} catch (err) {
@@ -263,7 +250,6 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
-				// Authorization: Bearer <user-session-jwt>
 			}
 		});
 	} catch (err) {
@@ -277,7 +263,8 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 function prepareUserInfoSection(): void {
 	hideElementById("usersList");
 	hideElementById("menuControlPanel");
-	setMenuTitle(`User info`);
+	hideElementById("menuDropdown");
+	setMenuTitle("User info");
 	showElementById("menuBackButton");
 	showElementById("usersInfo");
 	showElementById("userLowerPanel");
@@ -446,7 +433,6 @@ function renderUserList(users: UserListRow[]): void {
 	showElementById("usersList");
 
 	if (users.length === 0) {
-		// showElementById("noUsers");
 		usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text">No users</h1>`;
 		hideElementById("userrsList");
 		return;
@@ -494,8 +480,36 @@ function renderUserList(users: UserListRow[]): void {
 
 async function loadUsers(): Promise<void>{
 	try {
-		const res = await fetch(`${API_USERS_FRIENDS}/allusers`);
-		if (!res.ok) {
+		let res;
+		switch (currentFilter) {
+			case 'friends':
+				console.log("USERS: Loading FRIENDS only");
+				res = await fetch(`${API_USERS_FRIENDS}`);
+				setMenuTitle("Friends");
+				break;
+			case 'requests_in':
+				console.log("USERS: Loading REQUESTS IN only");
+				res = await fetch(`${API_USERS_FRIENDS}/incoming`);
+				setMenuTitle("Requests In");
+				break;
+			case 'requests_out':
+				console.log("USERS: Loading REQUESTS OUT only");
+				res = await fetch(`${API_USERS_FRIENDS}/outgoing`);
+				setMenuTitle("Requests Out");
+				break;
+			case 'blocked':
+				console.log("USERS: Loading BLOCKED users only");
+				res = await fetch(`${API_USERS_BLOCKS}`);
+				setMenuTitle("Blocked");
+				break;
+			// works for 'all' and any other invalid filter
+			default:
+				console.log("USERS: Loading ALL users");
+				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
+				setMenuTitle("Users");
+				break;
+		}
+		if (res === null || !res.ok) {
 			throw new Error(`Failed to fetch users for menu`);
 		}
 		const users: UserListRow[] = await res.json();
@@ -510,28 +524,117 @@ async function initUsersSection(): Promise<void> {
 	resetUsersSection();
 	showElementById("usersList");
 	showElementById("usersSection");
+	showElementById("menuDropdown");
 	await loadUsers();
 }
 
 /* ========================================= INITIALIZATION SECTION ========================= */
+function addMenuDropdown(): boolean {
+
+	const menuDropdown = document.querySelector(".menu-dropdown");
+	if (!menuDropdown) {
+		console.error("USERS: Menu dropdown element not found, cannot add dropdown content");
+		return false;
+	}
+
+	menuDropdown.innerHTML = `
+		<button id="menuDropdownButton" class="menu-dropbtn">Filter</button>
+		<div class="menu-dropdown-content">
+			<a id="menuDropdownAll">All</a>
+			<a id="menuDropdownFriends">Friends</a>
+			<a id="menuDropdownRequestsIn">Req. In</a>
+			<a id="menuDropdownRequestsOut">Req. Out</a>
+			<a id="menuDropdownBlocked">Blocked</a>
+		</div>
+	`;
+
+	const menuDropdownButton = document.getElementById('menuDropdownButton');
+    const menuDropdownContent = document.querySelector('.menu-dropdown-content');
+
+    if (menuDropdownButton && menuDropdownContent) {
+        menuDropdownButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdownContent.classList.toggle('show');
+			menuDropdownButton.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', () => {
+            menuDropdownContent.classList.remove('show');
+			menuDropdownButton.classList.remove('show');
+        });
+    }
+
+	showElementById("menuDropdown");
+
+	return true;
+}
+
+function initFilterDropdown(): void {
+
+	currentFilter = 'all';
+	setMenuTitle("Users");
+
+	if (!document.getElementById("menuDropdownButton")) {
+		showElementById("menuDropdown");
+		return;
+	}
+		
+	if (!addMenuDropdown()) {
+		return;
+	}
+
+	const dropdownAll = document.getElementById("menuDropdownAll");
+	const dropdownFriends = document.getElementById("menuDropdownFriends");
+	const dropdownRequestsIn = document.getElementById("menuDropdownRequestsIn");
+	const dropdownRequestsOut = document.getElementById("menuDropdownRequestsOut");
+	const dropdownBlocked = document.getElementById("menuDropdownBlocked");
+	
+	if (!dropdownAll || !dropdownFriends || !dropdownRequestsIn || !dropdownRequestsOut || !dropdownBlocked) {
+		console.error("USERS: One or more filter dropdown elements not found, cannot initialize filter dropdown");
+		return;
+	}
+	dropdownAll.addEventListener("click", () => {
+		currentFilter = 'all';
+		console.log("USERS: Filter set to ALL");
+		initUsersSection();
+	});
+	dropdownFriends.addEventListener("click", () => {
+		currentFilter = 'friends';
+		console.log("USERS: Filter set to FRIENDS");
+		initUsersSection();
+	});
+	dropdownRequestsIn.addEventListener("click", () => {
+		currentFilter = 'requests_in';
+		console.log("USERS: Filter set to REQUESTS IN");
+		initUsersSection();
+	});
+	dropdownRequestsOut.addEventListener("click", () => {
+		currentFilter = 'requests_out';
+		console.log("USERS: Filter set to REQUESTS OUT");
+		initUsersSection();
+	});
+	dropdownBlocked.addEventListener("click", () => {
+		currentFilter = 'blocked';
+		console.log("USERS: Filter set to BLOCKED");
+		initUsersSection();
+	});
+
+
+}
 
 export async function openUsersSection(userId: number): Promise<void> {
 	console.log("USERS: Users Section opened");
 	initializeGlobals(userId);
-	// if (!menuBackButton || !menuControlPanel || !usersSectionButton || !friendsSectionButton || !chatsSectionButton
-	// 	|| !usersSection || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
-	// 	|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
-	// 	|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {
-	// 	console.error("One or more required elements not found, cannot open Users section");
-	// 	return;
-	// }
+
 	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
 		|| !usersSection || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
 		|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
 		|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {
-		console.error("One or more required elements not found, cannot open Users section");
-		return;
+			console.error("One or more required elements not found, cannot open Users section");
+			return;
 	}
+
+	initFilterDropdown();
 	
 	await initUsersSection();
 }
