@@ -110,12 +110,10 @@ export const credentialsSchema = {
 } as const;
 
 export const matchHistoryQuerySchema = {
-  querystring: {
-    type: 'object',
-    properties: {
-      page: { type: 'integer', minimum: 1, default: 1},
-      limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
-    }
+  type: 'object',
+  properties: {
+    page: { type: 'integer', minimum: 1, default: 1},
+    limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
   }
 } as const;
 
@@ -127,4 +125,4 @@ export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
 export type UserLookupParams = FromSchema<typeof userLookupSchema>;
 export type Credentials = FromSchema<typeof credentialsSchema>;
-export type MatchHistoryQuery = FromSchema<typeof matchHistoryQuerySchema.querystring>;
+export type MatchHistoryQuery = FromSchema<typeof matchHistoryQuerySchema>;

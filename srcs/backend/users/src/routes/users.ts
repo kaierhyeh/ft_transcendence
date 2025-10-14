@@ -114,10 +114,10 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getUser.bind(userController)
   );
 
-  // GET /me/match-history - Get match history via game service (TODO)
-  fastify.get<{ Querystring: MatchHistoryQuery}>(
-    "/me/match-history", 
-    { schema: matchHistoryQuerySchema,
+  // GET /:uid/match-history - Get match history via game service [protected]
+  fastify.get<{Params: UserIdParams, Querystring: MatchHistoryQuery}>(
+    "/:uid/match-history", 
+    { schema: { querystring: matchHistoryQuerySchema, params: userIdSchema },
       preHandler: userAuthMiddleware,
     },
     userController.getMatchHistory.bind(userController)
