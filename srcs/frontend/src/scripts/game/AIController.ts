@@ -7,7 +7,7 @@ export class AIController {
     private session: GameSession | null = null;
     private decisionInterval: number | null = null;
     private moveInterval: number | null = null;
-    private targetY: number = -1;
+    private AITarg: number = -1;
     private currentMove: 'up' | 'down' | 'stop' = 'stop';
     
     attachToSession(session: GameSession, playerIndex: number = 1): void {
@@ -43,7 +43,7 @@ export class AIController {
         }
         
         this.session = null;
-        this.targetY = -1;
+        this.AITarg = -1;
         this.currentMove = 'stop';
         
         console.log("AI controller detached");
@@ -65,17 +65,17 @@ export class AIController {
         // Only predict when ball is moving towards AI
         if (ball.dx < 0) {
             // Ball moving away - return to center
-            this.targetY = -1;
+            this.AITarg = -1;
         } else {
             // Ball moving towards AI - predict where it will be
-            this.targetY = this.predictBallY(
+            this.AITarg = this.predictBallY(
                 ball,
                 state.players.right.paddle.x,
                 config
             );
         }
         
-        console.log("AI decision: targetY =", this.targetY);
+        console.log("AI decision: AITarg =", this.AITarg);
     }
     
     /**
@@ -92,7 +92,7 @@ export class AIController {
         const config = this.session.config;
         
         // Calculate what move to make based on current target
-        if (this.targetY === -1) {
+        if (this.AITarg === -1) {
             // Return to center
             const centerY = config.canvas_height / 2;
             if (paddle.y > centerY + 15) {
@@ -107,9 +107,9 @@ export class AIController {
             const paddleCenter = paddle.y + (config.paddle_height / 2);
             const tolerance = config.paddle_height / 1.1;
             
-            if (paddle.y > this.targetY) {
+            if (paddle.y > this.AITarg) {
                 this.currentMove = 'up';
-            } else if (paddle.y < this.targetY - tolerance) {
+            } else if (paddle.y < this.AITarg - tolerance) {
                 this.currentMove = 'down';
             } else {
                 this.currentMove = 'stop';

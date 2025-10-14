@@ -65,27 +65,26 @@ export interface GameState {
     players: Players;
     ball: Ball;
     score: Score;
-    winner?: number;
+    winner?: Team;
 }
 
 export interface GameState4p {
     players: Players4p;
     ball: Ball;
     score: Score;
-    winner?: string;
+    winner?: Team;
 }
 
 
 export type GameMode = 'solo' | 'pvp' | 'tournament';
 export type GameFormat = '1v1' | '2v2';
-type PlayerType = "registered" | "guest" | "ai";
+export type Team = 'left' | 'right';
+export type PlayerType = "registered" | "guest" | "ai";
 
 export interface GameParticipant {
     type: PlayerType;
     user_id?: number;
 }
-
-type Team = 'left' | 'right';
 
 export interface MatchMakingResult {
     game_id: number;

@@ -93,7 +93,7 @@ export class GameRenderer {
         if (isOver && state.winner) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(`Player ${state.winner} wins!`, config.canvas_width / 2, config.canvas_height / 2);
+            this.ctx.fillText(`${state.winner.toUpperCase()} player wins!`, config.canvas_width / 2, config.canvas_height / 2);
             this.ctx.font = "24px Bit5x3, monospace";
             this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
             this.ctx.textAlign = "left";
@@ -137,7 +137,7 @@ export class GameRenderer {
         if (isOver && state.winner) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(`${state.winner} team wins!`, config.canvas_width / 2, config.canvas_height / 2);
+            this.ctx.fillText(`${state.winner.toUpperCase()} team wins!`, config.canvas_width / 2, config.canvas_height / 2);
             this.ctx.font = "24px Bit5x3, monospace";
             this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
             this.ctx.textAlign = "left";

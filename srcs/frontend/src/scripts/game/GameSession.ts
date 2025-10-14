@@ -1,5 +1,5 @@
 // GameSession.ts
-import type { GameConfig, GameState, GameState4p, GameParticipant, GameMode, GameFormat } from "./types.js";
+import type { GameConfig, GameState, GameState4p, GameParticipant, GameMode, GameFormat, Team } from "./types.js";
 import { createMatch, getGameConfig } from "./api.js";
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
@@ -13,12 +13,12 @@ export interface GameSession {
     // State accessors
     getState(): GameState | GameState4p | null;
     isOver(): boolean;
-    getWinner(): string | null;
+    getWinner(): Team | null;
     
     // Control
     sendInput(playerIndex: number, move: 'up' | 'down' | 'stop'): void;
     onStateUpdate(callback: (state: GameState | GameState4p) => void): void;
-    onGameOver(callback: (winner: string) => void): void;
+    onGameOver(callback: (winner: Team) => void): void;
     
     // Cleanup
     cleanup(): Promise<void>;
@@ -43,10 +43,10 @@ export async function createGameSession(
     const numPlayers = format === '1v1' ? 2 : 4;
     
     let currentState: GameState | GameState4p | null = null;
-    let winner: string | null = null;
+    let winner: Team | null = null;
     
     const stateUpdateCallbacks: Array<(state: GameState | GameState4p) => void> = [];
-    const gameOverCallbacks: Array<(winner: string) => void> = [];
+    const gameOverCallbacks: Array<(winner: Team) => void> = [];
     
     // Create WebSocket connections
     for (let i = 0; i < numPlayers; i++) {
@@ -70,8 +70,8 @@ export async function createGameSession(
                     currentState = message.data;
                     stateUpdateCallbacks.forEach(cb => cb(currentState!));
                     
-                    // Check for winner
-                    const newWinner = (currentState as any)?.winner;
+                    // Check for winner (backend sends 'left' or 'right')
+                    const newWinner = currentState?.winner;
                     if (newWinner && !winner) {
                         winner = newWinner;
                         gameOverCallbacks.forEach(cb => cb(winner!));

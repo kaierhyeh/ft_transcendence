@@ -28,42 +28,5 @@ export interface TournamentBracket {
     matches: TournamentMatch[];
 }
 
-export interface GameParticipant {
-    user_id: number;
-    participant_id: string;
-    is_ai: boolean;
-}
-
-export interface GameConfig {
-    canvas_width: number;
-    canvas_height: number;
-    paddle_height: number;
-    paddle_width: number;
-    win_point: number;
-    ball_size: number;
-}
-
-export interface GameState {
-    winner?: 'left' | 'right';
-    [key: string]: any;
-}
-
-export interface TournamentKeyHandlers {
-    keyDownHandler: (e: KeyboardEvent) => void;
-    keyUpHandler: (e: KeyboardEvent) => void;
-}
-
-export interface GameSystem {
-    cleanup?: () => void;
-    setGameConfig?: (config: GameConfig) => void;
-    setGameStarted?: (started: boolean) => void;
-    setGameState?: (state: GameState) => void;
-    draw?: () => void;
-}
-
-export interface WebSocketMessage {
-    type: string;
-    data?: any;
-    participant_id?: string;
-    move?: string;
-}
+// Re-export game types for convenience
+export type { GameParticipant, GameConfig, GameState, GameState4p } from '../game/types.js';
