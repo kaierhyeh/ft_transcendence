@@ -2,11 +2,14 @@
 
 import database from "../db/database";
 import { logError } from "../utils/errorHandler";
-
-// to use as type for data
-// data:Message[] - if its list of messages
-import { Message } from "../types/messages.type";
 import { colorLog } from "../utils/logger";
+
+export interface ChatListRow {
+	chat_id: number;
+	user_id: number;
+	username: string;
+}
+
 
 // get chat id of two users
 // return null if no chat 
@@ -37,7 +40,10 @@ export async function getChatPartners(userId:number) {
 		// this query collect chat partners IDs and usernames
 
 		const query = `
-			SELECT DISTINCT u.id AS userId, c.id AS chatId, u.username, u.wins, u.losses
+			SELECT DISTINCT 
+				c.id AS chat_id,
+				u.id AS user_id, 
+				u.username
 			FROM chats c
 			JOIN users u
 				ON (u.id = c.user_id_a AND c.user_id_b = ?)

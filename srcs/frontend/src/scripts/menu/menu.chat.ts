@@ -23,24 +23,13 @@ export interface NewMessageResponse {
 	msg: string;
 }
 
-/*
- * A user in a chat
- * @chatId - the ID of the chat
- * @userId - the ID of the user
- * @username - the username of the user
- * @avatar - the avatar URL of the user
- * @wins - number of wins
- * @losses - number of losses
- * @isBlockedByThis - whether this user is blocked by the current user
- */
 export interface ChatUser {
-	chatId: number;
-	userId: number;
+	chat_id: number;
+	user_id: number;
 	username: string;
-	avatar: string;
-	wins: number;
-	losses: number;
-	isBlockedByThis: boolean;
+	alias: string | null;
+	user_status: string;
+	friendship_status: string | null;
 }
 
 /* ============================================ GLOBALS ===================================== */
@@ -104,26 +93,39 @@ function renderChatList(users: ChatUser[]): void {
 	showElementById("chatsList");
 
 	users.map(u => {
-		console.log(`CHAT: user: ${u.userId} (${u.username}), chatId: ${u.chatId}, avatar: ${u.avatar}, W:${u.wins} L:${u.losses}`);
+		console.log(`CHAT: user: ${u.user_id} (${u.username}), chatId: ${u.chat_id}, W:? L:?`);
 	});
 
-	chatsList.innerHTML = users.map(u => `
-		<div class="chat-with" data-chat-id="${u.chatId}" data-user-id="${u.userId}">
-		<img class="chat-avatar" src="${u.avatar || '/images/image.png'}">
-		<span>
-		${u.username} ( <span class="green-text">${u.wins}:W</span> / <span class="red-text">${u.losses}:L</span> )
-		</span>
+	chatsList.innerHTML = users.map(u => {
+		const avatarSrc = `https://localhost:4443/api/users/${u.user_id}/avatar`;
+
+		const userName = u.alias
+			? `${u.username} aka ${u.alias}`
+			: u.username;
+
+		const statusHtml = u.friendship_status
+			? `<span class="user-status-${u.user_status.toLowerCase()}">${u.user_status}</span>`
+			: `<span class="user-status-unknown"></span>`;
+
+		return `
+		<div class="chat-list-element" data-chat-id="${u.chat_id}" data-user-id="${u.user_id}">
+			<img class="chat-avatar" src="${avatarSrc}">
+			<div class="chat-list-element-info">
+				<span>${userName}</span>
+				${statusHtml}
+			</div>
 		</div>
-		`).join("");
+		`;
+	}).join("");
 
 	// Add click event listeners to each chat item
-	document.querySelectorAll(".chat-with").forEach(conv => {
+	document.querySelectorAll(".chat-list-element").forEach(conv => {
 		conv.addEventListener("click", () => {
 			const userId = (conv as HTMLElement).dataset.userId;
 			const chatId = (conv as HTMLElement).dataset.chatId;
 			console.log("CHAT: Clicked on chatId:", chatId, " userId:", userId);
 			if (chatId && userId) {
-				initMessageSection(parseInt(chatId), users.find(u => u.userId === parseInt(userId))!);
+				initMessageSection(parseInt(chatId), users.find(u => u.user_id === parseInt(userId))!);
 			}
 		});
 	});
@@ -161,7 +163,7 @@ async function sendMessageByButton(toUser: ChatUser): Promise<void> {
 		const message = chatInput.value.trim();
 		if (message) {
 			console.log("CHAT: Sending message:", message);
-			sendMessage(toUser.userId, message);
+			sendMessage(toUser.user_id, message);
 		}
 		chatInput.value = "";
 	}
@@ -195,8 +197,8 @@ function renderMessages(messages: Message[], withUser: ChatUser): void {
 
 	// better to use this.user.username instead of "You: "
 	chatMessages.innerHTML = messages.map(msg => `
-		<div class="chat-msg ${msg.fromId === withUser.userId ? withUser.username : "from-them"}">
-		${msg.fromId !== withUser.userId
+		<div class="chat-msg ${msg.fromId === withUser.user_id ? withUser.username : "from-them"}">
+		${msg.fromId !== withUser.user_id
 			? `<span class="green-text">You: </span>`
 			: `<span class="blue-text">${withUser.username}: </span>`}
 		${msg.msg}
@@ -208,7 +210,7 @@ function renderMessages(messages: Message[], withUser: ChatUser): void {
 	if (sendBtn && input) {
 		sendBtn.onclick = async () => {
 			if (input.value.trim()) {
-				const newMsg: NewMessageResponse = await sendMessage(withUser.userId, input.value.trim());
+				const newMsg: NewMessageResponse = await sendMessage(withUser.user_id, input.value.trim());
 				input.value = "";
 				if (newMsg) {
 					await initMessageSection(newMsg.chatId, withUser);
@@ -253,7 +255,7 @@ async function initMessageSection(chatId: number, withUser: ChatUser): Promise<v
 
 		setMenuTitle(`${withUser.username}`);
 
-		const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${chatId}/${withUser.userId}`);
+		const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${chatId}/${withUser.user_id}`);
 		if (!res.ok) {
 			throw new Error("Failed to load messages");
 		}

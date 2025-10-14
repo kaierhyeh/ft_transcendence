@@ -110,14 +110,6 @@ export class FriendRepository {
 		return stmt.get(thisUserId, thisUserId, targetUserId) as UserListRow | undefined;
 	}
 
-	// user_id: number;
-	// username: string;
-	// alias: string | null;
-	// avatar_filename: string | null;
-	// user_status: string;
-	// 	user_status: string;
-	// friendship_status: string | null;
-
 	public async listFriends(userId: number) {
 		const stmt = this.db.prepare(`
 			SELECT

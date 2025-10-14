@@ -161,7 +161,7 @@ async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
-				credentials: 'include' // ADD IT EVERYWHERE (((
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -176,6 +176,7 @@ async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -190,6 +191,7 @@ async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/accept/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -204,6 +206,7 @@ async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/decline/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -218,6 +221,7 @@ async function removeFriend(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_FRIENDS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -236,6 +240,7 @@ async function blockUser(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -250,6 +255,7 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
+				credentials: 'include'
 			}
 		});
 	} catch (err) {
@@ -484,22 +490,42 @@ async function loadUsers(): Promise<void>{
 		switch (currentFilter) {
 			case 'friends':
 				console.log("USERS: Loading FRIENDS only");
-				res = await fetch(`${API_USERS_FRIENDS}`);
+				res = await fetch(`${API_USERS_FRIENDS}`, {
+					method: 'GET',
+					headers: {
+						credentials: 'include'
+					}
+				});
 				setMenuTitle("Friends");
 				break;
 			case 'requests_in':
 				console.log("USERS: Loading REQUESTS IN only");
-				res = await fetch(`${API_USERS_FRIENDS}/incoming`);
+				res = await fetch(`${API_USERS_FRIENDS}/incoming`, {
+					method: 'GET',
+					headers: {
+						credentials: 'include'
+					}
+				});
 				setMenuTitle("Requests In");
 				break;
 			case 'requests_out':
 				console.log("USERS: Loading REQUESTS OUT only");
-				res = await fetch(`${API_USERS_FRIENDS}/outgoing`);
+				res = await fetch(`${API_USERS_FRIENDS}/outgoing`, {
+					method: 'GET',
+					headers: {
+						credentials: 'include'
+					}
+				});
 				setMenuTitle("Requests Out");
 				break;
 			case 'blocked':
 				console.log("USERS: Loading BLOCKED users only");
-				res = await fetch(`${API_USERS_BLOCKS}`);
+				res = await fetch(`${API_USERS_BLOCKS}`, {
+					method: 'GET',
+					headers: {
+						credentials: 'include'
+					}
+				});
 				setMenuTitle("Blocked");
 				break;
 			// works for 'all' and any other invalid filter

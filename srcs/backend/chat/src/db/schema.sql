@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS messages (
 	from_id INTEGER NOT NULL,										-- who sent the message
 	to_id INTEGER NOT NULL,											-- who received the message
 	msg TEXT NOT NULL,												-- message
+	blocked BOOLEAN DEFAULT 0,										-- 1 if the message was sent while the recipient has blocked the sender
 	FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE	-- delete messages when chat is deleted
 );
 
