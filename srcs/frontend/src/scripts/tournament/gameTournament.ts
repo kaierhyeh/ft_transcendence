@@ -33,7 +33,7 @@ export class TournamentGameManager {
             
             // Setup renderer
             canvas.id = 'pong';
-            this.renderer = new GameRenderer('pong');
+            this.renderer = new GameRenderer('pong', false);  // Don't show restart hint in tournament
             
             // Setup input controller for tournament (both players controlled by humans)
             this.inputController = new InputController();

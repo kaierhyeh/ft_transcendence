@@ -6,8 +6,9 @@ export class GameRenderer {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     private animationFrameId: number | null = null;
+    private showRestartHint: boolean = true;  // Controls restart message visibility
     
-    constructor(canvasId: string = "pong") {
+    constructor(canvasId: string = "pong", showRestartHint: boolean = true) {
         const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
         if (!canvas) {
             throw new Error(`Canvas element with id '${canvasId}' not found`);
@@ -20,6 +21,7 @@ export class GameRenderer {
         
         this.canvas = canvas;
         this.ctx = ctx;
+        this.showRestartHint = showRestartHint;
     }
     
     attachToSession(session: GameSession): void {
@@ -94,8 +96,12 @@ export class GameRenderer {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
             this.ctx.fillText(`${state.winner.toUpperCase()} player wins!`, config.canvas_width / 2, config.canvas_height / 2);
-            this.ctx.font = "24px Bit5x3, monospace";
-            this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+            
+            if (this.showRestartHint) {
+                this.ctx.font = "24px Bit5x3, monospace";
+                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+            }
+            
             this.ctx.textAlign = "left";
         }
     }
@@ -138,8 +144,12 @@ export class GameRenderer {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
             this.ctx.fillText(`${state.winner.toUpperCase()} team wins!`, config.canvas_width / 2, config.canvas_height / 2);
-            this.ctx.font = "24px Bit5x3, monospace";
-            this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+            
+            if (this.showRestartHint) {
+                this.ctx.font = "24px Bit5x3, monospace";
+                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+            }
+            
             this.ctx.textAlign = "left";
         }
     }
