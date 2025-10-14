@@ -1,0 +1,347 @@
+/* style/match-history.css */
+
+.match-history-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.match-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Match Card */
+.match-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.match-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Header */
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: #2a2a2a;
+    font-weight: 600;
+}
+
+.mode-badge[data-mode="solo"] {
+    background: #1e3a5f;
+    color: #60a5fa;
+}
+
+.mode-badge[data-mode="pvp"] {
+    background: #5f1e1e;
+    color: #f87171;
+}
+
+.mode-badge[data-mode="tournament"] {
+    background: #5f4b1e;
+    color: #fbbf24;
+}
+
+.mode-emoji {
+    font-size: 16px;
+}
+
+.match-date {
+    color: #888;
+}
+
+/* Score Display */
+.match-score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    margin: 24px 0;
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    max-width: 200px;
+}
+
+.player-name {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.player-score {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: 'Bit5x3', monospace;
+}
+
+/* Winner/Loser Styling */
+.player.winner .player-name {
+    color: #fff;
+}
+
+.player.winner .player-score {
+    color: #4ade80;
+    font-size: 40px;
+}
+
+.player.loser .player-name {
+    color: #666;
+}
+
+.player.loser .player-score {
+    color: #888;
+    font-size: 28px;
+}
+
+/* Player Links */
+.player-link {
+    color: #60a5fa;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.player-link:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}
+
+.ai-player, .guest-player {
+    font-style: italic;
+    color: #888;
+}
+
+/* VS Divider */
+.match-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.vs-text {
+    font-size: 16px;
+    font-weight: 700;
+    padding: 0 16px;
+}
+
+/* Footer */
+.match-footer {
+    display: flex;
+    justify-content: center;
+    padding-top: 12px;
+    border-top: 1px solid #333;
+}
+
+.match-duration {
+    color: #888;
+    font-size: 14px;
+}
+
+/* Load More Button */
+.load-more-btn {
+    display: block;
+    margin: 24px auto;
+    padding: 12px 32px;
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.load-more-btn:hover:not(:disabled) {
+    background: #333;
+}
+
+.load-more-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Pagination Info */
+.pagination-info {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-top: 16px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.empty-state p {
+    color: #888;
+    margin-bottom: 24px;
+}
+
+/* Error State */
+.error-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.error-state h3 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #f87171;
+}
+
+.error-state p {
+    color: #888;
+    margin-bottom: 24px;
+}
+
+/* Skeleton Loading */
+.match-card.skeleton {
+    pointer-events: none;
+}
+
+.skeleton-badge,
+.skeleton-date,
+.skeleton-player,
+.skeleton-duration {
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-badge {
+    width: 80px;
+    height: 24px;
+}
+
+.skeleton-date {
+    width: 100px;
+    height: 20px;
+}
+
+.skeleton-player {
+    width: 120px;
+    height: 60px;
+}
+
+.skeleton-divider {
+    width: 40px;
+    height: 20px;
+    background: #333;
+}
+
+.skeleton-duration {
+    width: 60px;
+    height: 20px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Buttons */
+.btn-primary, .btn-secondary {
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #60a5fa;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #3b82f6;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #60a5fa;
+    border: 1px solid #60a5fa;
+}
+
+.btn-secondary:hover {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+    .match-score {
+        gap: 16px;
+    }
+    
+    .player-name {
+        font-size: 16px;
+    }
+    
+    .player-score {
+        font-size: 28px;
+    }
+    
+    .player.winner .player-score {
+        font-size: 32px;
+    }
+    
+    .player.loser .player-score {
+        font-size: 24px;
+    }
+    
+    .vs-text {
+        font-size: 14px;
+        padding: 0 8px;
+    }
+}
