@@ -109,12 +109,36 @@ GET /game/sessions?user_id=7&page=3
 **Response:**
 ```json
 {
-  "data": [...],
+  "data": [
+    {
+      "id": number,
+      "format": "1v1" | "2v2",
+      "mode": "solo" | "pvp" | "tournament",
+      "tournament_id": number | null,
+      "created_at": "datetime",
+      "started_at": "datetime",
+      "ended_at": "datetime",
+      "players": [
+        {
+          "user_id": number | null,
+          "username": "string" | null,
+          "type": "registered" | "guest" | "ai",
+          "team": "left" | "right",
+          "score": number,
+          "winner": 0 | 1
+        },
+        ...
+      ]
+    },
+    ...
+  ],
   "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total_items": 87,
-    "total_pages": 9
+    "page": number,
+    "limit": number,
+    "total_records": number,
+    "total_pages": number,
+    "next_page": number | null,
+    "prev_page": number | null
   }
 }
 ```

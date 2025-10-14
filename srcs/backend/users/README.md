@@ -258,11 +258,84 @@ Get public user profile (no sensitive data).
 
 ---
 
+#### `GET /users/:uid/match-history`
+
+Get user's match history from game service [requires user authentication].
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `page`    | number | optional | Default `1`.                    |
+| `limit`   | number | optional | Default `10`, max `20`.         |
+
+**Examples:**
+```
+GET /users/42/match-history
+GET /users/42/match-history?page=1
+GET /users/42/match-history?page=2&limit=5
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": number,
+      "format": "1v1" | "2v2",
+      "mode": "solo" | "pvp" | "tournament",
+      "tournament_id": number | null,
+      "created_at": "datetime",
+      "started_at": "datetime",
+      "ended_at": "datetime",
+      "players": [
+        {
+          "user_id": number | null,
+          "username": "string" | null,
+          "type": "registered" | "guest" | "ai",
+          "team": "left" | "right",
+          "score": number,
+          "winner": 0 | 1
+        },
+        ...
+      ]
+    },
+    ...
+  ],
+  "pagination": {
+    "page": number,
+    "limit": number,
+    "total_records": number,
+    "total_pages": number,
+    "next_page": number | null,
+    "prev_page": number | null
+  }
+}
+```
+
+---
+
 ### Friends Management
 
 #### `GET /friends`
 
 List current user's friends [requires user authentication].
+
+**Response:**
+```json
+{
+  "friends": [
+    {
+      "user_id": number,
+      "username": "string",
+      "alias": "string",
+      "status": "online" | "offline" | "away" | "deleted",
+      "avatar_url": "string"
+    },
+    ...
+  ]
+}
+```
 
 ---
 
@@ -270,11 +343,47 @@ List current user's friends [requires user authentication].
 
 List pending friend requests (incoming/outgoing) [requires user authentication].
 
+**Response:**
+```json
+{
+  "incoming": [
+    {
+      "request_id": number,
+      "user_id": number,
+      "username": "string",
+      "alias": "string",
+      "avatar_url": "string",
+      "created_at": "datetime"
+    },
+    ...
+  ],
+  "outgoing": [
+    {
+      "request_id": number,
+      "user_id": number,
+      "username": "string",
+      "alias": "string",
+      "avatar_url": "string",
+      "created_at": "datetime"
+    },
+    ...
+  ]
+}
+```
+
 ---
 
 #### `POST /friends/request/:id`
 
 Send a friend request to user [requires user authentication].
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Friend request sent"
+}
+```
 
 ---
 
@@ -282,11 +391,27 @@ Send a friend request to user [requires user authentication].
 
 Cancel a friend request [requires user authentication].
 
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Friend request cancelled"
+}
+```
+
 ---
 
 #### `POST /friends/accept/:id`
 
 Accept a friend request [requires user authentication].
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Friend request accepted"
+}
+```
 
 ---
 
@@ -294,11 +419,27 @@ Accept a friend request [requires user authentication].
 
 Decline a friend request [requires user authentication].
 
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Friend request declined"
+}
+```
+
 ---
 
 #### `DELETE /friends/:id`
 
 Remove a friend [requires user authentication].
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Friend removed"
+}
+```
 
 ---
 
@@ -308,11 +449,34 @@ Remove a friend [requires user authentication].
 
 List blocked users [requires user authentication].
 
+**Response:**
+```json
+{
+  "blocked": [
+    {
+      "user_id": number,
+      "username": "string",
+      "alias": "string",
+      "blocked_at": "datetime"
+    },
+    ...
+  ]
+}
+```
+
 ---
 
 #### `POST /blocks/:id`
 
 Block a user [requires user authentication].
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User blocked"
+}
+```
 
 ---
 
@@ -320,7 +484,13 @@ Block a user [requires user authentication].
 
 Unblock a user [requires user authentication].
 
----
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User unblocked"
+}
+```
 
 #### `POST /blocks/check`
 

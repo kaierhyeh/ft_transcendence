@@ -82,9 +82,6 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
     
     // Setup load more button
     setupLoadMoreButton(container);
-    
-    // Re-attach navigation events for new links
-    attachNavigationEvents();
 }
 
 function setupLoadMoreButton(container: Element): void {
@@ -122,21 +119,6 @@ function setupLoadMoreButton(container: Element): void {
     });
 }
 
-function attachNavigationEvents(): void {
-    // This function should trigger your app's navigation
-    document.querySelectorAll('[data-route]').forEach(link => {
-        const element = link as HTMLElement;
-        if (!element.dataset.route) return;
-        
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const path = (e.currentTarget as HTMLElement).dataset.route!;
-            // Call your app's navigate function
-            (window as any).navigate?.(path);
-        });
-    });
-}
-
 async function loadMatchHistory(): Promise<void> {
     const historyContainer = document.querySelector('.match-history-container');
     if (!historyContainer) return;
@@ -150,14 +132,7 @@ async function loadMatchHistory(): Promise<void> {
             if (serverAuthenticated) {
                 await user.fetchAndUpdate();
             } else {
-                historyContainer.innerHTML = `
-                    <div class="auth-required">
-                        <h3>Login Required</h3>
-                        <p>Please log in to view your match history.</p>
-                        <a href="/login" data-route="/login" class="btn-primary">Log In</a>
-                    </div>
-                `;
-                attachNavigationEvents();
+                // Don't show anything when not logged in
                 return;
             }
         }
