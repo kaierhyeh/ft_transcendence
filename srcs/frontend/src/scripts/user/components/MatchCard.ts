@@ -1,13 +1,6 @@
 // user/components/MatchCard.ts
 import type { GameSession, PlayerData } from '../types.js';
 
-// Utility for VS Code HTML syntax highlighting (in vscode, install es6-string-html extension)
-const html = (strings: TemplateStringsArray, ...values: any[]) => {
-    return strings.reduce((result, string, i) => {
-        return result + string + (values[i] || '');
-    }, '');
-};
-
 interface MatchCardData {
     session: GameSession;
     currentUserId: number | null;
@@ -136,7 +129,7 @@ export function createMatchCard(data: MatchCardData): string {
     const currentPlayerClass = isCurrentPlayerWinner ? 'winner' : 'loser';
     const opponentClass = isCurrentPlayerWinner ? 'loser' : 'winner';
     
-    return html`
+    return `
         <div class="match-card">
             <div class="match-header">
                 <span class="mode-badge" data-mode="${session.mode}">
@@ -173,7 +166,7 @@ export function createMatchCard(data: MatchCardData): string {
  * Creates a loading skeleton card
  */
 export function createSkeletonCard(): string {
-    return html`
+    return `
         <div class="match-card skeleton">
             <div class="match-header">
                 <div class="skeleton-badge"></div>
@@ -195,7 +188,7 @@ export function createSkeletonCard(): string {
  * Creates an empty state message
  */
 export function createEmptyState(): string {
-    return html`
+    return `
         <div class="empty-state">
             <div class="empty-icon">🎮</div>
             <h3>No matches yet</h3>
@@ -209,7 +202,7 @@ export function createEmptyState(): string {
  * Creates an error state message
  */
 export function createErrorState(message: string = 'Failed to load match history'): string {
-    return html`
+    return `
         <div class="error-state">
             <div class="error-icon">⚠️</div>
             <h3>Oops!</h3>
