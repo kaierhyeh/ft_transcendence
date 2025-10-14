@@ -15,7 +15,7 @@ export function initPong() {
     // --- Event Listeners ---
     const handleKeyDown = (e: KeyboardEvent) => {
         keys[e.key] = true;
-        if (e.key === " " && gameEnded && !isTransitioning) {
+        if (e.key === " " && game.over && !isTransitioning) {
             e.preventDefault();
             restartGame();
         }
@@ -159,12 +159,12 @@ export function initPong() {
 
 
     async function restartGame(): Promise<void> {
-        if (!gameEnded || isTransitioning) {
-            console.log("Cannot restart - gameEnded:", gameEnded, "isTransitioning:", isTransitioning);
+        if (!game.over || isTransitioning) {
+            console.log("Cannot restart - gameEnded:", game.over, "isTransitioning:", isTransitioning);
             return;
         }
         
-        console.log("Restarting with format:", gameFormat, "AI:", isAI);
+        console.log("Restarting with format:", gameFormat);
         await initGame();
     }
 

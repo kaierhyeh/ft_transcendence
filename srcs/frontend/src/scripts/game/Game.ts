@@ -4,7 +4,24 @@ import user from "../user/User.js";
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 const API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
 
+interface GameConf {
+    canvas_width: number;
+    canvas_height: number;
+    paddle_width: number;
+    paddle_height: number;
+    win_point: number;
+    ball_size: number;
+}
+
 export class Game {
+    private winner: Team | undefined;
+    private game_id: number;
+    private jwtTickets: string[];
+    private gameConf: GameConf;
+
+    constructor() {
+        this.winner = undefined;
+    }
 
     async cleanup() {
         console.log("Cleaning up current game - WebSockets count:", websockets.length, "Game ID:", game_id, "Mode:", gameMode);
@@ -56,11 +73,40 @@ export class Game {
     }
 
     async setup(gameMode: GameMode, gameFormat: GameFormat, participants: GameParticipant[]) {
-        
+        try {
+            // 1. Create match through matchmaking service
+            const matchResult = await this.createMatch(participants);
+            
+            this.game_id = matchResult.game_id;
+            this.jwtTickets = matchResult.jwt_tickets;
+            console.log(`${gameFormat === '1v1' ? '2-player' : '4-player'} match created with ID:`, game_id);
+            console.log("JWT tickets received:", this.jwtTickets.length);
+            
+            // 2. Get game configuration
+            const response = await fetch(API_GAME_ENDPOINT + `/${this.game_id}/conf`);
+            if (!response.ok)
+                throw new Error(`Failed to get game config: ${response.status}`);
+            
+            this.gameConf = await response.json() as GameConf;
+            canvas.width = game_conf.canvas_width;
+            canvas.height = game_conf.canvas_height;
+            console.log(`${gameFormat === '1v1' ? '2-player' : '4-player'} game initialized:`, game_conf);
+           
+        } catch(error) {
+
+        }
+    }
+
+    private async createMatch(particpants: GameParticipant[]) {
+
     }
 
     async run() {
 
+    }
+
+    get over(): boolean {
+        return this.winner !== undefined;
     }
 }
 

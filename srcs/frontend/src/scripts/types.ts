@@ -117,3 +117,4 @@ interface GameParticipant {
     type: PlayerType;
     user_id?: number;
 }
+type Team = 'left' | 'right';

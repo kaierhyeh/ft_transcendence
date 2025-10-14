@@ -1,4 +1,3 @@
-import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
 import { initLanguages } from "./i18n/index.js";
@@ -12,6 +11,7 @@ import { initSignup } from "./auth/signup.js";
 import { initLogin } from "./auth/login.js";
 import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
+import { initPong } from "./pong.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -41,8 +41,8 @@ const initScripts: Record<string, () => void> = {
 			initLanguages();
 	},
 	"/pong": () => {
-		if (typeof initGame === "function")
-			initGame();
+		if (typeof initPong === "function")
+			initPong();
 	},
 	"/stats": () => {
 		if (typeof initStats === "function")
