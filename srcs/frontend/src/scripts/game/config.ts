@@ -1,0 +1,1 @@
+export const INPUT_INTERVAL_MS = 50;

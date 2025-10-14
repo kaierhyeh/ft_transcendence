@@ -185,7 +185,7 @@ export class GameSession {
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
-        const hasRegisteredUser = Array.from(this.players.values()).some(p => p.type !== "guest");
+        const hasRegisteredUser = Array.from(this.players.values()).some(p => p.type === "registered");
         
         if (!hasRegisteredUser) {
             return undefined;

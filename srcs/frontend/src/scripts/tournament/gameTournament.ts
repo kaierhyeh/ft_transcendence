@@ -1,6 +1,6 @@
 import { TournamentMatch, GameConfig, GameState, GameSystem, TournamentKeyHandlers, WebSocketMessage } from './types.js';
 import { TournamentApiService } from './api.js';
-import { initGame } from '../game.js';
+// import { initGame } from '../game.js';
 
 export class TournamentGameManager {
     private gameId: number | null = null;
@@ -47,7 +47,7 @@ export class TournamentGameManager {
 
             canvas.id = 'pong';
             
-            initGame();
+            // initGame();
             
             setTimeout(() => {
                 const gameSystem = (window as any).gameSystem as GameSystem;

@@ -73,12 +73,14 @@ export class LiveSessionManager {
     private saveSession(game_id: number, session: GameSession): void {
         try {
             const dto = session.toDbRecord();
-            if (dto) this.session_repo.save(dto); // save in db with db plugin I guess, taking dto: DbSession as argument
+            if (dto) {
+                this.session_repo.save(dto); // save in db with db plugin I guess, taking dto: DbSession as argument
+                this.logger.info({ game_id: game_id }, "Game session saved");
+            }
         } catch(err) {
             this.logger.warn({ game_id: game_id, error: err instanceof Error ? err.message : String(err) }, "Failed to save game session");
             return;
         }
-        this.logger.info({ game_id: game_id }, "Game session saved");
     }
 
     private terminateSession_(id: number, session: GameSession): void {
@@ -98,6 +100,7 @@ export class LiveSessionManager {
                 continue;
             }
             if (game.timeout) {
+                this.logger.info({ game_id: id }, "Terminating inactive game session");
                 this.game_sessions.delete(id);
                 continue ;
             }
