@@ -6,7 +6,7 @@ dotenv.config();
 // Load client credentials from Docker secrets
 function loadClientCredentials() {
 	try {
-		const credentialsPath = '/run/secrets/users-service-client.env';
+		const credentialsPath = '/run/secrets/chat-service-client.env';
 		if (fs.existsSync(credentialsPath)) {
 			const envConfig = dotenv.parse(fs.readFileSync(credentialsPath));
 			return {
@@ -64,9 +64,5 @@ export const CONFIG = {
 		PORT: parseInt(process.env.PORT || "3000"),
 		HOST: process.env.HOST || "0.0.0.0",
 	},
-
-	// SECURITY: {
-	// 	JWT_SECRET: process.env.SECRET_JWT || "here-should-be-magic-secret-words",
-	// },
 
 } as const;

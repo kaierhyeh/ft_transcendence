@@ -29,6 +29,9 @@ export interface UserInfo {
 
 
 export class ChatService {
+
+	private internalAuthClient = new InternalAuthClient();
+
 	constructor(private chatRepository: ChatRepository) {}	
 
 	
@@ -37,21 +40,20 @@ export class ChatService {
 		// no -> delete chats with this user
 		
 		let baseUrl = CONFIG.USER_SERVICE.BASE_URL;
-		// let internalAuthClient = new InternalAuthClient();
 		const chatsInfo = await this.chatRepository.listUserChats(userId);
 		const userIds = chatsInfo.map(c => (c.from_id !== userId ? c.from_id : c.to_id));
 
 		const body = { id: userId, ids: userIds };
 		// ------------------------------- HERE ------------------------------- PROBLEM WITH CONNECTION BETWEEN SERVICES with TOKENS
-		// const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
+		const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
 
 		const res = await fetch(
 			`${baseUrl}/friends/usersChat`,
 			{
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
-					// ...internalAuthHeaders
+					'Content-Type': 'application/json',
+					...internalAuthHeaders
 				},
 				body: JSON.stringify(body)
 			}
