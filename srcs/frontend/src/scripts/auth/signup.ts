@@ -1,4 +1,5 @@
 import user from "../user/User.js";
+import { initiateGoogleLogin } from "../api.js";
 
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 
@@ -12,13 +13,12 @@ export function initSignup() {
 	const emailInput = document.getElementById('email') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
-
 	// Event listeners
 	if (registerBtn)
 		registerBtn.addEventListener('click', handleRegister);
 
-	// if (googleSignupBtn)
-	// 	googleSignupBtn.addEventListener('click', handleGoogleSignup);
+	if (googleSignupBtn)
+		googleSignupBtn.addEventListener('click', handleGoogleSignup);
 
 	async function handleRegister() {
 		const username = usernameInput?.value.trim();
@@ -57,7 +57,9 @@ export function initSignup() {
 		}
 	}
 
-	// async function handleGoogleSignup() { await initiateGoogleSignup(); }
+	async function handleGoogleSignup() { 
+		await initiateGoogleLogin(); // Google signup uses the same OAuth flow as login
+	}
 
 	async function checkAuthStatusAndRedirect() {
 		try {

@@ -1,9 +1,10 @@
-import { GameMode } from "../schemas";
+import { GameFormat, GameMode } from "../schemas";
 import { Team, PlayerType } from "../types";
 import { Database } from "better-sqlite3";
 
 export interface DbPlayerSession {
     user_id: number | null,
+    username: string | null,
     type: PlayerType,
     team: Team,
     score: number,
@@ -11,7 +12,9 @@ export interface DbPlayerSession {
 }
 
 interface SessionRow {
+    format: GameFormat,
     mode: GameMode,
+    tournament_id: number | null,
     created_at: string,
     started_at: string,
     ended_at: string,
@@ -26,11 +29,7 @@ type SessionData = SessionRow & {
     players: DbPlayerSession[]
 }
 
-interface SessionQueryRow {
-    mode: GameMode;
-    created_at: string;
-    started_at: string;
-    ended_at: string;
+type SessionQueryRow = Omit<SessionRow, "player_sessions"> & {
     player_sessions: string;
 }
 
@@ -60,13 +59,13 @@ export class SessionRepository {
 
     public save(session: DbSession): void {
         const insertSession = this.db.prepare(`
-            INSERT INTO sessions (mode, created_at, started_at, ended_at)
-            VALUES (@mode, @created_at, @started_at, @ended_at)
+            INSERT INTO sessions (format, tournament_id, mode, created_at, started_at, ended_at)
+            VALUES (@format, @tournament_id, @mode, @created_at, @started_at, @ended_at)
         `);
 
         const insertPlayerSession = this.db.prepare(`
-            INSERT INTO player_sessions (session_id, user_id, type, team, score, winner)
-            VALUES (@session_id, @user_id, @type, @team, @score, @winner)
+            INSERT INTO player_sessions (session_id, user_id, username, type, team, score, winner)
+            VALUES (@session_id, @user_id, @username, @type, @team, @score, @winner)
         `);
 
         // Start a transaction so both inserts happen atomically
@@ -78,6 +77,7 @@ export class SessionRepository {
                 insertPlayerSession.run({
                     session_id,
                     user_id: player.user_id,
+                    username: player.username,
                     type: player.type,
                     team: player.team,
                     score: player.score,
@@ -106,20 +106,23 @@ export class SessionRepository {
         // Retrieve data
         const dataStmt = this.db.prepare(`
             WITH filtered_sessions AS (
-                SELECT s.id, s.mode, s.created_at, s.started_at, s.ended_at
+                SELECT s.id, s.format, s.mode, s.tournament_id, s.created_at, s.started_at, s.ended_at
                 FROM sessions s
                 WHERE (:user_id IS NULL OR s.id IN (SELECT session_id FROM player_sessions WHERE user_id = :user_id))
                 ORDER BY s.created_at DESC
                 LIMIT :limit OFFSET :offset
             )
             SELECT
+                fs.format,
                 fs.mode,
+                fs.tournament_id,
                 fs.created_at,
                 fs.started_at,
                 fs.ended_at,
                 json_group_array(
                 json_object(
                     'user_id', ps.user_id,
+                    'username', ps.username,
                     'type', ps.type,
                     'team', ps.team,
                     'score', ps.score,

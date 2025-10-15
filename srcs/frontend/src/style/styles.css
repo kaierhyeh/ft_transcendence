@@ -1,15 +1,15 @@
 
-@import "stats.css";
 @import "settings.css";
 @import "homepage.css";
 @import "error404.css";
 @import "pong.css";
 @import "auth.css";
-@import "history.css";
 @import "tournament-game.css";
 @import "tournament-layout.css";
 @import "header.css";
 @import "i18n.css";
+@import "history.css";
+@import "profile.css";
 /* @import "browser-compat.css"; */
 /* @import "browser-warning.css"; */
 /* @import "multi-device.css"; */
@@ -52,7 +52,6 @@ body {
 	background-color: #000;
 	color: #fff;
 	height: 100vh;
-	overflow: hidden;
 }
 
 /* Back to Home Button - Universal Style */

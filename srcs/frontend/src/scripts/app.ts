@@ -1,4 +1,3 @@
-import {initGame} from "./game.js";
 import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
 import { initLanguages } from "./i18n/index.js";
@@ -9,9 +8,11 @@ import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
 import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
-import { initLogin } from "./auth/login.js";
+import { initLogin, handleOAuthCallback } from "./auth/login.js";
 import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
+import { initPong } from "./pong.js";
+import { initProfile } from "./user/profile.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -26,11 +27,11 @@ const routes: Record<string, string> = {
 	// "/oauth-callback": "./html/profile.html",
 	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
-	"/user/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
 	"/user/block-list": "./html/user/block_list.html",
 	"/signup": "./html/auth/signup.html",
 	"/login": "./html/auth/login.html",
+	"/auth/google/callback": "./html/auth/login.html", // Temporary page while processing OAuth
 };
 
 const initScripts: Record<string, () => void> = {
@@ -41,8 +42,8 @@ const initScripts: Record<string, () => void> = {
 			initLanguages();
 	},
 	"/pong": () => {
-		if (typeof initGame === "function")
-			initGame();
+		if (typeof initPong === "function")
+			initPong();
 	},
 	"/stats": () => {
 		if (typeof initStats === "function")
@@ -64,18 +65,18 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initHistory === "function")
 			initHistory();
 	},
-	"/user/match-history": () => {
-		if (typeof initMatchHistory === "function")
-			initMatchHistory();
-	},
 	"/user/settings": () => {
 		if (typeof initSettings === "function")
 			initSettings();
 	},
-	// "/oauth-callback": () => {
-	// 	if (typeof handleOAuthCallback === "function")
-	// 		handleOAuthCallback();
-	// }
+	"/user/profile": () => {
+		if (typeof initSettings === "function")
+			initProfile();
+	},
+	"/auth/google/callback": () => {
+		if (typeof handleOAuthCallback === "function")
+			handleOAuthCallback();
+	}
 }
 
 async function load404(push: boolean)

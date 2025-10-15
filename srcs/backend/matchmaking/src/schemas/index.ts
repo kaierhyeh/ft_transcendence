@@ -15,11 +15,16 @@ export const participantSchema = {
 
 export const matchMakingSchema = {
   type: "object",
-  required: ["mode", "participants"],
+  required: ["format", "mode", "participants"],
   properties: {
+    format: {
+        type: "string",
+        enum: ["1v1", "2v2"]
+    },
+    tournament_id: { type: "number"},
     mode: {
       type: "string",
-      enum: ["pvp", "multi"],
+      enum: ["solo", "pvp", "tournament"],
     },
     participants: {
       type: "array",
@@ -35,4 +40,5 @@ export const matchMakingSchema = {
 export type MatchParticipant = FromSchema<typeof participantSchema>;
 export type MatchMakingData = FromSchema<typeof matchMakingSchema>;
 export type GameMode = MatchMakingData["mode"];
+export type GameFormat = MatchMakingData["format"];
 export type PlayerType = MatchParticipant["type"];

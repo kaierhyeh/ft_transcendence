@@ -270,13 +270,9 @@ export class UserController {
     }
   }
 
-  public async getMatchHistory(request: FastifyRequest<{ Querystring: MatchHistoryQuery }>, reply: FastifyReply) {
+  public async getMatchHistory(request: FastifyRequest<{ Params: UserIdParams, Querystring: MatchHistoryQuery }>, reply: FastifyReply) {
     try {
-      const sub = request.authUser?.sub;
-       if (!sub) {
-        return reply.status(401).send({ error: "Unauthorized: No user context" });
-      }
-      const user_id = toInteger(sub);
+      const user_id = request.params.uid;
       const { page, limit } = request.query;
 
       const game_sessions = await this.userService.getMatchHistory(user_id, page, limit);

@@ -1,4 +1,5 @@
 import user from '../user/User.js';
+import { initiateGoogleLogin, processGoogleOAuth } from '../api.js';
 
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 const API_TWOFA_ENDPOINT = `${window.location.origin}/api/auth/2fa`;
@@ -17,8 +18,8 @@ export function initLogin() {
 	if (loginBtn)
 		loginBtn.addEventListener('click', handleLogin);
 
-	// if (googleLoginBtn)
-	// 	googleLoginBtn.addEventListener('click', handleGoogleLogin);
+	if (googleLoginBtn)
+		googleLoginBtn.addEventListener('click', handleGoogleLogin);
 
 	// if (twofaBtn)
 	// 	twofaBtn.addEventListener('click', handle2FASetup);
@@ -84,9 +85,9 @@ export function initLogin() {
 		}
 	}
 
-	// async function handleGoogleLogin() { await initiateGoogleLogin(); }
-
-	// async function handle2FASetup() {
+	async function handleGoogleLogin() {
+		await initiateGoogleLogin();
+	}	// async function handle2FASetup() {
 	// 	try {
 	// 		const response = await setup2fa();
 	// 		if (!response) {
@@ -190,29 +191,95 @@ export function initLogin() {
 
 }
 
-// export async function handleOAuthCallback() {
-// 	const urlParams = new URLSearchParams(window.location.search);
-// 	const code = urlParams.get('code');
-// 	const error = urlParams.get('error');
+export async function handleOAuthCallback() {
+	// Show loading overlay immediately
+	showOAuthLoadingOverlay();
+	
+	const urlParams = new URLSearchParams(window.location.search);
+	const code = urlParams.get('code');
+	const error = urlParams.get('error');
 
-// 	if (error) {
-// 		alert('OAuth error: ' + error);
-// 		// Redirect to profile page
-// 		window.location.href = '/profile';
-// 		return;
-// 	}
+	if (error) {
+		hideOAuthLoadingOverlay();
+		alert('OAuth error: ' + error);
+		window.location.href = '/profile';
+		return;
+	}
 
-// 	if (code) {
-// 		try {
-// 			await processGoogleOAuth(code);
-// 			// The processGoogleOAuth function handles the redirect
-// 		} catch (error) {
-// 			console.error('OAuth callback error:', error);
-// 			alert('OAuth authentication failed.');
-// 			window.location.href = '/profile';
-// 		}
-// 	} else {
-// 		// No code parameter, redirect to profile
-// 		window.location.href = '/profile';
-// 	}
-// }
+	if (code) {
+		try {
+			await processGoogleOAuth(code);
+			// The processGoogleOAuth function handles the redirect
+		} catch (error) {
+			hideOAuthLoadingOverlay();
+			console.error('OAuth callback error:', error);
+			alert('OAuth authentication failed.');
+			window.location.href = '/profile';
+		}
+	} else {
+		hideOAuthLoadingOverlay();
+		window.location.href = '/profile';
+	}
+}
+
+function showOAuthLoadingOverlay() {
+	// Create overlay element
+	const overlay = document.createElement('div');
+	overlay.id = 'oauth-loading-overlay';
+	overlay.style.cssText = `
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.8);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		z-index: 9999;
+		color: white;
+		font-family: Arial, sans-serif;
+	`;
+	
+	// Create spinner
+	const spinner = document.createElement('div');
+	spinner.style.cssText = `
+		border: 4px solid rgba(255, 255, 255, 0.3);
+		border-top: 4px solid white;
+		border-radius: 50%;
+		width: 50px;
+		height: 50px;
+		animation: spin 1s linear infinite;
+		margin-bottom: 20px;
+	`;
+	
+	// Create text
+	const text = document.createElement('div');
+	text.textContent = 'Authenticating with Google...';
+	text.style.cssText = `
+		font-size: 18px;
+		font-weight: 500;
+	`;
+	
+	// Add CSS animation for spinner
+	const style = document.createElement('style');
+	style.textContent = `
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+	`;
+	document.head.appendChild(style);
+	
+	overlay.appendChild(spinner);
+	overlay.appendChild(text);
+	document.body.appendChild(overlay);
+}
+
+function hideOAuthLoadingOverlay() {
+	const overlay = document.getElementById('oauth-loading-overlay');
+	if (overlay) {
+		overlay.remove();
+	}
+}

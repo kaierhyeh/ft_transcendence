@@ -1,6 +1,7 @@
 COMPOSE_FILE := srcs/docker-compose.yml
+PROJECT_NAME := ft_transcendence
 
-.PHONY: all up stop down del-vol clean fclean status help secrets
+.PHONY: help up up-d up_separately stop down del-vol re clean fclean secrets
 
 # Default target
 all: up
@@ -14,77 +15,70 @@ secrets:
 up: secrets
 	docker compose -f $(COMPOSE_FILE) up ${OPTS} --build $(ARGS)
 
-up-d:
+up-d: secrets
 	docker compose -f $(COMPOSE_FILE) up -d ${OPTS} --build $(ARGS)
 
-# Clean only Docker volumes
-del-vol:
-	@echo "Removing project volumes..."
-	@echo "Stopping containers first..."
-	@docker compose -f $(COMPOSE_FILE) down 2>/dev/null || true
-	@echo "Removing specific project volumes..."
-	@docker volume rm $$(docker volume ls -q | grep -E "(ssl|game_sessions|auth_data|users|ft_transcendence)" 2>/dev/null) 2>/dev/null || true
-	@echo "Removing any dangling volumes..."
-	@docker volume prune -f
-	@echo "Volume cleanup completed!"
+# Build and start services one by one (avoids memory issues)
+up_separately: secrets
+	@echo "🔨 Building services separately to avoid memory issues..."
+	@echo "📦 1/6 Building backend-users..."
+	@docker compose -f $(COMPOSE_FILE) build backend-users
+	@echo "📦 2/6 Building backend-game..."
+	@docker compose -f $(COMPOSE_FILE) build backend-game
+	@echo "📦 3/6 Building backend-chat..."
+	@docker compose -f $(COMPOSE_FILE) build backend-chat
+	@echo "📦 4/6 Building backend-auth..."
+	@docker compose -f $(COMPOSE_FILE) build backend-auth
+	@echo "📦 5/6 Building api-gateway..."
+	@docker compose -f $(COMPOSE_FILE) build api-gateway
+	@echo "📦 6/6 Building frontend..."
+	@docker compose -f $(COMPOSE_FILE) build frontend
+	@echo "✅ All services built successfully!"
+	@echo "🚀 Starting all services..."
+	@docker compose -f $(COMPOSE_FILE) up -d
 
 # Stop all running containers
 stop:
 	@echo "Stopping all containers..."
 	@docker compose -f $(COMPOSE_FILE) stop
 
-# Stop and remove containers/networks
+# Stop and remove containers/networks (keeps volumes)
 down:
 	@echo "Stopping and removing containers..."
 	@docker compose -f $(COMPOSE_FILE) down
 
+# Clean only project volumes
+del-vol:
+	@echo "Removing project volumes..."
+	@docker compose -f $(COMPOSE_FILE) down -v
+
 # Project cleanup (containers, images, volumes)
 clean:
-	@echo "Performing Docker cleanup for ft_transcendence project..."
-	@echo "Stopping and removing project containers..."
-	@docker compose -f $(COMPOSE_FILE) down --volumes --remove-orphans 2>/dev/null || true
-	@echo "Removing project images..."
-	@docker compose -f $(COMPOSE_FILE) down --rmi all 2>/dev/null || true
-	@echo "Removing specific project volumes..."
-	@docker volume rm $$(docker volume ls -q | grep -E "(ssl|game_sessions|auth_data|users|ft_transcendence)" 2>/dev/null) 2>/dev/null || true
-	@echo "Removing any dangling volumes..."
-	@docker volume prune -f
-	@echo "Removing unused images and containers..."
-	@docker system prune -f
-	@echo "Project cleanup completed!"
+	@echo "Performing project cleanup..."
+	@docker compose -f $(COMPOSE_FILE) down -v --rmi all --remove-orphans
 
-# Complete system cleanup (use with caution)
+# Complete system cleanup (use with caution - removes ALL Docker data)
 fclean:
-	@echo "⚠️  WARNING: This will remove ALL Docker data system-wide!"
-	@echo "Stopping all containers..."
 	@docker stop $$(docker ps -aq) 2>/dev/null || true
-	@echo "Removing all containers..."
 	@docker rm $$(docker ps -aq) 2>/dev/null || true
-	@echo "Removing all images..."
 	@docker rmi $$(docker images -aq) 2>/dev/null || true
-	@echo "Removing all volumes..."
-	@docker volume prune -f
-	@echo "Removing all unused containers..."
-	@docker container prune -f
-	@echo "Performing system cleanup..."
+	@docker volume prune -af
 	@docker system prune --all --force --volumes
-	@echo "Full system cleanup completed!"
 
-clean-srcs-volumes:
-	@docker volume ls -q | grep '^srcs_' | xargs -r docker volume rm
-
+# Restart services
 re: down up
-
 
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  all       - Default target, same as 'up'"
-	@echo "  up        - Start all services with build"
-	@echo "  stop      - Stop all containers"
-	@echo "  down      - Stop and remove containers"
-	@echo "  re        - Stop and start containers"
-	@echo "  del-vol   - Remove only project volumes (preserves containers/images)"
-	@echo "  clean     - Remove project containers, images, and volumes"
-	@echo "  fclean    - ⚠️  Complete system-wide Docker cleanup (use with caution)"
-	@echo "  help      - Show this help message"
+	@echo "  all            - Default target, same as 'up'"
+	@echo "  up             - Start all services with build (foreground)"
+	@echo "  up-d           - Start all services in detached mode (background)"
+	@echo "  up_separately  - Build services one-by-one, start in detached mode (avoids memory issues)"
+	@echo "  stop           - Stop all containers"
+	@echo "  down           - Stop and remove containers (keeps volumes)"
+	@echo "  re             - Restart services (down + up)"
+	@echo "  del-vol        - Remove containers and volumes"
+	@echo "  clean          - Remove containers, images, and volumes"
+	@echo "  fclean         - Complete Docker cleanup (USE WITH CAUTION)"
+	@echo "  help           - Show this help message"

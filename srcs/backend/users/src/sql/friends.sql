@@ -27,7 +27,7 @@ CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 -- IT IS A TEST DATA FOR MENU: USERS, FRIENDS --
 -- DELETE IT WHEN YOU WILL HAVE REAL DATA --
 
--- Insert sample users
+-- Insert sample users (use INSERT OR IGNORE to prevent constraint violations on restart)
 
 -- INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
 -- VALUES

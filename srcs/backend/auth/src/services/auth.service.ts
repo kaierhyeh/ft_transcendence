@@ -2,11 +2,11 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { CONFIG } from '../config';
 import jwksService from './jwks.service';
 import { JWTType, JWTPayload, UserSessionPayload } from '../types/jwt.types';
-import { LocalUserCreationData, UserProfile } from '../clients/UserClient';
+import { LocalUserCreationData, UserProfile } from '../clients/UsersClient';
 import { LoginCredentials } from '../schemas/auth';
 import redis from '../clients/RedisClient';
 import jwtService from './jwt.service';
-import userClient from '../clients/UserClient';
+import usersClient from '../clients/UsersClient';
 
 export interface TokenValidationResult {
 	valid: boolean;
@@ -42,7 +42,7 @@ export class AuthService {
 
 	async loginLocalUser(credentials: LoginCredentials): Promise<LoginLocalResult> {
 
-		const { user_id, two_fa_enabled } = await userClient.resolveLocalUser(credentials);
+		const { user_id, two_fa_enabled } = await usersClient.resolveLocalUser(credentials);
 
 		if (two_fa_enabled) {
 			const tempToken = await jwtService.generateTempToken(
@@ -57,7 +57,7 @@ export class AuthService {
 
 	async checkUserExistence(identifier: string): Promise<boolean> {
 		try {
-			await userClient.getUser(identifier);
+			await usersClient.getUser(identifier);
 		} catch(error) {
 			const status = (error as any).status;
 			if (status === 404) {
@@ -81,7 +81,7 @@ export class AuthService {
     }
 
 	async register(data: LocalUserCreationData): Promise< {user_id: number} > {
-		const result = userClient.register(data);
+		const result = usersClient.register(data);
 		return result;
 	}
 	
@@ -183,39 +183,31 @@ export class AuthService {
 			// Verify if the token is the latest
 			const currentAccessToken = await redis.get(`access_${user_id}`);
 			if (accessToken !== currentAccessToken) {
-				console.warn(`⚠️ Token is not the latest one.`);
 				throw new Error('Token is not the latest one.');
 			}
 
-			console.log('✅ Access Token is valid.\n');
 			return {
 				success: true,
 				userId: user_id
 			};
 
 		} catch (error) {
-			console.warn('⚠️ Access token invalid, Attempting to refresh it...');
-			console.log('🔍 REFRESH TOKEN CHECK...');
 			// If the access token is expired, try to refresh it using the refresh token
 			if (!refreshToken) {
-				console.error('❌ No refresh token provided.', error);
 				return { success: false, reason: 'No refresh token provided.' };
 			}
 
 			try {
 				const result = await this.refreshAccessToken(fastify, refreshToken, accessToken);
 				if (!result.success) {
-					console.warn(`⚠️ Failed to refresh access token, invalid refresh token.`);
 					return { success: false, reason: 'Failed to refresh access token, invalid refresh token.' };
 				}
-				console.log(`✅ New access token generated successfully.`);
 				return {
 					success: true,
 					userId: result.userId,
 					newAccessToken: result.newAccessToken,
 				};
 			} catch (refreshError) {
-				console.error('❌ Fail to verify refresh token.', refreshError);
 				return { success: false, reason: 'Fail to verify refresh token.' };
 			}
 		}
@@ -331,11 +323,11 @@ export class AuthService {
 	}
 
 	async getUserProfileById(userId: number): Promise<UserProfile> {
-		return await userClient.getUserProfile(userId);
+		return await usersClient.getUserProfile(userId);
 	}
 
 	async getUserProfileByLogin(login: string): Promise<UserProfile> {
-		return await userClient.getUser(login);
+		return await usersClient.getUser(login);
 	}
 	
 }
