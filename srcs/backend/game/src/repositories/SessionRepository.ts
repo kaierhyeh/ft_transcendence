@@ -1,5 +1,5 @@
 import { GameFormat, GameMode } from "../schemas";
-import { Team, PlayerType } from "../types";
+import { Team, PlayerType, PlayerSlot } from "../types";
 import { Database } from "better-sqlite3";
 
 export interface DbPlayerSession {
@@ -7,6 +7,7 @@ export interface DbPlayerSession {
     username: string | null,
     type: PlayerType,
     team: Team,
+    slot: PlayerSlot,
     score: number,
     winner: boolean
 }
@@ -81,6 +82,7 @@ export class SessionRepository {
                     username: player.username,
                     type: player.type,
                     team: player.team,
+                    slot: player.slot,
                     score: player.score,
                     winner: player.winner ? 1 : 0,
                 });
@@ -127,6 +129,7 @@ export class SessionRepository {
                     'username', ps.username,
                     'type', ps.type,
                     'team', ps.team,
+                    'slot', ps.slot,
                     'score', ps.score,
                     'winner', ps.winner
                 )

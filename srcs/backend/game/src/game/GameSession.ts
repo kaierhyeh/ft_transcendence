@@ -192,7 +192,7 @@ export class GameSession {
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (this.game_format === "2v2" || !this.started_at || !this.ended_at || !game_state.winner)
+        if (!this.started_at || !this.ended_at || !game_state.winner)
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
@@ -222,6 +222,7 @@ export class GameSession {
                     username: p.username ?? null,
                     type: p.type,
                     team: p.team,
+                    slot: p.slot,
                     score: game_state.score[p.team],
                     winner: game_state.winner === p.team
                 };

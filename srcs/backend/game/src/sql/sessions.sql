@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS player_sessions (
     username               TEXT        CHECK ((username IS NULL) = (user_id IS NULL)),
     type                   TEXT        NOT NULL CHECK (type IN ('registered', 'guest', 'ai')),
     team                   TEXT        NOT NULL CHECK (team IN ('left', 'right')),
+    slot                   TEXT        NOT NULL CHECK (slot IN ('left', 'right', 'top_left', 'top_right', 'bottom_left', 'bottom_right')),
     score                  INTEGER     DEFAULT 0,
     winner                 BOOLEAN     DEFAULT 0,
     FOREIGN KEY (session_id) REFERENCES sessions (id)

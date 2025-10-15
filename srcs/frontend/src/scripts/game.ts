@@ -1,3 +1,4 @@
+// scripts/game.ts
 import "./types.js";
 
 export function initGame(): void {
