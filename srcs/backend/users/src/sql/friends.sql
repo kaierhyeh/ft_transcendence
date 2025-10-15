@@ -29,28 +29,28 @@ CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 
 -- Insert sample users (use INSERT OR IGNORE to prevent constraint violations on restart)
 
-INSERT OR IGNORE INTO users (username, email, password_hash, alias, avatar_filename, status)
-VALUES
-  ('alice', 'alice@ya.com', 'hash1', 'A_lice', 'test2.gif', 'online'),
-  ('bob', 'bob@ya.com', 'hash2', 'B_ob', 'test1.jpg', 'offline'),
-  ('charlie', 'charlie@ya.com', 'hash3', 'C_harlie', 'default.png', 'away'),
-  ('dave', 'dave@ya.com', 'hash4', NULL, 'test2.gif', 'online'),
-  ('eve', 'eve@ya.com', 'hash5', 'E_ve', 'test2.gif', 'offline'),
-  ('frank', 'frank@ya.com', 'hash6', NULL, 'test1.jpg', 'online'),
-  ('grace', 'grace@ya.com', 'hash7', 'G_race', 'test2.gif', 'offline'),
-  ('heidi', 'heidi@ya.com', 'hash8', 'H_eidi', 'default.png', 'online');
+-- INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
+-- VALUES
+--   ('alice', 'alice@ya.com', 'hash1', 'A_lice', 'test2.gif', 'online'),
+--   ('bob', 'bob@ya.com', 'hash2', 'B_ob', 'test1.jpg', 'offline'),
+--   ('charlie', 'charlie@ya.com', 'hash3', 'C_harlie', 'default.png', 'away'),
+--   ('dave', 'dave@ya.com', 'hash4', NULL, 'test2.gif', 'online'),
+--   ('eve', 'eve@ya.com', 'hash5', 'E_ve', 'test2.gif', 'offline'),
+--   ('frank', 'frank@ya.com', 'hash6', NULL, 'test1.jpg', 'online'),
+--   ('grace', 'grace@ya.com', 'hash7', 'G_race', 'test2.gif', 'offline'),
+--   ('heidi', 'heidi@ya.com', 'hash8', 'H_eidi', 'default.png', 'online');
 
--- Insert friendships (alice ↔ bob accepted, alice → charlie pending)
+-- -- Insert friendships (alice ↔ bob accepted, alice → charlie pending)
 
-INSERT OR IGNORE INTO friendships (user_id, friend_id, status)
-VALUES
-  (1, 2, 'accepted'),
-  (1, 3, 'pending'),
-  (4, 1, 'pending'),
-  (5, 1, 'blocked'),
-  (2, 3, 'accepted'),
-  (3, 4, 'pending'),
-  (6, 7, 'accepted'),
-  (7, 8, 'blocked'),
-  (8, 1, 'accepted'),
-  (1, 6, 'blocked');
+-- INSERT INTO friendships (user_id, friend_id, status)
+-- VALUES
+--   (1, 2, 'accepted'),
+--   (1, 3, 'pending'),
+--   (4, 1, 'pending'),
+--   (5, 1, 'blocked'),
+--   (2, 3, 'accepted'),
+--   (3, 4, 'pending'),
+--   (6, 7, 'accepted'),
+--   (7, 8, 'blocked'),
+--   (8, 1, 'accepted'),
+--   (1, 6, 'blocked');

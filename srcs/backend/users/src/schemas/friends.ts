@@ -18,5 +18,23 @@ export const friendshipIdSchema = {
 	additionalProperties: false,
 } as const;
 
+export const userIdsSchema = {
+  type: "object",
+  required: ["id", "ids"],
+  properties: {
+	id: { 
+		type: "number", 
+		minimum: 0 
+	},
+    ids: {
+      type: "array",
+      items: { type: "number", minimum: 0 },
+      minItems: 0
+    },
+  },
+  additionalProperties: false,
+} as const;
+
 export type UserIdParams = FromSchema<typeof userIdSchema>;
 export type FriendshipIdParams = FromSchema<typeof friendshipIdSchema>;
+export type UserIdsBody = FromSchema<typeof userIdsSchema>;

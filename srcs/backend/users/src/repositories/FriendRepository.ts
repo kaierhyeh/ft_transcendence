@@ -5,7 +5,7 @@ export interface UserListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
-	user_status: string;
+	user_status: string | null;
 	friendship_status: string | null;
 	from_id: number | null;
 	to_id: number | null;
@@ -109,14 +109,6 @@ export class FriendRepository {
 		`);
 		return stmt.get(thisUserId, thisUserId, targetUserId) as UserListRow | undefined;
 	}
-
-	// user_id: number;
-	// username: string;
-	// alias: string | null;
-	// avatar_filename: string | null;
-	// user_status: string;
-	// 	user_status: string;
-	// friendship_status: string | null;
 
 	public async listFriends(userId: number) {
 		const stmt = this.db.prepare(`
@@ -227,5 +219,38 @@ export class FriendRepository {
 		`);
 		const result = stmt.get(userId, friendId, friendId, userId, status) as { count: number };
 		return result.count > 0;
+	}
+
+	public async getUsersByIds(thisUserId: number, userIds: number[]) {
+		if (!userIds.length) {
+			return [];
+		}
+
+		// Dynamically build placeholders (?, ?, ?, ...)
+		const placeholders = userIds.map(() => "?").join(", ");
+
+		const stmt = this.db.prepare(`
+			SELECT
+				u.user_id,
+				u.username,
+				u.alias,
+				u.avatar_filename,
+				u.status AS user_status,
+				f.status AS friendship_status,
+				f.user_id AS from_id,
+				f.friend_id AS to_id
+			FROM users AS u
+			LEFT JOIN friendships AS f
+				ON (
+					(f.user_id = ? AND f.friend_id = u.user_id)
+					OR
+					(f.friend_id = ? AND f.user_id = u.user_id)
+				)
+			WHERE u.user_id IN (${placeholders})
+		`);
+
+		const params = [thisUserId, thisUserId, ...userIds];
+
+		return stmt.all(...params) as UserListRow[];
 	}
 }

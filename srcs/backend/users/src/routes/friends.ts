@@ -1,14 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { FriendController } from "../controllers/FriendController";
-import { FriendshipIdParams, friendshipIdSchema, UserIdParams, userIdSchema } from "../schemas/friends";
+import { UserIdParams, userIdSchema, UserIdsBody, userIdsSchema } from "../schemas/friends";
 import { userAuthMiddleware, userAuthSwitcher } from "../middleware/userAuth";
-
-
-/* 
- * Time to think about friendship manpulations: 
- * is it better to use FriendshipIdParams or UserIdParams
- * for accepting/declining/canceling requests and removing friends?
- */
+import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function friendsRoutes(fastify: FastifyInstance) {
 	const friendController = new FriendController(fastify.services.friends);
@@ -108,4 +102,13 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		friendController.removeFriend.bind(friendController)
 	);
 
+	// Set of users data for chat service
+	fastify.post<{ Body: UserIdsBody }>(
+		"/usersChat",
+		{
+			schema: { body: userIdsSchema },
+			preHandler: internalAuthMiddleware
+		},
+		friendController.getUsersByIds.bind(friendController)
+	);
 }
