@@ -203,7 +203,7 @@ export function createEmptyState(): string {
             <div class="empty-icon">🎮</div>
             <h3>No matches yet</h3>
             <p>Your match history will appear here after you play some games!</p>
-            <a href="/pong" class="btn-primary">Play Now</a>
+            <a href="/pong" class="match-history-btn">Play Now</a>
         </div>
     `;
 }

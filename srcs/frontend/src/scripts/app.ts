@@ -12,6 +12,7 @@ import { initLogin, handleOAuthCallback } from "./auth/login.js";
 import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
 import { initPong } from "./pong.js";
+import { initProfile } from "./user/profile.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -26,7 +27,6 @@ const routes: Record<string, string> = {
 	// "/oauth-callback": "./html/profile.html",
 	"/history": "./html/history.html",
 	"/user/settings":"./html/user/settings.html",
-	"/user/match-history": "./html/user/match_history.html",
 	"/user/friends": "./html/user/friends.html",
 	"/user/block-list": "./html/user/block_list.html",
 	"/signup": "./html/auth/signup.html",
@@ -65,13 +65,13 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initHistory === "function")
 			initHistory();
 	},
-	"/user/match-history": () => {
-		if (typeof initMatchHistory === "function")
-			initMatchHistory();
-	},
 	"/user/settings": () => {
 		if (typeof initSettings === "function")
 			initSettings();
+	},
+	"/user/profile": () => {
+		if (typeof initSettings === "function")
+			initProfile();
 	},
 	"/auth/google/callback": () => {
 		if (typeof handleOAuthCallback === "function")
