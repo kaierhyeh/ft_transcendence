@@ -43,3 +43,42 @@ export type GameParticipant = FromSchema<typeof playerSchema>;
 export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationBody = FromSchema<typeof createGameSchema>;
 export type GameType = GameCreationBody["type"];
+
+//REMOTE_PLAYER_ADD
+export const matchmakingRequestSchema = {
+  type: "object",
+  required: ["mode", "participant_id"],
+  properties: {
+    mode: {
+      type: "string",
+      enum: ["2p", "4p"],
+    },
+    participant_id: { type: "string" },
+  },
+  additionalProperties: false,
+} as const;
+
+export const matchmakingResponseSchema = {
+  type: "object",
+  required: ["type"],
+  properties: {
+    type: {
+      type: "string",
+      enum: ["queue_joined", "game_ready", "queue_status", "error"],
+    },
+    mode: {
+      type: "string",
+      enum: ["2p", "4p"],
+    },
+    position: { type: "number" },
+    players_needed: { type: "number" },
+    game_id: { type: "number" },
+    message: { type: "string" },
+  },
+  additionalProperties: false,
+} as const;
+
+export type MatchmakingRequest = FromSchema<typeof matchmakingRequestSchema>;
+export type MatchmakingResponse = FromSchema<typeof matchmakingResponseSchema>;
+export type MatchmakingMode = MatchmakingRequest["mode"];
+//END_REMOTE_PLAYER_ADD

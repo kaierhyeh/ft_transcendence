@@ -1,6 +1,6 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameType } from '../schemas';
-import { Team, PlayerSlot, GameMessage } from '../types'
+import { Team, PlayerSlot, GameMessage, PlayerDisconnectedMessage, GameEndedMessage } from '../types'
 import { GameConf, GameEngine, GameMode, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { CONFIG } from '../config';
@@ -35,6 +35,8 @@ export class GameSession {
     private ended_at: Date | undefined;
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
+    private player_disconnected: boolean = false;
+    private disconnected_player_info?: { slot: PlayerSlot; team: Team };
 
     constructor(game_type: GameType, participants: GameParticipant[], logger: FastifyBaseLogger) {
         this.type = game_type;
@@ -76,9 +78,14 @@ export class GameSession {
     }
 
     public get over(): boolean {
+        // Game is over if there's a winner OR if a player disconnected
         if (this.winner) {
             this.ended_at = new Date();
             this.logger.info(`Checking if game is over. Winner: ${this.winner}, Ended at: ${this.ended_at}`);
+            return true;
+        }
+        if (this.player_disconnected) {
+            this.logger.info(`Game is over due to player disconnection.`);
             return true;
         }
         return false;
@@ -169,9 +176,67 @@ export class GameSession {
 
     public disconnectPlayer(participant_id: string): void {
         const player = this.players.get(participant_id);
-        if (!player) return; // TODO - or throw an exception
+        if (!player) return;
+
+        // Don't broadcast disconnection if game already ended normally
+        if (this.ended_at !== undefined) {
+            player.socket = undefined;
+            this.game_engine.setConnected(player.slot, false);
+            return;
+        }
+
+        let remainingPlayers = 0;
+        for (const p of this.players.values()) {
+            if (p.socket !== undefined && p.participant_id !== participant_id) {
+                remainingPlayers++;
+            }
+        }
+
         player.socket = undefined;
         this.game_engine.setConnected(player.slot, false);
+
+        if (remainingPlayers === 0) {
+            return;
+        }
+
+        if (!this.started_at) {
+            return;
+        }
+
+        this.logger.info(`Player disconnected: ${participant_id}, slot: ${player.slot}, team: ${player.team}`);
+
+        this.player_disconnected = true;
+        this.disconnected_player_info = {
+            slot: player.slot,
+            team: player.team
+        };
+        const disconnectionMessage: PlayerDisconnectedMessage = {
+            type: "player_disconnected",
+            data: {
+                participant_id: participant_id,
+                slot: player.slot,
+                team: player.team,
+                reason: "Player disconnected"
+            }
+        };
+        this.broadcast(disconnectionMessage);
+
+        const gameEndedMessage: GameEndedMessage = {
+            type: "game_ended",
+            data: {
+                reason: "player_disconnected",
+                disconnected_player: {
+                    slot: player.slot,
+                    team: player.team
+                }
+            }
+        };
+        this.broadcast(gameEndedMessage);
+
+        // End the game
+        if (!this.ended_at) {
+            this.ended_at = new Date();
+        }
     }
    
     public disconnectViewer(connection: SocketStream): void {

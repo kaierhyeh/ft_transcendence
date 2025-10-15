@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import websocketPlugin from '@fastify/websocket';
 import liveSessionManagerPlugin from "./plugins/liveSessionManager";
+import remoteMatchmakingManagerPlugin from "./plugins/remoteMatchmakingManager";
 import dbPlugin from "./plugins/db";
 import routes from "./routes";
 import { CONFIG } from "./config";
@@ -12,6 +13,7 @@ async function run() {
   await fastify.register(websocketPlugin);
   await fastify.register(dbPlugin);
   await fastify.register(liveSessionManagerPlugin);
+  await fastify.register(remoteMatchmakingManagerPlugin);
   
   for (const route of routes) {
     await fastify.register(route, { prefix: "/game" });

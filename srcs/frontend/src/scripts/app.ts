@@ -3,6 +3,7 @@ import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
 import {initProfile, handleOAuthCallback} from "./profile.js";
 import {initTournament} from "./tournament.js";
+import initRemoteGame, { cleanupRemoteGame } from "./remoteGame.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
 import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
@@ -14,7 +15,7 @@ const error_404_path = "./html/404.html";
 const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
-	"/pong/online": "./html/pong.html", //temporary
+	"/online": "./html/pong.html", //temporary
 	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/profile": "./html/profile.html",
@@ -42,6 +43,10 @@ const initScripts: Record<string, () => void> = {
 	"/tournament": () => {
 		if (typeof initTournament === "function")
 			initTournament();
+	},
+	"/online": () => {
+		if (typeof initRemoteGame === "function")
+			initRemoteGame();
 	},
 	"/history": () => {
 		if (typeof initHistory === "function")
@@ -78,6 +83,12 @@ function update_event()
 
 async function navigate(path: string, push: boolean = true)
 {
+	// Cleanup remote game connections when leaving /online page
+	const currentPath = window.location.pathname;
+	if (currentPath === "/online" && path !== "/online") {
+		cleanupRemoteGame();
+	}
+
 	const file = routes[path];
 
 	if (file)

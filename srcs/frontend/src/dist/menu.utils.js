@@ -1,0 +1,46 @@
+import { i18n } from './i18n/i18n.js';
+// Hide an element by its ID
+export function hideElementById(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.classList.add("hidden");
+    }
+}
+// Unhide an element by its ID
+export function showElementById(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.classList.remove("hidden");
+    }
+}
+// To remove all event listeners from an element and its children
+// after that need to reset references (parent and children)
+// because old references still connected with old elements
+export function clearEvents(toReset) {
+    // Clear all event listeners for Friends, Users, Chats
+    const oldElement = document.querySelector(toReset);
+    if (!oldElement) {
+        return;
+    }
+    const newElement = oldElement.cloneNode(true);
+    oldElement.replaceWith(newElement);
+}
+export function setElementActive(id, isActive) {
+    // funcion to set or unset that button is active - for example when section is opened
+    const element = document.getElementById(id);
+    if (element) {
+        if (isActive) {
+            console.log(`INFO: Setting element ${id} as active`);
+        }
+        else {
+            console.log(`INFO: Setting element ${id} as inactive`);
+        }
+    }
+}
+export function setMenuTitle(translationKey) {
+    const menuTitleElement = document.getElementById("menuTitle");
+    if (menuTitleElement) {
+        menuTitleElement.textContent = i18n.t(translationKey);
+    }
+}
+//# sourceMappingURL=menu.utils.js.map
