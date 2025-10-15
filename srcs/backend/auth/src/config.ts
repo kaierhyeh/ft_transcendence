@@ -50,6 +50,28 @@ function loadClientCredentials(): Record<string, ClientCredentials> {
 	return credentials;
 }
 
+function loadOAuthCredentials(): OAuthConfig {
+	const oauthPath = path.join('/run/secrets', 'google-oauth.env');
+	
+	// Default values if file doesn't exist
+	let googleClientId: string | undefined;
+	let googleClientSecret: string | undefined;
+	let googleRedirectUri: string | undefined;
+	
+	if (fs.existsSync(oauthPath)) {
+		const envConfig = dotenv.parse(fs.readFileSync(oauthPath));
+		googleClientId = envConfig.GOOGLE_CLIENT_ID;
+		googleClientSecret = envConfig.GOOGLE_CLIENT_SECRET;
+		googleRedirectUri = envConfig.GOOGLE_REDIRECT_URI;
+	}
+	
+	return {
+		GOOGLE_CLIENT_ID: googleClientId,
+		GOOGLE_CLIENT_SECRET: googleClientSecret,
+		GOOGLE_REDIRECT_URI: googleRedirectUri,
+	};
+}
+
 function optionalEnv(key: string, defaultValue: string): string {
 	return process.env[key] || defaultValue;
 }
@@ -154,11 +176,7 @@ export const CONFIG: Config = {
 		PORT: parseInt(optionalEnv('PORT', '3000')),
 		HOST: optionalEnv('HOST', '0.0.0.0'),
 	},
-	OAUTH: {
-		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-		GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-	},
+	OAUTH: loadOAuthCredentials(),
 	COOKIE: {
 		OPTIONS: {
 			PATH: '/',

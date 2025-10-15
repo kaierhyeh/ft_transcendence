@@ -259,8 +259,6 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			reply.clearCookie('accessToken', cookieOptions);
 			reply.clearCookie('refreshToken', cookieOptions);
-			
-			console.log('✅ Logout successful for user:', { userId: result.userId });
 
 			return reply.code(200).send({
 				success: true,
@@ -268,13 +266,6 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			});
 
 		} catch (error: any) {
-			console.error('❌ Logout error:', {
-				userId: (request as any).user?.userId,
-				ip: (request as any).ip,
-				errorMessage: error.message,
-				errorCode: error.code,
-				stack: error.stack
-			});
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during logout'
@@ -319,17 +310,11 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			// If the access token was refreshed, update the cookie
 			if (verification.newAccessToken) {
-				console.log('🔄 Access token refreshed, updating cookie');
 				authUtils.ft_setCookie(reply, verification.newAccessToken, CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY, 'access');
 			}
 
 			// Get user profile from users service
 			const user = await authService.getUserProfileById(verification.userId!);
-
-			console.log('✅ Token verification successful:', {
-				userId: verification.userId,
-				tokenRefreshed: !!verification.newAccessToken
-			});
 
 			return reply.code(200).send({
 				success: true,
@@ -340,22 +325,12 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 		} catch (error: any) {
 			if (error.code === 'USER_NOT_FOUND') {
-				console.warn('⚠️ User not found during token verification:', {
-					userId: error.userId
-				});
 				return reply.code(404).send({
 					success: false,
 					error: 'User not found'
 				});
 			}
-			
-			console.error('❌ Token verification error:', {
-				ip: (request as any).ip,
-				errorCode: error.code,
-				errorStatus: error.status,
-				errorMessage: error.message,
-				stack: error.stack
-			});
+
 			return reply.code(500).send({
 				success: false,
 				error: 'Internal server error during token verification'

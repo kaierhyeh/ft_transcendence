@@ -8,7 +8,7 @@ import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
 import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
-import { initLogin } from "./auth/login.js";
+import { initLogin, handleOAuthCallback } from "./auth/login.js";
 import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
 import { initPong } from "./pong.js";
@@ -31,6 +31,7 @@ const routes: Record<string, string> = {
 	"/user/block-list": "./html/user/block_list.html",
 	"/signup": "./html/auth/signup.html",
 	"/login": "./html/auth/login.html",
+	"/auth/google/callback": "./html/auth/login.html", // Temporary page while processing OAuth
 };
 
 const initScripts: Record<string, () => void> = {
@@ -72,10 +73,10 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initSettings === "function")
 			initSettings();
 	},
-	// "/oauth-callback": () => {
-	// 	if (typeof handleOAuthCallback === "function")
-	// 		handleOAuthCallback();
-	// }
+	"/auth/google/callback": () => {
+		if (typeof handleOAuthCallback === "function")
+			handleOAuthCallback();
+	}
 }
 
 async function load404(push: boolean)
