@@ -111,6 +111,14 @@ export interface ChatInfo {
 	to_id: number;
 }
 
+export interface MessageInfo {
+	msg_id: number;
+	chat_id: number;
+	from_id: number;
+	to_id: number;
+	msg: string;
+}
+
 export class ChatRepository {
 	constructor(private db: Database) {
 		this.db = db;
@@ -118,7 +126,7 @@ export class ChatRepository {
 
 	public async listUserChats(userId: number) {
 		const stmt = this.db.prepare(`
-			SELECT DISTINCT 
+			SELECT 
 				c.id AS chat_id,
 				c.user_id_a AS from_id,
 				c.user_id_b AS to_id
@@ -129,14 +137,21 @@ export class ChatRepository {
 		return stmt.all([userId, userId]) as ChatInfo[];
 	}
 
-	public async getChatByUserIds(thisUserId: number, targetUserId: number) {
+	public async getChatById(chatId: number, thisUserId: number) {
 		const stmt = this.db.prepare(`
-			SELECT id AS chat_id
-			FROM chats
-			WHERE (user_a_id = ? AND user_b_id = ?)
-			OR (user_b_id = ? AND user_a_id = ?)
+			SELECT 
+				m.id AS msg_id,
+				m.chat_id AS chat_id,
+				m.from_id AS from_id,
+				m.to_id AS to_id,
+				m.msg AS msg
+			FROM messages m
+			WHERE m.chat_id = ?
+				AND NOT (m.to_id = ? AND m.blocked = 1)
+			ORDER BY m.id ASC
 		`);
-		return stmt.get([thisUserId, targetUserId, thisUserId, targetUserId]) as { chat_id: number } | undefined;
+		return stmt.all([chatId, thisUserId]) as MessageInfo[];
 	}
+
 }
 

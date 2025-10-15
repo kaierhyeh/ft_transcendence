@@ -54,14 +54,76 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
     }
   }
 
-  // somewhere here I can I add SEED DATA
-
+  //  SEED DATA
+  try {
+    // Example: Insert initial chat rooms or users
+    const rowU = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
+    const existingUsers= rowU.count;
+    if (existingUsers === 0) {
+      const insert = db.prepare(`
+        INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
+        VALUES (@username, @email, @password_hash, @alias, @avatar_filename, @status)
+        `);
+        const now = new Date().toISOString();
+        // Example seed users
+        const seedData = [
+          { username: 'alice',    email: 'alice@ya.com',    password_hash: 'hash1', alias: 'A_lice',    avatar_filename: 'test2.gif',   status: 'online' },
+          { username: 'bob',      email: 'bob@ya.com',      password_hash: 'hash2', alias: 'B_ob',      avatar_filename: 'test1.jpg',   status: 'offline' },
+          { username: 'charlie',  email: 'charlie@ya.com',  password_hash: 'hash3', alias: 'C_harlie',  avatar_filename: 'default.png', status: 'away' },
+          { username: 'dave',     email: 'dave@ya.com',     password_hash: 'hash4', alias: null,        avatar_filename: 'test2.gif',   status: 'online' },
+          { username: 'eve',      email: 'eve@ya.com',      password_hash: 'hash5', alias: 'E_ve',      avatar_filename: 'test2.gif',   status: 'offline' },
+          { username: 'frank',    email: 'frank@ya.com',    password_hash: 'hash6', alias: null,        avatar_filename: 'test1.jpg',   status: 'online' },
+          { username: 'grace',    email: 'grace@ya.com',    password_hash: 'hash7', alias: 'G_race',    avatar_filename: 'test2.gif',   status: 'offline' },
+          { username: 'heidi',    email: 'heidi@ya.com',    password_hash: 'hash8', alias: 'H_eidi',    avatar_filename: 'default.png', status: 'online' }
+        ];
+        const insertMany = db.transaction((users) => {
+          for (const user of users) insert.run(user);
+        });
+        insertMany(seedData);
+        fastify.log.info("🌱 Seed data inserted into users table");
+      } else {
+        fastify.log.info("🌾 Users table already has data — skipping seed");
+      }
+      const rowF = db.prepare("SELECT COUNT(*) as count FROM friendships").get() as { count: number };
+      const existingMessages = rowF.count;
+      if (existingMessages === 0) {
+        const insert = db.prepare(`
+          INSERT INTO friendships (user_id, friend_id, status)
+          VALUES (@user_id, @friend_id, @status)
+          `);
+          // Example seed friendships
+          const seedData = [
+            { user_id: 1, friend_id: 2, status: 'accepted' },
+            { user_id: 1, friend_id: 3, status: 'pending' },
+            { user_id: 4, friend_id: 1, status: 'pending' },
+            { user_id: 5, friend_id: 1, status: 'blocked' },
+            { user_id: 2, friend_id: 3, status: 'accepted' },
+            { user_id: 3, friend_id: 4, status: 'pending' },
+            { user_id: 6, friend_id: 7, status: 'accepted' },
+            { user_id: 7, friend_id: 8, status: 'blocked' },
+            { user_id: 8, friend_id: 1, status: 'accepted' },
+            { user_id: 1, friend_id: 6, status: 'blocked' }
+          ];
+          const insertMany = db.transaction((friendships) => {
+        for (const friendship of friendships) insert.run(friendship);
+      });
+      insertMany(seedData);
+      fastify.log.info("🌱 Seed data inserted into friendships table");
+    } else {
+      fastify.log.info("🌾 Friendships table already has data — skipping seed");
+    }
+  } catch (error) {
+    fastify.log.error(`❌ Failed to seed data: ${error}`);
+    throw error;
+  }
+  //  END SEED DATA
+  
   fastify.decorate("repositories", {
     users: new UserRepository(db),
     friends: new FriendRepository(db),
     blocks: new BlockRepository(db)
   });
-
+  
   fastify.addHook("onClose", async () => {
     db.close();
   });

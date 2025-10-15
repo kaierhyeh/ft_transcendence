@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { ChatService } from "../services/chats.service";
-import { UserIdParams } from "../schemas/users.schema";
+import { ChatIdParams } from "../schemas/users.schema";
 import { toInteger } from "../utils/toInteger";
 
 export class ChatController {
@@ -20,21 +20,21 @@ export class ChatController {
 		}
 	}
 
-	// public async getChatById(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
-	// 	try {
-	// 		const targetUserId = request.params.id;
-	// 		const sub = request.authUser?.sub;
+	public async getChatById(request: FastifyRequest<{ Params: ChatIdParams }>, reply: FastifyReply) {
+		try {
+			const chatId = request.params.id;
+			const sub = request.authUser?.sub;
 
-	// 		if (!sub) {
-	// 			return reply.status(401).send({ error: "Unauthorized: No user context" });
-	// 		}
-	// 		const thisUserId = toInteger(sub);
-	// 		const chat = await this.chatService.getChatById(thisUserId, targetUserId);
-	// 		reply.status(200).send(chat);
-	// 	} catch (error) {
-	// 		this.handleError(error, reply);
-	// 	}
-	// }
+			if (!sub) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const thisUserId = toInteger(sub);
+			const chat = await this.chatService.getChatById(chatId, thisUserId);
+			reply.status(200).send(chat);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
 
 	private handleError(error: any, reply: FastifyReply) {
 		if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {

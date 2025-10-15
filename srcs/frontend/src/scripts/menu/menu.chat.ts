@@ -2,10 +2,10 @@ import { clearEvents, hideElementById, setElementActive, setMenuTitle, showEleme
 import { i18n } from '../i18n/i18n.js';
 
 export interface Message {
-	id: number;
-	chatId: number;
-	fromId: number;
-	toId: number;
+	msg_id: number;
+	chat_id: number;
+	from_id: number;
+	to_id: number;
 	msg: string;
 }
 
@@ -205,8 +205,8 @@ function renderMessages(messages: Message[], withUser: ChatUser): void {
 
 	// better to use this.user.username instead of "You: "
 	chatMessages.innerHTML = messages.map(msg => `
-		<div class="chat-msg ${msg.fromId === withUser.user_id ? withUser.username : "from-them"}">
-		${msg.fromId !== withUser.user_id
+		<div class="chat-msg ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
+		${msg.from_id !== withUser.user_id
 			? `<span class="green-text">You: </span>`
 			: `<span class="blue-text">${withUser.username}: </span>`}
 		${msg.msg}
@@ -263,7 +263,12 @@ async function initMessageSection(chatId: number, withUser: ChatUser): Promise<v
 
 		setMenuTitle(`${withUser.username}`);
 
-		const res = await fetch(`${API_CHAT_ENDPOINT}/messages/${chatId}/${withUser.user_id}`);
+		const res = await fetch(`${API_CHAT_ENDPOINT}/${chatId}`, {
+			method: "GET",
+			headers: {
+				credentials: "include"
+			}
+		});
 		if (!res.ok) {
 			throw new Error("Failed to load messages");
 		}

@@ -106,8 +106,8 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 	fastify.post<{ Body: UserIdsBody }>(
 		"/usersChat",
 		{
-			schema: { body: userIdsSchema },
-			preHandler: internalAuthMiddleware
+			schema: { body: userIdsSchema }
+			// preHandler: internalAuthMiddleware
 		},
 		friendController.getUsersByIds.bind(friendController)
 	);
