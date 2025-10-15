@@ -32,7 +32,7 @@ let menuControlPanel: HTMLElement;
 let usersSectionButton: HTMLElement;
 let chatsSectionButton: HTMLElement;
 // users section
-let usersSection: HTMLElement;
+// let usersSection: HTMLElement;
 let usersList: HTMLElement;
 let usersInfo: HTMLElement;
 // user info panel buttons
@@ -48,10 +48,10 @@ let secondLine: HTMLElement;
 let openChatButton: HTMLElement;
 let blockUserButton: HTMLElement;
 
-let thisUserId: number;
+// let thisUserId: number;
 let currentFilter: string = 'all';
 
-function initializeGlobals(userId: number): boolean {
+function initializeGlobals(/* userId: number */): boolean {
 	API_USERS_FRIENDS = `${window.location.origin}/api/friends`;
 	API_USERS_BLOCKS = `${window.location.origin}/api/blocks`;
 	menuBackButton = document.getElementById("menuBackButton")!;
@@ -60,7 +60,7 @@ function initializeGlobals(userId: number): boolean {
 	usersSectionButton = document.getElementById("usersSectionButton")!;
 	chatsSectionButton = document.getElementById("chatsSectionButton")!;
 	// users section
-	usersSection = document.getElementById("usersSection")!;
+	// usersSection = document.getElementById("usersSection")!;
 	usersList = document.getElementById("usersList")!;
 	usersInfo = document.getElementById("usersInfo")!;
 	// user info panel buttons
@@ -76,7 +76,7 @@ function initializeGlobals(userId: number): boolean {
 	openChatButton = document.getElementById("openChatButton")!;
 	blockUserButton = document.getElementById("blockUserButton")!;
 
-	thisUserId = userId;
+	// thisUserId = userId;
 
 	if (
 		!API_USERS_FRIENDS ||
@@ -84,7 +84,7 @@ function initializeGlobals(userId: number): boolean {
 		!menuControlPanel ||
 		!usersSectionButton ||
 		!chatsSectionButton ||
-		!usersSection ||
+		/*!usersSection ||*/
 		!usersList ||
 		!usersInfo ||
 		!userLowerPanel ||
@@ -109,9 +109,12 @@ function initializeGlobals(userId: number): boolean {
 // utility functions
 
 function clearBeforeOpenUsersSection(): void {
-	clearEvents("#usersSection");
+	// clearEvents("#usersSection");
+	clearEvents("#usersList");
+	clearEvents("#usersInfo");
+	clearEvents('#userLowerPanel');
 	clearEvents("#menuBackButton");
-	if (!initializeGlobals(thisUserId)) {
+	if (!initializeGlobals(/* thisUserId */)) {
 		console.error("USERS: globals reinitialization failed: Missing elements");
 	}
 	menuBackButton.addEventListener("click", () => {
@@ -121,8 +124,11 @@ function clearBeforeOpenUsersSection(): void {
 }
 
 function resetUsersSection(): void {
-	hideElementById("friendsSection");
-	hideElementById("chatsSection");
+	// hideElementById("friendsSection");
+	// hideElementById("chatsSection");
+	hideElementById("chatsList");
+	hideElementById("chatMessages");
+	hideElementById("chatLowerPanel");
 
 	hideElementById("menuBackButton");
 	hideElementById("usersInfo");
@@ -461,7 +467,7 @@ function renderUserList(users: UserListRow[]): void {
 			: `<span class="user-status-unknown"></span>`;
 
 		return `
-			<div class="user-list-element" data-user-id="${u.user_id}">
+			<div class="menu-list-element " data-user-id="${u.user_id}">
 				<img class="user-info-avatar-small" src="${avatarSrc}">
 				<div class="user-list-element-info">
 					<span>${userName}</span>
@@ -471,7 +477,7 @@ function renderUserList(users: UserListRow[]): void {
 		`;
 	}).join("");
 
-	document.querySelectorAll(".user-list-element").forEach(u => {
+	document.querySelectorAll(".menu-list-element ").forEach(u => {
 		u.addEventListener("click", () => {
 			const userId = (u as HTMLElement).dataset.userId;
 			console.log(`User TARGET id: ${userId}=`, userId);
@@ -549,7 +555,8 @@ async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
 	showElementById("usersList");
-	showElementById("usersSection");
+	// showElementById("usersSection");
+	showElementById("usersList");
 	showElementById("menuDropdown");
 	await loadUsers();
 }
@@ -648,12 +655,12 @@ function initFilterDropdown(): void {
 
 }
 
-export async function openUsersSection(userId: number): Promise<void> {
+export async function openUsersSection(/* userId: number */): Promise<void> {
 	console.log("USERS: Users Section opened");
-	initializeGlobals(userId);
+	initializeGlobals(/* userId */);
 
 	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
-		|| !usersSection || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
+		/*|| !usersSection*/ || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
 		|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
 		|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {
 			console.error("One or more required elements not found, cannot open Users section");
