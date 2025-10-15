@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     tournament_id          INTEGER,
     format                 TEXT        NOT NULL CHECK (format IN ('1v1', '2v2')),
     mode                   TEXT        NOT NULL CHECK (mode IN ('solo', 'pvp', 'tournament')),
+    forfeit                BOOLEAN     DEFAULT 0,
     created_at             DATETIME,
     started_at             DATETIME,
     ended_at               DATETIME

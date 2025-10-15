@@ -1,6 +1,6 @@
 import { SocketStream } from "@fastify/websocket";
-import { GameParticipant, GameMode, GameCreationData } from "../schemas";
-import { GameSession } from "./GameSession";
+import { GameCreationData } from "../schemas";
+import { GameEndedMessage, GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
@@ -84,8 +84,27 @@ export class LiveSessionManager {
     }
 
     private terminateSession_(id: number, session: GameSession): void {
+        
         this.saveSession(id, session);
-        session.closeAllConnections(1001, "Game ended"); 
+        let message: GameEndedMessage;
+        if (session.disconnected_player) {
+            message = {
+                type: "game_ended",
+                data: {
+                    reason: "player_disconnected",
+                    disconnected_player: session.disconnected_player
+                }
+            };
+            session.closeAllConnections(4000, message);
+        } else {
+            message = {
+                type: "game_ended",
+                data: {
+                    reason: "game_over",
+                }
+            };
+            session.closeAllConnections(1001, message); 
+        }
         this.game_sessions.delete(id);
     }
 
@@ -98,11 +117,6 @@ export class LiveSessionManager {
             if (!game.started) {
                 game.checkAndStart();
                 continue;
-            }
-            if (game.timeout) {
-                this.logger.info({ game_id: id }, "Terminating inactive game session");
-                this.game_sessions.delete(id);
-                continue ;
             }
 
             game.tick();

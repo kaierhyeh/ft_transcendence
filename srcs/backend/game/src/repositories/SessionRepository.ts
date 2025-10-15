@@ -15,6 +15,7 @@ interface SessionRow {
     format: GameFormat,
     mode: GameMode,
     tournament_id: number | null,
+    forfeit: boolean,
     created_at: string,
     started_at: string,
     ended_at: string,
@@ -59,8 +60,8 @@ export class SessionRepository {
 
     public save(session: DbSession): void {
         const insertSession = this.db.prepare(`
-            INSERT INTO sessions (format, tournament_id, mode, created_at, started_at, ended_at)
-            VALUES (@format, @tournament_id, @mode, @created_at, @started_at, @ended_at)
+            INSERT INTO sessions (format, tournament_id, mode, forfeit, created_at, started_at, ended_at)
+            VALUES (@format, @tournament_id, @mode, @forfeit, @created_at, @started_at, @ended_at)
         `);
 
         const insertPlayerSession = this.db.prepare(`
@@ -106,7 +107,7 @@ export class SessionRepository {
         // Retrieve data
         const dataStmt = this.db.prepare(`
             WITH filtered_sessions AS (
-                SELECT s.id, s.format, s.mode, s.tournament_id, s.created_at, s.started_at, s.ended_at
+                SELECT s.id, s.format, s.mode, s.tournament_id, s.forfeit, s.created_at, s.started_at, s.ended_at
                 FROM sessions s
                 WHERE (:user_id IS NULL OR s.id IN (SELECT session_id FROM player_sessions WHERE user_id = :user_id))
                 ORDER BY s.created_at DESC
@@ -116,6 +117,7 @@ export class SessionRepository {
                 fs.format,
                 fs.mode,
                 fs.tournament_id,
+                fs.forfeit,
                 fs.created_at,
                 fs.started_at,
                 fs.ended_at,

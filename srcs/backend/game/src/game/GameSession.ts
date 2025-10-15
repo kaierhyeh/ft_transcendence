@@ -1,9 +1,8 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameMode, GameFormat, GameCreationData } from '../schemas';
-import { Team, GameMessage, PlayerDisconnectedMessage, GameEndedMessage } from '../types'
+import { Team, GameMessage } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
-import { CONFIG } from '../config';
 import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
 import { toSqlDate } from '../utils/db';
 
@@ -15,6 +14,14 @@ type PlayerMap = Map<number, Player>;
 
 export type SessionPlayerMap = PlayerMap;
 
+export interface GameEndedMessage {
+    type: "game_ended";
+    data: {
+        reason: "player_disconnected" | "game_over";
+        disconnected_player?: Player;
+    };
+}
+
 export class GameSession {
     private game_format: GameFormat;
     private tournament_id: number | undefined;
@@ -22,15 +29,14 @@ export class GameSession {
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
     private game_engine: GameEngine;
-    private last_activity: number;
     private created_at: Date;
     private last_time: number | undefined;
     private started_at: Date | undefined;
     private ended_at: Date | undefined;
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
-    private player_disconnected: boolean = false;
-    private disconnected_player_info?: { slot: PlayerSlot; team: Team };
+    private disconnected_player_info?: GameParticipant;
+    private forfeit: boolean = false;
 
     constructor(data: GameCreationData, logger: FastifyBaseLogger) {
         this.game_format = data.format;
@@ -39,7 +45,6 @@ export class GameSession {
         this.players = this.initPlayers_(data.participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
-        this.last_activity = Date.now();
         this.game_engine = new GameEngine(this.game_format, this.players);
         this.logger = logger;
     }
@@ -69,17 +74,16 @@ export class GameSession {
     }
 
     public get over(): boolean {
-        // Game is over if there's a winner OR if a player disconnected
         if (this.winner) {
             this.ended_at = new Date();
-            this.logger.info(`Checking if game is over. Winner: ${this.winner}, Ended at: ${this.ended_at}`);
-            return true;
-        }
-        if (this.player_disconnected) {
-            this.logger.info(`Game is over due to player disconnection.`);
+            this.logger.info(`Checking if game is over. Winner: ${this.winner}, Ended at: ${this.ended_at}, Forfeit: ${this.forfeit}`);
             return true;
         }
         return false;
+    }
+
+    public get disconnected_player() {
+        return this.disconnected_player_info;
     }
 
     public checkAndStart(): void {
@@ -88,11 +92,6 @@ export class GameSession {
             this.started_at = new Date();
             this.last_time = Date.now();
         }
-    }
-
-    public get timeout(): boolean {
-        const no_connection: boolean = Array.from(this.players.values()).every((p) => p.socket === undefined);
-        return no_connection && ( Date.now() - this.last_activity > CONFIG.GAME.SESSION_TIMEOUT);
     }
 
     private get delta(): number | undefined {
@@ -137,7 +136,6 @@ export class GameSession {
         }
 
         player.socket = connection;
-        this.game_engine.setConnected(player.slot, true);
 
         connection.socket.on("message", (raw: string) => {
             const msg = JSON.parse(raw);
@@ -150,7 +148,6 @@ export class GameSession {
 
         connection.socket.on("close", () => {
             this.disconnectPlayer(player_id);
-            this.last_activity = Date.now();
         });
     }
 
@@ -158,88 +155,37 @@ export class GameSession {
         this.viewers.add(connection);
         connection.socket.on("close", () => {
             this.disconnectViewer(connection);
-            this.last_activity = Date.now();
         });
     }
 
     public disconnectPlayer(player_id: number): void {
         const player = this.players.get(player_id);
         if (!player) return;
-
-        // Don't broadcast disconnection if game already ended normally
-        if (this.ended_at !== undefined) {
-            player.socket = undefined;
-            this.game_engine.setConnected(player.slot, false);
-            return;
-        }
-
-        let remainingPlayers = 0;
-        for (const p of this.players.values()) {
-            if (p.socket !== undefined && p.participant_id !== participant_id) {
-                remainingPlayers++;
-            }
-        }
-
         player.socket = undefined;
-        this.game_engine.setConnected(player.slot, false);
-
-        if (remainingPlayers === 0) {
-            return;
+        if (!this.winner) {
+            this.forfeit = true;
+            this.winner = player.team === 'left' ? 'right' : 'left';
+            this.disconnected_player_info = player;
+            this.logger.info(`Forfeit detected: Player ${player_id} disconnected.`);
         }
-
-        if (!this.started_at) {
-            return;
-        }
-
-        this.logger.info(`Player disconnected: ${participant_id}, slot: ${player.slot}, team: ${player.team}`);
-
-        this.player_disconnected = true;
-        this.disconnected_player_info = {
-            slot: player.slot,
-            team: player.team
-        };
-        const disconnectionMessage: PlayerDisconnectedMessage = {
-            type: "player_disconnected",
-            data: {
-                participant_id: participant_id,
-                slot: player.slot,
-                team: player.team,
-                reason: "Player disconnected"
-            }
-        };
-        this.broadcast(disconnectionMessage);
-
-        const gameEndedMessage: GameEndedMessage = {
-            type: "game_ended",
-            data: {
-                reason: "player_disconnected",
-                disconnected_player: {
-                    slot: player.slot,
-                    team: player.team
-                }
-            }
-        };
-        this.broadcast(gameEndedMessage);
-
-        // End the game
-        if (!this.ended_at) {
-            this.ended_at = new Date();
-        }
+        this.logger.info(`Player disconnected: ${player_id}, slot: ${player.slot}, team: ${player.team}`);
     }
    
     public disconnectViewer(connection: SocketStream): void {
         this.viewers.delete(connection);
     }
 
-    public closeAllConnections(status: number, reason: string): void {
+    public closeAllConnections(status: number, message: GameMessage): void {
+        const payload = JSON.stringify(message);
+
         this.players.forEach(({ socket: connection }, participant_id) => {
             if (connection) {
-                connection.socket.close(status, reason);
+                connection.socket.close(status, payload);
                 this.disconnectPlayer(participant_id);
             }
         });
         this.viewers.forEach( connection => {
-            connection.socket.close(status, reason);
+            connection.socket.close(status, payload);
             this.disconnectViewer(connection);
         });
     }
@@ -264,6 +210,7 @@ export class GameSession {
                 format: this.game_format,
                 mode: this.game_mode,
                 tournament_id: this.tournament_id ?? null,
+                forfeit: this.forfeit,
                 created_at: toSqlDate(this.created_at),
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),

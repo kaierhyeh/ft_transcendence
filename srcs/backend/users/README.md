@@ -285,6 +285,7 @@ GET /users/42/match-history?page=2&limit=5
       "format": "1v1" | "2v2",
       "mode": "solo" | "pvp" | "tournament",
       "tournament_id": number | null,
+      "forfeit": boolean,
       "created_at": "datetime",
       "started_at": "datetime",
       "ended_at": "datetime",

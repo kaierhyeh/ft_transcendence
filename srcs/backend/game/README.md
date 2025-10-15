@@ -115,6 +115,7 @@ GET /game/sessions?user_id=7&page=3
       "format": "1v1" | "2v2",
       "mode": "solo" | "pvp" | "tournament",
       "tournament_id": number | null,
+      "forfeit": boolean,
       "created_at": "datetime",
       "started_at": "datetime",
       "ended_at": "datetime",

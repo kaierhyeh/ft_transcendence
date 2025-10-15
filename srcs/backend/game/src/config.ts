@@ -26,7 +26,6 @@ export const CONFIG = {
   // Game settings
   GAME: {
     TICK_PERIOD: 1000 / 30, // <=> 30 FPS
-    SESSION_TIMEOUT: 5000, // 5s
     MAX_SESSIONS: 100,
   },
   

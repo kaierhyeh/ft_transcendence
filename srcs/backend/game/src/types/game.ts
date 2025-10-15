@@ -14,24 +14,3 @@ export interface GameMessage {
 }
 
 export type PlayerType = "registered" | "guest" | "ai";
-
-export interface PlayerDisconnectedMessage {
-    type: "player_disconnected";
-    data: {
-        participant_id: string;
-        slot: PlayerSlot;
-        team: Team;
-        reason: string;
-    };
-}
-
-export interface GameEndedMessage {
-    type: "game_ended";
-    data: {
-        reason: "player_disconnected" | "game_over";
-        disconnected_player?: {
-            slot: PlayerSlot;
-            team: Team;
-        };
-    };
-}
