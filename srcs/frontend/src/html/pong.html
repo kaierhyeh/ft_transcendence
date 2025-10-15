@@ -2,26 +2,41 @@
 	<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
 	
 	<div class="pong-icons">
-		<button class="pong-icons-btn" data-route="/stats/game-session" data-i18n-title="viewStats" title="View Stats">
-			📊
-		</button>
-		<button class="pong-icons-btn" data-route="/profile" data-i18n-title="viewProfile" title="View Profile">
-			👤
-		</button>
+		<div class="pong-mini-stats">
+			<div class="mini-stats-label">Points</div>
+			<div class="mini-stats-chart">
+				<canvas id="pong-mini-stats-chart" width="160" height="40"></canvas>
+			</div>
+			<div class="mini-stats-misc">
+				<div id="pong-points-breakdown">—</div>
+				<div style="color:#777">|</div>
+				<div id="pong-rebounds-avg">Avg rebounds before point: —</div>
+			</div>
+			<button class="mini-stats-reset-btn" onclick="resetPersistentStats()">Reset</button>
+		</div>
 	</div>
 	
 	<div class="pong-header">
-		<button class="pong-btn" id="one-player-btn" data-route="/pong" data-i18n="onePlayer">
+		<button class="pong-btn local-game-btn" id="one-player-btn" data-route="/pong" data-i18n="onePlayer">
 			One player
 		</button>
-		<button class="pong-btn" id="two-players-btn" data-route="/pong" data-i18n="twoPlayers">
+		<button class="pong-btn local-game-btn" id="two-players-btn" data-route="/pong" data-i18n="twoPlayers">
 			Two players
 		</button>
-		<button class="pong-btn" id="four-players-btn" data-route="/pong" data-i18n="fourPlayers">
+		<button class="pong-btn local-game-btn" id="four-players-btn" data-route="/pong" data-i18n="fourPlayers">
 			Four players
 		</button>
-		<button class="pong-btn" data-route="/pong/online" data-i18n="playOnline">
+		<button class="pong-btn local-game-btn" data-route="/online" data-i18n="playOnline">
 			Play online
+		</button>
+		<button class="pong-btn remote-game-btn" id="remote-2p-btn">
+			2 Players Online
+		</button>
+		<button class="pong-btn remote-game-btn" id="remote-4p-btn">
+			4 Players Online
+		</button>
+		<button class="pong-btn remote-game-btn" id="remote-cancel-btn">
+			Cancel
 		</button>
 	</div>
 	
