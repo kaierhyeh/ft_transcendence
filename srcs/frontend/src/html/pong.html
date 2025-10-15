@@ -2,17 +2,17 @@
 	<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
 	
 	<div class="pong-icons">
-		<div class="pong-mini-stats">
-			<div class="mini-stats-label">Points</div>
-			<div class="mini-stats-chart">
-				<canvas id="pong-mini-stats-chart" width="160" height="40"></canvas>
+		<div class="pong-game-info">
+			<div class="game-info-label">Points</div>
+			<div class="game-info-chart">
+				<canvas id="pong-score-chart" width="160" height="40"></canvas>
 			</div>
-			<div class="mini-stats-misc">
-				<div id="pong-points-breakdown">—</div>
+			<div class="game-info-details">
+				<div id="pong-points-display">—</div>
 				<div style="color:#777">|</div>
-				<div id="pong-rebounds-avg">Avg rebounds before point: —</div>
+				<div id="pong-rally-info">Avg rebounds: —</div>
 			</div>
-			<button class="mini-stats-reset-btn" onclick="resetPersistentStats()">Reset</button>
+			<button class="game-info-reset-btn" onclick="resetGameData()">Reset</button>
 		</div>
 	</div>
 	

@@ -8,12 +8,12 @@
     "build:watch": "tsc --watch"
   },
   "dependencies": {
-    "fastify": "^4.28.1",
-    "better-sqlite3": "^11.3.0",
     "@fastify/static": "^7.0.4",
+    "better-sqlite3": "^11.3.0",
+    "fastify": "^4.28.1",
     "pino-pretty": "^11.2.2"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   }
 }

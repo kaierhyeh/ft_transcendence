@@ -12,7 +12,7 @@ import { initSignup } from "./auth/signup.js";
 import { initLogin } from "./auth/login.js";
 import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
-import { initPong } from "./pong.js";
+import { initPong } from "./pong/pong.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
