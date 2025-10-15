@@ -97,7 +97,8 @@
 	border: 2px solid transparent;
 	transition: all 0.3s ease;
 	cursor: pointer;
-	width: 30%;
+	/* width: 30%; */
+	height: 40px;
 	gap : 5px;
 }
 .user-action-button:hover {
@@ -120,7 +121,8 @@
 	border: 2px solid transparent;
 	transition: all 0.3s ease;
 	cursor: pointer;
-	width: 30%;
+	/* width: 30%; */
+	height: 40px;
 	gap : 5px;
 }
 .user-action-button-red:hover {

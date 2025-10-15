@@ -5,7 +5,7 @@ export interface UserListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
-	user_status: string;
+	user_status: string | null;
 	friendship_status: string | null;
 	from_id: number | null;
 	to_id: number | null;

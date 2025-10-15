@@ -189,10 +189,6 @@ export class FriendController {
 
 	public async getUsersByIds(request: FastifyRequest<{ Body: UserIdsBody }>, reply: FastifyReply) {
 		try {
-			// const sub = request.authUser?.sub;
-			// if (!sub) {
-			// 	return reply.status(401).send({ error: "Unauthorized: No user context" });
-			// }
 			const thisUserId = request.body.id;
 			const userIds = request.body.ids;
 			const users = await this.friendService.getUsersByIds(thisUserId, userIds);

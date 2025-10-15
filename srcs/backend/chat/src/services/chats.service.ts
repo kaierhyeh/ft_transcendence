@@ -22,9 +22,9 @@ export interface UserInfo {
 	user_id: number;
 	username: string;
 	alias: string;
-	user_status: string;
+	user_status: string | null;
 	friendship_status: string | null;
-	from: number | null;
+	from_id: number | null;
 };
 
 
@@ -34,7 +34,6 @@ export class ChatService {
 
 	constructor(private chatRepository: ChatRepository) {}	
 
-	
 	public async getUserChats(userId: number) {
 		// user exist
 		// no -> delete chats with this user
@@ -42,9 +41,7 @@ export class ChatService {
 		let baseUrl = CONFIG.USER_SERVICE.BASE_URL;
 		const chatsInfo = await this.chatRepository.listUserChats(userId);
 		const userIds = chatsInfo.map(c => (c.from_id !== userId ? c.from_id : c.to_id));
-
 		const body = { id: userId, ids: userIds };
-		// ------------------------------- HERE ------------------------------- PROBLEM WITH CONNECTION BETWEEN SERVICES with TOKENS
 		const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
 
 		const res = await fetch(
@@ -58,49 +55,76 @@ export class ChatService {
 				body: JSON.stringify(body)
 			}
 		);
-
 		if (!res.ok) {
 			throw new Error(`Failed to fetch users data: ${res.status} ${res.statusText}`);
 		}
 
 		const usersData = (await res.json()) as UserInfo[];
-
-		// combine into final array
-
 		const userMap = new Map<number, UserInfo>();
 		for (const user of usersData) {
 			userMap.set(user.user_id, user);
 		}
 		
 		const chats: chatListRow[] = [];
-
 		for (const c of chatsInfo) {
 			const otherUserId = c.from_id !== userId ? c.from_id : c.to_id;
 			const u = userMap.get(otherUserId);
+
 			if (!u) continue;
 
 			let user_status = u.user_status;
 			let friendship_status = u.friendship_status;
-			let from: number | null = u.from;
+			let from: number | null = u.from_id;
 
-			// Apply conditions
-			if (friendship_status === null || friendship_status === "pending") {
-				user_status = "unknown";
-				friendship_status = null;
-				from = null;
-			} else if (friendship_status === "blocked") {
-				user_status = "unknown";
+			switch (friendship_status) {
+				case "blocked":
+					if (u.user_id !== from) {
+						// user_id was blocked by this user
+						chats.push({
+							chat_id: c.chat_id,
+							user_id: u.user_id,
+							username: u.username,
+							alias: u.alias,
+							user_status: null,
+							friendship_status,
+							from
+						});
+					} else {
+						// this user was blocked by user_id, hide status and friendship from frontend
+						chats.push({
+							chat_id: c.chat_id,
+							user_id: u.user_id,
+							username: u.username,
+							alias: u.alias,
+							user_status: null,
+							friendship_status: null,
+							from: null
+						});
+					}
+					break;
+				case "accepted":
+					chats.push({
+						chat_id: c.chat_id,
+						user_id: u.user_id,
+						username: u.username,
+						alias: u.alias,
+						user_status,
+						friendship_status,
+						from
+					});
+					break;
+				default:
+					chats.push({
+						chat_id: c.chat_id,
+						user_id: u.user_id,
+						username: u.username,
+						alias: u.alias,
+						user_status: null,
+						friendship_status: null,
+						from: null
+					});
+					break;
 			}
-
-			chats.push({
-				chat_id: c.chat_id,
-				user_id: u.user_id,
-				username: u.username,
-				alias: u.alias,
-				user_status,
-				friendship_status,
-				from
-			});
 		}
 
 		chats.sort((a, b) => a.username.localeCompare(b.username));

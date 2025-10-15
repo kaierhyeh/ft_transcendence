@@ -446,7 +446,7 @@ function renderUserList(users: UserListRow[]): void {
 
 	if (users.length === 0) {
 		usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text">No users</h1>`;
-		hideElementById("userrsList");
+		// hideElementById("userrsList");
 		return;
 	}
 
@@ -558,6 +558,14 @@ async function initUsersSection(): Promise<void> {
 	// showElementById("usersSection");
 	showElementById("usersList");
 	showElementById("menuDropdown");
+
+	const userBtn = document.getElementById("usersSectionButton");
+	if (userBtn)
+		userBtn.className = "menu-control-panel-button-pressed";
+	const chatsBtn = document.getElementById("chatsSectionButton");
+	if (chatsBtn)
+		chatsBtn.className = "menu-control-panel-button";
+
 	await loadUsers();
 }
 

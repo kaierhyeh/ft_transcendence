@@ -128,7 +128,7 @@
 		<!-- CHAT SECTION -->
 
 		<div id="chatsList" class="menu-list-users-chats">
-			<h1 id="noChats" class="menu-empty-list-text" data-i18n="noChats">No chats</h1>
+			<!-- <h1 id="noChats" class="menu-empty-list-text" data-i18n="noChats">No chats</h1> -->
 		</div>
 
 		<div id="chatMessages" class="chat-messages hidden"></div>
@@ -136,21 +136,33 @@
 		<div id="chatLowerPanel" class="chat-lower-panel hidden" type="text">
 			
 			<!-- Invite to game button -->
-			<div class="chat-input-actions">
-				<button id="chatInviteGameButton" class="invite-btn">
-					<svg class="invite-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+			<div id="chatInputActions" class="chat-input-actions">
+				<button id="chatInviteGameButton" class="menu-control-panel-button">
+					<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 						<path fill="currentColor" d="M2 5h20v14H2V5zm18 12V7H4v10h16zM8 9h2v2h2v2h-2v2H8v-2H6v-2h2V9zm6 0h2v2h-2V9zm4 4h-2v2h2v-2z"></path>
 					</svg>
 					<span data-i18n="inviteToGame">Invite to game</span>
 				</button>
+				<button id="blockUserButtonInChat" class="user-action-button-red">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="user-pixel-icon">
+						<path fill="currentColor" d="M5 3h14v2H5V3zm0 16H3V5h2v14zm14 0v2H5v-2h14zm0 0h2V5h-2v14zM10 8H8v2h2V8zm4 0h2v2h-2V8zm-5 8v-2h6v2h2v-2h-2v-2H9v2H7v2h2z"></path>
+					</svg>
+					<span>Block</span>
+				</button>
+				<button id="unblockUserButtonInChat" class="user-action-button hidden">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="user-pixel-icon">
+						<path fill="currentColor" d="M5 3h14v2H5V3zm0 16H3V5h2v14zm14 0v2H5v-2h14zm0 0h2V5h-2v14zM10 8H8v2h2V8zm4 0h2v2h-2V8zm-5 6v-2H7v2h2zm6 0v2H9v-2h6zm0 0h2v-2h-2v2z"></path>
+					</svg>
+					<span>Unblock</span>
+				</button>
 			</div>
 			
 			<!-- Message input box and send button -->
-			<div class="chat-message-box">
+			<div id="chatMessageBox" class="chat-message-box">
 				<input id="chatMessageToSend" data-i18n-placeholder="typeMessage" placeholder="Type a message..." type="text" class="chat-textbox">
-				<button id="chatSendButton" class="send-btn">
-					<svg class="send-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5h-2v4H6v2H4v6h2v-2h6v4h2v-2h2v-2h2v-2h2v-2h-2V9h-2V7h-2V5z"/>
+				<button id="chatSendButton" class="menu-button">
+					<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<path fill="currentColor" d="M14 5h-2v4H6v2H4v6h2v-2h6v4h2v-2h2v-2h2v-2h2v-2h-2V9h-2V7h-2V5z"/>
 					</svg>
 				</button>
 			</div>

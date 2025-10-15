@@ -1,6 +1,6 @@
 import {openChatsSection} from "./menu.chat.js";
-import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
 import {openUsersSection} from "./menu.users.js";
+import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
 // import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
@@ -96,8 +96,8 @@ function clearEventsInSections(): void {
 	if(!initializeGlobals()) {
 		console.error("MENU: globals reinitialization failed: Missing elements");
 	}
-	document.getElementById("usersList")!.innerHTML = '<h1 id="noUsers" class="menu-empty-list-text" data-i18n="noUsers">No users</h1>';
-	document.getElementById("chatsList")!.innerHTML = '<h1 id="noChats" class="menu-empty-list-text" data-i18n="noChats">No chats</h1>';
+	document.getElementById("usersList")!.innerHTML = '';
+	document.getElementById("chatsList")!.innerHTML = '';
 }
 
 // To hide elements that are not part of the menu

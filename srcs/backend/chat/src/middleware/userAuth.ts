@@ -43,7 +43,6 @@ export async function userAuthMiddleware(
 			});
 		}
 
-
 		// Verify the user JWT token
 		const payload = await verifyUserSessionJWT(token);
 		
