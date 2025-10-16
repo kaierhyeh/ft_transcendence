@@ -23,6 +23,7 @@ export interface Player {
 export interface GameCreationData {
   format: GameFormat;
   mode: GameMode;
+  online: boolean;
   tournament_id?: number;
   players: Player[];
 };
@@ -45,6 +46,7 @@ export class GameClient {
         body: JSON.stringify({
           mode: data.mode,
           format: data.format,
+          online: data.online,
           tournament_id: data.tournament_id,
           participants: data.players  // Adjust field name to match game service
         })

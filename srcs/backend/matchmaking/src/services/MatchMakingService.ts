@@ -52,6 +52,7 @@ export class MatchMakingService {
     const game_creation_data: GameCreationData = {
       format: data.format,
       mode: data.mode,
+      online: data.online,
       tournament_id: data.tournament_id,
       players
     };
@@ -110,6 +111,7 @@ export class MatchMakingService {
     const game_creation_data: GameCreationData = {
       format: data.format,
       mode: data.mode,
+      online: data.online,
       players
     };
 

@@ -32,6 +32,10 @@ export const matchMakingSchema = {
       maxItems: 4,
       items: participantSchema,
     },
+    online: {
+      type: "boolean",
+      default: false
+    },
   },
   additionalProperties: false,
 } as const;

@@ -37,11 +37,13 @@ export class GameSession {
     private logger: FastifyBaseLogger;
     private disconnected_player_info?: GameParticipant;
     private forfeit: boolean = false;
+    private online: boolean;
 
     constructor(data: GameCreationData, logger: FastifyBaseLogger) {
         this.game_format = data.format;
         this.game_mode = data.mode;
         this.tournament_id = data.tournament_id;
+        this.online = data.online;
         this.players = this.initPlayers_(data.participants);
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
@@ -192,7 +194,7 @@ export class GameSession {
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (!this.started_at || !this.ended_at || !game_state.winner)
+        if (!this.started_at || !this.ended_at || !game_state.winner || (this.forfeit && !this.online))
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
@@ -210,6 +212,7 @@ export class GameSession {
                 format: this.game_format,
                 mode: this.game_mode,
                 tournament_id: this.tournament_id ?? null,
+                online: this.online,
                 forfeit: this.forfeit,
                 created_at: toSqlDate(this.created_at),
                 started_at: toSqlDate(this.started_at),

@@ -146,7 +146,17 @@ export function initPong() {
             
             return participants;
         } else {
-            return Array(4).fill({ type: "guest", user_id: undefined });
+            const participants: GameParticipant[] = [
+                {
+                    type: user.isLoggedIn() ? "registered" : "guest",
+                    user_id: user.user_id ?? undefined
+                }
+            ];
+            participants.push({ type: "guest", user_id: undefined });
+            participants.push({ type: "guest", user_id: undefined });
+            participants.push({ type: "guest", user_id: undefined });
+
+            return participants;
         }
     }
 }

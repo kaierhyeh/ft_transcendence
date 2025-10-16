@@ -44,6 +44,10 @@ export const createGameSchema = {
       type: "string",
       enum: ["solo", "pvp", "tournament"],
     },
+    online: {
+      type: "boolean",
+      default: false,
+    },
     tournament_id: { type: "number"},
     participants: {
       type: "array",
