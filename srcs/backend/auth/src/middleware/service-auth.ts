@@ -38,8 +38,6 @@ export async function internalAuthMiddleware(
     
   } catch (error) {
     console.error('Internal auth middleware error:', error);
-    return reply.status(500).send({ 
-      error: 'Internal authentication error'
-    });
+    return reply.status(500).send({ error: 'Internal authentication error'});
   }
 }

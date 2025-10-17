@@ -115,10 +115,8 @@ export function initLogin() {
 			// Clear the stored page and redirect to it
 			sessionStorage.removeItem('previousPage');
 			window.location.href = previousPage;
-		} else {
-			// Default redirect to homepage
+		} else		// Default redirect to homepage
 			window.location.href = '/';
-		}
 	}
 
 }
@@ -211,9 +209,9 @@ function showOAuthLoadingOverlay() {
 
 function hideOAuthLoadingOverlay() {
 	const overlay = document.getElementById('oauth-loading-overlay');
-	if (overlay) {
+
+	if (overlay)
 		overlay.remove();
-	}
 }
 
 // Export to window so it can be called from other modules

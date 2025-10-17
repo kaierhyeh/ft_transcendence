@@ -81,9 +81,8 @@ export default async function twofaRoutes(fastify: FastifyInstance, options: any
 			// Verify the token with the secret
 			const isValid = speakeasy.totp.verify({ secret, encoding: 'base32', token });
 
-			if (!isValid) {
+			if (!isValid)
 				return reply.code(400).send({ success: false, error: "Invalid verification code." });
-			}
 
 			// Store the secret in the users database via usersClient
 			await usersClient.update2FASettings(userId, true, secret);
@@ -114,18 +113,16 @@ export default async function twofaRoutes(fastify: FastifyInstance, options: any
 
 			// Verify the temporary token
 			const payload = await authService.verifyTempToken(temp_token);
-			if (!payload.valid || !payload.payload) {
+			if (!payload.valid || !payload.payload)
 				return reply.code(400).send({ success: false, error: 'Invalid or expired temp token.' });
-			}
 
 			const userId = (payload.payload as any).user_id;
 			
 			// Check if user has 2FA enabled via usersClient
 			const twoFAStatus = await usersClient.get2FAStatus(userId);
 			
-			if (!twoFAStatus.enabled || !twoFAStatus.secret) {
+			if (!twoFAStatus.enabled || !twoFAStatus.secret)
 				return reply.code(400).send({ success: false, error: "2FA is not enabled for this user." });
-			}
 
 			// Verify the 2FA code using speakeasy
 			const isValid = speakeasy.totp.verify({
@@ -134,9 +131,8 @@ export default async function twofaRoutes(fastify: FastifyInstance, options: any
 				token: twofaCode
 			});
 			
-			if (!isValid) {
+			if (!isValid)
 				return reply.code(400).send({ success: false, error: "Invalid 2FA code." });
-			}
 
 			// Generate access and refresh tokens
 			const { accessToken, refreshToken } = await jwtService.generateTokens(userId);

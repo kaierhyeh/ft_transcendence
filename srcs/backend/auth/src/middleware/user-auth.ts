@@ -235,9 +235,8 @@ export const userSessionMiddleware = async (request: FastifyRequest, reply: Fast
 export const gameSessionMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
 	const gameToken = (request as any).cookies?.accessToken;
 	
-	if (!gameToken) {
+	if (!gameToken)
 		return reply.code(401).send({ error: 'No game session token provided.' });
-	}
 
 	const validation = await authService.validateToken(gameToken, JWTType.GAME_SESSION);
 	
@@ -259,9 +258,8 @@ export const gameSessionMiddleware = async (request: FastifyRequest, reply: Fast
 export const internalAccessMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
 	const internalToken = (request as any).cookies?.accessToken;
 	
-	if (!internalToken) {
+	if (!internalToken)
 		return reply.code(401).send({ error: 'No internal access token provided.' });
-	}
 
 	const validation = await authService.validateToken(internalToken, JWTType.INTERNAL_ACCESS);
 	
