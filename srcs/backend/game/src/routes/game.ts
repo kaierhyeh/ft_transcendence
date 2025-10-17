@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createGameSchema, GameCreationData, GameIdParams,gameIdSchema } from "../schemas";
-import { internalAuthMiddleware } from "../middleware/internalAuth";
+// import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
   // POST /create - Create a new game session [protected]
@@ -8,7 +8,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     "/create",
     { 
       schema: { body: createGameSchema },
-      preHandler: internalAuthMiddleware  // ← Simple protection!
+      // preHandler: internalAuthMiddleware  // ← Simple protection!
     },
     async (request, reply) => {
       const data = request.body;

@@ -1,16 +1,18 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameMode, GameFormat, GameCreationData } from '../schemas';
-import { Team, GameMessage } from '../types'
+import { Team, GameMessage, PlayerSlot } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
 import { toSqlDate } from '../utils/db';
 
 type Player = GameParticipant & {
+    team: Team;
+    slot: PlayerSlot;
     socket?: SocketStream;
 }
 
-type PlayerMap = Map<number, Player>;
+type PlayerMap = Map<string, Player>;
 
 export type SessionPlayerMap = PlayerMap;
 
@@ -35,7 +37,7 @@ export class GameSession {
     private ended_at: Date | undefined;
     private winner: Team | undefined;
     private logger: FastifyBaseLogger;
-    private disconnected_player_info?: GameParticipant;
+    private disconnected_player_info?: Player;
     private forfeit: boolean = false;
     private online: boolean;
 
@@ -53,18 +55,62 @@ export class GameSession {
 
     private initPlayers_(participants: GameParticipant[]): PlayerMap {
         const players: PlayerMap = new Map();
-        participants.forEach((p, idx) => {
-            players.set(p.player_id, {
-                player_id: p.player_id,
-                type: p.type,
-                team: p.team,
-                slot: p.slot,
-                user_id: p.user_id,
-                username: p.username,
-                socket: undefined,
+
+        if (this.game_format === '1v1') {
+
+            participants.forEach((p, idx) => {
+                players.set(p.participant_id, {
+                    participant_id: p.participant_id,
+                    type: p.type,
+                    team: idx % 2 === 0 ? 'left' : 'right',
+                    slot: idx % 2 === 0 ? 'left' : 'right',
+                    user_id: p.user_id,
+                    username: p.username,
+                    socket: undefined,
+                });
             });
-        });
+        }
+        else {
+             if (participants.length !== 4) {
+                throw new Error(
+                    `Multi-player games require exactly 4 participants, got ${participants.length}`,
+                );
+            }
+
+            
+            participants.forEach((p, idx) => {
+                 // Team assignment: first 2 players = "left", last 2 players = "right"
+                 const team: Team = idx < 2 ? "left" : "right";
+                 
+                 // Slot assignment based on array order
+                 const slot: PlayerSlot = this.getMultiPlayerSlot(idx);
+
+                players.set(p.participant_id, {
+                    participant_id: p.participant_id,
+                    type: p.type,
+                    team,
+                    slot,
+                    user_id: p.user_id,
+                    username: p.username,
+                    socket: undefined,
+                });
+            });
+        }
+
         return players;
+    }
+
+    private getMultiPlayerSlot(index: number): PlayerSlot {
+        switch (index) {
+        case 0: return "top-left";     // Player 1: top-left
+        case 1: return "bottom-left";  // Player 2: bottom-left  
+        case 2: return "top-right";    // Player 3: top-right
+        case 3: return "bottom-right"; // Player 4: bottom-right
+        default:
+            throw new Error(
+            `Invalid player index for multi-player: ${index}`
+            );
+        }
     }
 
     public get config(): GameConf {
@@ -126,10 +172,10 @@ export class GameSession {
         });
     }
     
-    public connectPlayer(player_id: number, connection: SocketStream): void {
-        const player = this.players.get(player_id);
+    public connectPlayer(participant_id: string, connection: SocketStream): void {
+        const player = this.players.get(participant_id);
 
-        this.logger.info(`Player connecting with player_id: ${player_id}`);
+        this.logger.info(`Player connecting with participant_id: ${participant_id}`);
         this.logger.info(`found player : ${player !== undefined}`);
 
         if (!player) {
@@ -149,7 +195,7 @@ export class GameSession {
         });
 
         connection.socket.on("close", () => {
-            this.disconnectPlayer(player_id);
+            this.disconnectPlayer(participant_id);
         });
     }
 
@@ -160,17 +206,17 @@ export class GameSession {
         });
     }
 
-    public disconnectPlayer(player_id: number): void {
-        const player = this.players.get(player_id);
+    public disconnectPlayer(participant_id: string): void {
+        const player = this.players.get(participant_id);
         if (!player) return;
         player.socket = undefined;
         if (!this.winner) {
             this.forfeit = true;
             this.winner = player.team === 'left' ? 'right' : 'left';
             this.disconnected_player_info = player;
-            this.logger.info(`Forfeit detected: Player ${player_id} disconnected.`);
+            this.logger.info(`Forfeit detected: Player ${participant_id} disconnected.`);
         }
-        this.logger.info(`Player disconnected: ${player_id}, slot: ${player.slot}, team: ${player.team}`);
+        this.logger.info(`Player disconnected: ${participant_id}, slot: ${player.slot}, team: ${player.team}`);
     }
    
     public disconnectViewer(connection: SocketStream): void {

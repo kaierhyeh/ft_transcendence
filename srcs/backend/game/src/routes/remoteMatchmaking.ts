@@ -1,19 +1,18 @@
-import { FastifyInstance } from "fastify";
-import { matchmakingRequestSchema, GameParticipant } from "../schemas";
+import { FastifyInstance, FastifyRequest } from "fastify";
+import { matchmakingRequestSchema, MatchmakingRequest } from "../schemas";
 
-function handleJoinRequest(request: any, reply: any): void {
-  // const mode = request.body.mode;
-  // const participant_id = request.body.participant_id;
+function handleJoinRequest(request: FastifyRequest<{ Body: MatchmakingRequest }>, reply: any): void {
+  const {format, participant } = request.body;
 
-  // const participant: GameParticipant = {
-  //   user_id: 0,
-  //   participant_id: participant_id,
-  //   is_ai: false
-  // };
+  if (participant.type === 'ai') {
+      throw new Error(
+        'AI players cannot join matchmaking queues',
+      );
+    }
 
-  // const fastify = request.server;
-  // const response = fastify.matchmaking.joinQueue(participant, mode);
-  // reply.send(response);
+  const fastify = request.server;
+  const response = fastify.matchmaking.joinQueue(participant, format);
+  reply.send(response);
 }
 
 function handleStatusRequest(request: any, reply: any): void {
@@ -66,7 +65,7 @@ function handleWebSocketConnection(connection: any, request: any): void {
 
 export default function matchmakingRoutes(fastify: FastifyInstance, options: any, done: Function): void {
 
-  fastify.post("/join", { schema: { body: matchmakingRequestSchema } }, handleJoinRequest);
+  fastify.post<{ Body: MatchmakingRequest }>("/join", { schema: { body: matchmakingRequestSchema } }, handleJoinRequest);
 
   fastify.get("/status", handleStatusRequest);
 

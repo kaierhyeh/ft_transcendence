@@ -2,13 +2,12 @@
 
 import { GameConfig, GameFormat, GameMode, GameParticipant, MatchMakingResult } from "./types";
 
-const API_MATCHMAKING_ENDPOINT = `${window.location.origin}/api/match`;
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
 // --- Matchmaking Service API ---
 export async function createMatch(gameMode: GameMode,gameFormat: GameFormat, participants: GameParticipant[]): Promise<MatchMakingResult> {
     try {
-        const response = await fetch(`${API_MATCHMAKING_ENDPOINT}/make`, {
+        const response = await fetch(`${API_GAME_ENDPOINT}/create0`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

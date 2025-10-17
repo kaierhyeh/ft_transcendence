@@ -4,8 +4,8 @@ import { GameEndedMessage, GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
-import { toInteger } from "../utils/type-converters";
-import { verifyGameSessionJWT } from "../services/JwtVerifierService";
+// import { toInteger } from "../utils/type-converters";
+// import { verifyGameSessionJWT } from "../services/JwtVerifierService";
 
 let next_id = 1;
 
@@ -56,12 +56,7 @@ export class LiveSessionManager {
                     return; 
                 }
                 try {
-                    const payload = await verifyGameSessionJWT(ticket);
-                    if (!payload.game_id || payload.game_id !== id) {
-                        throw new Error("Game ID mismatch");
-                    }
-                    const player_id = toInteger(payload.sub);
-                    session.connectPlayer(player_id, connection);
+                    session.connectPlayer(ticket, connection);
                 } catch (err) {
                     this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "JWT verification failed");
                     connection.socket.close(4001, "Invalid or expired token");

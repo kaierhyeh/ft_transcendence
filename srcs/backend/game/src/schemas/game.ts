@@ -2,20 +2,12 @@ import { FromSchema } from "json-schema-to-ts";
 
 export const playerSchema = {
   type: "object",
-  required: ["player_id", "type", "team", "slot"],
+  required: ["participant_id", "type"],
   properties: {
-    player_id: { type: "number" },
+    participant_id: { type: "string" },
     type: {
       type: "string",
       enum: ["registered", "guest", "ai"],
-    },
-    team: {
-      type: "string",
-      enum: ["left", "right"],
-    },
-    slot: {
-      type: "string",
-      enum: ["left", "right", "top-left", "bottom-left", "top-right", "bottom-right"],
     },
     user_id: { type: "number" },
     username: { type: "string" },
@@ -68,14 +60,14 @@ export type GameMode = GameCreationData["mode"];
 export type GameFormat = GameCreationData["format"];
 //REMOTE_PLAYER_ADD
 export const matchmakingRequestSchema = {
-  type: "object",
-  required: ["mode", "participant_id"],
+ type: "object",
+  required: ["format", "participant"],
   properties: {
-    mode: {
-      type: "string",
-      enum: ["2p", "4p"],
+    format : {
+        type: "string",
+        enum: ["1v1", "2v2"]
     },
-    participant_id: { type: "string" },
+    participant:  playerSchema,
   },
   additionalProperties: false,
 } as const;
@@ -88,9 +80,9 @@ export const matchmakingResponseSchema = {
       type: "string",
       enum: ["queue_joined", "game_ready", "queue_status", "error"],
     },
-    mode: {
+    format: {
       type: "string",
-      enum: ["2p", "4p"],
+      enum: ["1v1", "2v2"],
     },
     position: { type: "number" },
     players_needed: { type: "number" },
@@ -102,5 +94,5 @@ export const matchmakingResponseSchema = {
 
 export type MatchmakingRequest = FromSchema<typeof matchmakingRequestSchema>;
 export type MatchmakingResponse = FromSchema<typeof matchmakingResponseSchema>;
-export type MatchmakingMode = MatchmakingRequest["mode"];
+export type MatchmakingFormat = MatchmakingRequest["format"];
 //END_REMOTE_PLAYER_ADD
