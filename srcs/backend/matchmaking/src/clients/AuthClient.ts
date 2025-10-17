@@ -1,5 +1,6 @@
 import { CONFIG } from "../config";
 import { InternalAuthClient } from "./InternalAuthClient";
+import { AppError, ErrorCode } from "../errors";
 
 interface ErrorResponse {
   message?: string;
@@ -16,31 +17,42 @@ export class AuthClient {
   private base_url = CONFIG.AUTH_SERVICE.BASE_URL;
   private internalAuthClient = new InternalAuthClient();
 
-
   async generateJWT(claims: GameSessionClaims): Promise<{ token: string }> {
     const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
 
-    const response = await fetch(`${this.base_url}/auth/token/game`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...internalAuthHeaders,
-      },
-      body: JSON.stringify(claims)
-    });
+    try {
+      const response = await fetch(`${this.base_url}/auth/token/game`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...internalAuthHeaders,
+        },
+        body: JSON.stringify(claims)
+      });
 
-    if (!response.ok) {
-      const errorBody = await response.json() as ErrorResponse;
-      const errorMessage = errorBody.message || errorBody.error || `Password hash failed: ${response.status}`;
+      if (!response.ok) {
+        const errorBody = await response.json() as ErrorResponse;
+        const message = errorBody.message || errorBody.error || 'Auth service failed';
+        
+        throw new AppError(
+          message,
+          response.status,
+          ErrorCode.AUTH_SERVICE_ERROR
+        );
+      }
+
+      return await response.json() as { token: string };
       
-      const error = new Error(errorMessage);
-      (error as any).status = response.status;
-      (error as any).details = errorBody;
-      throw error;
-
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      throw new AppError(
+        'Failed to connect to auth service',
+        503,
+        ErrorCode.SERVICE_UNAVAILABLE
+      );
     }
-
-    return await response.json() as { token: string };
   }
-
 }

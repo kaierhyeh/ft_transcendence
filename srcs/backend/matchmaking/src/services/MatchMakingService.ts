@@ -1,7 +1,8 @@
 import { AuthClient, GameSessionClaims } from '../clients/AuthClient';
 import { GameClient, GameCreationData, Player } from '../clients/GameClient';
 import { UsersClient } from '../clients/UsersClient';
-import { MatchMakingData } from '../schemas';
+import { GameFormat, JoinMatchData, MatchMakingData, MatchParticipant } from '../schemas';
+import { AppError, ErrorCode } from '../errors';
 
 type Team = "left" | "right";
 type PlayerSlots = "left" | "right" | "top-left" | "bottom-left" | "top-right" | "bottom-right";
@@ -11,16 +12,24 @@ export interface Match {
   jwt_tickets: string[];
 }
 
+interface QueueEntry {
+  participant: MatchParticipant;
+}
+
 export class MatchMakingService {
   private authClient: AuthClient;
   private gameClient: GameClient;
   private usersClient: UsersClient;
+  private queues: Map<GameFormat, QueueEntry[]>;
 
   constructor(
   ) {
     this.authClient = new AuthClient();
     this.gameClient = new GameClient();
     this.usersClient = new UsersClient();
+    this.queues = new Map();
+    this.queues.set("1v1", []);
+    this.queues.set("2v2", []);
   }
 
   public async make(data: MatchMakingData): Promise<Match> {
@@ -29,6 +38,30 @@ export class MatchMakingService {
     } 
     return this.make1v1Game(data);
   }
+
+  public async join(data: JoinMatchData) {
+    // Business rule validation: AI players cannot join matchmaking
+    if (data.participant.type === 'ai') {
+      throw new AppError(
+        'AI players cannot join matchmaking queues',
+        400,
+        ErrorCode.INVALID_PARTICIPANT
+      );
+    }
+
+    //  if (this.isPlayerAlreadyInQueue(participant.participant_id)) {
+    //   return {
+    //     type: "error",
+    //     message: "Already in queue"
+    //   };
+    // }
+
+    
+  }
+
+  // private isPlayerAlreadyInQueue(player_id: number): boolean {
+
+  // }
 
   private async make1v1Game(data: MatchMakingData): Promise<Match> {
     // Map participants to game players for game creation
@@ -81,7 +114,11 @@ export class MatchMakingService {
   private async make2v2Game(data: MatchMakingData): Promise<Match> {
     // Validate we have exactly 4 participants for multi-player
     if (data.participants.length !== 4) {
-      throw new Error(`Multi-player games require exactly 4 participants, got ${data.participants.length}`);
+      throw new AppError(
+        `Multi-player games require exactly 4 participants, got ${data.participants.length}`,
+        400,
+        ErrorCode.INVALID_PARTICIPANT_COUNT
+      );
     }
 
     // Map participants to game players with specific team/slot assignments
@@ -143,7 +180,11 @@ export class MatchMakingService {
       case 2: return "top-right";    // Player 3: top-right
       case 3: return "bottom-right"; // Player 4: bottom-right
       default:
-        throw new Error(`Invalid player index for multi-player: ${index}`);
+        throw new AppError(
+          `Invalid player index for multi-player: ${index}`,
+          500,
+          ErrorCode.INVALID_PLAYER_INDEX
+        );
     }
   }
 

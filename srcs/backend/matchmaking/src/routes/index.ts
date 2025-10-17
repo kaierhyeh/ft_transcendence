@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { MatchMakingController } from '../controllers/MatchMakingController';
-import { MatchMakingData, matchMakingSchema } from "../schemas";
+import { joinMatchSchema, MatchMakingData, matchMakingSchema } from "../schemas";
 
 export default async function matchMakingRoutes(fastify: FastifyInstance) {
   const matchMakingController = new MatchMakingController();
@@ -11,5 +11,11 @@ export default async function matchMakingRoutes(fastify: FastifyInstance) {
     { schema: { body: matchMakingSchema } },
     matchMakingController.make.bind(matchMakingController)
   );
+
+  fastify.post(
+    "/join",
+    { schema: { body: joinMatchSchema } },
+    matchMakingController.join.bind(matchMakingController)
+  )
 
 }

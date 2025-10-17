@@ -1,0 +1,37 @@
+/**
+ * Centralized error codes for the matchmaking service
+ * Using const object for type safety without runtime overhead
+ */
+export const ErrorCode = {
+  // Validation errors (400)
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_PARTICIPANT: 'INVALID_PARTICIPANT',
+  INVALID_FORMAT: 'INVALID_FORMAT',
+  INVALID_GAME_MODE: 'INVALID_GAME_MODE',
+  INSUFFICIENT_PLAYERS: 'INSUFFICIENT_PLAYERS',
+  INVALID_PARTICIPANT_COUNT: 'INVALID_PARTICIPANT_COUNT',
+  INVALID_PLAYER_INDEX: 'INVALID_PLAYER_INDEX',
+  
+  // Not found errors (404)
+  MATCH_NOT_FOUND: 'MATCH_NOT_FOUND',
+  GAME_NOT_FOUND: 'GAME_NOT_FOUND',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  
+  // Conflict errors (409)
+  QUEUE_FULL: 'QUEUE_FULL',
+  ALREADY_IN_QUEUE: 'ALREADY_IN_QUEUE',
+  
+  // External service errors (502/503)
+  AUTH_SERVICE_ERROR: 'AUTH_SERVICE_ERROR',
+  GAME_SERVICE_ERROR: 'GAME_SERVICE_ERROR',
+  USERS_SERVICE_ERROR: 'USERS_SERVICE_ERROR',
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  
+  // Internal errors (500)
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  NOT_IMPLEMENTED: 'NOT_IMPLEMENTED',
+} as const;
+
+// Type derived from the const object
+export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
