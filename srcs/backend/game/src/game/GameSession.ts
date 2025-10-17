@@ -5,6 +5,7 @@ import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
 import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
 import { toSqlDate } from '../utils/db';
+import { UsersClient } from '../clients/UsersClient';
 
 type Player = GameParticipant & {
     team: Team;
@@ -36,39 +37,65 @@ export class GameSession {
     private started_at: Date | undefined;
     private ended_at: Date | undefined;
     private winner: Team | undefined;
-    private logger: FastifyBaseLogger;
     private disconnected_player_info?: Player;
     private forfeit: boolean = false;
     private online: boolean;
 
-    constructor(data: GameCreationData, logger: FastifyBaseLogger) {
+    // Private constructor - cannot be called directly
+    private constructor(
+        data: GameCreationData, 
+        private logger: FastifyBaseLogger, 
+        private usersClient: UsersClient,
+        players: PlayerMap
+    ) {
         this.game_format = data.format;
         this.game_mode = data.mode;
         this.tournament_id = data.tournament_id;
         this.online = data.online;
-        this.players = this.initPlayers_(data.participants);
+        this.players = players; // Already initialized
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.game_engine = new GameEngine(this.game_format, this.players);
-        this.logger = logger;
     }
 
-    private initPlayers_(participants: GameParticipant[]): PlayerMap {
+    // Static async factory method
+    public static async create(
+        data: GameCreationData,
+        logger: FastifyBaseLogger,
+        usersClient: UsersClient
+    ): Promise<GameSession> {
+        // Fetch usernames asynchronously before construction
+        const players = await GameSession.initPlayers_(data, usersClient);
+        
+        // Now construct the instance with pre-initialized players
+        return new GameSession(data, logger, usersClient, players);
+    }
+
+    private static async initPlayers_(
+        data: GameCreationData,
+        usersClient: UsersClient
+    ): Promise<PlayerMap> {
+        const participants = data.participants;
         const players: PlayerMap = new Map();
 
-        if (this.game_format === '1v1') {
+        if (data.format === '1v1') {
 
-            participants.forEach((p, idx) => {
+            for (let idx = 0; idx < participants.length; idx++) {
+                const p = participants[idx];
+                const username = p.user_id 
+                    ? (await usersClient.getUserName(p.user_id)).username 
+                    : undefined;
+
                 players.set(p.participant_id, {
                     participant_id: p.participant_id,
                     type: p.type,
                     team: idx % 2 === 0 ? 'left' : 'right',
                     slot: idx % 2 === 0 ? 'left' : 'right',
                     user_id: p.user_id,
-                    username: p.username,
+                    username: username,
                     socket: undefined,
                 });
-            });
+            }
         }
         else {
              if (participants.length !== 4) {
@@ -78,12 +105,17 @@ export class GameSession {
             }
 
             
-            participants.forEach((p, idx) => {
-                 // Team assignment: first 2 players = "left", last 2 players = "right"
-                 const team: Team = idx < 2 ? "left" : "right";
-                 
-                 // Slot assignment based on array order
-                 const slot: PlayerSlot = this.getMultiPlayerSlot(idx);
+            for (let idx = 0; idx < participants.length; idx++) {
+                const p = participants[idx];
+                // Team assignment: first 2 players = "left", last 2 players = "right"
+                const team: Team = idx < 2 ? "left" : "right";
+                
+                // Slot assignment based on array order
+                const slot: PlayerSlot = GameSession.getMultiPlayerSlot_(idx);
+
+                const username = p.user_id 
+                    ? (await usersClient.getUserName(p.user_id)).username 
+                    : undefined;
 
                 players.set(p.participant_id, {
                     participant_id: p.participant_id,
@@ -91,16 +123,16 @@ export class GameSession {
                     team,
                     slot,
                     user_id: p.user_id,
-                    username: p.username,
+                    username: username,
                     socket: undefined,
                 });
-            });
+            }
         }
 
         return players;
     }
 
-    private getMultiPlayerSlot(index: number): PlayerSlot {
+    private static getMultiPlayerSlot_(index: number): PlayerSlot {
         switch (index) {
         case 0: return "top-left";     // Player 1: top-left
         case 1: return "bottom-left";  // Player 2: bottom-left  
@@ -179,7 +211,7 @@ export class GameSession {
         this.logger.info(`found player : ${player !== undefined}`);
 
         if (!player) {
-            connection.socket.close(4001, "Invalid player_id");
+            connection.socket.close(4001, "Invalid participant_id");
             return;
         }
 

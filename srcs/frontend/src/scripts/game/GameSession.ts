@@ -30,7 +30,7 @@ export async function createGameSession(
     participants: GameParticipant[]
 ): Promise<GameSession> {
     // 1. Create match
-    const game_id = await createMatch(mode, format, participants);
+    const { game_id } = await createMatch(mode, format, participants);
     
     console.log(`Game session ${game_id} created (${mode}, ${format})`);
     
@@ -54,7 +54,7 @@ export async function createGameSession(
         
         await new Promise<void>((resolve, reject) => {
             ws.onopen = () => {
-                ws.send(JSON.stringify({ type: "join", ticket: participants[i].participant_id }));
+                ws.send(JSON.stringify({ type: "join", participant_id: participants[i].participant_id }));
                 resolve();
             };
             ws.onerror = (error) => reject(error);

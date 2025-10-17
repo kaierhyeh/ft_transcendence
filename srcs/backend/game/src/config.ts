@@ -44,7 +44,10 @@ export const CONFIG = {
     BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000",
   },
 
-  
+  USERS_SERVICE: {
+    BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-users:3000"
+  },
+
   // Internal auth credentials
   INTERNAL_AUTH: {
     CLIENT_ID: clientCredentials.clientId,

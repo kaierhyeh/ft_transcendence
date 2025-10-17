@@ -12,7 +12,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const data = request.body;
-      const game_id = fastify.live_sessions.createGameSession(data);
+      const game_id = await fastify.live_sessions.createGameSession(data);
       reply.status(201).send({game_id: game_id});
   });
 

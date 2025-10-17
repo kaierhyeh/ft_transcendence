@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { matchmakingRequestSchema, MatchmakingRequest } from "../schemas";
 
-function handleJoinRequest(request: FastifyRequest<{ Body: MatchmakingRequest }>, reply: any): void {
+async function handleJoinRequest(request: FastifyRequest<{ Body: MatchmakingRequest }>, reply: any): Promise<void> {
   const {format, participant } = request.body;
 
   if (participant.type === 'ai') {
@@ -11,7 +11,7 @@ function handleJoinRequest(request: FastifyRequest<{ Body: MatchmakingRequest }>
     }
 
   const fastify = request.server;
-  const response = fastify.matchmaking.joinQueue(participant, format);
+  const response = await fastify.matchmaking.joinQueue(participant, format);
   reply.send(response);
 }
 
@@ -30,13 +30,17 @@ function handleWebSocketConnection(connection: any, request: any): void {
   const participantId = request.query.participant_id;
   const fastify = request.server;
   
+  console.log("Handling WebSocket connection for participant:", participantId);
+
   if (!participantId) {
+    console.log("Missing participant_id");
     connection.socket.close(4001, "Missing participant_id");
     return;
   }
   
   const isInQueue = fastify.matchmaking.isPlayerAlreadyInQueue(participantId);
   if (!isInQueue) {
+    console.log(`Participant ${participantId} not in queue`);
     connection.socket.close(4002, "Not in queue");
     return;
   }
@@ -50,7 +54,7 @@ function handleWebSocketConnection(connection: any, request: any): void {
         connection.socket.send(JSON.stringify({ type: "pong" }));
       }
     } catch (error) {
-      console.error("Invalid message:", error);
+      console.log("Invalid message:", error);
     }
   });
   

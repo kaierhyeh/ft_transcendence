@@ -139,23 +139,6 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # backend-matchmaking:
-  #   container_name: backend-matchmaking
-  #   build:
-  #     context: ./backend/matchmaking
-  #     dockerfile: Dockerfile
-  #   secrets:
-  #     - matchmaking-service-client.env
-  #   networks:
-  #     - pong_network
-  #   init: true
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
-  #     interval: 5m
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
-  #   restart: unless-stopped
 
   backend-chat:
     container_name: backend-chat

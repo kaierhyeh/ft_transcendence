@@ -5,7 +5,7 @@ import { GameConfig, GameFormat, GameMode, GameParticipant } from "./types";
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
 // --- Matchmaking Service API ---
-export async function createMatch(gameMode: GameMode,gameFormat: GameFormat, participants: GameParticipant[]): Promise<number> {
+export async function createMatch(gameMode: GameMode,gameFormat: GameFormat, participants: GameParticipant[]): Promise<{game_id: number}> {
     try {
         const response = await fetch(`${API_GAME_ENDPOINT}/create`, {
             method: 'POST',
@@ -23,7 +23,7 @@ export async function createMatch(gameMode: GameMode,gameFormat: GameFormat, par
             throw new Error(`Matchmaking failed: ${response.status}`);
         }
 
-        return await response.json() as number;
+        return await response.json() as {game_id: number};
     } catch (error) {
         console.error('Failed to create match:', error);
         throw error;

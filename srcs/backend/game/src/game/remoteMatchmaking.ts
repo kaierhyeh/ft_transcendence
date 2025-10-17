@@ -19,7 +19,7 @@ export class MatchmakingManager {
     this.waitingConnections = new Map();
   }
 
-  joinQueue(participant: GameParticipant, format: MatchmakingFormat): MatchmakingResponse {
+  async joinQueue(participant: GameParticipant, format: MatchmakingFormat): Promise<MatchmakingResponse> {
     if (this.isPlayerAlreadyInQueue(participant.participant_id)) {
       return {
         type: "error",
@@ -40,7 +40,7 @@ export class MatchmakingManager {
     }
     
     if (queue.length >= playersNeeded) {
-      return this.createGameFromQueue(format);
+      return await this.createGameFromQueue(format);
     }
 
     return {
@@ -51,7 +51,7 @@ export class MatchmakingManager {
     };
   }
 
-  createGameFromQueue(format: MatchmakingFormat): MatchmakingResponse {
+  async createGameFromQueue(format: MatchmakingFormat): Promise<MatchmakingResponse> {
     const queue = this.queues.get(format)!;
     
     let playersNeeded = 2;
@@ -72,7 +72,7 @@ if (format == "2v2") {
   gameType = "multi";
 }
 
-const gameId = this.sessionManager.createGameSession({
+const gameId = await this.sessionManager.createGameSession({
   format,
   mode: 'pvp',
   online: true,

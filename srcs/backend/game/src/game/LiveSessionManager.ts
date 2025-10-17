@@ -4,6 +4,7 @@ import { GameEndedMessage, GameSession } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
+import { UsersClient } from "../clients/UsersClient";
 // import { toInteger } from "../utils/type-converters";
 // import { verifyGameSessionJWT } from "../services/JwtVerifierService";
 
@@ -11,17 +12,19 @@ let next_id = 1;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
+    private usersClient: UsersClient;
 
     constructor(
         private session_repo: SessionRepository,
         private logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
+        this.usersClient = new UsersClient();
     }
 
-    public createGameSession(data: GameCreationData): number {
+    public async createGameSession(data: GameCreationData): Promise<number> {
         const game_id = next_id++;
 
-        const new_game = new GameSession(data, this.logger);
+        const new_game = await GameSession.create(data, this.logger, this.usersClient);
         this.game_sessions.set(game_id, new_game);
 
         return game_id;
@@ -50,16 +53,16 @@ export class LiveSessionManager {
             if (msg.type === "view") {
                 session.connectViewer(connection);
             } else if (msg.type === "join") {
-                const ticket = msg.ticket as string | undefined;
-                if (!ticket) { 
-                    connection.socket.close(4001, "Missing ticket"); 
+                const participant_id = msg.participant_id as string | undefined;
+                if (!participant_id) { 
+                    connection.socket.close(4001, "Missing participant_id"); 
                     return; 
                 }
                 try {
-                    session.connectPlayer(ticket, connection);
+                    session.connectPlayer(participant_id, connection);
                 } catch (err) {
-                    this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "JWT verification failed");
-                    connection.socket.close(4001, "Invalid or expired token");
+                    this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "Invalid participant id");
+                    connection.socket.close(4001, "Invalid participant id");
                 }
             } 
         });

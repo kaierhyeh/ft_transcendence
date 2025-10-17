@@ -1,5 +1,10 @@
+import { GameParticipant } from './game/types.js';
 import { generateParticipantId } from './game/utils.js';
 import { showError } from './notifications.js';
+import user from "./user/User.js";
+
+const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
+
 
 interface PlayerData {
     paddle: { x: number; y: number };
@@ -94,7 +99,9 @@ export default function initRemoteGame(): void {
     function createRemoteInterface(): void {
         const header = document.querySelector('.pong-header');
         if (header !== null) {
-            header.classList.add('remote-format');
+            header.classList.add('remote-mode');
+        } else {
+            console.error('Pong header element not found');
         }
 
         setupRemoteEvents();
@@ -109,18 +116,24 @@ export default function initRemoteGame(): void {
             btn1v1.addEventListener('click', function() { 
                 joinQueue("1v1"); 
             });
+        } else {
+            console.error('Remote 1v1 button not found');
         }
 
         if (btn2v2 !== null) {
             btn2v2.addEventListener('click', function() { 
                 joinQueue("2v2"); 
             });
+        } else {
+            console.error('Remote 2v2 button not found');
         }
 
         if (btnCancel !== null) {
             btnCancel.addEventListener('click', function() { 
                 resetRemoteUI(); 
             });
+        } else {
+            console.error('Remote cancel button not found');
         }
     }
 
@@ -148,17 +161,21 @@ export default function initRemoteGame(): void {
             currentButton.textContent = "Joining...";
         }
 
-        const participantId = generateParticipantId();
-        currentParticipantId = participantId;
+        currentParticipantId = generateParticipantId();
+        const participant: GameParticipant = {
+             type: user.isLoggedIn() ? "registered" : "guest",
+            user_id: user.user_id ?? undefined,
+            participant_id: currentParticipantId
+        };
 
         try {
-            const response = await fetch('/game/join', {
+            const response = await fetch(`${API_GAME_ENDPOINT}/join`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     format: format,
-                    participant_id: participantId
+                    participant
                 })
             });
 
@@ -206,7 +223,7 @@ export default function initRemoteGame(): void {
         }
 
         const host = window.location.host;
-        const wsUrl = protocol + '//' + host + '/game/ws?participant_id=' + currentParticipantId;
+        const wsUrl = protocol + '//' + host + '/api/game/ws?participant_id=' + currentParticipantId;
 
         matchmakingWebSocket = new WebSocket(wsUrl);
 
@@ -269,7 +286,7 @@ export default function initRemoteGame(): void {
         }
 
         const host = window.location.host;
-        const wsUrl = protocol + '//' + host + '/game/' + gameId + '/ws';
+        const wsUrl = protocol + '//' + host + '/api/game/' + gameId + '/ws';
 
         gameWebSocket = new WebSocket(wsUrl);
 
@@ -360,7 +377,6 @@ export default function initRemoteGame(): void {
 
             const message = JSON.stringify({
                 type: "input",
-                participant_id: currentParticipantId,
                 move: movement
             });
             gameWebSocket.send(message);
