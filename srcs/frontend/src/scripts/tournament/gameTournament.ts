@@ -2,6 +2,7 @@ import { TournamentMatch, GameParticipant } from './types.js';
 import { createGameSession, GameSession } from '../game/GameSession.js';
 import { GameRenderer } from '../game/GameRenderer.js';
 import { InputController } from '../game/InputController.js';
+import { generateParticipantId } from '../game/utils.js';
 
 export class TournamentGameManager {
     private currentMatch: TournamentMatch | null = null; // Not used yet
@@ -27,8 +28,8 @@ export class TournamentGameManager {
         try {
             // Create game participants (both as guests for tournament)
             const participants: GameParticipant[] = [
-                { type: "guest", user_id: undefined },
-                { type: "guest", user_id: undefined }
+                { type: "guest", user_id: undefined,  participant_id: generateParticipantId()},
+                { type: "guest", user_id: undefined,  participant_id: generateParticipantId() }
             ];
             
             // Setup renderer

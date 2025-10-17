@@ -29,4 +29,4 @@ export interface TournamentBracket {
 }
 
 // Re-export game types for convenience
-export type { GameParticipant, GameConfig, GameState, GameState4p } from '../game/types.js';
+export type { GameParticipant, GameConfig, GameState, GameState2v2 } from '../game/types.js';

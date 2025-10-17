@@ -1,5 +1,5 @@
 // pong/pong.ts
-import { createGameSession } from "../game/GameSession.js";
+import { createGameSession, GameSession } from "../game/GameSession.js";
 import { GameRenderer } from "../game/GameRenderer.js";
 import { InputController } from "../game/InputController.js";
 import { AIController } from "../game/AIController.js";
@@ -8,9 +8,10 @@ import { ScoreChart } from "./ScoreChart.js";
 import { ScoreDisplay } from "./ScoreDisplay.js";
 import user from "../user/User.js";
 import { GameFormat, GameMode, GameParticipant } from "../game/types.js";
+import { generateParticipantId } from "../game/utils.js";
 
 export function initPong() {
-    let currentSession: Awaited<ReturnType<typeof createGameSession>> | null = null;
+    let currentSession: GameSession | null = null;
     let isTransitioning = false;
     
     // Core game components
@@ -134,14 +135,25 @@ export function initPong() {
             const participants: GameParticipant[] = [
                 {
                     type: user.isLoggedIn() ? "registered" : "guest",
-                    user_id: user.user_id ?? undefined
+                    user_id: user.user_id ?? undefined,
+                    participant_id: generateParticipantId()
                 }
             ];
             
             if (mode === 'solo') {
-                participants.push({ type: "ai", user_id: undefined });
+                participants.push(
+                    {
+                        type: "ai",
+                        user_id: undefined,
+                        participant_id: generateParticipantId()
+                    });
             } else {
-                participants.push({ type: "guest", user_id: undefined });
+                participants.push(
+                    {
+                        type: "guest",
+                        user_id: undefined,
+                        participant_id: generateParticipantId()
+                    });
             }
             
             return participants;
@@ -149,14 +161,17 @@ export function initPong() {
             const participants: GameParticipant[] = [
                 {
                     type: user.isLoggedIn() ? "registered" : "guest",
-                    user_id: user.user_id ?? undefined
+                    user_id: user.user_id ?? undefined,
+                    participant_id: generateParticipantId()
                 }
             ];
-            participants.push({ type: "guest", user_id: undefined });
-            participants.push({ type: "guest", user_id: undefined });
-            participants.push({ type: "guest", user_id: undefined });
+            participants.push({ type: "guest", user_id: undefined,  participant_id: generateParticipantId() });
+            participants.push({ type: "guest", user_id: undefined,  participant_id: generateParticipantId() });
+            participants.push({ type: "guest", user_id: undefined,  participant_id: generateParticipantId() });
 
             return participants;
         }
     }
+
+
 }
