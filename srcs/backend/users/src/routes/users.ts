@@ -97,6 +97,16 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getAvatar.bind(userController)
   );
 
+  // PUT /:uid/2fa - Update 2FA settings (internal service use only)
+  fastify.put<{ Params: UserIdParams; Body: { enabled: number; secret?: string | null } }>(
+    "/:uid/2fa",
+    { 
+      schema: { params: userIdSchema },
+      preHandler: internalAuthMiddleware 
+    },
+    userController.update2FASettings.bind(userController)
+  );
+
   // GET /:uid/profile - Get public user profile
   fastify.get<{ Params: UserIdParams }>(
     "/:uid/profile",

@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service';
 import { CONFIG } from '../config';
-import { internalAuthMiddleware } from '../middleware/internal-auth.middleware';
+import { internalAuthMiddleware } from '../middleware/service-auth';
 import jwtService from '../services/jwt.service';
 
 

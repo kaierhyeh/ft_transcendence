@@ -42,11 +42,11 @@ export class AuthService {
 
 	async loginLocalUser(credentials: LoginCredentials): Promise<LoginLocalResult> {
 
-		const { user_id, two_fa_enabled } = await usersClient.resolveLocalUser(credentials);
+		const { user_id, two_fa_enabled, two_fa_secret } = await usersClient.resolveLocalUser(credentials);
 
-		if (two_fa_enabled) {
+		if (two_fa_enabled && two_fa_secret) {
 			const tempToken = await jwtService.generateTempToken(
-				{ user_id }, 
+				{ userId: user_id }, 
 				"2fa", 
 				300);
 			return { step: "2fa_required", tempToken };
