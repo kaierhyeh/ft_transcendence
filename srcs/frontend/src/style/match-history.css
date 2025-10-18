@@ -171,7 +171,26 @@
     font-size: 40px;
 }
 
-/* Player Links */
+/* Team label for 2v2 */
+.team-label {
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 1px;
+    font-family: 'Bit5x3', monospace !important;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.player.winner .team-label {
+    color: #fff;
+}
+
+.player.loser .team-label {
+    color: #666;
+}
+
+/* Player Links and Special Styles */
 .player-link {
     color: #fff;
     text-decoration: none;
@@ -201,11 +220,27 @@
 .ai-player {
     font-style: normal;
     color: #888;
+    font-size: inherit !important;
+    font-weight: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
 }
 
 .guest-player {
     font-style: italic;
     color: #888;
+    font-size: inherit !important;
+    font-weight: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+}
+
+.you-player {
+    color: #7be3a1;
+    font-size: inherit !important;
+    font-weight: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
 }
 
 /* VS Divider */
@@ -224,12 +259,48 @@
     font-family: 'Bit5x3', monospace !important;
 }
 
+/* Match Badges */
+.match-badges {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.match-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    border: 2px solid #fff;
+    background: #000;
+    color: #fff;
+    font-family: 'Bit5x3', monospace !important;
+    letter-spacing: 0.5px;
+}
+
+.online-badge {
+    border-color: #4a9eff;
+    color: #4a9eff;
+    font-size: 14px;
+    padding: 5px 12px;
+}
+
+.tournament-badge {
+    border-color: #ffff00;
+    color: #ffff00;
+}
+
 /* Footer */
 .match-footer {
     display: flex;
     justify-content: center;
+    align-items: center;
+    gap: 8px;
     padding-top: 15px;
     border-top: 2px solid #fff;
+    flex-wrap: wrap;
 }
 
 .match-duration {
@@ -237,6 +308,36 @@
     font-size: 16px;
     letter-spacing: 0.5px;
     font-weight: normal;
+}
+
+.match-duration-separator {
+    color: #666;
+    font-size: 16px;
+    padding: 0 4px;
+}
+
+.winner-indicator {
+    color: #7be3a1;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-family: 'Bit5x3', monospace !important;
+    text-transform: uppercase;
+}
+
+.loser-indicator {
+    color: #e57373;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-family: 'Bit5x3', monospace !important;
+    text-transform: uppercase;
+}
+
+.forfeit-flag {
+    cursor: help;
+    font-size: 16px;
+    margin-left: 4px;
 }
 
 /* Load More Button */

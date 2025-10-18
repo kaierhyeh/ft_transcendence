@@ -4,6 +4,7 @@ import type { GameSession, PlayerData } from '../types.js';
 interface MatchCardData {
     session: GameSession;
     currentUserId: number | null;
+    profileUserId: number | null; // The user whose profile is being viewed
 }
 
 /**
@@ -59,15 +60,61 @@ function formatDuration(startedAt: string, endedAt: string): string {
 /**
  * Gets the mode badge label and emoji
  */
-function getModeBadge(mode: GameSession['mode']): { label: string; emoji: string } {
+function getModeBadge(mode: GameSession['mode'], format: GameSession['format']): { label: string; emoji: string } {
+    let label = '';
+    let emoji = '';
+    
     switch (mode) {
         case 'solo':
-            return { label: 'Solo', emoji: '🤖' };
+            emoji = '🤖';
+            label = 'Solo';
+            break;
         case 'pvp':
-            return { label: 'PvP', emoji: '⚔️' };
+            emoji = '⚔️';
+            label = 'PvP';
+            break;
         case 'tournament':
-            return { label: 'Tournament', emoji: '🏆' };
+            emoji = '🏆';
+            label = 'Tournament';
+            break;
     }
+    
+    // Add format for 2v2
+    if (format === '2v2') {
+        label += ' · 2v2';
+    }
+    
+    return { label, emoji };
+}
+
+/**
+ * Checks if viewing own profile
+ */
+function isOwnProfile(currentUserId: number | null, profileUserId: number | null): boolean {
+    return currentUserId !== null && profileUserId !== null && currentUserId === profileUserId;
+}
+
+/**
+ * Gets team label for 2v2
+ */
+function getTeamLabel(teamPlayers: PlayerData[], profileUserId: number | null, currentUserId: number | null): string {
+    const hasProfileOwner = teamPlayers.some(p => p.user_id === profileUserId);
+    
+    if (!hasProfileOwner) {
+        return 'Opponent';
+    }
+    
+    if (isOwnProfile(currentUserId, profileUserId)) {
+        return 'Your Team';
+    }
+    
+    // Find the profile owner's username
+    const profileOwner = teamPlayers.find(p => p.user_id === profileUserId);
+    if (profileOwner && profileOwner.username) {
+        return `@${profileOwner.username}'s Team`;
+    }
+    
+    return 'Team';
 }
 
 /**
@@ -99,7 +146,7 @@ function getPlayerInfo(session: GameSession, currentUserId: number | null) {
 /**
  * Formats player name with appropriate styling
  */
-function formatPlayerName(player: PlayerData | undefined): string {
+function formatPlayerName(player: PlayerData | undefined, profileUserId: number | null, currentUserId: number | null): string {
     if (!player) return 'Unknown';
     
     if (player.type === 'ai') {
@@ -110,9 +157,15 @@ function formatPlayerName(player: PlayerData | undefined): string {
         return '<span class="guest-player">Guest</span>';
     }
     
-    // Registered user with link to profile
+    // Registered user
     if (player.username) {
-        return `<a href="/user/profile?id=${player.user_id}" class="player-link">${player.username}</a>`;
+        // If viewing own profile and this is the profile owner, show "You"
+        if (player.user_id === profileUserId && isOwnProfile(currentUserId, profileUserId)) {
+            return '<span class="you-player">You</span>';
+        }
+        
+        // Otherwise show @username with link
+        return `<a href="/user/profile?id=${player.user_id}" class="player-link">@${player.username}</a>`;
     }
     
     return 'Player';
@@ -122,25 +175,120 @@ function formatPlayerName(player: PlayerData | undefined): string {
  * Creates a match history card HTML
  */
 export function createMatchCard(data: MatchCardData): string {
-    const { session, currentUserId } = data;
-    const { currentPlayer, opponent } = getPlayerInfo(session, currentUserId);
+    const { session, currentUserId, profileUserId } = data;
     
-    if (!currentPlayer || !opponent) {
-        console.error('Invalid player data in session:', session);
-        return '';
-    }
-    
-    const modeBadge = getModeBadge(session.mode);
+    const modeBadge = getModeBadge(session.mode, session.format);
     const relativeDate = formatRelativeDate(session.created_at);
     const localDate = formatLocalDate(session.created_at);
     const duration = formatDuration(session.started_at, session.ended_at);
     
-    const isCurrentPlayerWinner = currentPlayer.winner === 1;
-    const currentPlayerClass = isCurrentPlayerWinner ? 'winner' : 'loser';
-    const opponentClass = isCurrentPlayerWinner ? 'loser' : 'winner';
+    // Get teams
+    const leftPlayers = session.players.filter(p => p.team === 'left');
+    const rightPlayers = session.players.filter(p => p.team === 'right');
+    
+    if (leftPlayers.length === 0 || rightPlayers.length === 0) {
+        console.error('Invalid player data in session:', session);
+        return '';
+    }
+    
+    // Get scores and winner status
+    const leftScore = leftPlayers[0]?.score ?? 0;
+    const rightScore = rightPlayers[0]?.score ?? 0;
+    const leftIsWinner = leftPlayers[0]?.winner === 1;
+    const rightIsWinner = rightPlayers[0]?.winner === 1;
+    
+    // Determine if profile owner won
+    const profileOwnerOnLeft = leftPlayers.some(p => p.user_id === profileUserId);
+    const profileOwnerOnRight = rightPlayers.some(p => p.user_id === profileUserId);
+    const profileOwnerWon = (profileOwnerOnLeft && leftIsWinner) || (profileOwnerOnRight && rightIsWinner);
+    
+    // Create metadata badges
+    const badges = [];
+    if (session.online === 1) {
+        badges.push(`<span class="match-badge online-badge" title="Online match">🌐 Online</span>`);
+    }
+    if (session.tournament_id !== null) {
+        badges.push(`<span class="match-badge tournament-badge" title="Tournament match">🏆</span>`);
+    }
+    const badgesHTML = badges.length > 0 ? `<div class="match-badges">${badges.join('')}</div>` : '';
+    
+    // Determine outcome message
+    let outcomeHTML = '';
+    const forfeitFlag = session.forfeit === 1 ? ' <span class="forfeit-flag" title="Match ended due to forfeit">🏳️</span>' : '';
+    
+    if (profileOwnerWon) {
+        outcomeHTML = `<span class="winner-indicator">Victory!${forfeitFlag}</span>`;
+    } else {
+        outcomeHTML = `<span class="loser-indicator">Defeat${forfeitFlag}</span>`;
+    }
+    
+    // Build match score HTML based on format
+    let matchScoreHTML = '';
+    
+    if (session.format === '1v1') {
+        // 1v1 format - simple player vs player
+        const leftPlayer = leftPlayers[0];
+        const rightPlayer = rightPlayers[0];
+        const leftClass = leftIsWinner ? 'winner' : 'loser';
+        const rightClass = rightIsWinner ? 'winner' : 'loser';
+        
+        matchScoreHTML = `
+            <div class="player ${leftClass}">
+                <div class="player-name">${formatPlayerName(leftPlayer, profileUserId, currentUserId)}</div>
+                <div class="player-score">${leftScore}</div>
+            </div>
+            
+            <div class="match-divider">
+                <span class="vs-text">VS</span>
+            </div>
+            
+            <div class="player ${rightClass}">
+                <div class="player-name">${formatPlayerName(rightPlayer, profileUserId, currentUserId)}</div>
+                <div class="player-score">${rightScore}</div>
+            </div>
+        `;
+    } else {
+        // 2v2 format - team label + stacked players (using same .player class) + single score
+        const leftLabel = getTeamLabel(leftPlayers, profileUserId, currentUserId);
+        const rightLabel = getTeamLabel(rightPlayers, profileUserId, currentUserId);
+        const leftClass = leftIsWinner ? 'winner' : 'loser';
+        const rightClass = rightIsWinner ? 'winner' : 'loser';
+        
+        // Sort players by slot
+        const leftSorted = [...leftPlayers].sort((a, b) => {
+            const order = ['top-left', 'bottom-left'];
+            return order.indexOf(a.slot) - order.indexOf(b.slot);
+        });
+        const rightSorted = [...rightPlayers].sort((a, b) => {
+            const order = ['top-right', 'bottom-right'];
+            return order.indexOf(a.slot) - order.indexOf(b.slot);
+        });
+        
+        matchScoreHTML = `
+            <div class="player ${leftClass}">
+                <div class="team-label">${leftLabel}</div>
+                ${leftSorted.map(player => `
+                    <div class="player-name">${formatPlayerName(player, profileUserId, currentUserId)}</div>
+                `).join('')}
+                <div class="player-score">${leftScore}</div>
+            </div>
+            
+            <div class="match-divider">
+                <span class="vs-text">VS</span>
+            </div>
+            
+            <div class="player ${rightClass}">
+                <div class="team-label">${rightLabel}</div>
+                ${rightSorted.map(player => `
+                    <div class="player-name">${formatPlayerName(player, profileUserId, currentUserId)}</div>
+                `).join('')}
+                <div class="player-score">${rightScore}</div>
+            </div>
+        `;
+    }
     
     return `
-        <div class="match-card">
+        <div class="match-card" data-format="${session.format}">
             <div class="match-header">
                 <span class="mode-badge" data-mode="${session.mode}">
                     <span class="mode-emoji">${modeBadge.emoji}</span>
@@ -148,24 +296,15 @@ export function createMatchCard(data: MatchCardData): string {
                 </span>
                 <span class="match-date" title="${localDate}">${relativeDate}</span>
             </div>
+            ${badgesHTML}
             
             <div class="match-score">
-                <div class="player ${currentPlayerClass}">
-                    <div class="player-name">${formatPlayerName(currentPlayer)}</div>
-                    <div class="player-score">${currentPlayer.score}</div>
-                </div>
-                
-                <div class="match-divider">
-                    <span class="vs-text">VS</span>
-                </div>
-                
-                <div class="player ${opponentClass}">
-                    <div class="player-name">${formatPlayerName(opponent)}</div>
-                    <div class="player-score">${opponent.score}</div>
-                </div>
+                ${matchScoreHTML}
             </div>
             
             <div class="match-footer">
+                ${outcomeHTML}
+                <span class="match-duration-separator">•</span>
                 <span class="match-duration">${duration}</span>
             </div>
         </div>
