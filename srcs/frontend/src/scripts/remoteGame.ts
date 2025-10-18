@@ -1,6 +1,9 @@
 import { GameParticipant } from './game/types.js';
 import { generateParticipantId } from './game/utils.js';
 import { showError } from './notifications.js';
+import { ScoreChart } from './live_stats/ScoreChart.js';
+import { ScoreDisplay } from './live_stats/ScoreDisplay.js';
+import { ScoreTracker } from './live_stats/ScoreTracker.js';
 import user from "./user/User.js";
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
@@ -20,7 +23,7 @@ interface RemoteGameState {
         "bottom-right"?: PlayerData;
         [key: string]: PlayerData | undefined;
     };
-    ball: { x: number; y: number };
+    ball: { x: number; y: number, dx: number, dy: number };
     score: { left: number; right: number };
     winner?: string;
 }
@@ -59,6 +62,27 @@ export default function initRemoteGame(): void {
     let gameCanvas: HTMLCanvasElement | null = null;
     let gameContext: CanvasRenderingContext2D | null = null;
     let remotePartyFormat: string = '';
+
+    const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
+    const scoreChart = new ScoreChart();
+    const scoreDisplay = new ScoreDisplay();
+
+    // Initialize score display if elements exist
+    if (document.getElementById('pong-score-chart')) {
+        scoreChart.initialize('pong-score-chart');
+        scoreDisplay.initialize();
+        
+        // Subscribe to updates
+        scoreTracker.onUpdate((data) => {
+            scoreChart.update(data);
+            scoreDisplay.update(data);
+        });
+    }
+
+    // Global reset function for button
+    (window as any).resetGameData = () => {
+        scoreTracker.resetAll();
+    };
 
     function resetRemoteUI(message?: string): void {
         if (matchmakingWebSocket !== null) {
@@ -139,6 +163,8 @@ export default function initRemoteGame(): void {
 
     async function joinQueue(format: "1v1" | "2v2"): Promise<void> {
         remotePartyFormat = format;
+
+        scoreTracker.resetGame();
         
         const btn1v1 = document.getElementById('remote-1v1-btn') as HTMLButtonElement;
         const btn2v2 = document.getElementById('remote-2v2-btn') as HTMLButtonElement;
@@ -476,6 +502,10 @@ export default function initRemoteGame(): void {
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
 
+        // Get ball direction from server
+        const ballDx = state.ball.dx;
+
+
         let leftScore = 0;
         let rightScore = 0;
 
@@ -485,6 +515,8 @@ export default function initRemoteGame(): void {
         if (state.score !== undefined && state.score.right !== undefined) {
             rightScore = state.score.right;
         }
+
+        scoreTracker.update(leftScore, rightScore, ballDx);
 
         ctx.fillText(leftScore.toString(), canvas.width / 4, 50);
         ctx.fillText(rightScore.toString(), (3 * canvas.width) / 4, 50);

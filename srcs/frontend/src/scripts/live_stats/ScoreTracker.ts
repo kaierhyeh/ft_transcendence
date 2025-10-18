@@ -10,6 +10,7 @@ export interface ScoreData {
     rallyHistory: number[];
 }
 
+// Follows the Observer Pattern or Pub/Sub Pattern
 export class ScoreTracker {
     private persistentLeft: number = 0;
     private persistentRight: number = 0;
@@ -70,7 +71,7 @@ export class ScoreTracker {
      * Update scores with current game state
      */
     update(leftScore: number, rightScore: number, ballDx: number): void {
-        // Track score changes (new points)
+        // 1️⃣ Detect new points scored
         if (leftScore > this.previousLeft) {
             this.persistentLeft += (leftScore - this.previousLeft);
             this.previousLeft = leftScore;
@@ -83,18 +84,19 @@ export class ScoreTracker {
             this.onPointScored();
         }
         
-        // Track ball direction changes (paddle hits)
+        // 2️⃣ Track rally length (paddle hits)
         if (this.previousBallDirection !== null) {
             const currentDirection = Math.sign(ballDx);
             const previousDirection = Math.sign(this.previousBallDirection);
             
+            // Ball changed direction = paddle hit
             if (currentDirection !== previousDirection && currentDirection !== 0) {
                 this.currentRallyLength++;
             }
         }
         this.previousBallDirection = ballDx;
         
-        // Save and notify
+        // 3️⃣ Save to localStorage and notify subscribers
         this.saveToStorage();
         this.notifyUpdate();
     }

@@ -1,14 +1,14 @@
 // pong/pong.ts
-import { createGameSession, GameSession } from "../game/GameSession.js";
-import { GameRenderer } from "../game/GameRenderer.js";
-import { InputController } from "../game/InputController.js";
-import { AIController } from "../game/AIController.js";
-import { ScoreTracker } from "./ScoreTracker.js";
-import { ScoreChart } from "./ScoreChart.js";
-import { ScoreDisplay } from "./ScoreDisplay.js";
-import user from "../user/User.js";
-import { GameFormat, GameMode, GameParticipant } from "../game/types.js";
-import { generateParticipantId } from "../game/utils.js";
+import { createGameSession, GameSession } from "./game/GameSession.js";
+import { GameRenderer } from "./game/GameRenderer.js";
+import { InputController } from "./game/InputController.js";
+import { AIController } from "./game/AIController.js";
+import { ScoreTracker } from "./live_stats/ScoreTracker.js";
+import { ScoreChart } from "./live_stats/ScoreChart.js";
+import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
+import user from "./user/User.js";
+import { GameFormat, GameMode, GameParticipant } from "./game/types.js";
+import { generateParticipantId } from "./game/utils.js";
 
 export function initPong() {
     let currentSession: GameSession | null = null;
@@ -19,12 +19,13 @@ export function initPong() {
     const inputController = new InputController();
     const aiController = new AIController();
     
-    const scoreTracker = new ScoreTracker();
+    const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
     const scoreChart = new ScoreChart();
     const scoreDisplay = new ScoreDisplay();
     
     // Initialize score display if elements exist
     if (document.getElementById('pong-score-chart')) {
+        // Initialize the visual components
         scoreChart.initialize('pong-score-chart');
         scoreDisplay.initialize();
         
@@ -38,7 +39,9 @@ export function initPong() {
     // Global reset function for button
     (window as any).resetGameData = () => {
         scoreTracker.resetAll();
-    };    // Show initial message
+    };
+    
+    // Show initial message
     renderer.showMessage("Select a game mode");
     
     // Setup buttons
