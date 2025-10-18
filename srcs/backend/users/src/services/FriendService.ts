@@ -78,4 +78,8 @@ export class FriendService {
 			return u;
 		});
 	}
+
+	public async getFriendshipStatus(userId: number, friendId: number) {
+		return this.friendRepository.getFriendshipStatus(userId, friendId);
+	}
 }

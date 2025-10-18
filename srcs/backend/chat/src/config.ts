@@ -59,6 +59,12 @@ export const CONFIG = {
 		CLIENT_SECRET: clientCredentials.clientSecret,
 	},
 
+	WEB_SOCKET: {
+		TICK_PERIOD: 1000 / 30,
+		SESSION_TIMEOUT: 5000,
+		MAX_SESSIONS: 100,
+	},
+
 	// Server settings
 	SERVER: {
 		PORT: parseInt(process.env.PORT || "3000"),

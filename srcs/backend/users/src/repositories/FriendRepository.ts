@@ -33,6 +33,10 @@ export interface OutgoingRequestListRow {
 	avatar_filename: string | null;
 }
 
+export interface FriendshipStatus {
+	status: string | null;
+}
+
 export class FriendRepository {
 	constructor(private db: Database) {
 		this.db = db;
@@ -252,5 +256,16 @@ export class FriendRepository {
 		const params = [thisUserId, thisUserId, ...userIds];
 
 		return stmt.all(...params) as UserListRow[];
+	}
+
+	public async getFriendshipStatus(userId: number, friendId: number) {
+		const stmt = this.db.prepare(`
+			SELECT
+				f.status AS status
+			FROM friendships f
+			WHERE f.user_id = ? AND f.friend_id = ?
+		`);
+
+		return stmt.get(userId, friendId) as FriendshipStatus;
 	}
 }

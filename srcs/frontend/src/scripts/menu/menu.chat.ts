@@ -10,7 +10,7 @@ export interface Message {
 }
 
 export interface NewMessageRequest {
-	/* fromId: number; */
+	chatId: number;
 	toId: number;
 	msg: string;
 }
@@ -36,6 +36,7 @@ export interface ChatUser {
 /* ============================================ GLOBALS ===================================== */
 
 let API_CHAT_ENDPOINT: string;
+let API_MSG_ENDPOINT: string;
 let menuBackButton: HTMLElement;
 let usersSectionButton: HTMLElement;
 let chatsList: HTMLElement;
@@ -44,10 +45,11 @@ let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
-// let thisUserId: number;
+let count = 0;
 
-function initializeGlobals(/* userId: number */): boolean {
+function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
+	API_MSG_ENDPOINT = `${window.location.origin}/api/message`;
 	menuBackButton = document.getElementById("menuBackButton")!;
 	usersSectionButton = document.getElementById("usersSectionButton")!;
 	chatsList = document.getElementById("chatsList")!;
@@ -56,7 +58,6 @@ function initializeGlobals(/* userId: number */): boolean {
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
-	// thisUserId = userId;
 
 	if (!API_CHAT_ENDPOINT || !menuBackButton || !usersSectionButton || !chatsList
 		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton) {
@@ -72,9 +73,18 @@ function clearBeforeOpenChatsSection(): void {
 	clearEvents("#chatMessages");
 	clearEvents("#chatLowerPanel");
 	clearEvents("#menuBackButton");				// back button
-	if (!initializeGlobals(/* thisUserId */)) {		// update references of global variables
+	if (!initializeGlobals()) {					// update references of global variables
 		console.error("CHAT: globals reinitialization failed: Missing elements");
 	}
+}
+
+function clearBeforeInitMessageSection(): void {
+	clearEvents("chatSendButton");
+	clearEvents("chatMessageToSend");
+	clearEvents("chatInviteGameButton");
+	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
+	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
+	chatSendButton = document.getElementById("chatSendButton")!;
 }
 
 function resetChatSection(): void {
@@ -91,7 +101,8 @@ function resetChatSection(): void {
 /* =================================== CHATS SECTION ======================================== */
 
 function renderChatList(users: ChatUser[]): void {
-
+	count = 0;
+	console.log("[DEBUG] --- RESET COUNT");
 	showElementById("chatsList");
 
 	if (users.length === 0) {
@@ -135,6 +146,7 @@ function renderChatList(users: ChatUser[]): void {
 
 			console.log("CHAT: Clicked on chatId:", chatId, " userId:", userId);
 			if (chatId && userId) {
+				clearBeforeInitMessageSection();
 				initMessageSection(parseInt(chatId), users.find(u => u.user_id === parseInt(userId))!, friendshipStatus!);
 			}
 		});
@@ -183,7 +195,12 @@ async function sendMessageByButton(toUser: ChatUser): Promise<void> {
 		const message = chatInput.value.trim();
 		if (message) {
 			console.log("CHAT: Sending message:", message);
-			// sendMessage(toUser.user_id, message);
+			console.log("[DEBUG] run sendMessage in sendMessageByButton")
+			await sendMessage(toUser, message);
+			chatInput.value = "";
+
+			clearBeforeInitMessageSection();
+			initMessageSection(toUser.chat_id, toUser, toUser.friendship_status);				// Not sure about this friendship status =(
 		}
 		chatInput.value = "";
 	}
@@ -205,7 +222,7 @@ async function goBackToChatsList(): Promise<void> {
 	initChatSection();
 }
 
-// Message init functions
+// render and send msgs
 
 function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatus: string | null): void {
 	console.log("CHAT: renderMessages");
@@ -227,48 +244,43 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 		showElementById("unblockUserButtonInChat");
 	}
 	showElementById("chatMessages");
-	showElementById("menuBackButton");
 
+	
+	showElementById("menuBackButton");
+	
 	chatMessages.innerHTML = messages.map(msg => `
 		<div class="chat-msg ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
 		${msg.from_id !== withUser.user_id
 			? `<span class="green-text">You: </span>`
 			: `<span class="blue-text">${withUser.username}: </span>`}
-		${msg.msg}
-		</div>`).join("");
+			${msg.msg}
+			</div>`).join("");
 
-	const sendBtn = document.getElementById("chatSendButton");
-	const input = document.getElementById("chatMessageToSend") as HTMLInputElement | null;
-
-	if (sendBtn && input) {
-		sendBtn.onclick = async () => {
-			if (input.value.trim()) {
-				// const newMsg: NewMessageResponse = await sendMessage(withUser.user_id, input.value.trim());
-				input.value = "";
-				// if (newMsg) {
-				// 	await initMessageSection(newMsg.chatId, withUser, friendshipStatus);
-				// }
-			}
-		};
-	}
+	chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-async function sendMessage(toId: number, msg: string): Promise<NewMessageResponse> {
+async function sendMessage(toUser: ChatUser, msg: string) {
 	console.log("CHAT: sendMessage");
-	const payload: NewMessageRequest = { /* fromId: thisUserId, */ toId, msg };
+	const chatId = toUser.chat_id;
+	const toId = toUser.user_id;
+	const payload: NewMessageRequest = { chatId, toId, msg };
 
 	try {
-		const res = await fetch(`${API_CHAT_ENDPOINT}/messages`, {
+		console.log("CHAT: sendMessage - TRY");
+		const res = await fetch(`${API_MSG_ENDPOINT}/`, {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
+			headers: { 
+				credentials: 'include',
+				"Content-Type": "application/json"
+			},
 			body: JSON.stringify(payload)
 		});
+		console.log("CHAT: sendMessage - GOT res");
 		if (!res.ok) {
 			throw new Error("Failed to send message");
 		}
-		const data: NewMessageResponse = await res.json();
-		console.log("Message sent:", data);
-		return data;
+		console.log("CHAT: sendMessage - DONE");
+
 	} catch (err) {
 		console.error("Error sending message:", err);
 		throw err;
@@ -280,10 +292,12 @@ async function initMessageSection(chatId: number, withUser: ChatUser, friendship
 		console.log(`CHAT: initMessageSection {chatId: ${chatId}, withUser: ${withUser.username}, friendshipStatus: ${friendshipStatus}}`);
 		chatInput.value = "";
 
-		// Sent message by using button
 		if (friendshipStatus !== "blocked") {
+			// Sent message by using button
+			console.log("[DEBUG] ADD EVENT ON SEND n=", count++);
 			chatSendButton.addEventListener("click", () => sendMessageByButton(withUser));
 			chatInput.addEventListener("keydown", (event) => sentMessageByEnter(event));
+			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 		}
 		menuBackButton.addEventListener("click", () => goBackToChatsList());
@@ -309,9 +323,9 @@ async function initMessageSection(chatId: number, withUser: ChatUser, friendship
 
 /* =============================== INITIALIZATION OF CHAT SECTION =========================== */
 
-export async function openChatsSection(/* userId: number */): Promise<void> {
+export async function openChatsSection(): Promise<void> {
 	console.log("MENU: Chats Section opened");
-	initializeGlobals(/* userId */);
+	initializeGlobals();
 
 	if (!menuBackButton || !usersSectionButton || !chatsList || !chatMessages
 		|| !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton) {

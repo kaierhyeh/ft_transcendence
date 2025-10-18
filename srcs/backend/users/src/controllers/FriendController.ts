@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { FriendService } from '../services/FriendService';
-import { FriendshipIdParams, UserIdParams, UserIdsBody } from '../schemas/friends';
+import { FriendshipIdParams, FriendshipParams, UserIdParams, UserIdsBody } from '../schemas/friends';
 import { toInteger } from '../utils/type-converters';
 
 export class FriendController {
@@ -193,6 +193,17 @@ export class FriendController {
 			const userIds = request.body.ids;
 			const users = await this.friendService.getUsersByIds(thisUserId, userIds);
 			reply.status(200).send(users);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async getFriendshipStatus(request: FastifyRequest<{ Params: FriendshipParams }>, reply: FastifyReply) {
+		try {
+			const userId = request.params.userId;
+			const friendId = request.params.friendId;
+			const status = await this.friendService.getFriendshipStatus(userId, friendId);
+			reply.status(200).send({ status: status ?? null })
 		} catch (error) {
 			this.handleError(error, reply);
 		}

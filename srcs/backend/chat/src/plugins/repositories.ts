@@ -5,13 +5,13 @@ import fp from "fastify-plugin";
 import { join, dirname } from "path";
 import { readFileSync, mkdirSync } from "fs";
 import { ChatRepository } from "../repositories/chats.repository";
-// import { MessageRepository } from "../repositories/messages.repository";
+import { MessageRepository } from "../repositories/messages.repository";
 
 declare module "fastify" {
 	interface FastifyInstance {
 		repositories: {
 			chats: ChatRepository;
-			// messages: MessageRepository;
+			messages: MessageRepository;
 		}
 	}
 }
@@ -137,7 +137,8 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
 	//  END SEED DATA
 
 	fastify.decorate("repositories", {
-		chats: new ChatRepository(db)
+		chats: new ChatRepository(db),
+		messages: new MessageRepository(db)
 	});
 
 	fastify.addHook("onClose", async () => {

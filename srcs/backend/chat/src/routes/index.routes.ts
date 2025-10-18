@@ -1,7 +1,7 @@
 import chatsRoutes from "./chat.routes";
-// import messagRoutes from "./messages.routes";
+import messagesRoutes from "./message.routes";
 
 export default [
 	{ route: chatsRoutes, prefix: "/chat" },
-	// { route: messageRoutes, prefix: "/messages" },
+	{ route: messagesRoutes, prefix: "/message" },
 ];

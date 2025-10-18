@@ -1,6 +1,7 @@
 import Fastify from "fastify";
+import websocketPlugin from '@fastify/websocket';
 import { CONFIG } from "./config";
-import routes from "./routes/index.routes" // from index file where discribed all prefixes
+import routes from "./routes/index.routes"
 import repositoriesPlugin from "./plugins/repositories";
 import servicesPlugin from "./plugins/services";
 import cookie from "@fastify/cookie";
@@ -9,6 +10,7 @@ const fastify = Fastify({ logger: true });
 
 async function run() {
 	await fastify.register(cookie);
+	await fastify.register(websocketPlugin);
 	await fastify.register(repositoriesPlugin);
 	await fastify.register(servicesPlugin);
 
@@ -20,6 +22,10 @@ async function run() {
 	fastify.get('/health', async () => {
 		return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
 	});
+
+	// setInterval(() => {
+	// 	fastify.live_sessions.update();
+	// }, CONFIG.WEB_SOCKET.TICK_PERIOD);
 
 	await fastify.listen({ 
 		port: CONFIG.SERVER.PORT, 
