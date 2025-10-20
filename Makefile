@@ -1,7 +1,7 @@
 COMPOSE_FILE := srcs/docker-compose.yml
 PROJECT_NAME := ft_transcendence
 
-.PHONY: all up up-d stop down del-vol clean fclean re help secrets
+.PHONY: help up up-d up_separately stop down del-vol re clean fclean secrets
 
 # Default target
 all: up
@@ -17,6 +17,25 @@ up: secrets
 
 up-d: secrets
 	docker compose -f $(COMPOSE_FILE) up -d ${OPTS} --build $(ARGS)
+
+# Build and start services one by one (avoids memory issues)
+up_separately: secrets
+	@echo "🔨 Building services separately to avoid memory issues..."
+	@echo "📦 1/6 Building backend-users..."
+	@docker compose -f $(COMPOSE_FILE) build backend-users
+	@echo "📦 2/6 Building backend-game..."
+	@docker compose -f $(COMPOSE_FILE) build backend-game
+	@echo "📦 3/6 Building backend-chat..."
+	@docker compose -f $(COMPOSE_FILE) build backend-chat
+	@echo "📦 4/6 Building backend-auth..."
+	@docker compose -f $(COMPOSE_FILE) build backend-auth
+	@echo "📦 5/6 Building api-gateway..."
+	@docker compose -f $(COMPOSE_FILE) build api-gateway
+	@echo "📦 6/6 Building frontend..."
+	@docker compose -f $(COMPOSE_FILE) build frontend
+	@echo "✅ All services built successfully!"
+	@echo "🚀 Starting all services..."
+	@docker compose -f $(COMPOSE_FILE) up -d
 
 # Stop all running containers
 stop:
@@ -52,13 +71,14 @@ re: down up
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  all       - Default target, same as 'up'"
-	@echo "  up        - Start all services with build"
-	@echo "  up-d      - Start all services in detached mode"
-	@echo "  stop      - Stop all containers"
-	@echo "  down      - Stop and remove containers (keeps volumes)"
-	@echo "  re        - Restart services (down + up)"
-	@echo "  del-vol   - Remove containers and volumes"
-	@echo "  clean     - Remove containers, images, and volumes"
-	@echo "  fclean    - Complete Docker cleanup (USE WITH CAUTION)"
-	@echo "  help      - Show this help message"
+	@echo "  all            - Default target, same as 'up'"
+	@echo "  up             - Start all services with build (foreground)"
+	@echo "  up-d           - Start all services in detached mode (background)"
+	@echo "  up_separately  - Build services one-by-one, start in detached mode (avoids memory issues)"
+	@echo "  stop           - Stop all containers"
+	@echo "  down           - Stop and remove containers (keeps volumes)"
+	@echo "  re             - Restart services (down + up)"
+	@echo "  del-vol        - Remove containers and volumes"
+	@echo "  clean          - Remove containers, images, and volumes"
+	@echo "  fclean         - Complete Docker cleanup (USE WITH CAUTION)"
+	@echo "  help           - Show this help message"

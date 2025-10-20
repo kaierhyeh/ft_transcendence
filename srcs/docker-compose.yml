@@ -72,6 +72,7 @@ services:
       - users-service-client.env
       - game-service-client.env
       - chat-service-client.env
+      - google-oauth.env
     networks:
       - pong_network
     init: true
@@ -184,6 +185,10 @@ secrets:
     file: ../secrets/game-service-client.env
   chat-service-client.env:
     file: ../secrets/chat-service-client.env
+  
+  # OAuth Credentials
+  google-oauth.env:
+    file: ../secrets/google-oauth.env
 
 networks:
   pong_network:

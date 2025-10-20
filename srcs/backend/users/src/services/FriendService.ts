@@ -62,4 +62,24 @@ export class FriendService {
 		this.friendRepository.removeFriendship(userId, friendId);
 	}
 
+	public async getUsersByIds(thisUserId: number, userIds: number[]) {
+		const res = await this.friendRepository.getUsersByIds(thisUserId, userIds);
+
+		return res.map((u) => {
+			if (u.friendship_status === null || u.friendship_status === "pending") {
+				return {
+					...u,
+					user_status: null,
+					friendship_status: null,
+					from_id: null,
+					to_id: null,
+				};
+			}
+			return u;
+		});
+	}
+
+	public async getFriendshipStatus(userId: number, friendId: number) {
+		return this.friendRepository.getFriendshipStatus(userId, friendId);
+	}
 }

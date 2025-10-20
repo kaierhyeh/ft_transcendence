@@ -63,65 +63,65 @@ export default async function jwksRoutes(fastify: any, options: any): Promise<vo
 	});
 
 	// // Debug endpoint to show JWKS info (remove in production)
-	// fastify.get('/debug/jwks', async (request: any, reply: any) => {
-	// 	try {
-	// 		const jwksData = await jwksService.getJWKSWithCacheInfo();
+	fastify.get('/debug/jwks', async (request: any, reply: any) => {
+		try {
+			const jwksData = await jwksService.getJWKSWithCacheInfo();
 			
-	// 		return {
-	// 			...jwksData,
-	// 			publicKey: '*** HIDDEN FOR SECURITY ***', // Don't expose raw key
-	// 			debug: {
-	// 				keyCount: jwksData.jwks.keys.length,
-	// 				algorithms: jwksData.jwks.keys.map(k => k.alg),
-	// 				keyIds: jwksData.jwks.keys.map(k => k.kid),
-	// 				usage: jwksData.jwks.keys.map(k => k.use)
-	// 			}
-	// 		};
+			return {
+				...jwksData,
+				publicKey: '*** HIDDEN FOR SECURITY ***', // Don't expose raw key
+				debug: {
+					keyCount: jwksData.jwks.keys.length,
+					algorithms: jwksData.jwks.keys.map(k => k.alg),
+					keyIds: jwksData.jwks.keys.map(k => k.kid),
+					usage: jwksData.jwks.keys.map(k => k.use)
+				}
+			};
 			
-	// 	} catch (error) {
-	// 		logger.error('Error in JWKS debug endpoint', error as Error, {
-	// 			ip: (request as any).ip
-	// 		});
-	// 		return reply.code(500).send({
-	// 			error: 'Internal server error.'
-	// 		});
-	// 	}
-	// });
+		} catch (error) {
+			logger.error('Error in JWKS debug endpoint', error as Error, {
+				ip: (request as any).ip
+			});
+			return reply.code(500).send({
+				error: 'Internal server error.'
+			});
+		}
+	});
 
-	// // Refresh JWKS endpoint (for future key rotation)
-	// fastify.post('/admin/jwks/refresh', {
-	// 	preHandler: async (request: any, reply: any) => {
-	// 		// TODO: Add admin authentication
-	// 		// For now, just log the request
-	// 		logger.warn('JWKS refresh requested - should implement admin auth', {
-	// 			ip: (request as any).ip
-	// 		});
-	// 	}
-	// }, async (request: any, reply: any) => {
-	// 	try {
-	// 		await jwksService.refresh();
-	// 		const jwksData = await jwksService.getJWKSWithCacheInfo();
+	// Refresh JWKS endpoint (for future key rotation)
+	fastify.post('/admin/jwks/refresh', {
+		preHandler: async (request: any, reply: any) => {
+			// TODO: Add admin authentication
+			// For now, just log the request
+			logger.warn('JWKS refresh requested - should implement admin auth', {
+				ip: (request as any).ip
+			});
+		}
+	}, async (request: any, reply: any) => {
+		try {
+			await jwksService.refresh();
+			const jwksData = await jwksService.getJWKSWithCacheInfo();
 			
-	// 		logger.info('JWKS refreshed successfully', {
-	// 			newKeyId: jwksData.keyId,
-	// 			ip: (request as any).ip
-	// 		});
+			logger.info('JWKS refreshed successfully', {
+				newKeyId: jwksData.keyId,
+				ip: (request as any).ip
+			});
 			
-	// 		return {
-	// 			success: true,
-	// 			message: 'JWKS refreshed successfully.',
-	// 			newKeyId: jwksData.keyId,
-	// 			refreshedAt: jwksData.lastGenerated
-	// 		};
+			return {
+				success: true,
+				message: 'JWKS refreshed successfully.',
+				newKeyId: jwksData.keyId,
+				refreshedAt: jwksData.lastGenerated
+			};
 			
-	// 	} catch (error) {
-	// 		logger.error('Error refreshing JWKS', error as Error, {
-	// 			ip: (request as any).ip
-	// 		});
-	// 		return reply.code(500).send({
-	// 			success: false,
-	// 			error: 'Failed to refresh JWKS'
-	// 		});
-	// 	}
-	// });
+		} catch (error) {
+			logger.error('Error refreshing JWKS', error as Error, {
+				ip: (request as any).ip
+			});
+			return reply.code(500).send({
+				success: false,
+				error: 'Failed to refresh JWKS'
+			});
+		}
+	});
 }

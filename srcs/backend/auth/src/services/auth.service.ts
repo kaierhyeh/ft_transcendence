@@ -183,39 +183,31 @@ export class AuthService {
 			// Verify if the token is the latest
 			const currentAccessToken = await redis.get(`access_${user_id}`);
 			if (accessToken !== currentAccessToken) {
-				console.warn(`⚠️ Token is not the latest one.`);
 				throw new Error('Token is not the latest one.');
 			}
 
-			console.log('✅ Access Token is valid.\n');
 			return {
 				success: true,
 				userId: user_id
 			};
 
 		} catch (error) {
-			console.warn('⚠️ Access token invalid, Attempting to refresh it...');
-			console.log('🔍 REFRESH TOKEN CHECK...');
 			// If the access token is expired, try to refresh it using the refresh token
 			if (!refreshToken) {
-				console.error('❌ No refresh token provided.', error);
 				return { success: false, reason: 'No refresh token provided.' };
 			}
 
 			try {
 				const result = await this.refreshAccessToken(fastify, refreshToken, accessToken);
 				if (!result.success) {
-					console.warn(`⚠️ Failed to refresh access token, invalid refresh token.`);
 					return { success: false, reason: 'Failed to refresh access token, invalid refresh token.' };
 				}
-				console.log(`✅ New access token generated successfully.`);
 				return {
 					success: true,
 					userId: result.userId,
 					newAccessToken: result.newAccessToken,
 				};
 			} catch (refreshError) {
-				console.error('❌ Fail to verify refresh token.', refreshError);
 				return { success: false, reason: 'Fail to verify refresh token.' };
 			}
 		}
