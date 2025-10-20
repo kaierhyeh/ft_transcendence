@@ -1,20 +1,23 @@
 
-@import "stats.css";
+@import "settings.css";
 @import "homepage.css";
 @import "error404.css";
 @import "pong.css";
-@import "profile.css";
-@import "history.css";
+@import "auth.css";
 @import "tournament-game.css";
 @import "tournament-layout.css";
+@import "header.css";
 @import "i18n.css";
-@import "browser-compat.css";
-@import "browser-warning.css";
-@import "multi-device.css";
+@import "history.css";
+@import "profile.css";
+/* @import "browser-compat.css"; */
+/* @import "browser-warning.css"; */
+/* @import "multi-device.css"; */
 @import "./menu/menu.css";
 @import "./menu/menu.chats.css";
 @import "./menu/menu.friends.css";
 @import "./menu/menu.users.css";
+@import "./menu/menu.dropdown.css";
 
 /* Import Google Fonts for specific pages */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -49,7 +52,6 @@ body {
 	background-color: #000;
 	color: #fff;
 	height: 100vh;
-	overflow: hidden;
 }
 
 /* Back to Home Button - Universal Style */

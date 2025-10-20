@@ -16,8 +16,8 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost/health", "--insecure"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "https://localhost/health", "--insecure", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -38,8 +38,8 @@ services:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 30s
@@ -49,31 +49,53 @@ services:
         condition: service_healthy
       backend-auth:
         condition: service_healthy
+      backend-users:
+        condition: service_healthy
 
   ###################
   ## Backend Services
   ###################
 
-  # Auth service (with built-in Redis)
+    # Auth service (with built-in Redis)
   backend-auth:
     container_name: backend-auth
     build:
       context: ./backend/auth
       dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=/app/data/database.db
-    volumes:
-      - auth_data:/app/data
+    secrets:
+      - user-session-private.pem
+      - user-session-public.pem
+      - game-session-private.pem
+      - game-session-public.pem
+      - internal-access-private.pem
+      - internal-access-public.pem
+      - users-service-client.env
+      - game-service-client.env
+      - chat-service-client.env
+      - google-oauth.env
     networks:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
+
+  backend-redis:
+    container_name: backend-redis
+    image: "redis:7.0-alpine"
+    networks:
+      - pong_network
+    init: true
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli ping > /dev/null 2>&1"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
   backend-game:
@@ -82,41 +104,41 @@ services:
       context: ./backend/game
       dockerfile: Dockerfile
     volumes:
-      - game_sessions:/app/sessions
+      - game_sessions:/app/data
+    secrets:
+      - game-service-client.env
     networks:
       - pong_network
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
       timeout: 10s
       retries: 3
       start_period: 40s
     restart: unless-stopped
 
-  # backend-user:
-  #   container_name: backend-user
-  #   build:
-  #     context: ./backend/user
-  #     dockerfile: Dockerfile
-  #   networks:
-  #     - pong_network
-  #   init: true
-  #   # Add healthcheck if you can
-  #   restart: unless-stopped
+  backend-users:
+    container_name: backend-users
+    build:
+      context: ./backend/users
+      dockerfile: Dockerfile
+    volumes:
+      - users:/app/data
+    secrets:
+      - users-service-client.env
+    # env_file: .env
+    networks:
+      - pong_network
+    init: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
 
-  #   auth:
-  #     build:
-  #       context: ./backend/auth
-  #     dockerfile: Dockerfile
-  #   chat:
-  #     build:
-  #       context: ./backend/chat
-  #     dockerfile: Dockerfile
-  #   stats:
-  #     build:
-  #       context: ./backend/stats
-  #     dockerfile: Dockerfile
 
   backend-chat:
     container_name: backend-chat
@@ -127,20 +149,46 @@ services:
       # - /app/node_modules
       # - ./:/app
       - db-data:/db
+    secrets:
+      - chat-service-client.env
     networks:
       - pong_network
-    ports:
-      - "3001:3001"
     init: true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
     restart: unless-stopped
     working_dir: /app
 
+secrets:
+  # JWT Keys
+  user-session-private.pem:
+    file: ../secrets/user-session-private.pem
+  user-session-public.pem:
+    file: ../secrets/user-session-public.pem
+  game-session-private.pem:
+    file: ../secrets/game-session-private.pem
+  game-session-public.pem:
+    file: ../secrets/game-session-public.pem
+  internal-access-private.pem:
+    file: ../secrets/internal-access-private.pem
+  internal-access-public.pem:
+    file: ../secrets/internal-access-public.pem
+  
+  # Client Credentials
+  users-service-client.env:
+    file: ../secrets/users-service-client.env
+  game-service-client.env:
+    file: ../secrets/game-service-client.env
+  chat-service-client.env:
+    file: ../secrets/chat-service-client.env
+  
+  # OAuth Credentials
+  google-oauth.env:
+    file: ../secrets/google-oauth.env
 
 networks:
   pong_network:
@@ -150,4 +198,4 @@ volumes:
   game_sessions:
   db-data:
     driver: local
-  auth_data:
+  users:

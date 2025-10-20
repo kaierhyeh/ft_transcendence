@@ -4,17 +4,17 @@ import fp from "fastify-plugin";
 
 declare module "fastify" {
   interface FastifyInstance {
-    sessions: LiveSessionManager;
+    live_sessions: LiveSessionManager;
   }
 }
 
 const liveSessionManagerPlugin: FastifyPluginAsync = async (fastify) => {
   const manager = new LiveSessionManager(
-    fastify.repositories.sessions,
+    fastify.session_repo,
     fastify.log,
   );
 
-  fastify.decorate("sessions", manager);
+  fastify.decorate("live_sessions", manager);
 };
 
 export default fp(liveSessionManagerPlugin, {

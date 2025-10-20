@@ -1,0 +1,137 @@
+.user-list-element-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex: 1;
+	margin-left: 10px; 
+}
+.user-status-online {
+	color: green;
+}
+.user-status-offline {
+	color: red;
+}
+.user-info-avatar-small {
+	width: 40px;
+	height: 40px;
+	border-radius: 10px;
+	border: 2px solid #4ade80;
+	object-fit: cover;
+}
+.user-info-box {
+	text-align: center;
+	margin-bottom: auto;
+	width: 100%;
+	padding-top: 50px;
+	font-size: 36px;
+	line-height: 12px;
+
+}
+.user-info-avatar {
+	width: 250px;
+	height: 250px;
+	border-radius: 10px;
+	border: 2px solid #4ade80;
+	object-fit: cover;
+}
+.user-info-username {
+	margin: auto;
+	padding: 15px;
+	padding-top: 30px;
+	font-size: 36px;
+	line-height: 12px;
+}
+.user-info-alias {
+	margin: auto;
+	padding: 15px;
+	font-size: 36px;
+	line-height: 12px;
+}
+.user-info-online-status {
+	margin: auto;
+	padding: 15px;
+	font-size: 36px;
+	line-height: 12px;
+}
+.user-info-stats {
+	margin: auto;
+	padding: 15px;
+	font-size: 36px;
+	line-height: 12px;
+}
+.user-info-wins {
+	color: green;
+	font-size: 36px;
+	line-height: 12px;
+}
+.user-info-losses {
+	color: red;
+	font-size: 36px;
+	line-height: 12px;
+}
+.user-lower-panel {
+	border-top: 2px solid #444;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	padding-left: 8px;
+	padding-right: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+.user-lower-panel-line {
+	display: flex;
+	gap: 5px;
+}
+.user-action-button {
+	justify-content: center;
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	padding: 4%;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	border-radius: 8px;
+	color: #aaa;
+	background: transparent;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	/* width: 30%; */
+	height: 40px;
+	gap : 5px;
+}
+.user-action-button:hover {
+	color: #4ade80;
+	border-color: #4ade80;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	background-color: #333;
+}
+.user-action-button-red {
+	justify-content: center;
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	padding: 4%;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	border-radius: 8px;
+	color: #aaa;
+	background: transparent;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	/* width: 30%; */
+	height: 40px;
+	gap : 5px;
+}
+.user-action-button-red:hover {
+	color: #ff0000;
+	border-color: #ff0000;
+	box-shadow: 0 0 10px rgba(222, 74, 74, 0.5);
+	background-color: #333;
+}
+.user-pixel-icon {
+	width: 24px;
+	height: 24px;
+}

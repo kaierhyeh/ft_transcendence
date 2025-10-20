@@ -1,21 +1,74 @@
-// application configuration — things like environment variables, ports, database paths, secrets, etc.
+import dotenv from 'dotenv';
+import fs from 'fs';
 
-// example :
+dotenv.config();
+
+// Load client credentials from Docker secrets
+function loadClientCredentials() {
+	try {
+		const credentialsPath = '/run/secrets/chat-service-client.env';
+		if (fs.existsSync(credentialsPath)) {
+			const envConfig = dotenv.parse(fs.readFileSync(credentialsPath));
+			return {
+				clientId: envConfig.CLIENT_ID || '',
+				clientSecret: envConfig.CLIENT_SECRET || ''
+			};
+		}
+	} catch (error) {
+		console.error('Failed to load client credentials:', error);
+	}
+	return { clientId: '', clientSecret: '' };
+}
+
+const clientCredentials = loadClientCredentials();
 
 export const CONFIG = {
 	// Database settings
 	DB: {
-		PATH: process.env.DB_PATH || "/app/sessions/sessions.db",
+		PATH: process.env.DB_PATH || "/app/sessions/chats.db",
 		ENABLE_WAL: true,
+	},
+
+	JWT: {
+		ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
+	},
+
+	AUTH_SERVICE: {
+		BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000"
+	},
+
+	STATS_SERVICE: {
+		BASE_URL: process.env.STATS_SERVICE_URL || "http://backend-stats:3000"
+	},
+
+	GAME_SERVICE: {
+		BASE_URL: process.env.STATS_SERVICE_URL || "http://backend-game:3000"
+	},
+
+	USER_SERVICE: {
+		BASE_URL: process.env.USER_SERVICE_URL || "http://backend-users:3000"
+	},
+
+	API: {
+		BASE_URL: process.env.API_URL || "https://localhost:4443/api"
+	},
+
+	// Internal auth credentials
+	INTERNAL_AUTH: {
+		CLIENT_ID: clientCredentials.clientId,
+		CLIENT_SECRET: clientCredentials.clientSecret,
+	},
+
+	WEB_SOCKET: {
+		TICK_PERIOD: 1000 / 30,
+		SESSION_TIMEOUT: 5000,
+		MAX_SESSIONS: 100,
 	},
 
 	// Server settings
 	SERVER: {
-		PORT: parseInt(process.env.PORT || "3001"),
+		PORT: parseInt(process.env.PORT || "3000"),
 		HOST: process.env.HOST || "0.0.0.0",
 	},
 
-	SECURITY: {
-		JWT_SECRET: process.env.SECRET_JWT || "here-should-be-magic-secret-words",
-	}
 } as const;

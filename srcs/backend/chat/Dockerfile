@@ -1,20 +1,20 @@
-# Use Node.js 18.20.8 as the base image
-FROM node:lts-alpine
+FROM node:20-alpine3.21
 
 # Install sqlite3 for debugging
 RUN apk add --no-cache sqlite curl
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package files first for better Docker layer caching
 COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
-# Copy the rest of application
+# Copy source code
 COPY . .
 
-EXPOSE 3001
+EXPOSE 3000
 
-# Start app
+# Use npm start script
 CMD [ "npm", "start" ]

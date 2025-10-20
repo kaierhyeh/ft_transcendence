@@ -1,33 +1,46 @@
 import { FastifyInstance } from "fastify";
-import { createGameSchema, GameCreationBody, GameIdParams,gameIdSchema } from "../schemas";
+import { createGameSchema, GameCreationData, GameIdParams,gameIdSchema } from "../schemas";
+// import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
-  fastify.post<{ Body: GameCreationBody }>(
+  // POST /create - Create a new game session [protected]
+  fastify.post<{ Body: GameCreationData }>(
     "/create",
-    { schema: { body: createGameSchema } },
+    { 
+      schema: { body: createGameSchema },
+      // preHandler: internalAuthMiddleware  // ← Simple protection!
+    },
     async (request, reply) => {
-      const { type, participants } = request.body;
-      const game_id = fastify.sessions.createGameSession(type, participants);
-      reply.status(201).send({game_id: game_id});
+      const data = request.body;
+      try {
+
+        const game_id = await fastify.live_sessions.createGameSession(data);
+        reply.status(201).send({game_id: game_id});
+      } catch(error: any) {
+        if (error.code === 'INVALID_PARTICIPANTS_NUMBER')
+          reply.status(400).send(error.message);
+        reply.status(500).send("Internal server error");
+      }
   });
 
+  // GET /:id/conf - Get game session configuration
   fastify.get<{ Params: GameIdParams }>(
     "/:id/conf", 
     { schema: { params: gameIdSchema } },
     async (request, reply) => {
       const { id } = request.params;
-      const conf = fastify.sessions.getGameSessionConf(id);
+      const conf = fastify.live_sessions.getGameSessionConf(id);
       if (!conf) return reply.status(404).send({ error: "Game not found"});
       reply.send(conf);
   });
 
-  // WebSocket endpoint for real-time game updates
+  // GET /:id/ws - WebSocket endpoint for real-time game updates
   fastify.get<{ Params: GameIdParams }>(
     "/:id/ws",
     { schema: { params: gameIdSchema }, websocket: true },
     (connection, request) => {
       const { id } = request.params;
-      fastify.sessions.connectToGameSession(id, connection);
+      fastify.live_sessions.connectToGameSession(id, connection);
     }
   );
 }

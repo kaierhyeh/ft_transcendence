@@ -1,1 +1,0 @@
-{"version":3,"file":"remoteMatchmakingManager.d.ts","sourceRoot":"","sources":["../../../src/plugins/remoteMatchmakingManager.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,kBAAkB,EAAE,MAAM,2BAA2B,CAAC;AAG/D,OAAO,QAAQ,SAAS,CAAC;IACvB,UAAU,eAAe;QACvB,WAAW,EAAE,kBAAkB,CAAC;KACjC;CACF;;AAOD,wBAGG"}

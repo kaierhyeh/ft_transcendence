@@ -1,4 +1,4 @@
-import { GameParticipant, MatchmakingMode, MatchmakingResponse } from '../schemas/index.js';
+import { GameParticipant, MatchmakingFormat, MatchmakingResponse } from '../schemas/index.js';
 import { LiveSessionManager } from './LiveSessionManager.js';
 import { SocketStream } from "@fastify/websocket";
 
@@ -7,27 +7,34 @@ interface QueueEntry {
 }
 
 export class MatchmakingManager {
-  queues: Map<MatchmakingMode, QueueEntry[]>;
+  queues: Map<MatchmakingFormat, QueueEntry[]>;
   sessionManager: LiveSessionManager;
   waitingConnections: Map<string, SocketStream>;
 
   constructor(sessionManager: LiveSessionManager) {
     this.queues = new Map();
-    this.queues.set("2p", []);
-    this.queues.set("4p", []);
+    this.queues.set("1v1", []);
+    this.queues.set("2v2", []);
     this.sessionManager = sessionManager;
     this.waitingConnections = new Map();
   }
 
-  joinQueue(participant: GameParticipant, mode: MatchmakingMode): MatchmakingResponse {
+  async joinQueue(participant: GameParticipant, format: MatchmakingFormat): Promise<MatchmakingResponse> {
+      if (participant.type === 'ai') {
+        const error = new Error;
+        (error as any).code = "INVALID_PARTICIPANT";
+        error.message = 'AI players cannot join matchmaking queues';
+        throw error;
+    }
+    
     if (this.isPlayerAlreadyInQueue(participant.participant_id)) {
-      return {
-        type: "error",
-        message: "Already in queue"
-      };
+      const error = new Error;
+      (error as any).code = "INVALID_PARTICIPANT";
+      error.message = 'Already in queue';
+      throw error;
     }
 
-    const queue = this.queues.get(mode)!;
+    const queue = this.queues.get(format)!;
     const entry: QueueEntry = {
       participant
     };
@@ -35,27 +42,38 @@ export class MatchmakingManager {
     queue.push(entry);
 
     let playersNeeded = 2;
-    if (mode == "4p") {
+    if (format == "2v2") {
       playersNeeded = 4;
     }
     
     if (queue.length >= playersNeeded) {
-      return this.createGameFromQueue(mode);
+      const response = await this.createGameFromQueue(format);
+      const gameId = response.game_id;
+      if (!gameId)
+        throw new Error ('Failed to create game from queue');
+      const player = this.sessionManager.getPlayers(gameId)?.get(participant.participant_id);
+      if (!player)
+        throw new Error ('Failed to get player info from created game');
+      return {
+        ...response,
+        team: player.team,
+        slot: player.slot
+      };
     }
 
     return {
       type: "queue_joined",
-      mode,
+      format,
       position: queue.length,
       players_needed: playersNeeded - queue.length
     };
   }
 
-  createGameFromQueue(mode: MatchmakingMode): MatchmakingResponse {
-    const queue = this.queues.get(mode)!;
+  async createGameFromQueue(format: MatchmakingFormat): Promise<MatchmakingResponse> {
+    const queue = this.queues.get(format)!;
     
     let playersNeeded = 2;
-    if (mode == "4p") {
+    if (format == "2v2") {
       playersNeeded = 4;
     }
     
@@ -67,20 +85,35 @@ export class MatchmakingManager {
       participants.push(entry.participant);
     }
     
- let gameType: "pvp" | "multi" = "pvp";
-if (mode == "4p") {
-  gameType = "multi";
-}
+    let gameType: "pvp" | "multi" = "pvp";
+    if (format == "2v2") {
+      gameType = "multi";
+    }
 
-const gameId = this.sessionManager.createGameSession(gameType, participants);
- 
+    const gameId = await this.sessionManager.createGameSession({
+      format,
+      mode: 'pvp',
+      online: true,
+      participants
+    });
+
+    const players = this.sessionManager.getPlayers(gameId);
+    if (!players) {
+      const error = new Error;
+      error.message = 'Failed to retrieve players for created game';
+      throw error;
+    }
+
     for (let i = 0; i < participants.length; i++) {
       const participantId = participants[i].participant_id;
       const ws = this.waitingConnections.get(participantId);
-      if (ws) {
+      const player = players.get(participantId);
+      if (ws && player) {
         const message = {
           type: "game_ready",
-          game_id: gameId
+          game_id: gameId,
+          team: player.team,
+          slot: player.slot
         };
         const jsonMessage = JSON.stringify(message);
         ws.socket.send(jsonMessage);
@@ -90,23 +123,23 @@ const gameId = this.sessionManager.createGameSession(gameType, participants);
     
     return {
       type: "game_ready",
-      mode,
+      format,
       game_id: gameId
     };
   }
 
   public isPlayerAlreadyInQueue(participantId: string): boolean {
-    const queue2p = this.queues.get("2p")!;
-    for (let i = 0; i < queue2p.length; i++) {
-      const entry = queue2p[i];
+    const queue1v1 = this.queues.get("1v1")!;
+    for (let i = 0; i < queue1v1.length; i++) {
+      const entry = queue1v1[i];
       if (entry.participant.participant_id == participantId) {
         return true;
       }
     }
     
-    const queue4p = this.queues.get("4p")!;
-    for (let i = 0; i < queue4p.length; i++) {
-      const entry = queue4p[i];
+    const queue2v2 = this.queues.get("2v2")!;
+    for (let i = 0; i < queue2v2.length; i++) {
+      const entry = queue2v2[i];
       if (entry.participant.participant_id == participantId) {
         return true;
       }
@@ -115,17 +148,17 @@ const gameId = this.sessionManager.createGameSession(gameType, participants);
     return false;
   }
   
-  getQueueStatus(mode: MatchmakingMode): MatchmakingResponse {
-    const queue = this.queues.get(mode)!;
+  getQueueStatus(format: MatchmakingFormat): MatchmakingResponse {
+    const queue = this.queues.get(format)!;
     
     let playersNeeded = 2;
-    if (mode == "4p") {
+    if (format == "2v2") {
       playersNeeded = 4;
     }
     
     return {
       type: "queue_status",
-      mode,
+      format,
       position: queue.length,
       players_needed: Math.max(0, playersNeeded - queue.length)
     };
@@ -138,18 +171,18 @@ const gameId = this.sessionManager.createGameSession(gameType, participants);
   removeWebSocket(participantId: string): void {
     this.waitingConnections.delete(participantId);
     
-    const queue2p = this.queues.get("2p")!;
-    for (let i = 0; i < queue2p.length; i++) {
-      if (queue2p[i].participant.participant_id == participantId) {
-        queue2p.splice(i, 1);
+    const queue1v1 = this.queues.get("1v1")!;
+    for (let i = 0; i < queue1v1.length; i++) {
+      if (queue1v1[i].participant.participant_id == participantId) {
+        queue1v1.splice(i, 1);
         break;
       }
     }
     
-    const queue4p = this.queues.get("4p")!;
-    for (let i = 0; i < queue4p.length; i++) {
-      if (queue4p[i].participant.participant_id == participantId) {
-        queue4p.splice(i, 1);
+    const queue2v2 = this.queues.get("2v2")!;
+    for (let i = 0; i < queue2v2.length; i++) {
+      if (queue2v2[i].participant.participant_id == participantId) {
+        queue2v2.splice(i, 1);
         break;
       }
     }

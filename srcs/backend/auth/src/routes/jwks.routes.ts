@@ -1,14 +1,13 @@
-import jwksService from '../services/jwks.service.js';
-import { type ILoggerService } from '../container.js';
+import jwksService from '../services/jwks.service';
 
-export async function jwksRoutes(fastify: any, options: any): Promise<void> {
-	const logger: ILoggerService = (fastify as any).logger;
+export default async function jwksRoutes(fastify: any, options: any): Promise<void> {
+	const logger = (fastify as any).logger;
 	
 	/**
 	 * JWKS endpoint - RFC 7517 compliant
 	 * Standard endpoint for JWT key discovery
 	 */
-	fastify.get('/.well-known/jwks.json', {
+	fastify.get('/jwks.json', {
 		schema: {
 			description: 'JSON Web Key Set endpoint for JWT verification',
 			tags: ['JWKS'],
@@ -63,7 +62,7 @@ export async function jwksRoutes(fastify: any, options: any): Promise<void> {
 		}
 	});
 
-	// Debug endpoint to show JWKS info (remove in production)
+	// // Debug endpoint to show JWKS info (remove in production)
 	fastify.get('/debug/jwks', async (request: any, reply: any) => {
 		try {
 			const jwksData = await jwksService.getJWKSWithCacheInfo();

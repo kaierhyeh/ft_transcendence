@@ -716,6 +716,10 @@ export async function processGoogleOAuth(code: string): Promise<void> {
 		} else if (response.ok && data.success) {
 			update_user(new User(data.username));
 			showSuccess(`Welcome back, ${data.username}!`);
+			// Small delay to ensure cookies are set before redirecting
+			await new Promise(resolve => setTimeout(resolve, 100));
+			// Redirect to home page after successful login
+			window.location.href = '/';
 		} else
 			showError("Failed to process Google OAuth.");
 
@@ -745,6 +749,8 @@ async function completeGoogleRegistration(username: string, tempToken: string): 
 		} else if (response.ok && data.success) {
 			update_user(new User(data.username, data.id, data.email, data.avatar));
 			showSuccess(`Welcome, ${data.username}!`);
+			// Redirect to home page after successful registration
+			window.location.href = '/';
 		} else {
 			showError("Failed to complete Google registration.");
 		}

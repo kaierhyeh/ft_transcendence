@@ -1,3 +1,4 @@
+import { GameFormat } from "../schemas";
 import { PlayerSlot, Team } from "../types";
 import { SessionPlayerMap } from "./GameSession";
 
@@ -39,26 +40,23 @@ interface Player {
     slot: PlayerSlot;
     paddle: Paddle;
     velocity: number;
-    connected: boolean;
     team: Team;
 }
 
 type Score = Map<Team, number>;
 
-export type GameMode = "pvp" | "multi";
-
-interface GameModeConfig {
+interface GameFormatConfig {
     paddlePositions: Partial<Record<PlayerSlot, Paddle>>;
 }
 
-const GAME_MODE_CONFIGS: Record<GameMode, GameModeConfig> = {
-    pvp: {
+const GAME_MODE_CONFIGS: Record<GameFormat, GameFormatConfig> = {
+    "1v1": {
         paddlePositions: {
             left: { x: 20, y: HEIGHT / 2 - PADDLE_HEIGHT / 2 },
             right: { x: WIDTH - 30, y: HEIGHT / 2 - PADDLE_HEIGHT / 2 }
         }
     },
-    multi: {
+    "2v2": {
         paddlePositions: {
             "top-left": { x: 20, y: HEIGHT / 4 - PADDLE_HEIGHT / 2 },
             "bottom-left": { x: 20, y: (3 * HEIGHT) / 4 - PADDLE_HEIGHT / 2 },
@@ -76,8 +74,8 @@ export interface GameState {
 }
 
 export class GameEngine {
-    private game_mode: GameMode;
-    private mode_config: GameModeConfig;
+    private game_format: GameFormat;
+    private mode_config: GameFormatConfig;
     private conf_: GameConf;
     private ball: Ball;
     private players: Map<PlayerSlot, Player>;
@@ -86,8 +84,8 @@ export class GameEngine {
     private paused: boolean;
     private lastDelta: number = 16.67;
 
-    constructor(game_mode: GameMode, session_players: SessionPlayerMap) {
-        this.game_mode = game_mode;
+    constructor(game_mode: GameFormat, session_players: SessionPlayerMap) {
+        this.game_format = game_mode;
         this.mode_config = GAME_MODE_CONFIGS[game_mode];
         this.conf_ = {
             canvas_width: WIDTH,
@@ -109,7 +107,6 @@ export class GameEngine {
                 slot: p.slot,
                 paddle: { x: paddle.x, y: paddle.y },
                 velocity: 0,
-                connected: false,
                 team: p.team
             });
         });
@@ -243,7 +240,7 @@ export class GameEngine {
         const currentSpeed = Math.sqrt(this.ball.dx ** 2 + this.ball.dy ** 2);
         
         let speed: number;
-        if (this.game_mode === "multi")
+        if (this.game_format === "2v2")
             speed = currentSpeed * 1.05;
         else
             speed = Math.min(currentSpeed * 1.05, MAX_BALL_SPEED);
@@ -277,11 +274,6 @@ export class GameEngine {
         };
     }
 
-    public setConnected(slot: PlayerSlot, value: boolean): void {
-        const player = this.players.get(slot);
-        if (player) player.connected = value;
-    }
-
     private movePaddles(dt: number): void {
         for (const player of this.players.values()) {
             player.paddle.y += player.velocity * (dt / 1000);
@@ -292,7 +284,7 @@ export class GameEngine {
     }
 
     private getPaddleBounds(slot: PlayerSlot): { min: number; max: number } {
-        if (this.game_mode === "pvp") {
+        if (this.game_format === "1v1") {
             return { min: 0, max: HEIGHT - PADDLE_HEIGHT };
         } else {
             if (slot === "top-left" || slot === "top-right") {
@@ -306,7 +298,7 @@ export class GameEngine {
     public applyMovement(slot: PlayerSlot, move: "up" | "down" | "stop"): void {
         const player = this.players.get(slot);
         let speed = PADDLE_SPEED;
-        if (this.game_mode == "multi")
+        if (this.game_format == "2v2")
             speed /= 2;
         if (!player)
             return;

@@ -1,15 +1,57 @@
+import dotenv from 'dotenv';
+import fs from 'fs';
+
+dotenv.config();
+
+// Load client credentials from Docker secrets
+function loadClientCredentials() {
+  try {
+    const credentialsPath = '/run/secrets/users-service-client.env';
+    if (fs.existsSync(credentialsPath)) {
+      const envConfig = dotenv.parse(fs.readFileSync(credentialsPath));
+      return {
+        clientId: envConfig.CLIENT_ID || '',
+        clientSecret: envConfig.CLIENT_SECRET || ''
+      };
+    }
+  } catch (error) {
+    console.error('Failed to load client credentials:', error);
+  }
+  return { clientId: '', clientSecret: '' };
+}
+
+const clientCredentials = loadClientCredentials();
+
 export const CONFIG = {
   // Game settings
   GAME: {
     TICK_PERIOD: 1000 / 30, // <=> 30 FPS
-    SESSION_TIMEOUT: 5000, // 5s
     MAX_SESSIONS: 100,
   },
   
   // Database settings
   DB: {
-    PATH: process.env.DB_PATH || "/app/sessions/sessions.db",
+    PATH: process.env.DB_PATH || "/app/data/sessions.db",
     ENABLE_WAL: true,
+  },
+
+  JWT: {
+    ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
+  },
+
+  // Auth service settings
+  AUTH_SERVICE: {
+    BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000",
+  },
+
+  USERS_SERVICE: {
+    BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-users:3000"
+  },
+
+  // Internal auth credentials
+  INTERNAL_AUTH: {
+    CLIENT_ID: clientCredentials.clientId,
+    CLIENT_SECRET: clientCredentials.clientSecret,
   },
   
   // Server settings

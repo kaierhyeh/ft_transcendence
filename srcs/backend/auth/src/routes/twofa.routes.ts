@@ -1,14 +1,14 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import redis from '../../redis/redisClient.js';
-import authService from '../services/auth.service.js';
-import authUtils from '../utils/auth.utils.js';
-import { type ILoggerService } from '../container.js';
+import redis from '../clients/RedisClient';
+import authService from '../services/auth.service';
+import jwtService from '../services/jwt.service';
+import authUtils from '../utils/auth.utils';
+import { CONFIG } from '../config';
 
-export async function twofaRoutes(fastify: FastifyInstance, options: any) {
-	const db = (fastify as any).db;
-	const logger: ILoggerService = (fastify as any).logger;
+export default async function twofaRoutes(fastify: FastifyInstance, options: any) {
+	const logger = (fastify as any).logger;
 
 	// 📌 Route: 2fa/setup
 	// Route to setup 2FA for the user.

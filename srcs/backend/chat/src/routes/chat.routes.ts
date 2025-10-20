@@ -1,32 +1,28 @@
-// registers endpoints (fastify.get(...), fastify.post(...)) and maps them to controller functions.
+import { FastifyInstance } from "fastify";
+import { ChatController } from "../controllers/chats.controller";
+import { ChatIdParams, chatIdSchema } from "../schemas/users.schema";
+import { userAuthMiddleware } from "../middleware/userAuth";
 
-import	{
-		FastifyInstance,
-		FastifyPluginAsync
-		} from "fastify";
+export default async function chatsRoutes(fastify: FastifyInstance) {
+	const chatController = new ChatController(fastify.services.chat);
 
-import	{
-		getChatPartnersController
-		} from "../controllers/chats.controller";
+	// List current user's chats [Requires user authentication]
+	fastify.get(
+		"/",
+		{
+			preHandler: userAuthMiddleware
+		},
+		chatController.getUserChats.bind(chatController)
+	);
 
-import	{
-		postMessagesController,
-		getMessagesController,
-		deleteMessageController
-		} from "../controllers/messages.controller";
-import { colorLog } from "../utils/logger";
+	// Get chat by id [Requires user authentication]
+	fastify.get<{ Params: ChatIdParams }>(
+		"/:id",
+		{
+			schema: { params: chatIdSchema },
+			preHandler: userAuthMiddleware
+		},
+		chatController.getChatById.bind(chatController)
+	);
 
-export const chatRoutes: FastifyPluginAsync = async (fastify:FastifyInstance): Promise<void> => {
-
-	// empty routes
-	// fastify.get('/', async () => { return { message: 'Hello from Fastify 🚀' }; });
-	// fastify.get('/about', async () => { return { message: 'This is the about route' }; });
-
-	// chat routes
-	colorLog("cyan", fastify)
-	fastify.post("/messages", postMessagesController);
-	fastify.get("/messages/:chatId/:userId", getMessagesController);
-	fastify.delete("/messages/:id", deleteMessageController);
-	fastify.get("/chats/:userId", getChatPartnersController);
-
-};
+}

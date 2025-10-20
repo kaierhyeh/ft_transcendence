@@ -22,6 +22,7 @@ export function createLanguageSwitcher(): HTMLElement {
   // 添加事件監聽器
   select.addEventListener('change', (e) => {
     const target = e.target as HTMLSelectElement;
+	console.log('Language changed to:', target.value);
     setLanguage(target.value as Language);
   });
   
@@ -30,29 +31,20 @@ export function createLanguageSwitcher(): HTMLElement {
 }
 
 // 初始化語言切換器（可以添加到任何頁面）
-export function initializeLanguageSwitcher(): void {
-  addLanguageSwitcherToMenu();
+export function initLanguages(): void {
+  addLanguageSwitcher();
 }
 
-function addLanguageSwitcherToMenu(): void {
-  // 使用 requestAnimationFrame 確保 DOM 已經完全渲染
+function addLanguageSwitcher(): void {
   requestAnimationFrame(() => {
-    // 找到合適的位置插入語言切換器 - 添加到 menu-header-buttons 容器中
-    const menuWindow = document.getElementById('menuWindow');
-    
-    if (menuWindow) {
-      const menuHeaderButtons = menuWindow.querySelector('.menu-header-buttons');
-      
-      if (menuHeaderButtons) {
-        // 檢查是否已經存在語言選擇器，避免重複添加
-        const existingSwitcher = menuHeaderButtons.querySelector('.language-switcher');
-        
+    const languagesSwitcher = document.getElementById('languagesSwitcher');
+
+    if (languagesSwitcher) {
+        const existingSwitcher = languagesSwitcher.querySelector('.language-switcher');
         if (!existingSwitcher) {
           const switcher = createLanguageSwitcher();
-          // 插入到按鈕容器的最前面（在 Back 和 Close 按鈕之前）
-          menuHeaderButtons.insertBefore(switcher, menuHeaderButtons.firstChild);
+          languagesSwitcher.innerHTML = switcher.outerHTML;
         }
-      }
     }
   });
 }
