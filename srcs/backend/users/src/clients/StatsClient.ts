@@ -1,5 +1,5 @@
 import { CONFIG } from "../config";
-import { InternalJWTUtils } from "../utils/internal-jwt.utils";
+import { InternalAuthClient } from "./InternalAuthClient";
 
 interface ErrorResponse {
   message?: string;
@@ -22,14 +22,11 @@ export interface LeaderboardEntry {
 
 export class StatsClient {
   private base_url = CONFIG.STATS_SERVICE.BASE_URL;
-
-  private getAuthHeaders(): { Authorization: string } {
-    const token = InternalJWTUtils.generateInternalJWT();
-    return { Authorization: `Bearer ${token}` };
-  }
+  private internalAuthClient = new InternalAuthClient();
 
   async getLiteStats(user_id: number): Promise<LiteStats> {
-    const internalAuthHeaders = this.getAuthHeaders();
+    const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
+
 
     const response = await fetch(`${this.base_url}/stats/${user_id}/lite`, {
       headers: internalAuthHeaders
@@ -50,7 +47,7 @@ export class StatsClient {
   }
 
   async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
-    const internalAuthHeaders = this.getAuthHeaders();
+    const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
 
     const response = await fetch(`${this.base_url}/stats/leaderboard?limit=${limit}`, {
       headers: internalAuthHeaders
