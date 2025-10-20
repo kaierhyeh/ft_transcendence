@@ -12,8 +12,15 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const data = request.body;
-      const game_id = await fastify.live_sessions.createGameSession(data);
-      reply.status(201).send({game_id: game_id});
+      try {
+
+        const game_id = await fastify.live_sessions.createGameSession(data);
+        reply.status(201).send({game_id: game_id});
+      } catch(error: any) {
+        if (error.code === 'INVALID_PARTICIPANTS_NUMBER')
+          reply.status(400).send(error.message);
+        reply.status(500).send("Internal server error");
+      }
   });
 
   // GET /:id/conf - Get game session configuration

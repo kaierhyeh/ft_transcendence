@@ -29,7 +29,7 @@ function loadKeyByType(keyType: KeyType, keyFormat: KeyFormat): string {
 
 function loadClientCredentials(): Record<string, ClientCredentials> {
 	const credentials: Record<string, ClientCredentials> = {};
-	const services = ['users-service', 'game-service', 'matchmaking-service', 'chat-service'];
+	const services = ['users-service', 'game-service', 'chat-service'];
 	
 	for (const service of services) {
 		const credentialsPath = path.join('/run/secrets', `${service}-client.env`);

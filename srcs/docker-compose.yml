@@ -71,7 +71,6 @@ services:
       - internal-access-public.pem
       - users-service-client.env
       - game-service-client.env
-      - matchmaking-service-client.env
       - chat-service-client.env
     networks:
       - pong_network
@@ -183,8 +182,6 @@ secrets:
     file: ../secrets/users-service-client.env
   game-service-client.env:
     file: ../secrets/game-service-client.env
-  matchmaking-service-client.env:
-    file: ../secrets/matchmaking-service-client.env
   chat-service-client.env:
     file: ../secrets/chat-service-client.env
 

@@ -20,11 +20,18 @@ export class MatchmakingManager {
   }
 
   async joinQueue(participant: GameParticipant, format: MatchmakingFormat): Promise<MatchmakingResponse> {
+      if (participant.type === 'ai') {
+        const error = new Error;
+        (error as any).code = "INVALID_PARTICIPANT";
+        error.message = 'AI players cannot join matchmaking queues';
+        throw error;
+    }
+    
     if (this.isPlayerAlreadyInQueue(participant.participant_id)) {
-      return {
-        type: "error",
-        message: "Already in queue"
-      };
+      const error = new Error;
+      (error as any).code = "INVALID_PARTICIPANT";
+      error.message = 'Already in queue';
+      throw error;
     }
 
     const queue = this.queues.get(format)!;
@@ -40,7 +47,18 @@ export class MatchmakingManager {
     }
     
     if (queue.length >= playersNeeded) {
-      return await this.createGameFromQueue(format);
+      const response = await this.createGameFromQueue(format);
+      const gameId = response.game_id;
+      if (!gameId)
+        throw new Error ('Failed to create game from queue');
+      const player = this.sessionManager.getPlayers(gameId)?.get(participant.participant_id);
+      if (!player)
+        throw new Error ('Failed to get player info from created game');
+      return {
+        ...response,
+        team: player.team,
+        slot: player.slot
+      };
     }
 
     return {
@@ -67,25 +85,35 @@ export class MatchmakingManager {
       participants.push(entry.participant);
     }
     
- let gameType: "pvp" | "multi" = "pvp";
-if (format == "2v2") {
-  gameType = "multi";
-}
+    let gameType: "pvp" | "multi" = "pvp";
+    if (format == "2v2") {
+      gameType = "multi";
+    }
 
-const gameId = await this.sessionManager.createGameSession({
-  format,
-  mode: 'pvp',
-  online: true,
-  participants
-});
- 
+    const gameId = await this.sessionManager.createGameSession({
+      format,
+      mode: 'pvp',
+      online: true,
+      participants
+    });
+
+    const players = this.sessionManager.getPlayers(gameId);
+    if (!players) {
+      const error = new Error;
+      error.message = 'Failed to retrieve players for created game';
+      throw error;
+    }
+
     for (let i = 0; i < participants.length; i++) {
       const participantId = participants[i].participant_id;
       const ws = this.waitingConnections.get(participantId);
-      if (ws) {
+      const player = players.get(participantId);
+      if (ws && player) {
         const message = {
           type: "game_ready",
-          game_id: gameId
+          game_id: gameId,
+          team: player.team,
+          slot: player.slot
         };
         const jsonMessage = JSON.stringify(message);
         ws.socket.send(jsonMessage);

@@ -13,7 +13,9 @@ type Player = GameParticipant & {
     socket?: SocketStream;
 }
 
-type PlayerMap = Map<string, Player>;
+export type PublicPlayer =  Omit<Player, "participant_id"| "socket">;
+
+export type PlayerMap = Map<string, Player>;
 
 export type SessionPlayerMap = PlayerMap;
 
@@ -21,7 +23,7 @@ export interface GameEndedMessage {
     type: "game_ended";
     data: {
         reason: "player_disconnected" | "game_over";
-        disconnected_player?: Player;
+        disconnected_player?: PublicPlayer;
     };
 }
 
@@ -99,9 +101,12 @@ export class GameSession {
         }
         else {
              if (participants.length !== 4) {
-                throw new Error(
-                    `Multi-player games require exactly 4 participants, got ${participants.length}`,
-                );
+                const error = new Error;
+                (error as any).status = 400;
+                (error as any).code = 'INVALID_PARTICIPANTS_NUMBER';
+                error.message = `Multi-player games require exactly 4 participants, got ${participants.length}`;
+                throw error;
+
             }
 
             
@@ -149,6 +154,10 @@ export class GameSession {
         return this.game_engine.conf;
     }
 
+    public get playersMap(): PlayerMap {
+        return this.players;
+    }
+
     public get started(): boolean {
         return this.started_at !== undefined;
     }
@@ -162,8 +171,16 @@ export class GameSession {
         return false;
     }
 
-    public get disconnected_player() {
-        return this.disconnected_player_info;
+    public get disconnected_player(): PublicPlayer | undefined {
+        if (this.disconnected_player_info) {
+            return {
+                    team: this.disconnected_player_info.team,
+                    slot: this.disconnected_player_info.slot,
+                    type: this.disconnected_player_info.type,
+                    user_id: this.disconnected_player_info.user_id,
+                    username: this.disconnected_player_info.username
+            };
+        }
     }
 
     public checkAndStart(): void {
@@ -180,7 +197,7 @@ export class GameSession {
 
     public tick(): void {
         const delta = this.delta;
-        if (delta) {
+        if (delta && !this.winner) {
             this.game_engine.update(delta);
             this.winner = this.game_engine.winner;
             this.last_time = Date.now();
@@ -255,24 +272,23 @@ export class GameSession {
         this.viewers.delete(connection);
     }
 
-    public closeAllConnections(status: number, message: GameMessage): void {
-        const payload = JSON.stringify(message);
+    public closeAllConnections(status: number, reason: string): void {
 
         this.players.forEach(({ socket: connection }, participant_id) => {
             if (connection) {
-                connection.socket.close(status, payload);
+                connection.socket.close(status, reason);
                 this.disconnectPlayer(participant_id);
             }
         });
         this.viewers.forEach( connection => {
-            connection.socket.close(status, payload);
+            connection.socket.close(status, reason);
             this.disconnectViewer(connection);
         });
     }
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (!this.started_at || !this.ended_at || !game_state.winner || (this.forfeit && !this.online))
+        if (!this.started_at || !this.ended_at || !this.winner || (this.forfeit && !this.online))
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
@@ -305,7 +321,7 @@ export class GameSession {
                     team: p.team,
                     slot: p.slot,
                     score: game_state.score[p.team],
-                    winner: game_state.winner === p.team
+                    winner: this.winner === p.team
                 };
                 return player_session;
             })

@@ -1,10 +1,11 @@
-import { GameParticipant } from './game/types.js';
+import { GameParticipant, Team } from './game/types.js';
 import { generateParticipantId } from './game/utils.js';
 import { showError } from './notifications.js';
 import { ScoreChart } from './live_stats/ScoreChart.js';
 import { ScoreDisplay } from './live_stats/ScoreDisplay.js';
 import { ScoreTracker } from './live_stats/ScoreTracker.js';
 import user from "./user/User.js";
+import { PlayerSlot } from './user/types.js';
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
@@ -33,6 +34,8 @@ let matchmakingWebSocket: WebSocket | null = null;
 let keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
 let keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
 let gameDisconnected: boolean = false;
+let myTeam: Team | null;
+let mySlot: PlayerSlot | null;
 
 export function cleanupRemoteGame(): void {
     if (keyDownHandler !== null) {
@@ -54,6 +57,8 @@ export function cleanupRemoteGame(): void {
     }
 
     gameDisconnected = false;
+    myTeam = null;
+    mySlot = null;
 }
 
 export default function initRemoteGame(): void {
@@ -189,7 +194,7 @@ export default function initRemoteGame(): void {
 
         currentParticipantId = generateParticipantId();
         const participant: GameParticipant = {
-             type: user.isLoggedIn() ? "registered" : "guest",
+            type: user.isLoggedIn() ? "registered" : "guest",
             user_id: user.user_id ?? undefined,
             participant_id: currentParticipantId
         };
@@ -211,6 +216,8 @@ export default function initRemoteGame(): void {
                 if (currentButton !== null) {
                     currentButton.textContent = "Match found!";
                 }
+                myTeam = data.team;
+                mySlot = data.slot;
                 connectToGame(data.game_id);
             } else if (data.type === "queue_joined") {
                 if (currentButton !== null) {
@@ -276,7 +283,8 @@ export default function initRemoteGame(): void {
                     if (currentButton !== null) {
                         currentButton.textContent = 'Match found!';
                     }
-
+                    myTeam = data.team;
+                    mySlot = data.slot;
                     connectToGame(data.game_id);
                 }
             } catch (error) {
@@ -348,7 +356,11 @@ export default function initRemoteGame(): void {
                 } else if (msg.type === "player_disconnected") {
                 } else if (msg.type === "game_ended") {
                     if (msg.data.reason === "player_disconnected") {
-                        handleGameEnd("Your opponent left the game! ", "Please select a new party");
+                        console.log(msg);
+                        console.log("Disconnected player:", msg.data.disconnected_player, " - My team:", myTeam);
+                        const disconnectingTeam = msg.data.disconnected_player.team;
+                        const whoLeft = disconnectingTeam === myTeam ? "Your teammate left the game!" : "Your opponent left the game!";
+                        handleGameEnd(whoLeft, "Please select a new party");
                     }
                 }
             } catch (error) {
@@ -428,7 +440,6 @@ export default function initRemoteGame(): void {
         if (shouldStop === true) {
             const message = JSON.stringify({
                 type: "input",
-                participant_id: currentParticipantId,
                 move: "stop"
             });
 

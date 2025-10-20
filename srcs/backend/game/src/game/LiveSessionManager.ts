@@ -1,6 +1,6 @@
 import { SocketStream } from "@fastify/websocket";
 import { GameCreationData } from "../schemas";
-import { GameEndedMessage, GameSession } from "./GameSession";
+import { GameEndedMessage, GameSession, PlayerMap, PublicPlayer } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
@@ -32,6 +32,10 @@ export class LiveSessionManager {
 
     public getGameSessionConf(id: number): GameConf | undefined {
         return this.game_sessions.get(id)?.config;
+    }
+
+    public getPlayers(gameId: number): PlayerMap | undefined {
+        return this.game_sessions.get(gameId)?.playersMap;
     }
 
     public connectToGameSession(id: number, connection: SocketStream): void {
@@ -85,7 +89,7 @@ export class LiveSessionManager {
         
         this.saveSession(id, session);
         let message: GameEndedMessage;
-        if (session.disconnected_player) {
+        if (session.disconnected_player) {            
             message = {
                 type: "game_ended",
                 data: {
@@ -93,7 +97,8 @@ export class LiveSessionManager {
                     disconnected_player: session.disconnected_player
                 }
             };
-            session.closeAllConnections(4000, message);
+            session.broadcast(message);
+            session.closeAllConnections(4000, message.data.reason);
         } else {
             message = {
                 type: "game_ended",
@@ -101,7 +106,8 @@ export class LiveSessionManager {
                     reason: "game_over",
                 }
             };
-            session.closeAllConnections(1001, message); 
+            session.broadcast(message);
+            session.closeAllConnections(1001, message.data.reason); 
         }
         this.game_sessions.delete(id);
     }

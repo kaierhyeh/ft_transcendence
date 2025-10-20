@@ -88,6 +88,8 @@ export const matchmakingResponseSchema = {
     players_needed: { type: "number" },
     game_id: { type: "number" },
     message: { type: "string" },
+    team: { type: "string", enum: ["left", "right"]},
+    slot: { type: "string", enum: ["left", "right", "bottom-left", "bottom-right", "top-left", "top-right"]},
   },
   additionalProperties: false,
 } as const;

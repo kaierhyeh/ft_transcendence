@@ -3,26 +3,27 @@ import { matchmakingRequestSchema, MatchmakingRequest } from "../schemas";
 
 async function handleJoinRequest(request: FastifyRequest<{ Body: MatchmakingRequest }>, reply: any): Promise<void> {
   const {format, participant } = request.body;
-
-  if (participant.type === 'ai') {
-      throw new Error(
-        'AI players cannot join matchmaking queues',
-      );
-    }
-
   const fastify = request.server;
-  const response = await fastify.matchmaking.joinQueue(participant, format);
-  reply.send(response);
+   try {
+    const response = await fastify.matchmaking.joinQueue(participant, format);
+    reply.send(response);
+  } catch(error: any) {
+    if (error.code === 'INVALID_PARTICIPANTS_NUMBER')
+      reply.status(400).send(error.message);
+    else if (error.code === 'INVALID_PARTICIPANT')
+      reply.status(400).send(error.message);
+    reply.status(500).send("Internal server error");
+  }
 }
 
 function handleStatusRequest(request: any, reply: any): void {
   const fastify = request.server;
-  const status2p = fastify.matchmaking.getQueueStatus("2p");
-  const status4p = fastify.matchmaking.getQueueStatus("4p");
+  const status1v1 = fastify.matchmaking.getQueueStatus("1v1");
+  const status2v2 = fastify.matchmaking.getQueueStatus("2v2");
   
   reply.send({
-    queue_2p: status2p,
-    queue_4p: status4p
+    queue_1v1: status1v1,
+    queue_2v2: status2v2
   });
 }
 
