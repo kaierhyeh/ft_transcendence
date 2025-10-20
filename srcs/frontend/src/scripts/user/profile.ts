@@ -1,4 +1,5 @@
 import { initMatchHistory } from './match_history.js';
+import { fetchLeaderboard } from './api.js';
 import user from './User.js';
 
 declare const Chart: any;
@@ -16,30 +17,10 @@ export async function initProfile() {
 		total_points_scored: number;
 	}
 
-	const fictionalUser: User = {
-		id: 1,
-		username: "PlayerOne",
-		email: "playerone@example.com",
-		created_at: "2023-01-01T00:00:00Z",
-		wins: 25,
-		losses: 10,
-		curr_winstreak: 5,
-		best_winstreak: 8,
-		total_points_scored: 1500
-	};
-
-	const mockUsers: User[] = [
-		fictionalUser,
-		{ id: 2, username: "PlayerTwo", email: "playertwo@example.com", created_at: "2023-02-01T00:00:00Z", wins: 20, losses: 15, curr_winstreak: 3, best_winstreak: 6, total_points_scored: 1200 },
-		{ id: 3, username: "PlayerThree", email: "playerthree@example.com", created_at: "2023-03-01T00:00:00Z", wins: 30, losses: 5, curr_winstreak: 10, best_winstreak: 12, total_points_scored: 1800 },
-		{ id: 4, username: "PlayerFour", email: "playerfour@example.com", created_at: "2023-04-01T00:00:00Z", wins: 15, losses: 20, curr_winstreak: 2, best_winstreak: 4, total_points_scored: 900 },
-		{ id: 5, username: "PlayerFive", email: "playerfive@example.com", created_at: "2023-05-01T00:00:00Z", wins: 10, losses: 25, curr_winstreak: 1, best_winstreak: 3, total_points_scored: 600 }
-	];
-
 	let playerChart: any = null;
 
-	function displayUserProfile(user: User) {
-		const joinDate = new Date(user.created_at).toLocaleDateString('en-EN');
+	function displayUserProfile(userData: any) {
+		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
 		const usernameElement = document.getElementById('profileUsername');
 		const emailElement = document.getElementById('profileEmail');
@@ -49,15 +30,15 @@ export async function initProfile() {
 		const profileSection = document.getElementById('profileSection');
 
 		if (usernameElement)
-			usernameElement.textContent = user.username;
+			usernameElement.textContent = userData.username || userData.alias;
 		if (emailElement)
-			emailElement.textContent = user.email;
+			emailElement.textContent = userData.email;
 		if (joinDateElement)
 			joinDateElement.textContent = 'Member since ' + joinDate;
 		if (currentStreakElement)
-			currentStreakElement.textContent = user.curr_winstreak.toString();
+			currentStreakElement.textContent = userData.curr_winstreak?.toString() || '0';
 		if (bestStreakElement)
-			bestStreakElement.textContent = user.best_winstreak.toString();
+			bestStreakElement.textContent = userData.best_winstreak?.toString() || '0';
 
 		if (profileSection)
 			profileSection.style.display = 'block';
@@ -65,12 +46,12 @@ export async function initProfile() {
             matchHistorySection.style.display = 'block';
 
 		setTimeout(function () {
-			createPlayerChart(user);
-			displayPlayerRanking(user);
+			createPlayerChart(userData);
+			displayPlayerRanking(userData);
 		}, 50);
 	}
 
-	function createPlayerChart(user: User) {
+	function createPlayerChart(user: any) {
 		const canvasElement = document.getElementById('playerChart') as HTMLCanvasElement;
 		if (!canvasElement)
 			return;
@@ -82,12 +63,29 @@ export async function initProfile() {
 		if (playerChart)
 			playerChart.destroy();
 
+		const wins = user.wins || 0;
+		const losses = user.losses || 0;
+
+		if (wins === 0 && losses === 0) {
+			const noDataElement = document.getElementById('noDataChart');
+			if (noDataElement) {
+				noDataElement.style.display = 'block';
+				canvasElement.style.display = 'none';
+			}
+			return;
+		}
+
+		const noDataElement = document.getElementById('noDataChart');
+		if (noDataElement)
+			noDataElement.style.display = 'none';
+		canvasElement.style.display = 'block';
+
 		playerChart = new Chart(ctx, {
 			type: 'pie',
 			data: {
 				labels: ['Wins', 'Losses'],
 				datasets: [{
-					data: [user.wins, user.losses],
+					data: [wins, losses],
 					backgroundColor: ['#4ade80', '#f87171'],
 					borderColor: ['#22c55e', '#ef4444'],
 					borderWidth: 2
@@ -128,82 +126,92 @@ export async function initProfile() {
 		}, 100);
 	}
 
-	function displayPlayerRanking(selectedUser: User) {
+	async function displayPlayerRanking(selectedUser: any) {
 		const rankingContainer = document.getElementById('playerRanking');
 		if (!rankingContainer)
 			return;
 
 		rankingContainer.innerHTML = '';
 
-		const sortedUsers: User[] = [];
-		for (let i = 0; i < mockUsers.length; i++) {
-			sortedUsers.push(mockUsers[i]);
-		}
-
-		sortedUsers.sort(function (a: User, b: User) {
-			let pointsA = 0;
-			let pointsB = 0;
-
-			if (a.total_points_scored)
-				pointsA = a.total_points_scored;
-			if (b.total_points_scored)
-				pointsB = b.total_points_scored;
-
-			return pointsB - pointsA;
-		});
-
-		let playerIndex = -1;
-		for (let i = 0; i < sortedUsers.length; i++) {
-			if (sortedUsers[i].id === selectedUser.id) {
-				playerIndex = i;
-				break;
+		const hasGamesPlayed = (selectedUser.wins || 0) + (selectedUser.losses || 0) > 0;
+		if (!hasGamesPlayed) {
+			const noDataElement = document.getElementById('noDataRanking');
+			if (noDataElement) {
+				noDataElement.style.display = 'block';
+				rankingContainer.style.display = 'none';
 			}
+			return;
 		}
 
-		let playersToShow: User[] = [];
-		const totalUsers = sortedUsers.length;
+		try {
+			const leaderboard = await fetchLeaderboard(10);
+			
+			if (leaderboard.length === 0) {
+				const noDataElement = document.getElementById('noDataRanking');
+				if (noDataElement) {
+					noDataElement.style.display = 'block';
+					rankingContainer.style.display = 'none';
+				}
+				return;
+			}
 
-		if (totalUsers <= 5)
-			playersToShow = sortedUsers;
-		else if (playerIndex <= 2)
-			playersToShow = sortedUsers.slice(0, 5);
-		else if (playerIndex >= totalUsers - 3)
-			playersToShow = sortedUsers.slice(-5);
-		else
-			playersToShow = sortedUsers.slice(playerIndex - 2, playerIndex + 3);
+			const noDataElement = document.getElementById('noDataRanking');
+			if (noDataElement) {
+				noDataElement.style.display = 'none';
+			}
+			rankingContainer.style.display = 'block';
 
-		for (let i = 0; i < playersToShow.length; i++) {
-			const player = playersToShow[i];
-
-			let actualRank = -1;
-			for (let j = 0; j < sortedUsers.length; j++) {
-				if (sortedUsers[j].id === player.id) {
-					actualRank = j + 1;
+			let playerIndex = -1;
+			for (let i = 0; i < leaderboard.length; i++) {
+				if (leaderboard[i].user_id === selectedUser.id) {
+					playerIndex = i;
 					break;
 				}
 			}
 
-			const isCurrentPlayer = (player.id === selectedUser.id);
-			const item = document.createElement('div');
-			item.className = 'rank-item';
+			let playersToShow: any[] = [];
+			const totalUsers = leaderboard.length;
 
-			if (isCurrentPlayer)
-				item.className += ' current';
-			else if (actualRank < playerIndex + 1)
-				item.className += ' above';
-			else
-				item.className += ' below';
+			playersToShow = leaderboard;
 
-			let points = 0;
-			if (player.total_points_scored)
-				points = player.total_points_scored;
+			for (let i = 0; i < playersToShow.length; i++) {
+				const player = playersToShow[i];
 
-			item.innerHTML =
-				'<div class="rank-position">#' + actualRank + '</div>' +
-				'<div class="rank-name">' + player.username + '</div>' +
-				'<div class="rank-wins">' + points + ' pts</div>';
+				let actualRank = -1;
+				for (let j = 0; j < leaderboard.length; j++) {
+					if (leaderboard[j].user_id === player.user_id) {
+						actualRank = j + 1;
+						break;
+					}
+				}
 
-			rankingContainer.appendChild(item);
+				const isCurrentPlayer = (player.user_id === selectedUser.id);
+				const item = document.createElement('div');
+				item.className = 'rank-item';
+
+				if (isCurrentPlayer)
+					item.className += ' current';
+				else if (actualRank < playerIndex + 1)
+					item.className += ' above';
+				else
+					item.className += ' below';
+
+				let points = player.total_points_scored || 0;
+
+				item.innerHTML =
+					'<div class="rank-position">#' + actualRank + '</div>' +
+					'<div class="rank-name">' + player.username + '</div>' +
+					'<div class="rank-wins">' + points + ' pts</div>';
+
+				rankingContainer.appendChild(item);
+			}
+		} catch (error) {
+			console.error('Failed to load leaderboard:', error);
+			const noDataElement = document.getElementById('noDataRanking');
+			if (noDataElement) {
+				noDataElement.style.display = 'block';
+				rankingContainer.style.display = 'none';
+			}
 		}
 	}
 
@@ -243,7 +251,16 @@ export async function initProfile() {
 		return;
 	}
 
-	displayUserProfile(fictionalUser);
+	try {
+		await user.fetchAndUpdate();
+		displayUserProfile(user);
+	} catch (error) {
+		console.error('Failed to load user profile:', error);
+		if (profileError) profileError.style.display = 'block';
+		if (profileSection) profileSection.style.display = 'none';
+        if (matchHistorySection) matchHistorySection.style.display = 'none';
+		return;
+	}
 
 	await initMatchHistory();
 }

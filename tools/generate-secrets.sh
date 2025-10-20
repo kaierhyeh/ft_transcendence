@@ -39,5 +39,6 @@ generate_client_credentials "users-service"
 generate_client_credentials "game-service"
 generate_client_credentials "matchmaking-service"
 generate_client_credentials "chat-service"
+generate_client_credentials "stats-service"
 
 echo "✅ Secrets generated successfully."

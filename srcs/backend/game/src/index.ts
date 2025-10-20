@@ -23,8 +23,12 @@ async function run() {
   });
   
   // Use config for update period
-  setInterval(() => {
-    fastify.live_sessions.update();
+  setInterval(async () => {
+    try {
+      await fastify.live_sessions.update();
+    } catch (error) {
+      fastify.log.error({ error: error instanceof Error ? error.message : String(error) }, 'Error updating live sessions');
+    }
   }, CONFIG.GAME.TICK_PERIOD);
   
   await fastify.listen({ 

@@ -51,6 +51,8 @@ services:
         condition: service_healthy
       backend-users:
         condition: service_healthy
+      backend-stats:
+        condition: service_healthy
 
   ###################
   ## Backend Services
@@ -128,7 +130,30 @@ services:
       - users:/app/data
     secrets:
       - users-service-client.env
+      - game-service-client.env
+      - internal-access-private.pem
+      - internal-access-public.pem
     # env_file: .env
+    networks:
+      - pong_network
+    init: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  backend-stats:
+    container_name: backend-stats
+    build:
+      context: ./backend/stats
+      dockerfile: Dockerfile
+    volumes:
+      - stats:/app/data
+    secrets:
+      - stats-service-client.env
     networks:
       - pong_network
     init: true
@@ -205,6 +230,8 @@ secrets:
     file: ../secrets/matchmaking-service-client.env
   chat-service-client.env:
     file: ../secrets/chat-service-client.env
+  stats-service-client.env:
+    file: ../secrets/stats-service-client.env
   
   # OAuth Credentials
   google-oauth.env:
@@ -219,3 +246,4 @@ volumes:
   db-data:
     driver: local
   users:
+  stats:

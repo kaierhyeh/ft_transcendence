@@ -103,13 +103,12 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 420px;
+    max-height: 420px;
 }
 
 .chart-title {
 	font-size: 1.2rem;
 	text-align: center;
-    margin-bottom: 0.75rem;
 	color: #fff;
 }
 
@@ -119,44 +118,69 @@
     margin: 0 auto;
 }
 
-.ranking-container {
+.no-data-message {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    min-height: 340px;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    color: #888;
+    text-align: center;
 }
 
 .ranking-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 1rem;
-    min-height: 300px;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for ranking container */
+.ranking-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ranking-container::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 3px;
+}
+
+.ranking-container::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.ranking-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .rank-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0.75rem;
-    background: #171717;
-    border-radius: 6px;
-    border-left: 3px solid;
+    padding: 0.6rem 0.9rem;
+    background: linear-gradient(180deg, #171717 0%, #151515 100%);
+    border-radius: 8px;
+    border-left: 6px solid transparent;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02), 0 6px 18px rgba(0,0,0,0.6) inset;
 }
 
 .rank-item.current {
-	border-left-color: #4ade80;
-	background: #1a2a1a;
+    border-left-color: #60a5fa; /* blue */
+    background: linear-gradient(180deg, #0f2140 0%, #12283a 100%);
 }
 
 .rank-item.above {
-	border-left-color: #ffd700;
+    border-left-color: #fb923c; /* orange */
 }
 
 .rank-item.below {
-	border-left-color: #f87171;
+    border-left-color: #22c55e; /* green */
 }
+
+
 
 .rank-position {
     font-size: 1rem;

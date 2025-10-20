@@ -9,6 +9,12 @@ export interface FetchMatchHistoryOptions {
     pageSize?: number;
 }
 
+export interface LeaderboardEntry {
+    user_id: number;
+    username: string;
+    total_points_scored: number;
+}
+
 /**
  * Fetches match history for a user
  */
@@ -34,6 +40,24 @@ export async function fetchMatchHistory(
     }
     
     return await response.json() as MatchHistoryResponse;
+}
+
+export async function fetchLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
+    const url = new URL(`${API_USERS_ENDPOINT}/leaderboard`);
+    url.searchParams.set('limit', limit.toString());
+    
+    const response = await fetch(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    
+    if (!response.ok)
+        throw new Error(`Failed to fetch leaderboard: ${response.status}`);
+    
+    return await response.json() as LeaderboardEntry[];
 }
 
 // TODO - move fetchAndUpdate from Users.ts here

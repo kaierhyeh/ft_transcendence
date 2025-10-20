@@ -6,7 +6,7 @@ dotenv.config();
 // Load client credentials from Docker secrets
 function loadClientCredentials() {
   try {
-    const credentialsPath = '/run/secrets/game-service-client.env';
+    const credentialsPath = '/run/secrets/stats-service-client.env';
     if (fs.existsSync(credentialsPath)) {
       const envConfig = dotenv.parse(fs.readFileSync(credentialsPath));
       return {
@@ -23,21 +23,15 @@ function loadClientCredentials() {
 const clientCredentials = loadClientCredentials();
 
 export const CONFIG = {
-  // Game settings
-  GAME: {
-    TICK_PERIOD: 1000 / 30, // <=> 30 FPS
-    SESSION_TIMEOUT: 5000, // 5s
-    MAX_SESSIONS: 100,
-  },
-  
   // Database settings
   DB: {
-    PATH: process.env.DB_PATH || "/app/data/sessions.db",
+    PATH: process.env.DB_PATH || "/app/data/stats.db",
     ENABLE_WAL: true,
   },
 
-  JWT: {
-    ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
+  // Game service settings
+  GAME_SERVICE: {
+    BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-game:3000",
   },
 
   // Auth service settings
@@ -45,12 +39,10 @@ export const CONFIG = {
     BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000",
   },
 
-  // Stats service settings
-  STATS_SERVICE: {
-    BASE_URL: process.env.STATS_SERVICE_URL || "http://backend-stats:3000",
+  JWT: {
+    ISSUER: process.env.JWT_ISSUER || "ft_transcendence",
   },
 
-  
   // Internal auth credentials
   INTERNAL_AUTH: {
     CLIENT_ID: clientCredentials.clientId,
