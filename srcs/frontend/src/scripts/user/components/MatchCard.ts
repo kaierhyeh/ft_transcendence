@@ -111,7 +111,7 @@ function getTeamLabel(teamPlayers: PlayerData[], profileUserId: number | null, c
     // Find the profile owner's username
     const profileOwner = teamPlayers.find(p => p.user_id === profileUserId);
     if (profileOwner && profileOwner.username) {
-        return `@${profileOwner.username}'s Team`;
+        return `{profileOwner.username}'s Team`;
     }
     
     return 'Team';
@@ -164,8 +164,8 @@ function formatPlayerName(player: PlayerData | undefined, profileUserId: number 
             return '<span class="you-player">You</span>';
         }
         
-        // Otherwise show @username with link
-        return `<a href="/user/profile?id=${player.user_id}" class="player-link">@${player.username}</a>`;
+        // Otherwise show username with link
+        return `<a href="/user/profile?id=${player.user_id}" class="player-link">${player.username}</a>`;
     }
     
     return 'Player';
