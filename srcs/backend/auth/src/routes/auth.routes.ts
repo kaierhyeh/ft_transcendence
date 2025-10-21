@@ -320,7 +320,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 				success: true,
 				id: user.user_id,
 				username: user.username,
-				avatar_url: user.avatar_url
+				avatar_url: user.avatar_url,
+				avatar_updated_at: user.avatar_updated_at,
 			});
 
 		} catch (error: any) {

@@ -134,5 +134,17 @@ function setupHeaderEvents() {
     }
 }
 
+function updateHeaderAvatar() {
+    const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
+    if (userAvatar && user.isLoggedIn()) {
+        if (user.avatar_url) {
+            userAvatar.src = user.avatar_url;
+            userAvatar.style.display = 'block';
+        } else {
+            userAvatar.style.display = 'none';
+        }
+    }
+}
+
 // Export for use in app.ts
-export { loadHeader };
+export { loadHeader, updateHeaderAvatar };

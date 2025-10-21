@@ -135,8 +135,10 @@ export class UserService {
     return changes;
   }
 
-  public async updateAvatar(user_id: number, avatar_filename: string): Promise<number> {
-    const data: UpdateData = { avatar_filename };
+  public async updateAvatar(user_id: number, filename: string, updated_at: string): Promise<number> {
+    const data: UpdateData = {
+      avatar: { filename, updated_at }
+    };
     const changes = this.userRepository.updateById(user_id, data);
     return changes;
   }

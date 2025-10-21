@@ -12,6 +12,7 @@ export interface UserProfile {
   user_id: number;
   username: string;
   avatar_url: string | null;
+  avatar_updated_at: string | null;
 }
 
 export interface LocalUserResolution {

@@ -4,6 +4,7 @@ export type UserData = {
     email: string | null;
     alias: string | null;
     avatar_url: string | null;
+    avatar_updated_at: string | null;
     two_fa_enabled: boolean;
     status: "online" | "offline" | "away" | "deleted";
     created_at: string;
@@ -55,9 +56,17 @@ export class User {
     public get alias(): string | null {
         return this.data?.alias ?? null;
     }
+    
 
     public get avatar_url(): string | null {
-        return this.data?.avatar_url ?? null;
+        const data = this.data;
+        const updated_at = data?.avatar_updated_at ?? null;
+        const user_id = data?.user_id ?? null;
+        if (data && updated_at && user_id) {
+            const timestamp = new Date(updated_at).getTime();
+            return `${window.location.origin}/api/users/${user_id}/avatar?v=${timestamp}`;
+        }
+        return null;
     }
 
     public get two_fa_enabled(): boolean | null {
@@ -138,7 +147,8 @@ export class User {
                 username: partialData.username || null,
                 email: partialData.email || null,
                 alias: partialData.alias || null,
-                avatar_url: `${window.location.origin}/${partialData.avatar_url}` || null,
+                avatar_url: partialData.avatar_url || null,
+                avatar_updated_at: partialData.avatar_updated_at || null,
                 two_fa_enabled: partialData.two_fa_enabled || false,
                 status: partialData.status || "online",
                 created_at: partialData.created_at || new Date().toISOString(),
@@ -220,6 +230,14 @@ export class User {
     // public getAvatarUrl(): string {
     //     return this.data?.avatar_url || '';
     // }
+    static getAvatarUrl(user_id: number, avatar_updated_at: string | null): string {
+        if (avatar_updated_at) {
+            const timestamp = new Date(avatar_updated_at).getTime();
+            return `${window.location.origin}/api/users/${user_id}/avatar?v=${timestamp}`;
+        }
+        return '';
+    }
+
 }
 
 export default new User();
