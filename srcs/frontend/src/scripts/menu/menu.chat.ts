@@ -117,7 +117,7 @@ function renderChatList(users: ChatUser[]): void {
 	});
 
 	chatsList.innerHTML = users.map(u => {
-		const avatarSrc = `https://localhost:4443/api/users/${u.user_id}/avatar`;
+		const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
 
 		const userName = u.alias
 			? `${u.username} aka ${u.alias}`

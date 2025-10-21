@@ -96,7 +96,7 @@ export class UserService {
     return {
       ...cleanUser,
       avatar_url: avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/${user.user_id}/avatar` :
+        `api/users/${user.user_id}/avatar` :
         null,
       ...lite_stats
     };
