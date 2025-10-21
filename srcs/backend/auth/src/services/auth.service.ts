@@ -90,12 +90,13 @@ export class AuthService {
 	async verifyTempToken(token: string) {
 		try {
 			const payload = jwt.verify(token, CONFIG.JWT.USER.TEMP_SECRET); // Keep using symmetric for temp tokens
+			
+			// Only delete the temp token if verification succeeds (single use)
+			await redis.del(`temp_${token}`);
+			
 			return { valid: true, payload };
 		} catch (error: any) {
 			return { valid: false, error: error.message };
-		} finally {
-			// Always delete the temp token after verification (single use)
-			await redis.del(`temp_${token}`);
 		}
 	}
 

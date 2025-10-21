@@ -20,6 +20,18 @@ export function initLogin() {
 	if (googleLoginBtn)
 		googleLoginBtn.addEventListener('click', handleGoogleLogin);
 
+	// Add Enter key support for login form
+	if (loginInput && passwordInput) {
+		const handleEnterKey = (event: KeyboardEvent) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				handleLogin();
+			}
+		};
+		loginInput.addEventListener('keypress', handleEnterKey);
+		passwordInput.addEventListener('keypress', handleEnterKey);
+	}
+
 	async function handleLogin() {
 		const login = loginInput?.value.trim();
 		const password = passwordInput?.value.trim();

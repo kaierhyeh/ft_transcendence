@@ -31,7 +31,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			if (result.step === "2fa_required") {
 				return reply.code(202).send({
-					...result,
+					step: result.step,
+					temp_token: result.tempToken, // Convert camelCase to snake_case for frontend
 					message: "2FA verification required",
 				});
 			}

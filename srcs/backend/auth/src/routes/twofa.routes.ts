@@ -111,12 +111,27 @@ export default async function twofaRoutes(fastify: FastifyInstance, options: any
 		try {
 			const { token: twofaCode, temp_token } = request.body;
 
+			console.log('🔐 2FA verification attempt:', {
+				hasTwofaCode: !!twofaCode,
+				hasTempToken: !!temp_token,
+				tempTokenPreview: temp_token ? temp_token.substring(0, 20) + '...' : 'none'
+			});
+
 			// Verify the temporary token
 			const payload = await authService.verifyTempToken(temp_token);
+			
+			console.log('🔍 Temp token verification result:', {
+				valid: payload.valid,
+				hasPayload: !!payload.payload,
+				error: payload.error
+			});
+			
 			if (!payload.valid || !payload.payload)
 				return reply.code(400).send({ success: false, error: 'Invalid or expired temp token.' });
 
-			const userId = (payload.payload as any).user_id;
+			const userId = (payload.payload as any).userId;
+			
+			console.log('👤 Extracted userId from temp token:', userId);
 			
 			// Check if user has 2FA enabled via usersClient
 			const twoFAStatus = await usersClient.get2FAStatus(userId);

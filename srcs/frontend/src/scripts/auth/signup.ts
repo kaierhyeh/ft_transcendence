@@ -20,6 +20,19 @@ export function initSignup() {
 	if (googleSignupBtn)
 		googleSignupBtn.addEventListener('click', handleGoogleSignup);
 
+	// Add Enter key support for signup form
+	if (usernameInput && emailInput && passwordInput) {
+		const handleEnterKey = (event: KeyboardEvent) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				handleRegister();
+			}
+		};
+		usernameInput.addEventListener('keypress', handleEnterKey);
+		emailInput.addEventListener('keypress', handleEnterKey);
+		passwordInput.addEventListener('keypress', handleEnterKey);
+	}
+
 	async function handleRegister() {
 		const username = usernameInput?.value.trim();
 		const email = emailInput?.value.trim();
