@@ -284,6 +284,18 @@ export class UserController {
     }
   }
 
+  public async getLeaderboard(
+    request: FastifyRequest<{ Querystring: { limit?: number } }>,
+    reply: FastifyReply) {
+    try {
+      const { limit = 10 } = request.query;
+      const leaderboard = await this.userService.getLeaderboard(limit);
+      return reply.send(leaderboard);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
   private handleError(error: any, reply: FastifyReply) {
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       reply.status(409).send({ 

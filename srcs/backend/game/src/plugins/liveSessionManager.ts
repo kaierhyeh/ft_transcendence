@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { LiveSessionManager } from "../game/LiveSessionManager";
+import { StatsClient } from "../clients/StatsClient";
 import fp from "fastify-plugin";
 
 declare module "fastify" {
@@ -9,8 +10,10 @@ declare module "fastify" {
 }
 
 const liveSessionManagerPlugin: FastifyPluginAsync = async (fastify) => {
+  const statsClient = new StatsClient();
   const manager = new LiveSessionManager(
     fastify.session_repo,
+    statsClient,
     fastify.log,
   );
 

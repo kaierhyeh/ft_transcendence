@@ -16,7 +16,7 @@
   },
   "include": [
     "**/*.ts"
-, "src/middleware/userAuth.ts"  ],
+  ],
   "exclude": [
     "node_modules",
     "dist"
