@@ -47,10 +47,3 @@
     max-height: 90vh;
     overflow-y: auto;
 }
-
-.game-controls {
-    display: flex;
-    gap: 15px;
-    margin-top: 20px;
-    justify-content: center;
-}
