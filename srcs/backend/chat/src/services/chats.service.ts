@@ -127,7 +127,7 @@ export class ChatService {
 			}
 		}
 
-		chats.sort((a, b) => a.username.localeCompare(b.username));
+		// chats.sort((a, b) => a.username.localeCompare(b.username));
 
 		return chats;
 	}

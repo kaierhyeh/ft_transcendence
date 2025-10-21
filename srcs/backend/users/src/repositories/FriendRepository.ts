@@ -35,6 +35,8 @@ export interface OutgoingRequestListRow {
 
 export interface FriendshipStatus {
 	status: string | null;
+	from_id: number | null;
+	to_id: number | null;
 }
 
 export class FriendRepository {
@@ -261,11 +263,15 @@ export class FriendRepository {
 	public async getFriendshipStatus(userId: number, friendId: number) {
 		const stmt = this.db.prepare(`
 			SELECT
-				f.status AS status
+				f.status AS status,
+				f.user_id AS from_id,
+				f.friend_id AS to_id
 			FROM friendships f
 			WHERE f.user_id = ? AND f.friend_id = ?
 		`);
-
-		return stmt.get(userId, friendId) as FriendshipStatus;
+		
+		const res = stmt.get(userId, friendId) as FriendshipStatus;
+		console.log("--------------- RES FROM DB: ", res);
+		return res;
 	}
 }
