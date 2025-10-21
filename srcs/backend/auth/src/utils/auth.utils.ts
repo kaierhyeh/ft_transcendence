@@ -1,115 +1,157 @@
-import bcrypt from 'bcrypt';
-import type { FastifyReply, FastifyInstance } from 'fastify';
+import * as jwt from 'jsonwebtoken';
+import { SignOptions } from 'jsonwebtoken';
+import { CONFIG } from '../config';
+import jwksService from '../services/jwks.service';
+import { JWTType } from '../types/index';
 
 export class AuthUtils {
-	// Hash password with bcrypt
-	async hashPassword(password: string, saltRounds: number = 10): Promise<string> {
-		try {
-			return await bcrypt.hash(password, saltRounds);
-		} catch (error) {
-			console.error('Password hashing error:', error);
-			throw new Error('Failed to hash password');
-		}
-	}
+	// Cache for internal JWT token
+	private internalJWTCache: {
+		token: string | null;
+		expiresAt: number;
+	} = {
+		token: null,
+		expiresAt: 0
+	};
 
-	// Verify password with bcrypt
-	async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-		try {
-			return await bcrypt.compare(password, hashedPassword);
-		} catch (error) {
-			console.error('Password verification error:', error);
-			throw new Error('Failed to verify password');
-		}
-	}
 
 	// Configure and set cookies with flexible expiration time
-	ft_setCookie(reply: any, token: string, duration: number): void {
-		const cookieOptions = {
-			path: '/',
-			secure: true,
-			httpOnly: true,
-			sameSite: 'none' as const,
-		};
-
-		// Accepted cases: 1min (debug), 5min, 15min or 7days
-		if (duration === 1) { // 🔧 Debug purpose only
-			reply.setCookie('accessToken', token, {
-				...cookieOptions,
-				maxAge: 60 // 1 minute
-			});
-		} else if (duration === 5 || duration === 15) {
-			reply.setCookie('accessToken', token, {
-				...cookieOptions,
-				maxAge: duration * 60
-			});
-		} else if (duration === 7) {
-			reply.setCookie('refreshToken', token, {
-				...cookieOptions,
-				maxAge: duration * 24 * 60 * 60
-			});
-		} else {
-			throw new Error("Invalid duration: only 1 (debug), 5, 15 (minutes) or 7 (days) are allowed.");
-		}
-		return reply;
+	ft_setCookie(reply: any, token: string, duration: string, tokenType: 'access' | 'refresh' = 'access'): void {
+		const maxAge = this.parseDuration(duration) / 1000; // seconds
+		const cookieName = tokenType === 'access' ? 'accessToken' : 'refreshToken';
+		
+		reply.setCookie(cookieName, token, {
+			path: CONFIG.COOKIE.OPTIONS.PATH,
+			secure: CONFIG.COOKIE.OPTIONS.SECURE,
+			httpOnly: CONFIG.COOKIE.OPTIONS.HTTP_ONLY,
+			sameSite: CONFIG.COOKIE.OPTIONS.SAME_SITE,
+			maxAge
+		});
 	}
 
-	checkUsername(fastify: any, username: string): { error: string } | string {
-		fastify.log.info(`Checking username: ${username}`);
+	private parseDuration(duration: string): number {
+		// Supports "15m", "7d", "1h", "30s"
+		const match = /^(\d+)([smhd])$/.exec(duration);
+		if (!match) throw new Error(`Invalid duration format: ${duration}`);
+		const value = parseInt(match[1], 10);
+		switch (match[2]) {
+			case 's': return value * 1000;
+			case 'm': return value * 60 * 1000;
+			case 'h': return value * 60 * 60 * 1000;
+			case 'd': return value * 24 * 60 * 60 * 1000;
+			default: throw new Error(`Unknown duration unit: ${match[2]}`);
+		}
+	}
 
-		// Check for null/undefined
-		if (username === null || username === undefined) {
-			fastify.log.warn("Search failed: username is null or undefined");
-			return { error: "Username is required" };
+		/**
+	 * Security validation for input fields (control chars, XSS)
+	 * Throws error with code/message if unsafe
+	 */
+	public checkInputSafety(field: string, value: string): void {
+		// Control characters (ASCII 0-31 and 127)
+		if (/[^\x20-\x7E]/.test(value)) {
+			const error: any = new Error(`${field} contains invalid characters`);
+			error.code = 'UNSAFE_INPUT';
+			error.field = field;
+			throw error;
+		}
+		// XSS patterns
+		if (/<[^>]*>|script|alert|onerror|onclick|javascript:|&lt;|\"|\'|%3C/.test(value.toLowerCase())) {
+			const error: any = new Error(`${field} contains potentially malicious patterns`);
+			error.code = 'UNSAFE_INPUT';
+			error.field = field;
+			throw error;
+		}
+	}
+
+	/**
+	 * Normalize email to lowercase
+	 */
+	public normalizeEmail(email: string): string {
+		return email.trim().toLowerCase();
+	}
+
+
+	/**
+	 * Generate internal JWT for service-to-service communication
+	 * Centralized method with caching to avoid regenerating tokens
+	 * Tokens are cached and reused until 5 minutes before expiry
+	 */
+	generateInternalJWT(): string {
+		const now = Date.now();
+		
+		// Check if we have a valid cached token (expires 5 minutes early for safety)
+		if (this.internalJWTCache.token && now < this.internalJWTCache.expiresAt - (5 * 60 * 1000)) {
+			console.log('🔄 Using cached internal JWT token');
+			return this.internalJWTCache.token;
 		}
 
-		// Make sure username is a string
-		if (typeof username !== 'string') {
-			fastify.log.warn("Search failed: username is not a string");
-			return { error: "Username must be a text value" };
+		// Generate new token
+		const keyId = jwksService.getKeyIdForType(JWTType.INTERNAL_ACCESS);
+		if (!keyId) {
+			throw new Error('Internal JWT key ID not found in JWKS');
 		}
+		
+		const sign_options: SignOptions = {
+			algorithm: CONFIG.JWT.INTERNAL.ALGORITHM,
+			expiresIn: CONFIG.JWT.INTERNAL.ACCESS_TOKEN_EXPIRY as any,
+			keyid: keyId
+		};
 
-		const trimmedUsername = username.trim();
-		if (!trimmedUsername.length) {
-			fastify.log.warn("Search failed: username is empty after trimming");
-			return { error: "Username is required" };
+		console.log(`🔐 Generating new internal JWT with key ID: ${keyId}`);
+
+		const token = jwt.sign(
+			{
+				type: CONFIG.JWT.INTERNAL.TYPE,
+				iss: CONFIG.JWT.INTERNAL.ISSUER,
+			},
+			CONFIG.JWT.INTERNAL.PRIVATE_KEY,
+			sign_options
+		);
+
+		// Cache the token with expiry time (1 hour from now)
+		this.internalJWTCache = {
+			token,
+			expiresAt: now + (60 * 60 * 1000) // 1 hour in milliseconds
+		};
+
+		return token;
+	}
+
+	/**
+	 * Generate game session JWT for game authentication
+	 * Similar to internal JWT but includes game-specific claims
+	 */
+	generateGameJWT(claims: { sub: string; game_id: number }): string {
+		// Generate new token (no caching for game tokens as they're session-specific)
+		const keyId = jwksService.getKeyIdForType(JWTType.GAME_SESSION);
+		if (!keyId) {
+			throw new Error('Game session JWT key ID not found in JWKS');
 		}
+		
+		const sign_options: SignOptions = {
+			algorithm: CONFIG.JWT.GAME.ALGORITHM,
+			expiresIn: CONFIG.JWT.GAME.ACCESS_TOKEN_EXPIRY as any,
+			keyid: keyId
+		};
 
-		// Check for control characters and escape sequences
-		if (/[\x00-\x1F\x7F]/.test(trimmedUsername)) {
-			fastify.log.warn("Search failed: username contains control characters");
-			return { error: "Username contains invalid characters" };
-		}
+		console.log(`🎮 Generating new game JWT with key ID: ${keyId} for game: ${claims.game_id}`);
 
-		// Check for various XSS patterns (more comprehensive)
-		if (/<[^>]*>|script|alert|onerror|onclick|javascript:|&lt;|\"|\'|%3C/.test(trimmedUsername.toLowerCase())) {
-			fastify.log.warn("Search failed: username contains potentially malicious patterns");
-			return { error: "Username contains invalid characters" };
-		}
+		const token = jwt.sign(
+			{
+				// Standard JWT claims
+				sub: claims.sub,
+				iss: CONFIG.JWT.GAME.ISSUER,
+				type: CONFIG.JWT.GAME.TYPE,
 
-		// Check for excessive repetition of characters (ie. aaaaaaa)
-		if (/(.)\1{3,}/.test(trimmedUsername)) {
-			fastify.log.warn("Search failed: username contains excessive repeated characters");
-			return { error: "Username cannot contain more than 3 repeated characters in a row" };
-		}
+				// Game specific claims
+				game_id: claims.game_id,
+			},
+			CONFIG.JWT.GAME.PRIVATE_KEY,
+			sign_options
+		);
 
-		// Check if it's an email address (allow @ symbol and common email characters)
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (emailRegex.test(trimmedUsername)) {
-			// For email addresses, only check length (reasonable email length)
-			if (trimmedUsername.length > 254) { // RFC 5321 limit
-				return { error: "Email address is too long" };
-			}
-			return trimmedUsername.toLowerCase(); // Store emails in lowercase
-		}
-
-		// For traditional usernames: must be 3-15 characters, letters/numbers/underscores only
-		const capitalizedUsername = trimmedUsername.charAt(0).toUpperCase() + trimmedUsername.slice(1).toLowerCase();
-		const usernameRegex = /^[a-zA-Z][a-zA-Z0-9_]{3,15}$/;
-		if (!usernameRegex.test(capitalizedUsername)) {
-			return { error: "Username must be 3-15 characters, letters/numbers/underscores only, OR a valid email address." };
-		}
-
-		return capitalizedUsername;
+		return token;
 	}
 }
 

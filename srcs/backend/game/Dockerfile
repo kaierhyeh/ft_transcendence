@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:20-alpine3.21
 
 # Install sqlite3 for debugging
 RUN apk add --no-cache sqlite curl

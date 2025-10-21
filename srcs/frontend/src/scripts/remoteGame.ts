@@ -1,4 +1,14 @@
+import { GameParticipant, Team } from './game/types.js';
+import { generateParticipantId } from './game/utils.js';
 import { showError } from './notifications.js';
+import { ScoreChart } from './live_stats/ScoreChart.js';
+import { ScoreDisplay } from './live_stats/ScoreDisplay.js';
+import { ScoreTracker } from './live_stats/ScoreTracker.js';
+import user from "./user/User.js";
+import { PlayerSlot } from './user/types.js';
+
+const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
+
 
 interface PlayerData {
     paddle: { x: number; y: number };
@@ -14,7 +24,7 @@ interface RemoteGameState {
         "bottom-right"?: PlayerData;
         [key: string]: PlayerData | undefined;
     };
-    ball: { x: number; y: number };
+    ball: { x: number; y: number, dx: number, dy: number };
     score: { left: number; right: number };
     winner?: string;
 }
@@ -24,6 +34,8 @@ let matchmakingWebSocket: WebSocket | null = null;
 let keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
 let keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
 let gameDisconnected: boolean = false;
+let myTeam: Team | null;
+let mySlot: PlayerSlot | null;
 
 export function cleanupRemoteGame(): void {
     if (keyDownHandler !== null) {
@@ -45,6 +57,8 @@ export function cleanupRemoteGame(): void {
     }
 
     gameDisconnected = false;
+    myTeam = null;
+    mySlot = null;
 }
 
 export default function initRemoteGame(): void {
@@ -52,7 +66,28 @@ export default function initRemoteGame(): void {
     let currentParticipantId: string | null = null;
     let gameCanvas: HTMLCanvasElement | null = null;
     let gameContext: CanvasRenderingContext2D | null = null;
-    let remotePartyMode: string = '';
+    let remotePartyFormat: string = '';
+
+    const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
+    const scoreChart = new ScoreChart();
+    const scoreDisplay = new ScoreDisplay();
+
+    // Initialize score display if elements exist
+    if (document.getElementById('pong-score-chart')) {
+        scoreChart.initialize('pong-score-chart');
+        scoreDisplay.initialize();
+        
+        // Subscribe to updates
+        scoreTracker.onUpdate((data) => {
+            scoreChart.update(data);
+            scoreDisplay.update(data);
+        });
+    }
+
+    // Global reset function for button
+    (window as any).resetGameData = () => {
+        scoreTracker.resetAll();
+    };
 
     function resetRemoteUI(message?: string): void {
         if (matchmakingWebSocket !== null) {
@@ -66,20 +101,20 @@ export default function initRemoteGame(): void {
         
         currentGameId = null;
         currentParticipantId = null;
-        remotePartyMode = '';
+        remotePartyFormat = '';
         gameDisconnected = false;
 
-        const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
-        const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
+        const btn1v1 = document.getElementById('remote-1v1-btn') as HTMLButtonElement;
+        const btn2v2 = document.getElementById('remote-2v2-btn') as HTMLButtonElement;
         const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
 
-        if (btn2p !== null) {
-            btn2p.disabled = false;
-            btn2p.textContent = "2 Players Online";
+        if (btn1v1 !== null) {
+            btn1v1.disabled = false;
+            btn1v1.textContent = "2 Players Online";
         }
-        if (btn4p !== null) {
-            btn4p.disabled = false;
-            btn4p.textContent = "4 Players Online";
+        if (btn2v2 !== null) {
+            btn2v2.disabled = false;
+            btn2v2.textContent = "4 Players Online";
         }
         if (btnCancel !== null) {
             btnCancel.style.display = 'none';
@@ -94,76 +129,84 @@ export default function initRemoteGame(): void {
         const header = document.querySelector('.pong-header');
         if (header !== null) {
             header.classList.add('remote-mode');
+        } else {
+            console.error('Pong header element not found');
         }
 
         setupRemoteEvents();
     }
 
     function setupRemoteEvents(): void {
-        const btn2p = document.getElementById('remote-2p-btn');
-        const btn4p = document.getElementById('remote-4p-btn');
+        const btn1v1 = document.getElementById('remote-1v1-btn');
+        const btn2v2 = document.getElementById('remote-2v2-btn');
         const btnCancel = document.getElementById('remote-cancel-btn');
 
-        if (btn2p !== null) {
-            btn2p.addEventListener('click', function() { 
-                joinQueue("2p"); 
+        if (btn1v1 !== null) {
+            btn1v1.addEventListener('click', function() { 
+                joinQueue("1v1"); 
             });
+        } else {
+            console.error('Remote 1v1 button not found');
         }
 
-        if (btn4p !== null) {
-            btn4p.addEventListener('click', function() { 
-                joinQueue("4p"); 
+        if (btn2v2 !== null) {
+            btn2v2.addEventListener('click', function() { 
+                joinQueue("2v2"); 
             });
+        } else {
+            console.error('Remote 2v2 button not found');
         }
 
         if (btnCancel !== null) {
             btnCancel.addEventListener('click', function() { 
                 resetRemoteUI(); 
             });
+        } else {
+            console.error('Remote cancel button not found');
         }
     }
 
-    function generateParticipantId(): string {
-        const timestamp = Date.now();
-        const randomNumber = Math.random();
-        return "remote_" + timestamp + "_" + randomNumber;
-    }
+    async function joinQueue(format: "1v1" | "2v2"): Promise<void> {
+        remotePartyFormat = format;
 
-    async function joinQueue(mode: "2p" | "4p"): Promise<void> {
-        remotePartyMode = mode;
+        scoreTracker.resetGame();
         
-        const btn2p = document.getElementById('remote-2p-btn') as HTMLButtonElement;
-        const btn4p = document.getElementById('remote-4p-btn') as HTMLButtonElement;
+        const btn1v1 = document.getElementById('remote-1v1-btn') as HTMLButtonElement;
+        const btn2v2 = document.getElementById('remote-2v2-btn') as HTMLButtonElement;
 
-        if (btn2p !== null) {
-            btn2p.disabled = true;
+        if (btn1v1 !== null) {
+            btn1v1.disabled = true;
         }
-        if (btn4p !== null) {
-            btn4p.disabled = true;
+        if (btn2v2 !== null) {
+            btn2v2.disabled = true;
         }
 
         let currentButton: HTMLButtonElement | null = null;
-        if (mode === "2p") {
-            currentButton = btn2p;
+        if (format === "1v1") {
+            currentButton = btn1v1;
         } else {
-            currentButton = btn4p;
+            currentButton = btn2v2;
         }
 
         if (currentButton !== null) {
             currentButton.textContent = "Joining...";
         }
 
-        const participantId = generateParticipantId();
-        currentParticipantId = participantId;
+        currentParticipantId = generateParticipantId();
+        const participant: GameParticipant = {
+            type: user.isLoggedIn() ? "registered" : "guest",
+            user_id: user.user_id ?? undefined,
+            participant_id: currentParticipantId
+        };
 
         try {
-            const response = await fetch('/game/join', {
+            const response = await fetch(`${API_GAME_ENDPOINT}/join`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    mode: mode,
-                    participant_id: participantId
+                    format: format,
+                    participant
                 })
             });
 
@@ -173,6 +216,8 @@ export default function initRemoteGame(): void {
                 if (currentButton !== null) {
                     currentButton.textContent = "Match found!";
                 }
+                myTeam = data.team;
+                mySlot = data.slot;
                 connectToGame(data.game_id);
             } else if (data.type === "queue_joined") {
                 if (currentButton !== null) {
@@ -186,13 +231,13 @@ export default function initRemoteGame(): void {
 
                 openMatchmakingWebSocket();
             } else if (data.type === "error") {
-                if (btn2p !== null) {
-                    btn2p.disabled = false;
-                    btn2p.textContent = "Join 2 Players";
+                if (btn1v1 !== null) {
+                    btn1v1.disabled = false;
+                    btn1v1.textContent = "Join 2 Players";
                 }
-                if (btn4p !== null) {
-                    btn4p.disabled = false;
-                    btn4p.textContent = "Join 4 Players";
+                if (btn2v2 !== null) {
+                    btn2v2.disabled = false;
+                    btn2v2.textContent = "Join 4 Players";
                 }
             }
         } catch (error) {
@@ -211,7 +256,7 @@ export default function initRemoteGame(): void {
         }
 
         const host = window.location.host;
-        const wsUrl = protocol + '//' + host + '/game/ws?participant_id=' + currentParticipantId;
+        const wsUrl = protocol + '//' + host + '/api/game/ws?participant_id=' + currentParticipantId;
 
         matchmakingWebSocket = new WebSocket(wsUrl);
 
@@ -229,16 +274,17 @@ export default function initRemoteGame(): void {
                     }
 
                     let currentButton: HTMLElement | null = null;
-                    if (remotePartyMode === '2p') {
-                        currentButton = document.getElementById('remote-2p-btn');
+                    if (remotePartyFormat === '1v1') {
+                        currentButton = document.getElementById('remote-1v1-btn');
                     } else {
-                        currentButton = document.getElementById('remote-4p-btn');
+                        currentButton = document.getElementById('remote-2v2-btn');
                     }
 
                     if (currentButton !== null) {
                         currentButton.textContent = 'Match found!';
                     }
-
+                    myTeam = data.team;
+                    mySlot = data.slot;
                     connectToGame(data.game_id);
                 }
             } catch (error) {
@@ -274,7 +320,7 @@ export default function initRemoteGame(): void {
         }
 
         const host = window.location.host;
-        const wsUrl = protocol + '//' + host + '/game/' + gameId + '/ws';
+        const wsUrl = protocol + '//' + host + '/api/game/' + gameId + '/ws';
 
         gameWebSocket = new WebSocket(wsUrl);
 
@@ -304,13 +350,17 @@ export default function initRemoteGame(): void {
                         drawRemoteGame(msg.data);
 
                         if (msg.data.winner !== undefined && msg.data.winner !== null) {
-                            handleGameEnd(" 🏆 WINNER 🏆 : " + msg.data.winner, " Select an online mode to retry");
+                            handleGameEnd(" 🏆 WINNER 🏆 : " + msg.data.winner, " Select an online format to retry");
                         }
                     }
                 } else if (msg.type === "player_disconnected") {
                 } else if (msg.type === "game_ended") {
                     if (msg.data.reason === "player_disconnected") {
-                        handleGameEnd("Your opponent left the game! ", "Please select a new party");
+                        console.log(msg);
+                        console.log("Disconnected player:", msg.data.disconnected_player, " - My team:", myTeam);
+                        const disconnectingTeam = msg.data.disconnected_player.team;
+                        const whoLeft = disconnectingTeam === myTeam ? "Your teammate left the game!" : "Your opponent left the game!";
+                        handleGameEnd(whoLeft, "Please select a new party");
                     }
                 }
             } catch (error) {
@@ -365,7 +415,6 @@ export default function initRemoteGame(): void {
 
             const message = JSON.stringify({
                 type: "input",
-                participant_id: currentParticipantId,
                 move: movement
             });
             gameWebSocket.send(message);
@@ -391,7 +440,6 @@ export default function initRemoteGame(): void {
         if (shouldStop === true) {
             const message = JSON.stringify({
                 type: "input",
-                participant_id: currentParticipantId,
                 move: "stop"
             });
 
@@ -429,16 +477,16 @@ export default function initRemoteGame(): void {
         ctx.stroke();
         ctx.setLineDash([]);
 
-        let is4PlayerMode = false;
+        let is2v2layerFormat = false;
         if (state.players !== undefined && state.players !== null) {
             if (state.players["top-left"] !== undefined) {
-                is4PlayerMode = true;
+                is2v2layerFormat = true;
             }
         }
         
         ctx.fillStyle = "white";
 
-        if (is4PlayerMode === true) {
+        if (is2v2layerFormat === true) {
             const positions = ["top-left", "bottom-left", "top-right", "bottom-right"];
             for (let i = 0; i < positions.length; i = i + 1) {
                 const player = state.players[positions[i]];
@@ -465,6 +513,10 @@ export default function initRemoteGame(): void {
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
 
+        // Get ball direction from server
+        const ballDx = state.ball.dx;
+
+
         let leftScore = 0;
         let rightScore = 0;
 
@@ -474,6 +526,8 @@ export default function initRemoteGame(): void {
         if (state.score !== undefined && state.score.right !== undefined) {
             rightScore = state.score.right;
         }
+
+        scoreTracker.update(leftScore, rightScore, ballDx);
 
         ctx.fillText(leftScore.toString(), canvas.width / 4, 50);
         ctx.fillText(rightScore.toString(), (3 * canvas.width) / 4, 50);

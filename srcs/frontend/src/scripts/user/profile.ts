@@ -1,0 +1,266 @@
+import { initMatchHistory } from './match_history.js';
+import { fetchLeaderboard } from './api.js';
+import user from './User.js';
+
+declare const Chart: any;
+
+export async function initProfile() {
+	interface User {
+		id: number;
+		username: string;
+		email: string;
+		created_at: string;
+		wins: number;
+		losses: number;
+		curr_winstreak: number;
+		best_winstreak: number;
+		total_points_scored: number;
+	}
+
+	let playerChart: any = null;
+
+	function displayUserProfile(userData: any) {
+		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
+
+		const usernameElement = document.getElementById('profileUsername');
+		const emailElement = document.getElementById('profileEmail');
+		const joinDateElement = document.getElementById('profileJoinDate');
+		const currentStreakElement = document.getElementById('statsCurrentStreak');
+		const bestStreakElement = document.getElementById('statsBestStreak');
+		const profileSection = document.getElementById('profileSection');
+
+		if (usernameElement)
+			usernameElement.textContent = userData.username || userData.alias;
+		if (emailElement)
+			emailElement.textContent = userData.email;
+		if (joinDateElement)
+			joinDateElement.textContent = 'Member since ' + joinDate;
+		if (currentStreakElement)
+			currentStreakElement.textContent = userData.curr_winstreak?.toString() || '0';
+		if (bestStreakElement)
+			bestStreakElement.textContent = userData.best_winstreak?.toString() || '0';
+
+		if (profileSection)
+			profileSection.style.display = 'block';
+        if (matchHistorySection)
+            matchHistorySection.style.display = 'block';
+
+		setTimeout(function () {
+			createPlayerChart(userData);
+			displayPlayerRanking(userData);
+		}, 50);
+	}
+
+	function createPlayerChart(user: any) {
+		const canvasElement = document.getElementById('playerChart') as HTMLCanvasElement;
+		if (!canvasElement)
+			return;
+
+		const ctx = canvasElement.getContext('2d');
+		if (!ctx)
+			return;
+
+		if (playerChart)
+			playerChart.destroy();
+
+		const wins = user.wins || 0;
+		const losses = user.losses || 0;
+
+		if (wins === 0 && losses === 0) {
+			const noDataElement = document.getElementById('noDataChart');
+			if (noDataElement) {
+				noDataElement.style.display = 'block';
+				canvasElement.style.display = 'none';
+			}
+			return;
+		}
+
+		const noDataElement = document.getElementById('noDataChart');
+		if (noDataElement)
+			noDataElement.style.display = 'none';
+		canvasElement.style.display = 'block';
+
+		playerChart = new Chart(ctx, {
+			type: 'pie',
+			data: {
+				labels: ['Wins', 'Losses'],
+				datasets: [{
+					data: [wins, losses],
+					backgroundColor: ['#4ade80', '#f87171'],
+					borderColor: ['#22c55e', '#ef4444'],
+					borderWidth: 2
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				aspectRatio: 1,
+				plugins: {
+					legend: {
+						labels: {
+							color: '#fff',
+							font: { family: 'Bit5x3', size: 12 }
+						}
+					},
+					tooltip: {
+						titleFont: { family: 'Bit5x3' },
+						bodyFont: { family: 'Bit5x3' },
+						callbacks: {
+							label: function (context: any) {
+								const total = context.dataset.data.reduce(function (a: number, b: number) {
+									return a + b;
+								}, 0);
+								const percentage = ((context.parsed * 100) / total).toFixed(1);
+								return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+							}
+						}
+					}
+				}
+			}
+		});
+
+		setTimeout(function () {
+			if (playerChart) {
+				playerChart.resize();
+			}
+		}, 100);
+	}
+
+	async function displayPlayerRanking(selectedUser: any) {
+		const rankingContainer = document.getElementById('playerRanking');
+		if (!rankingContainer)
+			return;
+
+		rankingContainer.innerHTML = '';
+
+		const hasGamesPlayed = (selectedUser.wins || 0) + (selectedUser.losses || 0) > 0;
+		if (!hasGamesPlayed) {
+			const noDataElement = document.getElementById('noDataRanking');
+			if (noDataElement) {
+				noDataElement.style.display = 'block';
+				rankingContainer.style.display = 'none';
+			}
+			return;
+		}
+
+		try {
+			const leaderboard = await fetchLeaderboard(10);
+			
+			if (leaderboard.length === 0) {
+				const noDataElement = document.getElementById('noDataRanking');
+				if (noDataElement) {
+					noDataElement.style.display = 'block';
+					rankingContainer.style.display = 'none';
+				}
+				return;
+			}
+
+			const noDataElement = document.getElementById('noDataRanking');
+			if (noDataElement) {
+				noDataElement.style.display = 'none';
+			}
+			rankingContainer.style.display = 'block';
+
+			let playerIndex = -1;
+			for (let i = 0; i < leaderboard.length; i++) {
+				if (leaderboard[i].user_id === selectedUser.id) {
+					playerIndex = i;
+					break;
+				}
+			}
+
+			let playersToShow: any[] = [];
+			const totalUsers = leaderboard.length;
+
+			playersToShow = leaderboard;
+
+			for (let i = 0; i < playersToShow.length; i++) {
+				const player = playersToShow[i];
+
+				let actualRank = -1;
+				for (let j = 0; j < leaderboard.length; j++) {
+					if (leaderboard[j].user_id === player.user_id) {
+						actualRank = j + 1;
+						break;
+					}
+				}
+
+				const isCurrentPlayer = (player.user_id === selectedUser.id);
+				const item = document.createElement('div');
+				item.className = 'rank-item';
+
+				if (isCurrentPlayer)
+					item.className += ' current';
+				else if (actualRank < playerIndex + 1)
+					item.className += ' above';
+				else
+					item.className += ' below';
+
+				let points = player.total_points_scored || 0;
+
+				item.innerHTML =
+					'<div class="rank-position">#' + actualRank + '</div>' +
+					'<div class="rank-name">' + player.username + '</div>' +
+					'<div class="rank-wins">' + points + ' pts</div>';
+
+				rankingContainer.appendChild(item);
+			}
+		} catch (error) {
+			console.error('Failed to load leaderboard:', error);
+			const noDataElement = document.getElementById('noDataRanking');
+			if (noDataElement) {
+				noDataElement.style.display = 'block';
+				rankingContainer.style.display = 'none';
+			}
+		}
+	}
+
+	const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
+
+	async function checkAuth(): Promise<boolean> {
+		try {
+			const response = await fetch(`${API_AUTH_ENDPOINT}/verify`, {
+				method: 'POST',
+				credentials: 'include'
+			});
+			if (!response.ok) return false;
+			const data = await response.json();
+			return data.success;
+		} catch (err) {
+			return false;
+		}
+	}
+
+	const profileError = document.getElementById('profileError');
+	const profileSection = document.getElementById('profileSection');
+    const matchHistorySection = document.getElementById('matchHistorySection');
+
+	let isConnected = user.isLoggedIn();
+	if (!isConnected) {
+		const serverAuthenticated = await checkAuth();
+		if (serverAuthenticated) {
+			await user.fetchAndUpdate();
+			isConnected = user.isLoggedIn();
+		}
+	}
+
+	if (!isConnected) {
+		if (profileError) profileError.style.display = 'block';
+		if (profileSection) profileSection.style.display = 'none';
+        if (matchHistorySection) matchHistorySection.style.display = 'none';
+		return;
+	}
+
+	try {
+		await user.fetchAndUpdate();
+		displayUserProfile(user);
+	} catch (error) {
+		console.error('Failed to load user profile:', error);
+		if (profileError) profileError.style.display = 'block';
+		if (profileSection) profileSection.style.display = 'none';
+        if (matchHistorySection) matchHistorySection.style.display = 'none';
+		return;
+	}
+
+	await initMatchHistory();
+}

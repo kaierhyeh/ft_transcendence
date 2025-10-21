@@ -2,17 +2,18 @@
  * Enhanced JWKS Service (jwks.service.ts)
  * 
  * Manages public key distribution for JWT verification across microservices.
- * Supports both legacy single-key system and new three-type JWT system.
+ * Supports three-type JWT system with separate RSA keys for each JWT type.
  * 
- * Three-Type Mode: Separate RSA keys for USER_SESSION, GAME_SESSION, INTERNAL_ACCESS
- * Legacy Mode: Single RSA key for backward compatibility
+ * JWT Types: USER_SESSION, GAME_SESSION, INTERNAL_ACCESS
+ * Each type has its own RSA key pair loaded from config
  * 
  * Serves /.well-known/jwks.json endpoint following RFC 7517
- * Uses dependency injection to avoid circular imports with auth service
+ * Uses config-based key loading system
  */
 
 import crypto from 'crypto';
-import { config } from '../config.js';
+import { CONFIG } from '../config';
+import { JWTType } from '../types/index';
 
 interface JWK {
 	kty: string;
@@ -35,7 +36,7 @@ interface JWKSWithCache {
 }
 
 /**
- * Enhanced JWKS Service supporting three JWT types:
+ * JWKS Service supporting three JWT types:
  * - USER_SESSION: RSA keys for user authentication tokens
  * - GAME_SESSION: RSA keys for game session tokens  
  * - INTERNAL_ACCESS: RSA keys for service-to-service tokens
@@ -43,48 +44,37 @@ interface JWKSWithCache {
 export class JWKSService {
 	private jwks: JWKS | null = null;
 	private lastGenerated: string | null = null;
-	private authService: any = null; // Will be injected to avoid circular dependency
 
 	constructor() {
 		this.jwks = null;
 		this.lastGenerated = null;
 	}
 
-	// Set auth service reference to avoid circular imports, then generate JWKS
-	async setAuthService(authService: any): Promise<void> {
-		this.authService = authService;
-		await this.generateJWKS(); // Generate JWKS after auth service is set
-	}
-
-	// Generate JWKS from three JWT types, fallback to legacy if unavailable
+	// Generate JWKS from three JWT types using config system
 	async generateJWKS(): Promise<void> {
 		try {
 			const keys: JWK[] = [];
 			
-			// If auth service is available, use three-type system
-			if (this.authService && this.authService.jwtService) {
-				console.log('🔐 Generating JWKS from three-type JWT system...');
-				
-				// Get keys for all three JWT types
-				const jwtTypes = ['USER_SESSION', 'GAME_SESSION', 'INTERNAL_ACCESS'];
-				
-				for (const jwtType of jwtTypes) {
-					try {
-						const publicKey = this.authService.jwtService.getPublicKey(jwtType);
-						if (publicKey) {
-							const jwk = this.createJWKFromPublicKey(publicKey, jwtType);
-							keys.push(jwk);
-							console.log(`   ✅ Added ${jwtType} key with ID: ${jwk.kid}`);
-						}
-					} catch (error: any) {
-						console.warn(`⚠️  Failed to add ${jwtType} key:`, error.message);
+			console.log('🔐 Generating JWKS from three-type JWT system...');
+			
+			// Get keys for all three JWT types from config
+			const jwtConfigs = [
+				{ type: JWTType.USER_SESSION, config: CONFIG.JWT.USER },
+				{ type: JWTType.GAME_SESSION, config: CONFIG.JWT.GAME },
+				{ type: JWTType.INTERNAL_ACCESS, config: CONFIG.JWT.INTERNAL }
+			];
+			
+			for (const { type, config: jwtConfig } of jwtConfigs) {
+				try {
+					const publicKey = jwtConfig.PUBLIC_KEY;
+					if (publicKey) {
+						const jwk = this.createJWKFromPublicKey(publicKey, type, jwtConfig.ALGORITHM);
+						keys.push(jwk);
+						console.log(`   ✅ Added ${type} key with ID: ${jwk.kid}`);
 					}
+				} catch (error: any) {
+					console.warn(`⚠️  Failed to add ${type} key:`, error.message);
 				}
-			} else {
-				// Fallback to legacy single-key system
-				console.log('🔐 Generating JWKS from legacy system...');
-				await this.generateLegacyJWKS();
-				return;
 			}
 			
 			if (keys.length === 0)
@@ -95,18 +85,17 @@ export class JWKSService {
 			
 			console.log(`✅ JWKS generated successfully with ${keys.length} keys (3-type system)`);
 			keys.forEach(key => {
-				console.log(`   Key ID: ${key.kid}, Type: RSA, Use: ${key.use}`);
+				console.log(`   Key ID: ${key.kid}, Algorithm: ${key.alg}, Use: ${key.use}`);
 			});
 			
 		} catch (error: any) {
 			console.error('❌ Failed to generate JWKS:', error);
-			// Fallback to legacy system
-			await this.generateLegacyJWKS();
+			throw error;
 		}
 	}
 
 	// Create JWK from RSA public key with type-specific key ID
-	private createJWKFromPublicKey(publicKey: string, jwtType: string): JWK {
+	private createJWKFromPublicKey(publicKey: string, jwtType: JWTType, algorithm: string): JWK {
 		try {
 			// Parse the public key to get key components
 			const publicKeyObject = crypto.createPublicKey(publicKey);
@@ -121,7 +110,7 @@ export class JWKSService {
 			return {
 				kty: jwk.kty,				// Key Type (RSA)
 				use: 'sig',					// Public key use (signature)
-				alg: config.jwt.algorithm,	// Algorithm (RS256)
+				alg: algorithm,				// Algorithm (RS256)
 				kid: keyId,					// Key ID with type context
 				n: jwk.n,					// RSA modulus
 				e: jwk.e					// RSA public exponent
@@ -131,43 +120,7 @@ export class JWKSService {
 		}
 	}
 
-	// Fallback to legacy single-key JWKS generation
-	private async generateLegacyJWKS(): Promise<void> {
-		try {
-			console.log('🔄 Falling back to legacy JWKS generation...');
-			
-			// Parse the public key to get key components
-			const publicKeyObject = crypto.createPublicKey(config.jwt.publicKey!);
-			
-			// Export public key in JWK format
-			const jwk = publicKeyObject.export({ format: 'jwk' }) as any;
-			
-			// Generate key ID (kid) from public key
-			const keyId = this.generateKeyId(config.jwt.publicKey!);
-			
-			// Build JWK according to RFC 7517
-			const jwkWithMetadata: JWK = {
-				kty: jwk.kty,				// Key Type (RSA)
-				use: 'sig',					// Public key use (signature)
-				alg: config.jwt.algorithm,	// Algorithm (RS256)
-				kid: keyId,					// Key ID
-				n: jwk.n,					// RSA modulus
-				e: jwk.e					// RSA public exponent
-			};
 
-			// Build JWKS
-			this.jwks = {
-				keys: [jwkWithMetadata]
-			};
-
-			this.lastGenerated = new Date().toISOString();
-			console.log('✅ Legacy JWKS generated successfully with key ID:', keyId);
-			
-		} catch (error) {
-			console.error('❌ Failed to generate legacy JWKS:', error);
-			throw error;
-		}
-	}
 
 	// Get current JWKS
 	async getJWKS(): Promise<JWKS> {
@@ -205,32 +158,27 @@ export class JWKSService {
 	// Get current key ID (returns first available key)
 	getCurrentKeyId(): string {
 		if (!this.jwks || this.jwks.keys.length === 0) {
-			// Generate JWKS synchronously if needed
-			if (!this.jwks)
-				this.generateLegacyJWKS();
+			// Return a default key ID - JWKS should be generated at startup
+			return 'default-user-key';
 		}
 		return this.jwks?.keys[0]?.kid || 'default';
 	}
 
-	// Generate key ID from public key with optional type context  
-	private generateKeyId(publicKey: string, jwtType?: string): string {
+	// Generate key ID from public key with JWT type context  
+	private generateKeyId(publicKey: string, jwtType: JWTType): string {
 		const hash = crypto.createHash('sha256');
 		hash.update(publicKey);
-		if (jwtType) {
-			hash.update(jwtType); // Add type to make key ID unique per type
-		}
-		return hash.digest('hex').substring(0, 16);	// Use first 16 chars
+		hash.update(jwtType); // Add type to make key ID unique per type
+		return `${jwtType.toLowerCase()}_${hash.digest('hex').substring(0, 12)}`;	// Type prefix + hash
 	}
 
-	// Get key ID for specific JWT type (for three-type system)
-	getKeyIdForType(jwtType: string): string | null {
+	// Get key ID for specific JWT type
+	getKeyIdForType(jwtType: JWTType): string | null {
 		if (!this.jwks) return null;
 		
-		// In three-type system, find key with type-specific ID
+		// Find key with type-specific ID (keys are prefixed with type)
 		const typeKey = this.jwks.keys.find(key => {
-			// Key ID contains type information
-			return key.kid.includes(jwtType.toLowerCase()) || 
-				   this.generateKeyId(config.jwt.publicKey!, jwtType) === key.kid;
+			return key.kid.startsWith(jwtType.toLowerCase());
 		});
 		
 		return typeKey?.kid || null;

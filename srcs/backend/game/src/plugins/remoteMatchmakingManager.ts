@@ -9,7 +9,7 @@ declare module "fastify" {
 }
 
 const matchmakingManagerPlugin: FastifyPluginAsync = async (fastify) => {
-  const manager = new MatchmakingManager(fastify.sessions);
+  const manager = new MatchmakingManager(fastify.live_sessions);
   fastify.decorate("matchmaking", manager);
 };
 

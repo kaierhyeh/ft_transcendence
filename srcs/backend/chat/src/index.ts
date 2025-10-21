@@ -1,48 +1,36 @@
-import fastify, { FastifyInstance } from "fastify";
-import fastifyJwt from "@fastify/jwt";
-import FastifyWebsocket from "@fastify/websocket";
-
-import { chatRoutes } from "./routes/chat.routes";
-import { wsRoutes } from "./routes/ws.routes";
-import { logError } from "./utils/errorHandler";
-import { colorLog, redLogError } from "./utils/logger";
+import Fastify from "fastify";
+import websocketPlugin from '@fastify/websocket';
 import { CONFIG } from "./config";
+import routes from "./routes/index.routes"
+import repositoriesPlugin from "./plugins/repositories";
+import servicesPlugin from "./plugins/services";
+import cookie from "@fastify/cookie";
 
-import "./db/database";
+const fastify = Fastify({ logger: true });
 
-const chatServer: FastifyInstance = fastify({ logger: true });
+async function run() {
+	await fastify.register(cookie);
+	await fastify.register(websocketPlugin);
+	await fastify.register(repositoriesPlugin);
+	await fastify.register(servicesPlugin);
 
-chatServer.setErrorHandler((error, request, reply) => {
-	logError(error, "Chat server");
-	redLogError("Handling error:", error);
-	reply
-		.status(error.statusCode || 500)
-		.send({
-			error: error.message || "Chat server error",
-			statusCode: error.statusCode || 500,
-		});
-});
-
-chatServer.register(chatRoutes, { prefix: "/chat" });
-chatServer.register(wsRoutes);
-chatServer.register(fastifyJwt, { secret: CONFIG.SECURITY.JWT_SECRET });
-chatServer.register(FastifyWebsocket);
-
-// Health check endpoint
-chatServer.get('/health', async () => {
-	return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
-});
-
-const run = async () => {
-	try {
-		colorLog("cyan", "Start Chat service");
-		await chatServer.listen({ port: CONFIG.SERVER.PORT, host: CONFIG.SERVER.HOST });
-		colorLog("green", "Chat service is ready");
-	} catch (e) {
-		logError(e, "Can not run chat server");
-		redLogError("Chat server error:", e);
-		process.exit(1);
+	for (const { route, prefix } of routes) {
+		await fastify.register(route, { prefix });
 	}
-};
 
-run();
+	// Health check endpoint
+	fastify.get('/health', async () => {
+		return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
+	});
+
+	// setInterval(() => {
+	// 	fastify.live_sessions.update();
+	// }, CONFIG.WEB_SOCKET.TICK_PERIOD);
+
+	await fastify.listen({ 
+		port: CONFIG.SERVER.PORT, 
+		host: CONFIG.SERVER.HOST 
+	});
+}
+
+run().catch(console.error);

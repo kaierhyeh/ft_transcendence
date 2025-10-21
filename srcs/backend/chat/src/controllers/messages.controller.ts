@@ -1,86 +1,137 @@
-// the controller (HTTP routes).
-// it connects Fastify routes (/chats, /chats/:id, ..) to the service methods
-// contains the actual handler functions (just pure functions)
+// // the controller (HTTP routes).
+// // it connects Fastify routes (/chats, /chats/:id, ..) to the service methods
+// // contains the actual handler functions (just pure functions)
 
-import	{
-		FastifyRequest,
-		FastifyReply
-		} from "fastify";
+// import	{
+// 		FastifyRequest,
+// 		FastifyReply
+// 		} from "fastify";
 
-import	{
-		getChatPartnersService,
-		deleteChatService
-		} from "../services/chats.service";
+// import	{
+// 		getChatPartnersService,
+// 		deleteChatService
+// 		} from "../services/chats.service";
 
-import	{
-		postMessageService,
-		getMessagesService,
-		deleteMessageService
-		} from "../services/messages.service";
+// import	{
+// 		postMessageService,
+// 		getMessagesService,
+// 		deleteMessageService
+// 		} from "../services/messages.service";
 		
-import	{
-		logError,
-		getErrorCode,
-		getErrorMessage
-		} from "../utils/errorHandler";
-import { colorLog } from "../utils/logger";
+// import	{
+// 		logError,
+// 		getErrorCode,
+// 		getErrorMessage
+// 		} from "../utils/errorHandler";
+// import { colorLog } from "../utils/logger";
 
-export async function postMessageController(fromId:number, toId:number, msg:string) {
-	colorLog("cyan", "postMessageController: ", fromId, toId, msg);
-	try {
-		if (!fromId || !toId || !msg)
-			throw new Error("Invalid message data");
-		const newMsg = await postMessageService(fromId, toId, msg);
-		return (newMsg);
-	} catch (e) {
-		logError(e, "postMessageController");
-		throw e;
-	}	
-}
+// export async function postMessageController(fromId:number, toId:number, msg:string) {
+// 	colorLog("cyan", "postMessageController: ", fromId, toId, msg);
+// 	try {
+// 		if (!fromId || !toId || !msg)
+// 			throw new Error("Invalid message data");
+// 		const newMsg = await postMessageService(fromId, toId, msg);
+// 		return (newMsg);
+// 	} catch (e) {
+// 		logError(e, "postMessageController");
+// 		throw e;
+// 	}	
+// }
 
-export async function postMessagesController(req:FastifyRequest<{Body:{msg:{fromId:number, toId:number, msg:string}}}>, reply:FastifyReply) {
-// export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
-	colorLog("cyan", "postMessagesController: ", req.method, req.url);
-	try {
-		colorLog("cyan", "postMessagesController: body=", req.body);
-		// const {msgs} = req.body;
-		// if (!Array.isArray(msgs) || msgs.length === 0 || msgs.find(msg => !msg.fromId || !msg.toId || !msg.msg))
-		// 	return (reply.code(400).send({error: "Invalid message data" }));
-		// const newMsgs = await Promise.all(msgs.map(msg => postMessageService(msg.fromId, msg.toId, msg.msg)));
-		const {msg} = req.body
-		if (msg.fromId === undefined || msg.toId === undefined || msg.msg === undefined)
-			return (reply.status(400).send({error: "Invalid message data" }));
-		const newMsgs = await postMessageService(msg.fromId, msg.toId, msg.msg);
-		colorLog("cyan", "postMessagesController: newMsgs=", newMsgs);
-		return (reply.status(201).send(newMsgs));
-	} catch (e: any) {
-		logError(e, "postMessagesController");
-		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
+// export async function postMessagesController(req:FastifyRequest<{Body:{msg:{fromId:number, toId:number, msg:string}}}>, reply:FastifyReply) {
+// // export async function postMessagesController(req:FastifyRequest<{Body:{msgs:{fromId:number, toId:number, msg:string}[]}}>, reply:FastifyReply) {
+// 	colorLog("cyan", "postMessagesController: ", req.method, req.url);
+// 	try {
+// 		colorLog("cyan", "postMessagesController: body=", req.body);
+// 		// const {msgs} = req.body;
+// 		// if (!Array.isArray(msgs) || msgs.length === 0 || msgs.find(msg => !msg.fromId || !msg.toId || !msg.msg))
+// 		// 	return (reply.code(400).send({error: "Invalid message data" }));
+// 		// const newMsgs = await Promise.all(msgs.map(msg => postMessageService(msg.fromId, msg.toId, msg.msg)));
+// 		const {msg} = req.body
+// 		if (msg.fromId === undefined || msg.toId === undefined || msg.msg === undefined)
+// 			return (reply.status(400).send({error: "Invalid message data" }));
+// 		const newMsgs = await postMessageService(msg.fromId, msg.toId, msg.msg);
+// 		colorLog("cyan", "postMessagesController: newMsgs=", newMsgs);
+// 		return (reply.status(201).send(newMsgs));
+// 	} catch (e: any) {
+// 		logError(e, "postMessagesController");
+// 		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
+// 	}
+// }
+
+// export async function getMessagesController(req:FastifyRequest<{Params:{chatId:string, userId:string}}>, reply:FastifyReply) {
+// 	colorLog("cyan", "getMessagesController: ", req.method, req.url);
+// 	try {
+// 		const userId = parseInt(req.params.userId);
+// 		const chatId = parseInt(req.params.chatId);
+// 		if (isNaN(chatId) || isNaN(userId) || chatId < 0 || userId < 0)
+// 			return (reply.status(400).send({error: "Invalid chat ID or user ID"}));
+// 		const msgs = await getMessagesService(chatId, userId);
+// 		return (msgs);
+// 	} catch (e) {
+// 		logError(e, "getMessagesController");
+// 		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
+// 	}
+// }
+
+// export async function deleteMessageController(req:FastifyRequest<{Params:{msgId:string}}>, reply:FastifyReply) {
+// 	colorLog("cyan", "deleteMessageController: ", req.method, req.url);
+// 	try {
+// 		await deleteMessageService(parseInt(req.params.msgId));
+// 		return (reply.status(200).send({message: "Message deleted successfully."}));
+// 	} catch (e) {
+// 		logError(e, "deleteMessageController");
+// 		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
+// 	}
+// }
+
+
+import { FastifyRequest, FastifyReply } from "fastify";
+import { MessageService } from "../services/messages.service";
+import { toInteger } from "../utils/toInteger";
+import { NewMessageBody } from "../schemas/messages.schema";
+
+export class MessageController {
+	constructor(private messageService: MessageService) {}
+
+	public async addMessage(request: FastifyRequest<{ Body: NewMessageBody }>, reply: FastifyReply) {
+		try {
+			const sub = request.authUser?.sub;
+			if (!sub) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const chatId = request.body.chatId;
+			const fromId = toInteger(sub);
+			const toId = request.body.toId
+			const msg = request.body.msg;
+
+			await this.messageService.sendMessage(chatId, fromId, toId, msg);
+
+			reply.status(200).send({
+				success: true,
+				message: "Message was sent"
+			});
+
+		} catch (error) {
+			this.handleError(error, reply);
+		}
 	}
-}
 
-export async function getMessagesController(req:FastifyRequest<{Params:{chatId:string, userId:string}}>, reply:FastifyReply) {
-	colorLog("cyan", "getMessagesController: ", req.method, req.url);
-	try {
-		const userId = parseInt(req.params.userId);
-		const chatId = parseInt(req.params.chatId);
-		if (isNaN(chatId) || isNaN(userId) || chatId < 0 || userId < 0)
-			return (reply.status(400).send({error: "Invalid chat ID or user ID"}));
-		const msgs = await getMessagesService(chatId, userId);
-		return (msgs);
-	} catch (e) {
-		logError(e, "getMessagesController");
-		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
+	private handleError(error: any, reply: FastifyReply) {
+		if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+			reply.status(409).send({
+				error: "Username or email already exists"
+			});
+		} else if (error.code === 'USER_NOT_FOUND') {
+			reply.status(404).send({
+				error: "User not found"
+			});
+		} else {
+			reply.log.error(error);
+			reply.status(500).send({
+				error: "Internal server error"
+			});
+		}
 	}
-}
 
-export async function deleteMessageController(req:FastifyRequest<{Params:{msgId:string}}>, reply:FastifyReply) {
-	colorLog("cyan", "deleteMessageController: ", req.method, req.url);
-	try {
-		await deleteMessageService(parseInt(req.params.msgId));
-		return (reply.status(200).send({message: "Message deleted successfully."}));
-	} catch (e) {
-		logError(e, "deleteMessageController");
-		return (reply.status(getErrorCode(e)).send({error:getErrorMessage(e)}));
-	}
 }

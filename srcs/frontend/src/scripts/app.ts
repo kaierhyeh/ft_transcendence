@@ -1,13 +1,18 @@
-import {initGame} from "./game.js";
-import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
-import {initProfile, handleOAuthCallback} from "./profile.js";
+import { initLanguages } from "./i18n/index.js";
 import {initTournament} from "./tournament.js";
 import initRemoteGame, { cleanupRemoteGame } from "./remoteGame.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
 import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
 import { initDeviceDetection } from "./utils/deviceDetect.js";
+import {loadHeader} from "./header.js";
+import { initSignup } from "./auth/signup.js";
+import { initLogin, handleOAuthCallback } from "./auth/login.js";
+import { initMatchHistory } from "./user/match_history.js";
+import { initSettings } from "./user/settings.js";
+import { initPong } from "./pong.js";
+import { initProfile } from "./user/profile.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -16,29 +21,36 @@ const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
 	"/online": "./html/pong.html", //temporary
-	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
-	"/profile": "./html/profile.html",
-	"/oauth-callback": "./html/profile.html",
-	"/history": "./html/history.html"
+	"/user/profile": "./html/user/profile.html",
+	// "/oauth-callback": "./html/profile.html",
+	"/history": "./html/history.html",
+	"/user/settings":"./html/user/settings.html",
+	"/user/friends": "./html/user/friends.html",
+	"/user/block-list": "./html/user/block_list.html",
+	"/signup": "./html/auth/signup.html",
+	"/login": "./html/auth/login.html",
+	"/auth/google/callback": "./html/auth/login.html", // Temporary page while processing OAuth
 };
 
 const initScripts: Record<string, () => void> = {
 	"/": () => {
 		if (typeof initMenu === "function")
 			initMenu();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/pong": () => {
-		if (typeof initGame === "function")
-			initGame();
+		if (typeof initPong === "function")
+			initPong();
 	},
-	"/stats": () => {
-		if (typeof initStats === "function")
-			initStats();
+	"/signup": () => {
+		if (typeof initSignup === "function")
+			initSignup();
 	},
-	"/profile": () => {
-		if (typeof initProfile === "function")
-			initProfile();
+	"/login": () => {
+		if (typeof initLogin === "function")
+			initLogin();
 	},
 	"/tournament": () => {
 		if (typeof initTournament === "function")
@@ -52,7 +64,15 @@ const initScripts: Record<string, () => void> = {
 		if (typeof initHistory === "function")
 			initHistory();
 	},
-	"/oauth-callback": () => {
+	"/user/settings": () => {
+		if (typeof initSettings === "function")
+			initSettings();
+	},
+	"/user/profile": () => {
+		if (typeof initSettings === "function")
+			initProfile();
+	},
+	"/auth/google/callback": () => {
 		if (typeof handleOAuthCallback === "function")
 			handleOAuthCallback();
 	}
@@ -64,6 +84,8 @@ async function load404(push: boolean)
 	app.innerHTML = await res.text();
 	if (push)
 		history.pushState({path: "404"}, "", "/404.");
+	
+	await loadHeader();
 	update_event();
 }
 
@@ -101,14 +123,22 @@ async function navigate(path: string, push: boolean = true)
 	if (file)
 	{
 		try {
+			if (path === '/login' && push) {
+				const currentPath = window.location.pathname;
+				if (currentPath !== '/login' && currentPath !== '/signup') {
+					sessionStorage.setItem('previousPage', currentPath);
+				}
+			}
+
 			const res = await fetch(file);
 			if (!res.ok)
 				throw new Error("File not found.");
 			app.innerHTML = await res.text();
 			if (push)
 				history.pushState({path}, "", path);
+			
+			await loadHeader();
 			update_event();
-			// Initialize i18n for the new page
 			i18n.initializePage();
 			if (initScripts[path])
 				initScripts[path]();
@@ -126,11 +156,9 @@ window.onpopstate = (e) => {
 	navigate(path, false);
 };
 
-// Initialize browser detection and compatibility
 addBrowserClass();
 logBrowserInfo();
 
-// Initialize device detection and responsive support
 initDeviceDetection();
 
 navigate(location.pathname, false);

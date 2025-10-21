@@ -1,48 +1,37 @@
+// JWT Types for three-tier system
 export enum JWTType {
-  USER_SESSION = 'user_session',
-  GAME_SESSION = 'game_session',
-  INTERNAL_ACCESS = 'internal'
+  USER_SESSION = 'USER_SESSION',
+  GAME_SESSION = 'GAME_SESSION', 
+  INTERNAL_ACCESS = 'INTERNAL_ACCESS'
 }
 
-/**
- * Base JWT payload interface containing standard JWT claims
- * Payload: The data portion of a JWT that contains the claims (user info, permissions, etc.)
- * Based on RFC 7519 - JSON Web Token (JWT) specification
- */
-export interface BaseJWTPayload {
-  iat?: number;		// Issued At		- Unix timestamp
-  exp?: number;		// Expiration Time
-  iss?: string;		// Issuer			- Principal that issued the JWT
-  aud?: string;		// Audience
-  sub?: string;		// Subject			- Principal that is the subject of the JWT
-  jti?: string;		// JWT ID			- Unique identifier to prevent replay attacks
-  type: JWTType;	// Token Type
+// Base JWT payload interface
+export interface JWTPayload {
+  type: JWTType;
+  sub?: string;
+  iat?: number;
+  exp?: number;
+  iss?: string;
 }
 
-export interface UserSessionPayload extends BaseJWTPayload {
+// User Session JWT payload
+export interface UserSessionPayload extends JWTPayload {
   type: JWTType.USER_SESSION;
-  userId: string;
-  email: string;
-  role: string;
-  permissions?: string[];
+  sub: string;  // User ID as string (JWT standard)
+  token_type?: 'access' | 'refresh';  // Optional: distinguish between access and refresh tokens
 }
 
-export interface GameSessionPayload extends BaseJWTPayload {
+// Game Session JWT payload
+export interface GameSessionPayload extends JWTPayload {
   type: JWTType.GAME_SESSION;
-  gameId: string;
-  userId: string;
-  permissions: string[];
-  gameData?: any;
+  sub: string;
+  game_id: number;
 }
 
-export interface InternalAccessPayload extends BaseJWTPayload {
+// Internal Access JWT payload for service-to-service communication
+export interface InternalAccessPayload extends JWTPayload {
   type: JWTType.INTERNAL_ACCESS;
-  service: string;
-  scope: string[];
-  requestId?: string;
 }
-
-export type JWTPayload = UserSessionPayload | GameSessionPayload | InternalAccessPayload;
 
 export interface JWTHeader {
   alg: string;

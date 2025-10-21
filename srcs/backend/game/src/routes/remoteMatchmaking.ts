@@ -1,29 +1,29 @@
-import { FastifyInstance } from "fastify";
-import { matchmakingRequestSchema, GameParticipant } from "../schemas";
+import { FastifyInstance, FastifyRequest } from "fastify";
+import { matchmakingRequestSchema, MatchmakingRequest } from "../schemas";
 
-function handleJoinRequest(request: any, reply: any): void {
-  const mode = request.body.mode;
-  const participant_id = request.body.participant_id;
-
-  const participant: GameParticipant = {
-    user_id: 0,
-    participant_id: participant_id,
-    is_ai: false
-  };
-
+async function handleJoinRequest(request: FastifyRequest<{ Body: MatchmakingRequest }>, reply: any): Promise<void> {
+  const {format, participant } = request.body;
   const fastify = request.server;
-  const response = fastify.matchmaking.joinQueue(participant, mode);
-  reply.send(response);
+   try {
+    const response = await fastify.matchmaking.joinQueue(participant, format);
+    reply.send(response);
+  } catch(error: any) {
+    if (error.code === 'INVALID_PARTICIPANTS_NUMBER')
+      reply.status(400).send(error.message);
+    else if (error.code === 'INVALID_PARTICIPANT')
+      reply.status(400).send(error.message);
+    reply.status(500).send("Internal server error");
+  }
 }
 
 function handleStatusRequest(request: any, reply: any): void {
   const fastify = request.server;
-  const status2p = fastify.matchmaking.getQueueStatus("2p");
-  const status4p = fastify.matchmaking.getQueueStatus("4p");
+  const status1v1 = fastify.matchmaking.getQueueStatus("1v1");
+  const status2v2 = fastify.matchmaking.getQueueStatus("2v2");
   
   reply.send({
-    queue_2p: status2p,
-    queue_4p: status4p
+    queue_1v1: status1v1,
+    queue_2v2: status2v2
   });
 }
 
@@ -31,13 +31,17 @@ function handleWebSocketConnection(connection: any, request: any): void {
   const participantId = request.query.participant_id;
   const fastify = request.server;
   
+  console.log("Handling WebSocket connection for participant:", participantId);
+
   if (!participantId) {
+    console.log("Missing participant_id");
     connection.socket.close(4001, "Missing participant_id");
     return;
   }
   
   const isInQueue = fastify.matchmaking.isPlayerAlreadyInQueue(participantId);
   if (!isInQueue) {
+    console.log(`Participant ${participantId} not in queue`);
     connection.socket.close(4002, "Not in queue");
     return;
   }
@@ -51,7 +55,7 @@ function handleWebSocketConnection(connection: any, request: any): void {
         connection.socket.send(JSON.stringify({ type: "pong" }));
       }
     } catch (error) {
-      console.error("Invalid message:", error);
+      console.log("Invalid message:", error);
     }
   });
   
@@ -66,7 +70,7 @@ function handleWebSocketConnection(connection: any, request: any): void {
 
 export default function matchmakingRoutes(fastify: FastifyInstance, options: any, done: Function): void {
 
-  fastify.post("/join", { schema: { body: matchmakingRequestSchema } }, handleJoinRequest);
+  fastify.post<{ Body: MatchmakingRequest }>("/join", { schema: { body: matchmakingRequestSchema } }, handleJoinRequest);
 
   fastify.get("/status", handleStatusRequest);
 
