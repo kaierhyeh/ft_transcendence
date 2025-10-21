@@ -6,8 +6,6 @@ import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
 import { UsersClient } from "../clients/UsersClient";
 import { StatsClient } from "../clients/StatsClient";
-import { toInteger } from "../utils/type-converters";
-import { verifyGameSessionJWT } from "../services/JwtVerifierService";
 
 let next_id = 1;
 
