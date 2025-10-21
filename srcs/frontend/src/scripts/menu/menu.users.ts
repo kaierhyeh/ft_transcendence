@@ -1,5 +1,6 @@
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
-
+import { initMessageSection } from "./menu.chat.js";
+import { ChatUser } from "./menu.chat.js";
 // data structures
 
 export interface UserListRow {
@@ -24,6 +25,7 @@ export interface UserInfo {
 
 /* ============================================ GLOBALS ===================================== */
 
+let API_CHAT_ENDPOINT: string;
 let API_USERS_FRIENDS: string;
 let API_USERS_BLOCKS: string;
 let menuBackButton: HTMLElement;
@@ -52,8 +54,10 @@ let blockUserButton: HTMLElement;
 let currentFilter: string = 'all';
 
 function initializeGlobals(/* userId: number */): boolean {
+	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
 	API_USERS_FRIENDS = `${window.location.origin}/api/friends`;
 	API_USERS_BLOCKS = `${window.location.origin}/api/blocks`;
+	clearEvents("#menuBackButton");
 	menuBackButton = document.getElementById("menuBackButton")!;
 	// sections
 	menuControlPanel = document.getElementById("menuControlPanel")!;
@@ -236,8 +240,68 @@ async function removeFriend(userInfo: UserInfo): Promise<void> {
 	await initUserInfoSection(userInfo.user_id);
 }
 
+// export interface UserInfo {
+// 	user_id: number;
+// 	username: string;
+// 	alias: string | null;
+// 	avatar_filename: string | null;
+// 	user_status: string;
+// 	friendship_status: string | null;
+// 	from_id: number | null;
+// 	to_id: number | null;
+// }
+
+// async function loadChats(): Promise<void> {
+// 	try {
+// 		const res = await fetch(`${API_CHAT_ENDPOINT}/`, {
+// 			method: "GET",
+// 			headers: {
+// 				credentials: "include"
+// 			}
+// 		});
+// 		if (!res.ok) {
+// 			throw new Error("Failed to load chats");
+// 		}
+// 		const users: ChatUser[] = await res.json();
+// 		renderChatList(users);
+// 	} catch (err) {
+// 		console.error("Error loading chats:", err);
+// 	}
+// }
+
+
 async function openChatWithUser(userInfo: UserInfo): Promise<void> {
-	console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
+	try {
+		console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
+		// chatId: number, withUser: ChatUser, friendshipStatus: string | null
+		const res = await fetch(`${API_CHAT_ENDPOINT}/open/${userInfo.user_id}`, {
+			method: "GET",
+			headers: {
+				credentials: "include"
+			}
+		});
+		if (!res.ok) {
+			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
+		}
+		console.log("[DEBUG CHAT] - res:", res);
+		const chatUser: ChatUser = await res.json();
+		if (chatUser === undefined) {
+			throw new Error(`Failed to get chat info with user: ${userInfo.user_id}`);
+		}
+		console.log("[DEBUG CHAT] - chatUser:", chatUser);
+
+		[
+			"usersList",
+			"usersInfo",
+			"userLowerPanel"
+		].forEach(hideElementById);
+
+		initMessageSection(chatUser.chat_id, chatUser, chatUser.friendship_status, "users");
+		
+	} catch (err) {
+		console.error("USERS: blockUser failed", err);
+	}
+
 }
 
 async function blockUser(userInfo: UserInfo): Promise<void> {
@@ -619,10 +683,7 @@ function initFilterDropdown(): void {
 		showElementById("menuDropdown");
 		return;
 	}
-		
-	if (!addMenuDropdown()) {
-		return;
-	}
+	if (!addMenuDropdown()) { return; }
 
 	const dropdownAll = document.getElementById("menuDropdownAll");
 	const dropdownFriends = document.getElementById("menuDropdownFriends");
@@ -659,13 +720,11 @@ function initFilterDropdown(): void {
 		console.log("USERS: Filter set to BLOCKED");
 		initUsersSection();
 	});
-
-
 }
 
-export async function openUsersSection(/* userId: number */): Promise<void> {
+export async function openUsersSection(): Promise<void> {
 	console.log("USERS: Users Section opened");
-	initializeGlobals(/* userId */);
+	initializeGlobals();
 
 	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
 		/*|| !usersSection*/ || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton

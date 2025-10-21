@@ -137,6 +137,32 @@ export class ChatRepository {
 		return stmt.all([userId, userId]) as ChatInfo[];
 	}
 
+	public async getChatByUsersIds(thisUserId: number, userId: number) {
+		const stmt = this.db.prepare(`
+			SELECT 
+				c.id AS chat_id,
+				c.user_id_a AS from_id,
+				c.user_id_b AS to_id
+			FROM chats c
+			WHERE (c.user_id_a = ? AND c.user_id_b = ?) OR (c.user_id_b = ? AND c.user_id_a = ?)
+		`);
+		const ret = stmt.get([thisUserId, userId, thisUserId, userId]) as ChatInfo;
+		return ret ? ret : null;
+	}
+
+	public async addChat(thisUserId: number, userId: number): Promise<ChatInfo> {
+		const stmt = this.db.prepare(`
+			INSERT INTO chats (user_id_a, user_id_b)
+			VALUES (?, ?)
+			RETURNING 
+				id AS chat_id, 
+				user_id_a AS from_id, 
+				user_id_b AS to_id
+		`);
+		
+		return stmt.get(thisUserId, userId) as ChatInfo;
+	}
+
 	public async getChatById(chatId: number, thisUserId: number) {
 		const stmt = this.db.prepare(`
 			SELECT 

@@ -132,6 +132,100 @@ export class ChatService {
 		return chats;
 	}
 
+	private async getUserChatListRow(thisUserId: number, userId: number, chatInfo: ChatInfo): Promise<chatListRow | undefined> {
+
+		const baseUrl = CONFIG.USER_SERVICE.BASE_URL;
+		const body = { id: thisUserId, ids: [userId] };
+		const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
+
+		const res = await fetch(`${baseUrl}/friends/usersChat`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				...internalAuthHeaders
+			},
+			body: JSON.stringify(body)
+		});
+
+		if (!res.ok) {
+			throw new Error(`Failed to fetch users data: ${res.status} ${res.statusText}`);
+		}
+
+		const usersData = (await res.json()) as UserInfo[];
+		const user = usersData.find(u => u.user_id === userId);
+
+		if (user) {
+			let user_status = user.user_status;
+			let friendship_status = user.friendship_status;
+			let from: number | null = user.from_id;
+
+			switch (friendship_status) {
+				case "blocked":
+					if (user.user_id !== from) {
+						// user_id was blocked by this user
+						return {
+							chat_id: chatInfo.chat_id,
+							user_id: user.user_id,
+							username: user.username,
+							alias: user.alias,
+							user_status: null,
+							friendship_status,
+							from
+						};
+					} else {
+						// this user was blocked by user_id
+						return {
+							chat_id: chatInfo.chat_id,
+							user_id: user.user_id,
+							username: user.username,
+							alias: user.alias,
+							user_status: null,
+							friendship_status: null,
+							from: null
+						};
+					}
+				case "accepted":
+					return {
+						chat_id: chatInfo.chat_id,
+						user_id: user.user_id,
+						username: user.username,
+						alias: user.alias,
+						user_status,
+						friendship_status,
+						from
+					};
+				default:
+					return {
+						chat_id: chatInfo.chat_id,
+						user_id: user.user_id,
+						username: user.username,
+						alias: user.alias,
+						user_status: null,
+						friendship_status: null,
+						from: null
+					};
+			}
+		}
+
+		return undefined;
+	}
+
+	public async getUserChat(thisUserId: number, userId: number) {
+		let chatInfo = await this.chatRepository.getChatByUsersIds(thisUserId, userId);
+		console.log("[DEBUG CHAT_INFO] A:", chatInfo);
+		// exist?
+		if (chatInfo === null) {
+			// create
+			console.log("[DEBUG CHAT_INFO] ADD CHAT");
+			chatInfo = await this.chatRepository.addChat(thisUserId, userId);
+		}
+		// new or old chat exist now
+		console.log("[DEBUG CHAT_INFO] B:", chatInfo);
+		return await this.getUserChatListRow(thisUserId, userId, chatInfo);
+
+		// getUserChats()
+	}
+
 	public async getChatById(chatId: number, thisUserId: number) {
 		return this.chatRepository.getChatById(chatId, thisUserId);
 	}

@@ -1,5 +1,6 @@
 import { clearEvents, hideElementById, setElementActive, setMenuTitle, showElementById } from "./menu.utils.js";
 import { i18n } from '../i18n/i18n.js';
+import { openUsersSection } from "./menu.users.js";
 
 export interface Message {
 	msg_id: number;
@@ -45,7 +46,6 @@ let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
-let count = 0;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -69,20 +69,29 @@ function initializeGlobals(): boolean {
 /* ====================================== UTILS ============================================= */
 
 function clearBeforeOpenChatsSection(): void {
-	clearEvents("#chatsList");
-	clearEvents("#chatMessages");
-	clearEvents("#chatLowerPanel");
-	clearEvents("#menuBackButton");				// back button
+	[
+		"#chatsList",
+		"#chatMessages",
+		"#chatLowerPanel",
+		"#menuBackButton"
+	].forEach(clearEvents);
+	// clearEvents("#chatsList");
+	// clearEvents("#chatMessages");
+	// clearEvents("#chatLowerPanel");
+	// clearEvents("#menuBackButton");
 	if (!initializeGlobals()) {					// update references of global variables
 		console.error("CHAT: globals reinitialization failed: Missing elements");
 	}
 }
 
 function clearBeforeInitMessageSection(): void {
-	clearEvents("#chatSendButton");
-	clearEvents("#chatMessageToSend");
-	clearEvents("#chatInviteGameButton");
-	clearEvents("#menuBackButton");
+	[
+		"#chatSendButton",
+		"#chatMessageToSend",
+		"#chatInviteGameButton",
+		"#menuBackButton"
+	].forEach(clearEvents);
+
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
@@ -90,20 +99,25 @@ function clearBeforeInitMessageSection(): void {
 }
 
 function resetChatSection(): void {
-	hideElementById("chatLowerPanel");
-	hideElementById("chatMessages");
-	hideElementById("menuBackButton");
-	hideElementById("menuDropdown");
-	showElementById("menuControlPanel");
-	showElementById("usersSectionButton");
-	showElementById("chatsSectionButton");
+	[
+		"chatLowerPanel",
+		"chatMessages",
+		"menuBackButton",
+		"menuDropdown"
+	].forEach(hideElementById);
+
+	[
+		"menuControlPanel",
+		"usersSectionButton",
+		"chatsSectionButton"
+	].forEach(showElementById);
+
 	setMenuTitle("chats");
 }
 
 /* =================================== CHATS SECTION ======================================== */
 
 function renderChatList(users: ChatUser[]): void {
-	count = 0;
 	console.log("[DEBUG] --- RESET COUNT");
 	showElementById("chatsList");
 
@@ -149,7 +163,7 @@ function renderChatList(users: ChatUser[]): void {
 			console.log("CHAT: Clicked on chatId:", chatId, " userId:", userId);
 			if (chatId && userId) {
 				// clearBeforeInitMessageSection();
-				initMessageSection(parseInt(chatId), users.find(u => u.user_id === parseInt(userId))!, friendshipStatus!);
+				initMessageSection(parseInt(chatId), users.find(u => u.user_id === parseInt(userId))!, friendshipStatus!, 'chats');
 			}
 		});
 	});
@@ -210,11 +224,7 @@ async function sendMessageByButton(toUser: ChatUser): Promise<void> {
 			await sendMessage(toUser, message);
 
 			appendMessageToChat(message);
-
-			// clearBeforeInitMessageSection();
-			// initMessageSection(toUser.chat_id, toUser, toUser.friendship_status);
 		}
-		// chatInput.value = "";
 	}
 }	
 
@@ -232,7 +242,15 @@ async function inviteToGame(toUser: ChatUser): Promise<void> {
 
 async function goBackToChatsList(): Promise<void> {
 	console.log("[DEBUG] goBackToChatsList - CLICKED");
+	chatMessages.innerHTML = ``;
 	initChatSection();
+}
+
+async function goBackToUserList() {
+	console.log("[DEBUG] goBackToUserList - CLICKED");
+	// clearEvent
+	chatMessages.innerHTML = ``;
+	openUsersSection();
 }
 
 // render and send msgs
@@ -300,36 +318,58 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 	}
 }
 
-async function initMessageSection(chatId: number, withUser: ChatUser, friendshipStatus: string | null): Promise<void> {
+export async function initMessageSection(chatId: number, withUser: ChatUser, friendshipStatus: string | null, backTo: string): Promise<void> {
 	try {
 		console.log(`CHAT: initMessageSection {chatId: ${chatId}, withUser: ${withUser.username}, friendshipStatus: ${friendshipStatus}}`);
+		initializeGlobals();
 		chatInput.value = "";
+		console.log("---------0");
 		clearBeforeInitMessageSection();
+		console.log("---------1");
 
 		if (friendshipStatus !== "blocked") {
+			console.log("---------1-1");
 			// Sent message by using button
-			console.log("[DEBUG] ADD EVENT ON SEND n=", count++);
 			chatSendButton.addEventListener("click", () => sendMessageByButton(withUser));
+			console.log("---------1-2");
 			chatInput.addEventListener("keydown", (event) => sentMessageByEnter(event));
+			console.log("---------1-3");
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
+			console.log("---------1-4");
 		}
+		console.log("---------2");
 		console.log("[DEBUG] menuBackButton.addEventListener")
-		menuBackButton.addEventListener("click", () => goBackToChatsList());
+		switch (backTo) {
+			case 'users':
+				console.log("---------2-1");
+				menuBackButton.addEventListener("click", () => goBackToUserList());
+				break;
+			case 'chats':
+				console.log("---------2-2");
+				menuBackButton.addEventListener("click", () => goBackToChatsList());
+				break;
+		}
 
+		console.log("---------3");
 		setMenuTitle(`${withUser.username}`);
 
+		console.log("---------4");
 		const res = await fetch(`${API_CHAT_ENDPOINT}/${chatId}`, {
 			method: "GET",
 			headers: {
 				credentials: "include"
 			}
 		});
+		console.log("---------5");
 		if (!res.ok) {
 			throw new Error("Failed to load messages");
 		}
+		console.log("---------6");
 		const messages: Message[] = await res.json();
+		console.log("---------7");
 		console.log("CHAT: Loaded messages:", messages);
+		console.log("---------8");
 		renderMessages(messages, withUser, friendshipStatus);
 	} catch (err) {
 		console.error("Error loading messages:", err);

@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { ChatService } from "../services/chats.service";
-import { ChatIdParams } from "../schemas/users.schema";
+import { ChatIdParams, UserIdParams } from "../schemas/users.schema";
 import { toInteger } from "../utils/toInteger";
 
 export class ChatController {
@@ -15,6 +15,22 @@ export class ChatController {
 			const thisUserId = toInteger(sub);
 			const chats = await this.chatService.getUserChats(thisUserId);
 			reply.status(200).send(chats);
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+	
+	public async getUserChat(request: FastifyRequest<{ Params: UserIdParams }>, reply: FastifyReply) {
+		try {
+			
+			const sub = request.authUser?.sub;
+			if (!sub) {
+				return reply.status(401).send({ error: "Unauthorized: No user context" });
+			}
+			const thisUserId = toInteger(sub);
+			const withUserId = request.params.id;
+			const chatUser = await this.chatService.getUserChat(thisUserId, withUserId);
+			reply.status(200).send(chatUser);
 		} catch (error) {
 			this.handleError(error, reply);
 		}
