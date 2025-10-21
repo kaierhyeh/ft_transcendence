@@ -1,7 +1,6 @@
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { ChatUser } from "./menu.chat.js";
-// data structures
 
 export interface UserListRow {
 	user_id: number;
@@ -29,15 +28,14 @@ let API_CHAT_ENDPOINT: string;
 let API_USERS_FRIENDS: string;
 let API_USERS_BLOCKS: string;
 let menuBackButton: HTMLElement;
-// sections
+
 let menuControlPanel: HTMLElement;
 let usersSectionButton: HTMLElement;
 let chatsSectionButton: HTMLElement;
-// users section
-// let usersSection: HTMLElement;
+
 let usersList: HTMLElement;
 let usersInfo: HTMLElement;
-// user info panel buttons
+
 let userLowerPanel: HTMLElement;
 let firstLine: HTMLElement;
 let sendFriendRequestButton: HTMLElement;
@@ -50,24 +48,23 @@ let secondLine: HTMLElement;
 let openChatButton: HTMLElement;
 let blockUserButton: HTMLElement;
 
-// let thisUserId: number;
 let currentFilter: string = 'all';
 
-function initializeGlobals(/* userId: number */): boolean {
+function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
 	API_USERS_FRIENDS = `${window.location.origin}/api/friends`;
 	API_USERS_BLOCKS = `${window.location.origin}/api/blocks`;
-	clearEvents("#menuBackButton");
+
+	["#menuBackButton"].forEach(clearEvents);
 	menuBackButton = document.getElementById("menuBackButton")!;
-	// sections
+
 	menuControlPanel = document.getElementById("menuControlPanel")!;
 	usersSectionButton = document.getElementById("usersSectionButton")!;
 	chatsSectionButton = document.getElementById("chatsSectionButton")!;
-	// users section
-	// usersSection = document.getElementById("usersSection")!;
+
 	usersList = document.getElementById("usersList")!;
 	usersInfo = document.getElementById("usersInfo")!;
-	// user info panel buttons
+
 	userLowerPanel = document.getElementById("userLowerPanel")!;
 	firstLine = document.getElementById("firstLine")!;
 	sendFriendRequestButton = document.getElementById("sendFriendRequestButton")!;
@@ -80,15 +77,12 @@ function initializeGlobals(/* userId: number */): boolean {
 	openChatButton = document.getElementById("openChatButton")!;
 	blockUserButton = document.getElementById("blockUserButton")!;
 
-	// thisUserId = userId;
-
 	if (
 		!API_USERS_FRIENDS ||
 		!menuBackButton ||
 		!menuControlPanel ||
 		!usersSectionButton ||
 		!chatsSectionButton ||
-		/*!usersSection ||*/
 		!usersList ||
 		!usersInfo ||
 		!userLowerPanel ||
@@ -113,14 +107,17 @@ function initializeGlobals(/* userId: number */): boolean {
 // utility functions
 
 function clearBeforeOpenUsersSection(): void {
-	// clearEvents("#usersSection");
-	clearEvents("#usersList");
-	clearEvents("#usersInfo");
-	clearEvents('#userLowerPanel');
-	clearEvents("#menuBackButton");
-	if (!initializeGlobals(/* thisUserId */)) {
+
+	[	"#usersList",
+		"#usersInfo",
+		"#userLowerPanel",
+		"#menuBackButton"
+	].forEach(clearEvents);
+
+	if (!initializeGlobals()) {
 		console.error("USERS: globals reinitialization failed: Missing elements");
 	}
+
 	menuBackButton.addEventListener("click", () => {
 		console.log("USERS: Back button clicked");
 		initUsersSection();
@@ -128,25 +125,27 @@ function clearBeforeOpenUsersSection(): void {
 }
 
 function resetUsersSection(): void {
-	// hideElementById("friendsSection");
-	// hideElementById("chatsSection");
-	hideElementById("chatsList");
-	hideElementById("chatMessages");
-	hideElementById("chatLowerPanel");
 
-	hideElementById("menuBackButton");
-	hideElementById("usersInfo");
-	hideElementById("userLowerPanel");
+	[	"chatsList",
+		"chatMessages",
+		"chatLowerPanel",
+		"menuBackButton",
+		"usersInfo",
+		"userLowerPanel"
+	].forEach(hideElementById);
 
-	showElementById("menuControlPanel");
-	showElementById("usersSectionButton");
-	showElementById("chatsSectionButton");
+	[	"menuControlPanel",
+		"usersSectionButton",
+		"chatsSectionButton"
+	].forEach(showElementById);
 
 }
 
 function resetUserinfoButtons(): void {
-	clearEvents("#firstLine");
-	clearEvents("#secondLine");
+
+	[	"#firstLine",
+		"#secondLine"
+	].forEach(clearEvents);
 
 	firstLine = document.getElementById("firstLine")!;
 	sendFriendRequestButton = document.getElementById("sendFriendRequestButton")!;
@@ -240,36 +239,6 @@ async function removeFriend(userInfo: UserInfo): Promise<void> {
 	await initUserInfoSection(userInfo.user_id);
 }
 
-// export interface UserInfo {
-// 	user_id: number;
-// 	username: string;
-// 	alias: string | null;
-// 	avatar_filename: string | null;
-// 	user_status: string;
-// 	friendship_status: string | null;
-// 	from_id: number | null;
-// 	to_id: number | null;
-// }
-
-// async function loadChats(): Promise<void> {
-// 	try {
-// 		const res = await fetch(`${API_CHAT_ENDPOINT}/`, {
-// 			method: "GET",
-// 			headers: {
-// 				credentials: "include"
-// 			}
-// 		});
-// 		if (!res.ok) {
-// 			throw new Error("Failed to load chats");
-// 		}
-// 		const users: ChatUser[] = await res.json();
-// 		renderChatList(users);
-// 	} catch (err) {
-// 		console.error("Error loading chats:", err);
-// 	}
-// }
-
-
 async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 	try {
 		console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
@@ -290,14 +259,13 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 		}
 		console.log("[DEBUG CHAT] - chatUser:", chatUser);
 
-		[
-			"usersList",
+		[	"usersList",
 			"usersInfo",
 			"userLowerPanel"
 		].forEach(hideElementById);
 
 		initMessageSection(chatUser.chat_id, chatUser, chatUser.friendship_status, "users");
-		
+
 	} catch (err) {
 		console.error("USERS: blockUser failed", err);
 	}
@@ -337,32 +305,43 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 // user info section
 
 function prepareUserInfoSection(): void {
-	hideElementById("usersList");
-	hideElementById("menuControlPanel");
-	hideElementById("menuDropdown");
 	setMenuTitle("User info");
-	showElementById("menuBackButton");
-	showElementById("usersInfo");
-	showElementById("userLowerPanel");
-	showElementById("firstLine");
-	showElementById("secondLine");
+
+	[	"usersList",
+		"menuControlPanel",
+		"menuDropdown"
+	].forEach(hideElementById);
+
+	[	"menuBackButton",
+		"usersInfo",
+		"userLowerPanel",
+		"firstLine",
+		"secondLine"
+	].forEach(showElementById);
+
 }
 
 function updateButtonsForUserInfo(userInfo: UserInfo): void {
 	resetUserinfoButtons();
+
 	switch (userInfo.friendship_status) {
 		// No friendship exists
 		case null:
-			showElementById("firstLine");
-			showElementById("sendFriendRequestButton");
-			hideElementById("cancelFriendRequestButton");
-			hideElementById("acceptFriendRequestButton");
-			hideElementById("declineFriendRequestButton");
-			hideElementById("removeFriendButton");
-			hideElementById("unblockUserButton");
-			showElementById("secondLine");
-			showElementById("openChatButton");
-			showElementById("blockUserButton");
+
+			[	"cancelFriendRequestButton",
+				"acceptFriendRequestButton",
+				"declineFriendRequestButton",
+				"removeFriendButton",
+				"unblockUserButton"
+			].forEach(hideElementById);
+
+			[	"firstLine",
+				"sendFriendRequestButton",
+				"secondLine",
+				"openChatButton",
+				"blockUserButton"
+			].forEach(showElementById);
+
 			sendFriendRequestButton.addEventListener("click", () => sendFriendRequest(userInfo));
 			openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 			blockUserButton.addEventListener("click", () => blockUser(userInfo));
@@ -370,31 +349,41 @@ function updateButtonsForUserInfo(userInfo: UserInfo): void {
 		case 'pending':
 			if (userInfo.user_id === userInfo.to_id) {
 				// thisUser sent friend request to target user (cancel request)
-				showElementById("firstLine");
-				hideElementById("sendFriendRequestButton");
-				showElementById("cancelFriendRequestButton");
-				hideElementById("acceptFriendRequestButton");
-				hideElementById("declineFriendRequestButton");
-				hideElementById("removeFriendButton");
-				hideElementById("unblockUserButton");
-				showElementById("secondLine");
-				showElementById("openChatButton");
-				showElementById("blockUserButton");
+
+				[	"sendFriendRequestButton",
+					"acceptFriendRequestButton",
+					"declineFriendRequestButton",
+					"removeFriendButton",
+					"unblockUserButton"
+				].forEach(hideElementById);
+
+				[	"firstLine",
+					"cancelFriendRequestButton",
+					"secondLine",
+					"openChatButton",
+					"blockUserButton"
+				].forEach(showElementById);
+
 				cancelFriendRequestButton.addEventListener("click", () => cancelFriendRequest(userInfo));
 				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 				blockUserButton.addEventListener("click", () => blockUser(userInfo));
 			} else {
 				// target user sent friend request to thisUser (accept/decline request)
-				showElementById("firstLine");
-				hideElementById("sendFriendRequestButton");
-				hideElementById("cancelFriendRequestButton");
-				showElementById("acceptFriendRequestButton");
-				showElementById("declineFriendRequestButton");
-				hideElementById("removeFriendButton");
-				hideElementById("unblockUserButton");
-				showElementById("secondLine");
-				showElementById("openChatButton");
-				showElementById("blockUserButton");
+
+				[	"sendFriendRequestButton",
+					"cancelFriendRequestButton",
+					"removeFriendButton",
+					"unblockUserButton"
+				].forEach(hideElementById);
+
+				[	"firstLine",
+					"acceptFriendRequestButton",
+					"declineFriendRequestButton",
+					"secondLine",
+					"openChatButton",
+					"blockUserButton"
+				].forEach(showElementById);
+
 				acceptFriendRequestButton.addEventListener("click", () => acceptFriendRequest(userInfo));
 				declineFriendRequestButton.addEventListener("click", () => declineFriendRequest(userInfo));
 				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
@@ -402,16 +391,21 @@ function updateButtonsForUserInfo(userInfo: UserInfo): void {
 			}
 			break;
 		case 'accepted':
-			showElementById("firstLine");
-			hideElementById("sendFriendRequestButton");
-			hideElementById("cancelFriendRequestButton");
-			hideElementById("acceptFriendRequestButton");
-			hideElementById("declineFriendRequestButton");
-			showElementById("removeFriendButton");
-			hideElementById("unblockUserButton");
-			showElementById("secondLine");
-			showElementById("openChatButton");
-			showElementById("blockUserButton");
+
+			[	"sendFriendRequestButton",
+				"cancelFriendRequestButton",
+				"acceptFriendRequestButton",
+				"declineFriendRequestButton",
+				"unblockUserButton"
+			].forEach(hideElementById);
+
+			[	"firstLine",
+				"removeFriendButton",
+				"secondLine",
+				"openChatButton",
+				"blockUserButton"
+			].forEach(showElementById);
+
 			removeFriendButton.addEventListener("click", () => removeFriend(userInfo));
 			openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 			blockUserButton.addEventListener("click", () => blockUser(userInfo));
@@ -419,30 +413,40 @@ function updateButtonsForUserInfo(userInfo: UserInfo): void {
 		case 'blocked':
 			if (userInfo.user_id === userInfo.to_id) {
 				// thisUser blocked target user (unblock)
-				showElementById("firstLine");
-				hideElementById("sendFriendRequestButton");
-				hideElementById("cancelFriendRequestButton");
-				hideElementById("acceptFriendRequestButton");
-				hideElementById("declineFriendRequestButton");
-				hideElementById("removeFriendButton");
-				showElementById("unblockUserButton");
-				showElementById("secondLine");
-				showElementById("openChatButton");
-				hideElementById("blockUserButton");
+
+				[	"sendFriendRequestButton",
+					"cancelFriendRequestButton",
+					"acceptFriendRequestButton",
+					"declineFriendRequestButton",
+					"removeFriendButton",
+					"blockUserButton"
+				].forEach(hideElementById);
+
+				[	"firstLine",
+					"unblockUserButton",
+					"secondLine",
+					"openChatButton"
+				].forEach(showElementById);
+
 				unblockUserButton.addEventListener("click", () => unblockUser(userInfo));
 				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 			} else {
 				// target user blocked thisUser (no actions)
-				hideElementById("firstLine");
-				hideElementById("sendFriendRequestButton");
-				hideElementById("cancelFriendRequestButton");
-				hideElementById("acceptFriendRequestButton");
-				hideElementById("declineFriendRequestButton");
-				hideElementById("removeFriendButton");
-				hideElementById("unblockUserButton");
-				showElementById("secondLine");
-				showElementById("openChatButton");
-				hideElementById("blockUserButton");
+
+				[	"firstLine",
+					"sendFriendRequestButton",
+					"cancelFriendRequestButton",
+					"acceptFriendRequestButton",
+					"declineFriendRequestButton",
+					"removeFriendButton",
+					"unblockUserButton",
+					"blockUserButton"
+				].forEach(hideElementById);
+
+				[	"secondLine",
+					"openChatButton"
+				].forEach(showElementById);
+
 				openChatButton.addEventListener("click", () => openChatWithUser(userInfo));
 			}
 			break;
@@ -506,11 +510,10 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 
 function renderUserList(users: UserListRow[]): void {
 
-	showElementById("usersList");
+	["usersList"].forEach(showElementById);
 
 	if (users.length === 0) {
 		usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text">No users</h1>`;
-		// hideElementById("userrsList");
 		return;
 	}
 
@@ -598,7 +601,7 @@ async function loadUsers(): Promise<void>{
 				});
 				setMenuTitle("Blocked");
 				break;
-			// works for 'all' and any other invalid filter
+			// works for 'all' and an invalid filter
 			default:
 				console.log("USERS: Loading ALL users");
 				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
@@ -618,10 +621,10 @@ async function loadUsers(): Promise<void>{
 async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
-	showElementById("usersList");
-	// showElementById("usersSection");
-	showElementById("usersList");
-	showElementById("menuDropdown");
+	[	"usersList",
+		"usersList",
+		"menuDropdown"
+	].forEach(showElementById);
 
 	const userBtn = document.getElementById("usersSectionButton");
 	if (userBtn)
@@ -662,15 +665,14 @@ function addMenuDropdown(): boolean {
             menuDropdownContent.classList.toggle('show');
 			menuDropdownButton.classList.toggle('show');
         });
-        
+
         document.addEventListener('click', () => {
             menuDropdownContent.classList.remove('show');
 			menuDropdownButton.classList.remove('show');
         });
     }
 
-	showElementById("menuDropdown");
-
+	["menuDropdown"].forEach(showElementById);
 	return true;
 }
 
@@ -680,7 +682,7 @@ function initFilterDropdown(): void {
 	setMenuTitle("Users");
 
 	if (!document.getElementById("menuDropdownButton")) {
-		showElementById("menuDropdown");
+		["menuDropdown"].forEach(showElementById);
 		return;
 	}
 	if (!addMenuDropdown()) { return; }
@@ -690,7 +692,7 @@ function initFilterDropdown(): void {
 	const dropdownRequestsIn = document.getElementById("menuDropdownRequestsIn");
 	const dropdownRequestsOut = document.getElementById("menuDropdownRequestsOut");
 	const dropdownBlocked = document.getElementById("menuDropdownBlocked");
-	
+
 	if (!dropdownAll || !dropdownFriends || !dropdownRequestsIn || !dropdownRequestsOut || !dropdownBlocked) {
 		console.error("USERS: One or more filter dropdown elements not found, cannot initialize filter dropdown");
 		return;
@@ -727,7 +729,7 @@ export async function openUsersSection(): Promise<void> {
 	initializeGlobals();
 
 	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
-		/*|| !usersSection*/ || !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
+		|| !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
 		|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
 		|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {
 			console.error("One or more required elements not found, cannot open Users section");
@@ -735,6 +737,6 @@ export async function openUsersSection(): Promise<void> {
 	}
 
 	initFilterDropdown();
-	
+
 	await initUsersSection();
 }

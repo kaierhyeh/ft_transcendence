@@ -69,24 +69,19 @@ function initializeGlobals(): boolean {
 /* ====================================== UTILS ============================================= */
 
 function clearBeforeOpenChatsSection(): void {
-	[
-		"#chatsList",
+	[	"#chatsList",
 		"#chatMessages",
 		"#chatLowerPanel",
 		"#menuBackButton"
 	].forEach(clearEvents);
-	// clearEvents("#chatsList");
-	// clearEvents("#chatMessages");
-	// clearEvents("#chatLowerPanel");
-	// clearEvents("#menuBackButton");
-	if (!initializeGlobals()) {					// update references of global variables
+
+	if (!initializeGlobals()) {
 		console.error("CHAT: globals reinitialization failed: Missing elements");
 	}
 }
 
 function clearBeforeInitMessageSection(): void {
-	[
-		"#chatSendButton",
+	[	"#chatSendButton",
 		"#chatMessageToSend",
 		"#chatInviteGameButton",
 		"#menuBackButton"
@@ -99,15 +94,13 @@ function clearBeforeInitMessageSection(): void {
 }
 
 function resetChatSection(): void {
-	[
-		"chatLowerPanel",
+	[	"chatLowerPanel",
 		"chatMessages",
 		"menuBackButton",
 		"menuDropdown"
 	].forEach(hideElementById);
 
-	[
-		"menuControlPanel",
+	[	"menuControlPanel",
 		"usersSectionButton",
 		"chatsSectionButton"
 	].forEach(showElementById);
@@ -118,17 +111,16 @@ function resetChatSection(): void {
 /* =================================== CHATS SECTION ======================================== */
 
 function renderChatList(users: ChatUser[]): void {
-	console.log("[DEBUG] --- RESET COUNT");
-	showElementById("chatsList");
+	["chatsList"].forEach(showElementById);
 
 	if (users.length === 0) {
 		chatsList.innerHTML = `<h1 id="noChats" class="menu-empty-list-text" data-i18n="noChats">No chats</h1>`;
 		return;
 	}
 
-	users.map(u => {
-		console.log(`CHAT[${u.chat_id}]: user[${u.user_id}]([${u.username}]/[${u.alias}]) user_status[${u.user_status}] friendship[${u.friendship_status}] from[${u.from}]`);
-	});
+	// users.map(u => {
+	// 	console.log(`CHAT[${u.chat_id}]: user[${u.user_id}]([${u.username}]/[${u.alias}]) user_status[${u.user_status}] friendship[${u.friendship_status}] from[${u.from}]`);
+	// });
 
 	chatsList.innerHTML = users.map(u => {
 		const avatarSrc = `https://localhost:4443/api/users/${u.user_id}/avatar`;
@@ -160,9 +152,7 @@ function renderChatList(users: ChatUser[]): void {
 			const chatId = (conv as HTMLElement).dataset.chatId;
 			const friendshipStatus = (conv as HTMLElement).dataset.friendshipStatus;
 
-			console.log("CHAT: Clicked on chatId:", chatId, " userId:", userId);
 			if (chatId && userId) {
-				// clearBeforeInitMessageSection();
 				initMessageSection(parseInt(chatId), users.find(u => u.user_id === parseInt(userId))!, friendshipStatus!, 'chats');
 			}
 		});
@@ -191,7 +181,7 @@ async function loadChats(): Promise<void> {
 async function initChatSection(): Promise<void> {
 	clearBeforeOpenChatsSection();
 	resetChatSection();
-	showElementById("chatsList");
+	["chatsList"].forEach(showElementById);
 	const userBtn = document.getElementById("usersSectionButton");
 	if (userBtn)
 		userBtn.className = "menu-control-panel-button";
@@ -214,23 +204,18 @@ function appendMessageToChat(msg: string): void {
 }
 
 async function sendMessageByButton(toUser: ChatUser): Promise<void> {
-	console.log("CHAT: Send button clicked");
 	if (chatInput) {
 		const message = chatInput.value.trim();
 		chatInput.value = "";
 		if (message) {
-			console.log("CHAT: Sending message:", message);
-			console.log("[DEBUG] run sendMessage in sendMessageByButton")
 			await sendMessage(toUser, message);
-
 			appendMessageToChat(message);
 		}
 	}
-}	
+}
 
 async function sentMessageByEnter(event: KeyboardEvent): Promise<void> {
 	if (event.key === "Enter") {
-		console.log("CHAT: Enter pressed in input");
 		event.preventDefault();
 		chatSendButton.click();
 	}
@@ -241,14 +226,11 @@ async function inviteToGame(toUser: ChatUser): Promise<void> {
 }
 
 async function goBackToChatsList(): Promise<void> {
-	console.log("[DEBUG] goBackToChatsList - CLICKED");
 	chatMessages.innerHTML = ``;
 	initChatSection();
 }
 
 async function goBackToUserList() {
-	console.log("[DEBUG] goBackToUserList - CLICKED");
-	// clearEvent
 	chatMessages.innerHTML = ``;
 	openUsersSection();
 }
@@ -256,29 +238,38 @@ async function goBackToUserList() {
 // render and send msgs
 
 function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatus: string | null): void {
-	console.log("CHAT: renderMessages");
 
-	hideElementById("chatsList");
-	hideElementById("menuControlPanel");
-	console.log(`[DEBUG] friendshipStatus: ${friendshipStatus}`);
+	[	"chatsList",
+		"menuControlPanel"
+	].forEach(hideElementById);
+
 	if (friendshipStatus !== "blocked") {
-		showElementById("chatLowerPanel");
-		showElementById("chatInviteGameButton");
-		showElementById("blockUserButtonInChat");
-		showElementById("chatMessageBox");
-		hideElementById("unblockUserButtonInChat");
-	} else {
-		showElementById("chatLowerPanel");
-		hideElementById("chatInviteGameButton");
-		hideElementById("blockUserButtonInChat");
-		hideElementById("chatMessageBox");
-		showElementById("unblockUserButtonInChat");
-	}
-	showElementById("chatMessages");
 
-	
-	showElementById("menuBackButton");
-	
+		["unblockUserButtonInChat"].forEach(hideElementById);
+
+		[	"chatLowerPanel",
+			"chatInviteGameButton",
+			"blockUserButtonInChat",
+			"chatMessageBox"
+		].forEach(showElementById);
+
+	} else {
+
+		[	"chatInviteGameButton",
+			"blockUserButtonInChat",
+			"chatMessageBox"
+		].forEach(hideElementById);
+
+		[	"chatLowerPanel",
+			"unblockUserButtonInChat"
+		].forEach(showElementById);
+
+	}
+
+	[	"chatMessages",
+		"menuBackButton"
+	].forEach(showElementById);
+
 	chatMessages.innerHTML = messages.map(msg => `
 		<div class="chat-msg ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
 		${msg.from_id !== withUser.user_id
@@ -291,85 +282,63 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 }
 
 async function sendMessage(toUser: ChatUser, msg: string) {
-	// console.log("CHAT: sendMessage");
+
 	const chatId = toUser.chat_id;
 	const toId = toUser.user_id;
 	const payload: NewMessageRequest = { chatId, toId, msg };
 
 	try {
-		// console.log("CHAT: sendMessage - TRY");
 		const res = await fetch(`${API_MSG_ENDPOINT}/`, {
 			method: "POST",
-			headers: { 
+			headers: {
 				credentials: 'include',
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify(payload)
 		});
-		// console.log("CHAT: sendMessage - GOT res");
 		if (!res.ok) {
 			throw new Error("Failed to send message");
 		}
-		// console.log("CHAT: sendMessage - DONE");
-
 	} catch (err) {
-		// console.error("Error sending message:", err);
 		throw err;
 	}
+
 }
 
 export async function initMessageSection(chatId: number, withUser: ChatUser, friendshipStatus: string | null, backTo: string): Promise<void> {
 	try {
-		console.log(`CHAT: initMessageSection {chatId: ${chatId}, withUser: ${withUser.username}, friendshipStatus: ${friendshipStatus}}`);
 		initializeGlobals();
 		chatInput.value = "";
-		console.log("---------0");
 		clearBeforeInitMessageSection();
-		console.log("---------1");
 
 		if (friendshipStatus !== "blocked") {
-			console.log("---------1-1");
 			// Sent message by using button
 			chatSendButton.addEventListener("click", () => sendMessageByButton(withUser));
-			console.log("---------1-2");
 			chatInput.addEventListener("keydown", (event) => sentMessageByEnter(event));
-			console.log("---------1-3");
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
-			console.log("---------1-4");
 		}
-		console.log("---------2");
-		console.log("[DEBUG] menuBackButton.addEventListener")
 		switch (backTo) {
 			case 'users':
-				console.log("---------2-1");
 				menuBackButton.addEventListener("click", () => goBackToUserList());
 				break;
 			case 'chats':
-				console.log("---------2-2");
 				menuBackButton.addEventListener("click", () => goBackToChatsList());
 				break;
 		}
 
-		console.log("---------3");
 		setMenuTitle(`${withUser.username}`);
 
-		console.log("---------4");
 		const res = await fetch(`${API_CHAT_ENDPOINT}/${chatId}`, {
 			method: "GET",
 			headers: {
 				credentials: "include"
 			}
 		});
-		console.log("---------5");
 		if (!res.ok) {
 			throw new Error("Failed to load messages");
 		}
-		console.log("---------6");
 		const messages: Message[] = await res.json();
-		console.log("---------7");
-		console.log("CHAT: Loaded messages:", messages);
-		console.log("---------8");
 		renderMessages(messages, withUser, friendshipStatus);
 	} catch (err) {
 		console.error("Error loading messages:", err);
