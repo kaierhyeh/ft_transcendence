@@ -1,38 +1,7 @@
-import { clearEvents, hideElementById, setElementActive, setMenuTitle, showElementById } from "./menu.utils.js";
-import { i18n } from '../i18n/i18n.js';
+import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
+// import { i18n } from '../i18n/i18n.js';
 import { openUsersSection } from "./menu.users.js";
-
-export interface Message {
-	msg_id: number;
-	chat_id: number;
-	from_id: number;
-	to_id: number;
-	msg: string;
-}
-
-export interface NewMessageRequest {
-	chatId: number;
-	toId: number;
-	msg: string;
-}
-
-export interface NewMessageResponse {
-	messageId: number;
-	chatId: number;
-	fromId: number;
-	toId: number;
-	msg: string;
-}
-
-export interface ChatUser {
-	chat_id: number;
-	user_id: number;
-	username: string;
-	alias: string | null;
-	user_status: string | null;
-	friendship_status: string | null;
-	from: number | null;
-}
+import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 
 /* ============================================ GLOBALS ===================================== */
 

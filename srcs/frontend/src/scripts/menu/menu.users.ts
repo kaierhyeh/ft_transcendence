@@ -1,26 +1,6 @@
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
-import { ChatUser } from "./menu.chat.js";
-
-export interface UserListRow {
-	user_id: number;
-	username: string;
-	alias: string | null;
-	avatar_filename: string | null;
-	user_status: string;
-	friendship_status: string | null;
-}
-
-export interface UserInfo {
-	user_id: number;
-	username: string;
-	alias: string | null;
-	avatar_filename: string | null;
-	user_status: string;
-	friendship_status: string | null;
-	from_id: number | null;
-	to_id: number | null;
-}
+import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -119,7 +99,7 @@ function clearBeforeOpenUsersSection(): void {
 	}
 
 	menuBackButton.addEventListener("click", () => {
-		console.log("USERS: Back button clicked");
+		// console.log("USERS: Back button clicked");
 		initUsersSection();
 	});
 }
@@ -166,7 +146,7 @@ function resetUserinfoButtons(): void {
 
 async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Sending friend request to user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Sending friend request to user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
@@ -181,7 +161,7 @@ async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 
 async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Cancelling friend request to user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Cancelling friend request to user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
@@ -196,7 +176,7 @@ async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 
 async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Accepting friend request from user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Accepting friend request from user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_FRIENDS}/accept/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
@@ -211,7 +191,7 @@ async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 
 async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Declining friend request from user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Declining friend request from user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_FRIENDS}/decline/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
@@ -226,7 +206,7 @@ async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 
 async function removeFriend(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Removing friend user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Removing friend user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_FRIENDS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
@@ -241,7 +221,7 @@ async function removeFriend(userInfo: UserInfo): Promise<void> {
 
 async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
 		// chatId: number, withUser: ChatUser, friendshipStatus: string | null
 		const res = await fetch(`${API_CHAT_ENDPOINT}/open/${userInfo.user_id}`, {
 			method: "GET",
@@ -252,12 +232,12 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 		if (!res.ok) {
 			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
 		}
-		console.log("[DEBUG CHAT] - res:", res);
+		// console.log("[DEBUG CHAT] - res:", res);
 		const chatUser: ChatUser = await res.json();
 		if (chatUser === undefined) {
 			throw new Error(`Failed to get chat info with user: ${userInfo.user_id}`);
 		}
-		console.log("[DEBUG CHAT] - chatUser:", chatUser);
+		// console.log("[DEBUG CHAT] - chatUser:", chatUser);
 
 		[	"usersList",
 			"usersInfo",
@@ -274,7 +254,7 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 
 async function blockUser(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Blocking user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Blocking user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'POST',
 			headers: {
@@ -289,7 +269,7 @@ async function blockUser(userInfo: UserInfo): Promise<void> {
 
 async function unblockUser(userInfo: UserInfo): Promise<void> {
 	try {
-		console.log(`USERS: Unblocking user id: ${userInfo.user_id}`);
+		// console.log(`USERS: Unblocking user id: ${userInfo.user_id}`);
 		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
 			method: 'DELETE',
 			headers: {
@@ -456,7 +436,7 @@ function updateButtonsForUserInfo(userInfo: UserInfo): void {
 
 function renderUserInfo(userInfo: UserInfo): void {
 	prepareUserInfoSection();
-	console.log(`USER INFO: rendering user info for user: [${userInfo.user_id}] [${userInfo.username}], aka:[${userInfo.alias}], avatar:[${userInfo.avatar_filename}], online:[${userInfo.user_status}], friendship:[${userInfo.friendship_status}]`);
+	// console.log(`USER INFO: rendering user info for user: [${userInfo.user_id}] [${userInfo.username}], aka:[${userInfo.alias}], avatar:[${userInfo.avatar_filename}], online:[${userInfo.user_status}], friendship:[${userInfo.friendship_status}]`);
 
 	const avatarSrc = `https://localhost:4443/api/users/${userInfo.user_id}/avatar`;
 
@@ -486,7 +466,7 @@ function renderUserInfo(userInfo: UserInfo): void {
 
 async function initUserInfoSection(targetUserId: number): Promise<void> {
 	try {
-		console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
+		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
 		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
 		if (!res.ok) {
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
@@ -496,7 +476,7 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 			console.error(`USER INFO: No user data received for user id: ${targetUserId}`);
 			initUsersSection();
 		} else {
-			console.log(`USER INFO: user data received:`, userInfo);
+			// console.log(`USER INFO: user data received:`, userInfo);
 			renderUserInfo(userInfo);
 		}
 
@@ -517,9 +497,9 @@ function renderUserList(users: UserListRow[]): void {
 		return;
 	}
 
-	users.map(u => {
-		console.log(`USER: user: [${u.user_id}] [${u.username}], aka:[${u.alias}], avatar:[${u.avatar_filename}], online:[${u.user_status}], friendship:[${u.friendship_status}]`);
-	});
+	// users.map(u => {
+	// 	console.log(`USER: user: [${u.user_id}] [${u.username}], aka:[${u.alias}], avatar:[${u.avatar_filename}], online:[${u.user_status}], friendship:[${u.friendship_status}]`);
+	// });
 
 	usersList.innerHTML = users.map(u => {
 		const avatarSrc = `https://localhost:4443/api/users/${u.user_id}/avatar`;
@@ -547,8 +527,8 @@ function renderUserList(users: UserListRow[]): void {
 	document.querySelectorAll(".menu-list-element ").forEach(u => {
 		u.addEventListener("click", () => {
 			const userId = (u as HTMLElement).dataset.userId;
-			console.log(`User TARGET id: ${userId}=`, userId);
-			console.log("Full dataset:", (u as HTMLElement).dataset);
+			// console.log(`User TARGET id: ${userId}=`, userId);
+			// console.log("Full dataset:", (u as HTMLElement).dataset);
 			if (userId) {
 				initUserInfoSection(parseInt(userId));
 			}
@@ -562,7 +542,7 @@ async function loadUsers(): Promise<void>{
 		let res;
 		switch (currentFilter) {
 			case 'friends':
-				console.log("USERS: Loading FRIENDS only");
+				// console.log("USERS: Loading FRIENDS only");
 				res = await fetch(`${API_USERS_FRIENDS}`, {
 					method: 'GET',
 					headers: {
@@ -572,7 +552,7 @@ async function loadUsers(): Promise<void>{
 				setMenuTitle("Friends");
 				break;
 			case 'requests_in':
-				console.log("USERS: Loading REQUESTS IN only");
+				// console.log("USERS: Loading REQUESTS IN only");
 				res = await fetch(`${API_USERS_FRIENDS}/incoming`, {
 					method: 'GET',
 					headers: {
@@ -582,7 +562,7 @@ async function loadUsers(): Promise<void>{
 				setMenuTitle("Requests In");
 				break;
 			case 'requests_out':
-				console.log("USERS: Loading REQUESTS OUT only");
+				// console.log("USERS: Loading REQUESTS OUT only");
 				res = await fetch(`${API_USERS_FRIENDS}/outgoing`, {
 					method: 'GET',
 					headers: {
@@ -592,7 +572,7 @@ async function loadUsers(): Promise<void>{
 				setMenuTitle("Requests Out");
 				break;
 			case 'blocked':
-				console.log("USERS: Loading BLOCKED users only");
+				// console.log("USERS: Loading BLOCKED users only");
 				res = await fetch(`${API_USERS_BLOCKS}`, {
 					method: 'GET',
 					headers: {
@@ -603,7 +583,7 @@ async function loadUsers(): Promise<void>{
 				break;
 			// works for 'all' and an invalid filter
 			default:
-				console.log("USERS: Loading ALL users");
+				// console.log("USERS: Loading ALL users");
 				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
 				setMenuTitle("Users");
 				break;
@@ -699,33 +679,33 @@ function initFilterDropdown(): void {
 	}
 	dropdownAll.addEventListener("click", () => {
 		currentFilter = 'all';
-		console.log("USERS: Filter set to ALL");
+		// console.log("USERS: Filter set to ALL");
 		initUsersSection();
 	});
 	dropdownFriends.addEventListener("click", () => {
 		currentFilter = 'friends';
-		console.log("USERS: Filter set to FRIENDS");
+		// console.log("USERS: Filter set to FRIENDS");
 		initUsersSection();
 	});
 	dropdownRequestsIn.addEventListener("click", () => {
 		currentFilter = 'requests_in';
-		console.log("USERS: Filter set to REQUESTS IN");
+		// console.log("USERS: Filter set to REQUESTS IN");
 		initUsersSection();
 	});
 	dropdownRequestsOut.addEventListener("click", () => {
 		currentFilter = 'requests_out';
-		console.log("USERS: Filter set to REQUESTS OUT");
+		// console.log("USERS: Filter set to REQUESTS OUT");
 		initUsersSection();
 	});
 	dropdownBlocked.addEventListener("click", () => {
 		currentFilter = 'blocked';
-		console.log("USERS: Filter set to BLOCKED");
+		// console.log("USERS: Filter set to BLOCKED");
 		initUsersSection();
 	});
 }
 
 export async function openUsersSection(): Promise<void> {
-	console.log("USERS: Users Section opened");
+	// console.log("USERS: Users Section opened");
 	initializeGlobals();
 
 	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
