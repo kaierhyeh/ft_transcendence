@@ -1,4 +1,3 @@
-import {initStats} from "./stats.js";
 import {initMenu} from "./menu/menu.js";
 import { initLanguages } from "./i18n/index.js";
 import {initTournament} from "./tournament.js";
@@ -22,7 +21,6 @@ const routes: Record<string, string> = {
 	"/": "./html/home.html",
 	"/pong": "./html/pong.html",
 	"/online": "./html/pong.html", //temporary
-	"/stats": "./html/stats.html",
 	"/tournament": "./html/tournament.html",
 	"/user/profile": "./html/user/profile.html",
 	// "/oauth-callback": "./html/profile.html",
@@ -45,10 +43,6 @@ const initScripts: Record<string, () => void> = {
 	"/pong": () => {
 		if (typeof initPong === "function")
 			initPong();
-	},
-	"/stats": () => {
-		if (typeof initStats === "function")
-			initStats();
 	},
 	"/signup": () => {
 		if (typeof initSignup === "function")

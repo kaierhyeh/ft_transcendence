@@ -124,4 +124,20 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     },
     userController.getMatchHistory.bind(userController)
   );
+
+  // GET /leaderboard - Get leaderboard [public]
+  fastify.get<{ Querystring: { limit?: number } }>(
+    "/leaderboard",
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            limit: { type: 'number', minimum: 1, maximum: 100, default: 10 }
+          }
+        }
+      }
+    },
+    userController.getLeaderboard.bind(userController)
+  );
 }

@@ -1,5 +1,6 @@
 import { TournamentBracket } from './types.js';
 import { TournamentBracketManager } from './bracket.js';
+import user from '../user/User.js';
 
 export class TournamentUIManager {
     private bracketManager: TournamentBracketManager;
@@ -32,6 +33,8 @@ export class TournamentUIManager {
                 input.placeholder = `Enter name`;
                 input.maxLength = 14;
                 input.required = true;
+                if (i === 1 && user.isLoggedIn() && user.alias)
+                    input.value = user.alias;
                 
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
@@ -163,23 +166,6 @@ export class TournamentUIManager {
         if (gameWrapper) gameWrapper.style.display = 'none';
     }
 
-    showGameControls(): void {
-        const validateBtn = document.getElementById('validate-result');
-        const resetBtn = document.getElementById('reset-score');
-        
-        if (validateBtn)
-            validateBtn.style.display = 'block';
-        
-        if (resetBtn)
-            resetBtn.style.display = 'block';
-    }
-
-    hideGameControls(): void {
-        const validateBtn = document.getElementById('validate-result');
-        const resetBtn = document.getElementById('reset-score');
-        if (validateBtn) validateBtn.style.display = 'none';
-        if (resetBtn) resetBtn.style.display = 'none';
-    }
 
     showNextMatch(): void {
         const bracketDiv = document.getElementById('tournament-bracket');

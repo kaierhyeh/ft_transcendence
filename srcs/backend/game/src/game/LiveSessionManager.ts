@@ -5,8 +5,7 @@ import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
 import { UsersClient } from "../clients/UsersClient";
-// import { toInteger } from "../utils/type-converters";
-// import { verifyGameSessionJWT } from "../services/JwtVerifierService";
+import { StatsClient } from "../clients/StatsClient";
 
 let next_id = 1;
 
@@ -16,6 +15,7 @@ export class LiveSessionManager {
 
     constructor(
         private session_repo: SessionRepository,
+        private stats_client: StatsClient,
         private logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
         this.usersClient = new UsersClient();
@@ -72,12 +72,27 @@ export class LiveSessionManager {
         });
     }
 
-    private saveSession(game_id: number, session: GameSession): void {
+    private async saveSession(game_id: number, session: GameSession): Promise<void> {
         try {
             const dto = session.toDbRecord();
             if (dto) {
                 this.session_repo.save(dto); // save in db with db plugin I guess, taking dto: DbSession as argument
                 this.logger.info({ game_id: game_id }, "Game session saved");
+                
+                for (const player of dto.player_sessions) {
+                    if (player.user_id && player.type === 'registered') {
+                        try {
+                            await this.stats_client.updateStats({
+                                user_id: player.user_id,
+                                won: player.winner,
+                                points_scored: player.score
+                            });
+                            this.logger.info({ game_id: game_id, user_id: player.user_id }, "Stats updated");
+                        } catch (statsError) {
+                            this.logger.warn({ game_id: game_id, user_id: player.user_id, error: statsError instanceof Error ? statsError.message : String(statsError) }, "Failed to update stats");
+                        }
+                    }
+                }
             }
         } catch(err) {
             this.logger.warn({ game_id: game_id, error: err instanceof Error ? err.message : String(err) }, "Failed to save game session");
@@ -112,7 +127,7 @@ export class LiveSessionManager {
         this.game_sessions.delete(id);
     }
 
-    public update(): void {
+    public async update(): Promise<void> {
         for (const id of this.game_sessions.keys()) {
             const game = this.game_sessions.get(id);
 
@@ -127,7 +142,7 @@ export class LiveSessionManager {
             game.broadcastState();
 
             if (game.over)
-                this.terminateSession_(id, game);
+                await this.terminateSession_(id, game);
         }
     }
 
