@@ -426,9 +426,9 @@ export async function unblock(username: string): Promise<boolean> {
 	}
 }
 
-export async function setup2fa(): Promise<{ otpauth_url: string, qrCode: string } | undefined> {
+export async function setup2fa(): Promise<{ otpauth_url: string, qrCode: string, secret: string } | undefined> {
 	try {
-		const response = await fetch('/api/2fa/setup', {
+		const response = await fetch('/api/auth/2fa/setup', {
 			method: 'POST',
 			credentials: 'include'
 		});
@@ -451,11 +451,11 @@ export async function setup2fa(): Promise<{ otpauth_url: string, qrCode: string 
 		}
 
 		return {
-			otpauth_url: `otpauth://totp/42-Transcendence:${user?.name}?secret=${data.secret}&issuer=42-Transcendence`,
-			qrCode: data.qrCode
+			otpauth_url: data.otpauth_url || `otpauth://totp/ft_transcendence:${user?.name}?secret=${data.secret}&issuer=ft_transcendence`,
+			qrCode: data.qrCode,
+			secret: data.secret
 		};
 	} catch (error) {
-		// console.error('/api/2fa/setup error:', error);
 		showError("Sorry, 2FA setup failed.");
 		return undefined;
 	}
@@ -463,7 +463,7 @@ export async function setup2fa(): Promise<{ otpauth_url: string, qrCode: string 
 
 export async function activate2fa(token: string): Promise<boolean> {
 	try {
-		const response = await fetch('/api/2fa/activate', {
+		const response = await fetch('/api/auth/2fa/activate', {
 			method: 'POST',
 			credentials: 'include',
 			headers: {
@@ -491,8 +491,67 @@ export async function activate2fa(token: string): Promise<boolean> {
 		showInfo(`2FA activated!`);
 		return data.success;
 	} catch (error) {
-		// console.error('/api/2fa/activate error:', error);
 		showError("Sorry, 2FA activation failed.");
+		return false;
+	}
+}
+
+export async function disable2fa(): Promise<boolean> {
+	try {
+		const response = await fetch('/api/auth/2fa/disable', {
+			method: 'POST',
+			credentials: 'include'
+		});
+		const data = await response.json();
+
+		if (response.status === 401) {
+			if (user?.web_socket && user?.web_socket.readyState === WebSocket.OPEN)
+				user.web_socket.close(1000);
+			update_user(undefined);
+			const errorMessage = data?.error || "Session expired.";
+			showError(errorMessage);
+			check_redirect();
+			return false;
+		}
+
+		if (!response.ok || !data.success) {
+			const errorMessage = data?.error || "2FA disable failed.";
+			showError(errorMessage);
+			return false;
+		}
+		showInfo(`2FA disabled!`);
+		return data.success;
+	} catch (error) {
+		showError("Sorry, 2FA disable failed.");
+		return false;
+	}
+}
+
+export async function get2faStatus(): Promise<boolean> {
+	try {
+		console.log('get2faStatus: Fetching status from /api/auth/2fa/status');
+		const response = await fetch('/api/auth/2fa/status', {
+			method: 'GET',
+			credentials: 'include'
+		});
+		console.log('get2faStatus: Response status:', response.status);
+		const data = await response.json();
+		console.log('get2faStatus: Response data:', data);
+
+		if (response.status === 401) {
+			console.log('get2faStatus: Unauthorized');
+			return false;
+		}
+
+		if (!response.ok || !data.success) {
+			console.log('get2faStatus: Response not ok or not successful');
+			return false;
+		}
+		
+		console.log('get2faStatus: Returning enabled status:', data.enabled);
+		return data.enabled || false;
+	} catch (error) {
+		console.error('get2faStatus: Error:', error);
 		return false;
 	}
 }
@@ -566,71 +625,6 @@ export async function verify2fa(token: string, temp_token: string): Promise<bool
 		// console.error('/api/2fa/verify error:', error);
 		showError("Sorry, 2FA verification failed.");
 		return false;
-	}
-}
-
-export async function disable2fa(): Promise<boolean> {
-	try {
-		const response = await fetch('/api/2fa/disable', {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({})
-		});
-		const data = await response.json();
-
-		if (response.status === 401) {
-			if (user?.web_socket && user?.web_socket.readyState === WebSocket.OPEN)
-				user.web_socket.close(1000);
-			update_user(undefined);
-			const errorMessage = data?.error || "Session expired.";
-			showError(errorMessage);
-			check_redirect();
-			return false;
-		}
-
-		if (!response.ok || !data.success) {
-			const errorMessage = data?.error || "Disabling 2FA failed.";
-			showError(errorMessage);
-			return false;
-		}
-
-		return data.success;
-	} catch (error) {
-		// console.error('/api/2fa/disable error:', error);
-		showError("Sorry, disabling 2FA failed.");
-		return false;
-	}
-}
-
-export async function get2faStatus(): Promise<boolean | undefined> {
-	try {
-		const response = await fetch('/api/2fa/status', {
-			method: 'GET',
-			credentials: 'include'
-		});
-		const data = await response.json();
-
-		if (response.status === 401) {
-			if (user?.web_socket && user?.web_socket.readyState === WebSocket.OPEN)
-				user.web_socket.close(1000);
-			update_user(undefined);
-			const errorMessage = data?.error || "Session expired.";
-			showError(errorMessage);
-			check_redirect();
-			return undefined;
-		}
-
-		if (!response.ok || !data.success)
-			return undefined;
-
-		return data.enabled;
-	} catch (error) {
-		// console.error('/api/2fa/status error:', error);
-		showError("Sorry, getting 2FA status failed.");
-		return undefined;
 	}
 }
 
@@ -710,8 +704,12 @@ export async function processGoogleOAuth(code: string): Promise<void> {
 				await completeGoogleRegistration(username, data.temp_token);
 			}
 			return;
-		} else if (response.status === 202 && data.step === "2fa_required") {
-			show2FAVerificationModal(data.temp_token, "your Google account.");
+		} else if (response.ok && data.requires_2fa) {
+			// User has 2FA enabled, hide loading overlay and show verification modal
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
+			show2FAVerificationModal(data.temp_token, "your Google account");
 			return;
 		} else if (response.ok && data.success) {
 			update_user(new User(data.username));

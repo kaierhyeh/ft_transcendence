@@ -68,11 +68,27 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 				});
 			}
 
-			// TODO: Check if 2FA is enabled for the user
-			// Note: backend-users doesn't expose twofa_secret directly in UserProfile
-			// We may need to add a 2FA check here in the future
+			// Check if 2FA is enabled for the user
+			const twoFAStatus = await usersClient.get2FAStatus(user.user_id);
 			
-			// For now, proceed with normal login
+			if (twoFAStatus.enabled) {
+				// User has 2FA enabled, require 2FA verification
+				const tempPayload = {
+					user_id: user.user_id,
+					requires_2fa: true
+				};
+
+				const tempToken = await jwtService.generateTempToken(tempPayload, "2fa_pending", 300); // 5 min expiry
+
+				return reply.code(200).send({
+					success: true,
+					requires_2fa: true,
+					temp_token: tempToken,
+					user_id: user.user_id
+				});
+			}
+			
+			// No 2FA required, proceed with normal login
 			const { accessToken, refreshToken } = await jwtService.generateTokens(user.user_id);
 
 			// Set cookies with tokens

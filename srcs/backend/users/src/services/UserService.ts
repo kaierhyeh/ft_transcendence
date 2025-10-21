@@ -1,6 +1,6 @@
 import { AuthClient } from '../clients/AuthClient';
 import { GameClient, SessionsPayload } from '../clients/GameClient';
-import { LiteStats, StatsClient } from '../clients/StatsClient';
+import { LiteStats, StatsClient, LeaderboardEntry } from '../clients/StatsClient';
 import { CONFIG } from '../config';
 import { UpdateData, UserRepository, UserRow } from '../repositories/UserRepository';
 import { Credentials, GoogleUserCreationData, LocalUserCreationRawData, PasswordUpdateData, UpdateRawData } from '../schemas';
@@ -11,6 +11,12 @@ export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "goo
 };
 
 export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "updated_at">;
+
+export interface LeaderboardEntryWithUsername {
+  user_id: number;
+  username: string;
+  total_points_scored: number;
+}
 
 export class UserService {
   private authClient: AuthClient;
@@ -83,20 +89,31 @@ export class UserService {
 
   public async getProfile(user_id: number): Promise<UserProfile> {
     const user = await this.getUserById(user_id);
-    const lite_stats = await this.statsClient.getLiteStats(user_id);
     
-    if (!lite_stats) {
-      const error = new Error('Lite stats not found');
-      (error as any).code = 'LITE_STATS_NOT_FOUND';
-      throw error;
+    let lite_stats: LiteStats;
+    try {
+      lite_stats = await this.statsClient.getLiteStats(user_id);
+    } catch (error: any) {
+      // If stats not found (404), return default stats (all zeros)
+      if (error.status === 404) {
+        lite_stats = {
+          wins: 0,
+          losses: 0,
+          curr_winstreak: 0,
+          best_winstreak: 0,
+          total_points_scored: 0
+        };
+      } else {
+        throw error; // Re-throw other errors
+      }
     }
-
+    
     const { password_hash, two_fa_secret, google_sub, avatar_filename, ...cleanUser } = user;
     
     return {
       ...cleanUser,
       avatar_url: avatar_filename ?
-        `${CONFIG.API.BASE_URL}/users/${user.user_id}/avatar` :
+        `api/users/${user.user_id}/avatar` :
         null,
       ...lite_stats
     };
@@ -172,11 +189,37 @@ export class UserService {
     return this.userRepository.markAsDeleted(userId);
   }
 
+  public async getLeaderboard(limit: number = 10): Promise<LeaderboardEntryWithUsername[]> {
+    const leaderboardEntries = await this.statsClient.getLeaderboard(limit);
+    
+    const leaderboardWithUsernames: LeaderboardEntryWithUsername[] = [];
+    for (const entry of leaderboardEntries) {
+      try {
+        const user = await this.userRepository.findById(entry.user_id);
+        if (user && user.status !== 'deleted' && user.username) {
+          leaderboardWithUsernames.push({
+            user_id: entry.user_id,
+            username: user.username,
+            total_points_scored: entry.total_points_scored
+          });
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+    
+    return leaderboardWithUsernames;
+  }
+
   public async resetAvatarToDefault(userId: number): Promise<number> {
     return this.userRepository.resetAvatarToDefault(userId);
   }
 
   public async getMatchHistory(user_id: number, page: number, limit: number): Promise<SessionsPayload> {
     return this.gameClient.getMatchHistory(user_id, page, limit);
+  }
+
+  public async update2FASettings(user_id: number, enabled: number, secret?: string | null): Promise<void> {
+    this.userRepository.update2FASettings(user_id, enabled, secret);
   }
 }

@@ -63,6 +63,7 @@ export class UserController {
         success: true,
         user_id: result.user_id,
         two_fa_enabled: result.two_fa_enabled,
+        two_fa_secret: result.two_fa_secret,
         message: "Local user resolved successfully"
       });
     } catch (error) {
@@ -279,6 +280,37 @@ export class UserController {
 
       return reply.send(game_sessions);
 
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async getLeaderboard(
+    request: FastifyRequest<{ Querystring: { limit?: number } }>,
+    reply: FastifyReply) {
+    try {
+      const { limit = 10 } = request.query;
+      const leaderboard = await this.userService.getLeaderboard(limit);
+      return reply.send(leaderboard);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async update2FASettings(
+    request: FastifyRequest<{ Params: UserIdParams; Body: { enabled: number; secret?: string | null } }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const user_id = request.params.uid;
+      const { enabled, secret } = request.body;
+
+      await this.userService.update2FASettings(user_id, enabled, secret);
+
+      return reply.send({
+        success: true,
+        message: "2FA settings updated successfully"
+      });
     } catch (error) {
       this.handleError(error, reply);
     }

@@ -138,7 +138,7 @@ export class User {
                 username: partialData.username || null,
                 email: partialData.email || null,
                 alias: partialData.alias || null,
-                avatar_url: partialData.avatar_url || null,
+                avatar_url: `${window.location.origin}/${partialData.avatar_url}` || null,
                 two_fa_enabled: partialData.two_fa_enabled || false,
                 status: partialData.status || "online",
                 created_at: partialData.created_at || new Date().toISOString(),

@@ -97,6 +97,16 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getAvatar.bind(userController)
   );
 
+  // PUT /:uid/2fa - Update 2FA settings (internal service use only)
+  fastify.put<{ Params: UserIdParams; Body: { enabled: number; secret?: string | null } }>(
+    "/:uid/2fa",
+    { 
+      schema: { params: userIdSchema },
+      preHandler: internalAuthMiddleware 
+    },
+    userController.update2FASettings.bind(userController)
+  );
+
   // GET /:uid/profile - Get public user profile
   fastify.get<{ Params: UserIdParams }>(
     "/:uid/profile",
@@ -121,5 +131,21 @@ export default async function usersRoutes(fastify: FastifyInstance) {
       preHandler: userAuthMiddleware,
     },
     userController.getMatchHistory.bind(userController)
+  );
+
+  // GET /leaderboard - Get leaderboard [public]
+  fastify.get<{ Querystring: { limit?: number } }>(
+    "/leaderboard",
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            limit: { type: 'number', minimum: 1, maximum: 100, default: 10 }
+          }
+        }
+      }
+    },
+    userController.getLeaderboard.bind(userController)
   );
 }

@@ -6,7 +6,7 @@ dotenv.config();
 // Load client credentials from Docker secrets
 function loadClientCredentials() {
   try {
-    const credentialsPath = '/run/secrets/users-service-client.env';
+    const credentialsPath = '/run/secrets/game-service-client.env';
     if (fs.existsSync(credentialsPath)) {
       const envConfig = dotenv.parse(fs.readFileSync(credentialsPath));
       return {
@@ -44,6 +44,12 @@ export const CONFIG = {
     BASE_URL: process.env.AUTH_SERVICE_URL || "http://backend-auth:3000",
   },
 
+  // Stats service settings
+  STATS_SERVICE: {
+    BASE_URL: process.env.STATS_SERVICE_URL || "http://backend-stats:3000",
+  },
+
+  
   USERS_SERVICE: {
     BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-users:3000"
   },

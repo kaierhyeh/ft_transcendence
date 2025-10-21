@@ -17,6 +17,12 @@ export interface UserProfile {
 export interface LocalUserResolution {
   user_id: number;
   two_fa_enabled: boolean;
+  two_fa_secret?: string | null;
+}
+
+export interface TwoFAStatus {
+  enabled: boolean;
+  secret?: string | null;
 }
 
 
@@ -174,6 +180,60 @@ export class UsersClient {
     }
 
     return await response.json() as { user_id: number };
+  }
+
+  // 2FA Methods
+  async get2FAStatus(user_id: number): Promise<TwoFAStatus> {
+    const authHeaders = this.getAuthHeaders();
+    
+    const response = await fetch(`${this.base_url}/users/${user_id}`, {
+      headers: authHeaders
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json() as ErrorResponse;
+      const errorMessage = errorBody.message || errorBody.error || `Get 2FA status failed: ${response.status}`;
+      
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      (error as any).details = errorBody;
+      throw error;
+    }
+
+    const userData = await response.json() as any;
+    return {
+      enabled: userData.two_fa_enabled === 1 || userData.two_fa_enabled === true,
+      secret: userData.two_fa_secret
+    };
+  }
+
+  async update2FASettings(user_id: number, enabled: boolean, secret?: string | null): Promise<any> {
+    const authHeaders = this.getAuthHeaders();
+    
+    const response = await fetch(`${this.base_url}/users/${user_id}/2fa`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders,
+      },
+      body: JSON.stringify({
+        enabled: enabled ? 1 : 0,
+        secret: secret
+      })
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json() as ErrorResponse;
+      const errorMessage = errorBody.message || errorBody.error || `Update 2FA settings failed: ${response.status}`;
+      
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      (error as any).details = errorBody;
+      throw error;
+    }
+
+    const data = await response.json();
+    return data;
   }
 }
 
