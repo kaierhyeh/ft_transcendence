@@ -1,3 +1,4 @@
+import { User } from "../user/User.js";
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 
 // data structures
@@ -7,6 +8,7 @@ export interface UserListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 	user_status: string;
 	friendship_status: string | null;
 }
@@ -16,6 +18,7 @@ export interface UserInfo {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 	user_status: string;
 	friendship_status: string | null;
 	from_id: number | null;
@@ -390,7 +393,8 @@ function renderUserInfo(userInfo: UserInfo): void {
 	prepareUserInfoSection();
 	console.log(`USER INFO: rendering user info for user: [${userInfo.user_id}] [${userInfo.username}], aka:[${userInfo.alias}], avatar:[${userInfo.avatar_filename}], online:[${userInfo.user_status}], friendship:[${userInfo.friendship_status}]`);
 
-	const avatarSrc = `${window.location.origin}/api/users/${userInfo.user_id}/avatar`;
+	// const avatarSrc = `${window.location.origin}/api/users/${userInfo.user_id}/avatar`;
+	const avatarSrc = User.getAvatarUrl(userInfo.user_id, userInfo.avatar_updated_at);
 
 
 	const userAlias = userInfo.alias
@@ -456,7 +460,8 @@ function renderUserList(users: UserListRow[]): void {
 	});
 
 	usersList.innerHTML = users.map(u => {
-		const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
+		// const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
+		const avatarSrc = User.getAvatarUrl(u.user_id, u.avatar_updated_at);
 
 
 		const userName = u.alias

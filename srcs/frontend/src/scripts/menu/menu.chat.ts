@@ -1,5 +1,6 @@
 import { clearEvents, hideElementById, setElementActive, setMenuTitle, showElementById } from "./menu.utils.js";
 import { i18n } from '../i18n/i18n.js';
+import { User } from "../user/User.js";
 
 export interface Message {
 	msg_id: number;
@@ -28,6 +29,8 @@ export interface ChatUser {
 	user_id: number;
 	username: string;
 	alias: string | null;
+	avatar_url: string | null;
+	avatar_updated_at: string | null;
 	user_status: string | null;
 	friendship_status: string | null;
 	from: number | null;
@@ -117,7 +120,9 @@ function renderChatList(users: ChatUser[]): void {
 	});
 
 	chatsList.innerHTML = users.map(u => {
-		const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
+		// const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
+		const avatarSrc = User.getAvatarUrl(u.user_id, u.avatar_updated_at);
+		
 
 		const userName = u.alias
 			? `${u.username} aka ${u.alias}`

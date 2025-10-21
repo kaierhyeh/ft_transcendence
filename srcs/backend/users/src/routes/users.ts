@@ -14,7 +14,9 @@ import {
   MatchHistoryQuery,
   matchHistoryQuerySchema,
   UserLookupParams,
-  userLookupSchema
+  userLookupSchema,
+  AvatarQuery,
+  avatarQuerySchema
 } from "../schemas";
 import { userAuthMiddleware } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
@@ -91,9 +93,9 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   );
 
   // GET /:uid/avatar - Retrieve avatar image file
-  fastify.get<{ Params: UserIdParams }> (
+  fastify.get<{ Params: UserIdParams, Querystring: AvatarQuery }> (
     "/:uid/avatar",
-    { schema: { params: userIdSchema }  },
+    { schema: { querystring: avatarQuerySchema, params: userIdSchema } },
     userController.getAvatar.bind(userController)
   );
 

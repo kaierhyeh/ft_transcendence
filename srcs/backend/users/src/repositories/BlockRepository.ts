@@ -5,6 +5,7 @@ export interface BlockedRow {
 	username: string;
 	alias: string;
 	avatar_filename: string;
+	avatar_updated_at: string | null;
 }
 
 export class BlockRepository {
@@ -19,7 +20,8 @@ export class BlockRepository {
 				u.user_id AS user_id,
 				u.username AS username,
 				u.alias AS alias,
-				u.avatar_filename AS avatar_filename
+				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at
 			FROM users u
 			JOIN friendships f ON f.friend_id = u.user_id
 			WHERE f.user_id = ? AND f.status = 'blocked'

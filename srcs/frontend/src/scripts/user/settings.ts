@@ -1,3 +1,4 @@
+import { updateHeaderAvatar } from '../header.js';
 import user from '../user/User.js';
 
 export function initSettings() {
@@ -151,6 +152,7 @@ export function initSettings() {
 			}
 
 			await user.fetchAndUpdate();
+			updateHeaderAvatar();
 			displayProfile();
 			alert('Avatar updated successfully');
 		} catch (error) {
