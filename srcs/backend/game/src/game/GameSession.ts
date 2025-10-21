@@ -1,19 +1,31 @@
 import { SocketStream } from '@fastify/websocket';
 import { GameParticipant, GameMode, GameFormat, GameCreationData } from '../schemas';
-import { Team, GameMessage } from '../types'
+import { Team, GameMessage, PlayerSlot } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
-import { CONFIG } from '../config';
 import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
 import { toSqlDate } from '../utils/db';
+import { UsersClient } from '../clients/UsersClient';
 
 type Player = GameParticipant & {
+    team: Team;
+    slot: PlayerSlot;
     socket?: SocketStream;
 }
 
-type PlayerMap = Map<number, Player>;
+export type PublicPlayer =  Omit<Player, "participant_id"| "socket">;
+
+export type PlayerMap = Map<string, Player>;
 
 export type SessionPlayerMap = PlayerMap;
+
+export interface GameEndedMessage {
+    type: "game_ended";
+    data: {
+        reason: "player_disconnected" | "game_over";
+        disconnected_player?: PublicPlayer;
+    };
+}
 
 export class GameSession {
     private game_format: GameFormat;
@@ -22,44 +34,128 @@ export class GameSession {
     private players: PlayerMap;
     private viewers: Set<SocketStream>;
     private game_engine: GameEngine;
-    private last_activity: number;
     private created_at: Date;
     private last_time: number | undefined;
     private started_at: Date | undefined;
     private ended_at: Date | undefined;
     private winner: Team | undefined;
-    private logger: FastifyBaseLogger;
+    private disconnected_player_info?: Player;
+    private forfeit: boolean = false;
+    private online: boolean;
 
-    constructor(data: GameCreationData, logger: FastifyBaseLogger) {
+    // Private constructor - cannot be called directly
+    private constructor(
+        data: GameCreationData, 
+        private logger: FastifyBaseLogger, 
+        private usersClient: UsersClient,
+        players: PlayerMap
+    ) {
         this.game_format = data.format;
         this.game_mode = data.mode;
         this.tournament_id = data.tournament_id;
-        this.players = this.initPlayers_(data.participants);
+        this.online = data.online;
+        this.players = players; // Already initialized
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
-        this.last_activity = Date.now();
         this.game_engine = new GameEngine(this.game_format, this.players);
-        this.logger = logger;
     }
 
-    private initPlayers_(participants: GameParticipant[]): PlayerMap {
+    // Static async factory method
+    public static async create(
+        data: GameCreationData,
+        logger: FastifyBaseLogger,
+        usersClient: UsersClient
+    ): Promise<GameSession> {
+        // Fetch usernames asynchronously before construction
+        const players = await GameSession.initPlayers_(data, usersClient);
+        
+        // Now construct the instance with pre-initialized players
+        return new GameSession(data, logger, usersClient, players);
+    }
+
+    private static async initPlayers_(
+        data: GameCreationData,
+        usersClient: UsersClient
+    ): Promise<PlayerMap> {
+        const participants = data.participants;
         const players: PlayerMap = new Map();
-        participants.forEach((p, idx) => {
-            players.set(p.player_id, {
-                player_id: p.player_id,
-                type: p.type,
-                team: p.team,
-                slot: p.slot,
-                user_id: p.user_id,
-                username: p.username,
-                socket: undefined,
-            });
-        });
+
+        if (data.format === '1v1') {
+
+            for (let idx = 0; idx < participants.length; idx++) {
+                const p = participants[idx];
+                const username = p.user_id 
+                    ? (await usersClient.getUserName(p.user_id)).username 
+                    : undefined;
+
+                players.set(p.participant_id, {
+                    participant_id: p.participant_id,
+                    type: p.type,
+                    team: idx % 2 === 0 ? 'left' : 'right',
+                    slot: idx % 2 === 0 ? 'left' : 'right',
+                    user_id: p.user_id,
+                    username: username,
+                    socket: undefined,
+                });
+            }
+        }
+        else {
+             if (participants.length !== 4) {
+                const error = new Error;
+                (error as any).status = 400;
+                (error as any).code = 'INVALID_PARTICIPANTS_NUMBER';
+                error.message = `Multi-player games require exactly 4 participants, got ${participants.length}`;
+                throw error;
+
+            }
+
+            
+            for (let idx = 0; idx < participants.length; idx++) {
+                const p = participants[idx];
+                // Team assignment: first 2 players = "left", last 2 players = "right"
+                const team: Team = idx < 2 ? "left" : "right";
+                
+                // Slot assignment based on array order
+                const slot: PlayerSlot = GameSession.getMultiPlayerSlot_(idx);
+
+                const username = p.user_id 
+                    ? (await usersClient.getUserName(p.user_id)).username 
+                    : undefined;
+
+                players.set(p.participant_id, {
+                    participant_id: p.participant_id,
+                    type: p.type,
+                    team,
+                    slot,
+                    user_id: p.user_id,
+                    username: username,
+                    socket: undefined,
+                });
+            }
+        }
+
         return players;
+    }
+
+    private static getMultiPlayerSlot_(index: number): PlayerSlot {
+        switch (index) {
+        case 0: return "top-left";     // Player 1: top-left
+        case 1: return "bottom-left";  // Player 2: bottom-left  
+        case 2: return "top-right";    // Player 3: top-right
+        case 3: return "bottom-right"; // Player 4: bottom-right
+        default:
+            throw new Error(
+            `Invalid player index for multi-player: ${index}`
+            );
+        }
     }
 
     public get config(): GameConf {
         return this.game_engine.conf;
+    }
+
+    public get playersMap(): PlayerMap {
+        return this.players;
     }
 
     public get started(): boolean {
@@ -69,10 +165,22 @@ export class GameSession {
     public get over(): boolean {
         if (this.winner) {
             this.ended_at = new Date();
-            this.logger.info(`Checking if game is over. Winner: ${this.winner}, Ended at: ${this.ended_at}`);
+            this.logger.info(`Checking if game is over. Winner: ${this.winner}, Ended at: ${this.ended_at}, Forfeit: ${this.forfeit}`);
             return true;
         }
         return false;
+    }
+
+    public get disconnected_player(): PublicPlayer | undefined {
+        if (this.disconnected_player_info) {
+            return {
+                    team: this.disconnected_player_info.team,
+                    slot: this.disconnected_player_info.slot,
+                    type: this.disconnected_player_info.type,
+                    user_id: this.disconnected_player_info.user_id,
+                    username: this.disconnected_player_info.username
+            };
+        }
     }
 
     public checkAndStart(): void {
@@ -83,18 +191,13 @@ export class GameSession {
         }
     }
 
-    public get timeout(): boolean {
-        const no_connection: boolean = Array.from(this.players.values()).every((p) => p.socket === undefined);
-        return no_connection && ( Date.now() - this.last_activity > CONFIG.GAME.SESSION_TIMEOUT);
-    }
-
     private get delta(): number | undefined {
         return this.last_time ? Date.now() - this.last_time : undefined;
     }
 
     public tick(): void {
         const delta = this.delta;
-        if (delta) {
+        if (delta && !this.winner) {
             this.game_engine.update(delta);
             this.winner = this.game_engine.winner;
             this.last_time = Date.now();
@@ -118,19 +221,18 @@ export class GameSession {
         });
     }
     
-    public connectPlayer(player_id: number, connection: SocketStream): void {
-        const player = this.players.get(player_id);
+    public connectPlayer(participant_id: string, connection: SocketStream): void {
+        const player = this.players.get(participant_id);
 
-        this.logger.info(`Player connecting with player_id: ${player_id}`);
+        this.logger.info(`Player connecting with participant_id: ${participant_id}`);
         this.logger.info(`found player : ${player !== undefined}`);
 
         if (!player) {
-            connection.socket.close(4001, "Invalid player_id");
+            connection.socket.close(4001, "Invalid participant_id");
             return;
         }
 
         player.socket = connection;
-        this.game_engine.setConnected(player.slot, true);
 
         connection.socket.on("message", (raw: string) => {
             const msg = JSON.parse(raw);
@@ -142,8 +244,7 @@ export class GameSession {
         });
 
         connection.socket.on("close", () => {
-            this.disconnectPlayer(player_id);
-            this.last_activity = Date.now();
+            this.disconnectPlayer(participant_id);
         });
     }
 
@@ -151,15 +252,20 @@ export class GameSession {
         this.viewers.add(connection);
         connection.socket.on("close", () => {
             this.disconnectViewer(connection);
-            this.last_activity = Date.now();
         });
     }
 
-    public disconnectPlayer(player_id: number): void {
-        const player = this.players.get(player_id);
-        if (!player) return; // TODO - or throw an exception
+    public disconnectPlayer(participant_id: string): void {
+        const player = this.players.get(participant_id);
+        if (!player) return;
         player.socket = undefined;
-        this.game_engine.setConnected(player.slot, false);
+        if (!this.winner) {
+            this.forfeit = true;
+            this.winner = player.team === 'left' ? 'right' : 'left';
+            this.disconnected_player_info = player;
+            this.logger.info(`Forfeit detected: Player ${participant_id} disconnected.`);
+        }
+        this.logger.info(`Player disconnected: ${participant_id}, slot: ${player.slot}, team: ${player.team}`);
     }
    
     public disconnectViewer(connection: SocketStream): void {
@@ -167,6 +273,7 @@ export class GameSession {
     }
 
     public closeAllConnections(status: number, reason: string): void {
+
         this.players.forEach(({ socket: connection }, participant_id) => {
             if (connection) {
                 connection.socket.close(status, reason);
@@ -181,7 +288,7 @@ export class GameSession {
 
     public toDbRecord(): DbSession | undefined {
         const game_state = this.game_engine.state;
-        if (this.game_format === "2v2" || !this.started_at || !this.ended_at || !game_state.winner)
+        if (!this.started_at || !this.ended_at || !this.winner || (this.forfeit && !this.online))
             return undefined;
         
         // Check if there's at least one registered (non-guest) user to view session history
@@ -199,6 +306,8 @@ export class GameSession {
                 format: this.game_format,
                 mode: this.game_mode,
                 tournament_id: this.tournament_id ?? null,
+                online: this.online,
+                forfeit: this.forfeit,
                 created_at: toSqlDate(this.created_at),
                 started_at: toSqlDate(this.started_at),
                 ended_at: toSqlDate(this.ended_at),
@@ -210,8 +319,9 @@ export class GameSession {
                     username: p.username ?? null,
                     type: p.type,
                     team: p.team,
+                    slot: p.slot,
                     score: game_state.score[p.team],
-                    winner: game_state.winner === p.team
+                    winner: this.winner === p.team
                 };
                 return player_session;
             })

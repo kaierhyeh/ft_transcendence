@@ -1,18 +1,45 @@
-// pong.ts
+// pong/pong.ts
 import { createGameSession, GameSession } from "./game/GameSession.js";
 import { GameRenderer } from "./game/GameRenderer.js";
 import { InputController } from "./game/InputController.js";
 import { AIController } from "./game/AIController.js";
+import { ScoreTracker } from "./live_stats/ScoreTracker.js";
+import { ScoreChart } from "./live_stats/ScoreChart.js";
+import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
 import user from "./user/User.js";
 import { GameFormat, GameMode, GameParticipant } from "./game/types.js";
+import { generateParticipantId } from "./game/utils.js";
 
 export function initPong() {
     let currentSession: GameSession | null = null;
     let isTransitioning = false;
     
+    // Core game components
     const renderer = new GameRenderer("pong");
     const inputController = new InputController();
     const aiController = new AIController();
+    
+    const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
+    const scoreChart = new ScoreChart();
+    const scoreDisplay = new ScoreDisplay();
+    
+    // Initialize score display if elements exist
+    if (document.getElementById('pong-score-chart')) {
+        // Initialize the visual components
+        scoreChart.initialize('pong-score-chart');
+        scoreDisplay.initialize();
+        
+        // Subscribe to updates
+        scoreTracker.onUpdate((data) => {
+            scoreChart.update(data);
+            scoreDisplay.update(data);
+        });
+    }
+    
+    // Global reset function for button
+    (window as any).resetGameData = () => {
+        scoreTracker.resetAll();
+    };
     
     // Show initial message
     renderer.showMessage("Select a game mode");
@@ -63,7 +90,9 @@ export function initPong() {
                 currentSession = null;
             }
             
-            // Small delay for cleanup
+            // Reset per-game scores
+            scoreTracker.resetGame();
+            
             await new Promise(resolve => setTimeout(resolve, 100));
             
             // Create participants
@@ -80,6 +109,15 @@ export function initPong() {
             if (mode === 'solo') {
                 aiController.attachToSession(currentSession, 1);
             }
+            
+            // Subscribe to game state updates for score tracking
+            currentSession.onStateUpdate((state: any) => {
+                const leftScore = state.score?.left ?? 0;
+                const rightScore = state.score?.right ?? 0;
+                const ballDx = state.ball?.dx ?? 0;
+                
+                scoreTracker.update(leftScore, rightScore, ballDx);
+            });
             
             // Setup game over handler
             currentSession.onGameOver((winner) => {
@@ -100,19 +138,43 @@ export function initPong() {
             const participants: GameParticipant[] = [
                 {
                     type: user.isLoggedIn() ? "registered" : "guest",
-                    user_id: user.user_id ?? undefined
+                    user_id: user.user_id ?? undefined,
+                    participant_id: generateParticipantId()
                 }
             ];
             
             if (mode === 'solo') {
-                participants.push({ type: "ai", user_id: undefined });
+                participants.push(
+                    {
+                        type: "ai",
+                        user_id: undefined,
+                        participant_id: generateParticipantId()
+                    });
             } else {
-                participants.push({ type: "guest", user_id: undefined });
+                participants.push(
+                    {
+                        type: "guest",
+                        user_id: undefined,
+                        participant_id: generateParticipantId()
+                    });
             }
             
             return participants;
         } else {
-            return Array(4).fill({ type: "guest", user_id: undefined });
+            const participants: GameParticipant[] = [
+                {
+                    type: user.isLoggedIn() ? "registered" : "guest",
+                    user_id: user.user_id ?? undefined,
+                    participant_id: generateParticipantId()
+                }
+            ];
+            participants.push({ type: "guest", user_id: undefined,  participant_id: generateParticipantId() });
+            participants.push({ type: "guest", user_id: undefined,  participant_id: generateParticipantId() });
+            participants.push({ type: "guest", user_id: undefined,  participant_id: generateParticipantId() });
+
+            return participants;
         }
     }
+
+
 }

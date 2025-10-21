@@ -1,6 +1,6 @@
 // GameRenderer.ts
 import type { GameSession } from "./GameSession.js";
-import type { GameConfig, GameState, GameState4p } from "./types.js";
+import type { GameConfig, GameState, GameState2v2 } from "./types.js";
 
 export class GameRenderer {
     private canvas: HTMLCanvasElement;
@@ -36,7 +36,7 @@ export class GameRenderer {
             if (session.format === '1v1') {
                 this.draw1v1(state as GameState | null, session.config, session.isOver());
             } else {
-                this.draw2v2(state as GameState4p | null, session.config, session.isOver());
+                this.draw2v2(state as GameState2v2 | null, session.config, session.isOver());
             }
             
             this.animationFrameId = requestAnimationFrame(render);
@@ -106,7 +106,7 @@ export class GameRenderer {
         }
     }
     
-    private draw2v2(state: GameState4p | null, config: GameConfig, isOver: boolean): void {
+    private draw2v2(state: GameState2v2 | null, config: GameConfig, isOver: boolean): void {
         if (!state) {
             this.showMessage("Connecting...");
             return;
@@ -118,7 +118,7 @@ export class GameRenderer {
         this.drawCenterLine(config);
         
         // Draw all paddles
-        const positions: Array<keyof GameState4p['players']> = ['top-left', 'bottom-left', 'top-right', 'bottom-right'];
+        const positions: Array<keyof GameState2v2['players']> = ['top-left', 'bottom-left', 'top-right', 'bottom-right'];
         positions.forEach(pos => {
             const player = state.players[pos];
             if (player) {

@@ -1,5 +1,5 @@
 // GameSession.ts
-import type { GameConfig, GameState, GameState4p, GameParticipant, GameMode, GameFormat, Team } from "./types.js";
+import type { GameConfig, GameState, GameState2v2, GameParticipant, GameMode, GameFormat, Team } from "./types.js";
 import { createMatch, getGameConfig } from "./api.js";
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
@@ -11,13 +11,13 @@ export interface GameSession {
     readonly config: GameConfig;
     
     // State accessors
-    getState(): GameState | GameState4p | null;
+    getState(): GameState | GameState2v2 | null;
     isOver(): boolean;
     getWinner(): Team | null;
     
     // Control
     sendInput(playerIndex: number, move: 'up' | 'down' | 'stop'): void;
-    onStateUpdate(callback: (state: GameState | GameState4p) => void): void;
+    onStateUpdate(callback: (state: GameState | GameState2v2) => void): void;
     onGameOver(callback: (winner: Team) => void): void;
     
     // Cleanup
@@ -30,8 +30,7 @@ export async function createGameSession(
     participants: GameParticipant[]
 ): Promise<GameSession> {
     // 1. Create match
-    const matchResult = await createMatch(mode, format, participants);
-    const { game_id, jwt_tickets } = matchResult;
+    const { game_id } = await createMatch(mode, format, participants);
     
     console.log(`Game session ${game_id} created (${mode}, ${format})`);
     
@@ -42,10 +41,10 @@ export async function createGameSession(
     const websockets: WebSocket[] = [];
     const numPlayers = format === '1v1' ? 2 : 4;
     
-    let currentState: GameState | GameState4p | null = null;
+    let currentState: GameState | GameState2v2 | null = null;
     let winner: Team | null = null;
     
-    const stateUpdateCallbacks: Array<(state: GameState | GameState4p) => void> = [];
+    const stateUpdateCallbacks: Array<(state: GameState | GameState2v2) => void> = [];
     const gameOverCallbacks: Array<(winner: Team) => void> = [];
     
     // Create WebSocket connections
@@ -55,7 +54,7 @@ export async function createGameSession(
         
         await new Promise<void>((resolve, reject) => {
             ws.onopen = () => {
-                ws.send(JSON.stringify({ type: "join", ticket: jwt_tickets[i] }));
+                ws.send(JSON.stringify({ type: "join", participant_id: participants[i].participant_id }));
                 resolve();
             };
             ws.onerror = (error) => reject(error);

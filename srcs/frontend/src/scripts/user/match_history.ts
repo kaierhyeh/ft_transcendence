@@ -9,6 +9,22 @@ const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 let currentPage = 1;
 let isLoading = false;
 let hasMorePages = true;
+let profileUserId: number | null = null; // The user whose profile is being viewed
+
+/**
+ * Gets the user ID from URL query parameters
+ */
+function getProfileUserIdFromUrl(): number | null {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idParam = urlParams.get('id');
+    
+    if (idParam) {
+        const id = parseInt(idParam, 10);
+        return isNaN(id) ? null : id;
+    }
+    
+    return null;
+}
 
 async function checkAuth(): Promise<boolean> {
     try {
@@ -50,7 +66,11 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
     
     // Create match cards
     const cardsHTML = sessions.map(session => 
-        createMatchCard({ session, currentUserId: user.user_id })
+        createMatchCard({ 
+            session, 
+            currentUserId: user.user_id,
+            profileUserId: profileUserId 
+        })
     ).join('');
     
     if (append) {
@@ -98,7 +118,7 @@ function setupLoadMoreButton(container: Element): void {
             
             currentPage++;
             const response = await fetchMatchHistory({
-                userId: user.user_id!,
+                userId: profileUserId!,
                 page: currentPage
             });
             
@@ -124,7 +144,7 @@ async function loadMatchHistory(): Promise<void> {
     if (!historyContainer) return;
 
     try {
-        // Check authentication
+        // Check authentication first
         const isAuthenticated = user.isLoggedIn();
         
         if (!isAuthenticated) {
@@ -136,6 +156,19 @@ async function loadMatchHistory(): Promise<void> {
                 return;
             }
         }
+        
+        // Get profile user ID from URL (if present, otherwise use current logged-in user)
+        profileUserId = getProfileUserIdFromUrl();
+        
+        // If no profile ID in URL, use current logged-in user's ID
+        if (profileUserId === null) {
+            profileUserId = user.user_id;
+        }
+        
+        if (profileUserId === null) {
+            console.error('No user ID available');
+            return;
+        }
 
         // Show loading state
         showLoadingState(historyContainer);
@@ -146,7 +179,7 @@ async function loadMatchHistory(): Promise<void> {
         
         // Fetch match history
         const response = await fetchMatchHistory({
-            userId: user.user_id!,
+            userId: profileUserId,
             page: currentPage
         });
         

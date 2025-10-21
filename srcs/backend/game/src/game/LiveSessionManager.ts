@@ -1,9 +1,10 @@
 import { SocketStream } from "@fastify/websocket";
-import { GameParticipant, GameMode, GameCreationData } from "../schemas";
-import { GameSession } from "./GameSession";
+import { GameCreationData } from "../schemas";
+import { GameEndedMessage, GameSession, PlayerMap, PublicPlayer } from "./GameSession";
 import { GameConf } from "./GameEngine";
 import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
+import { UsersClient } from "../clients/UsersClient";
 import { StatsClient } from "../clients/StatsClient";
 import { toInteger } from "../utils/type-converters";
 import { verifyGameSessionJWT } from "../services/JwtVerifierService";
@@ -12,18 +13,20 @@ let next_id = 1;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
+    private usersClient: UsersClient;
 
     constructor(
         private session_repo: SessionRepository,
         private stats_client: StatsClient,
         private logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
+        this.usersClient = new UsersClient();
     }
 
-    public createGameSession(data: GameCreationData): number {
+    public async createGameSession(data: GameCreationData): Promise<number> {
         const game_id = next_id++;
 
-        const new_game = new GameSession(data, this.logger);
+        const new_game = await GameSession.create(data, this.logger, this.usersClient);
         this.game_sessions.set(game_id, new_game);
 
         return game_id;
@@ -31,6 +34,10 @@ export class LiveSessionManager {
 
     public getGameSessionConf(id: number): GameConf | undefined {
         return this.game_sessions.get(id)?.config;
+    }
+
+    public getPlayers(gameId: number): PlayerMap | undefined {
+        return this.game_sessions.get(gameId)?.playersMap;
     }
 
     public connectToGameSession(id: number, connection: SocketStream): void {
@@ -52,21 +59,16 @@ export class LiveSessionManager {
             if (msg.type === "view") {
                 session.connectViewer(connection);
             } else if (msg.type === "join") {
-                const ticket = msg.ticket as string | undefined;
-                if (!ticket) { 
-                    connection.socket.close(4001, "Missing ticket"); 
+                const participant_id = msg.participant_id as string | undefined;
+                if (!participant_id) { 
+                    connection.socket.close(4001, "Missing participant_id"); 
                     return; 
                 }
                 try {
-                    const payload = await verifyGameSessionJWT(ticket);
-                    if (!payload.game_id || payload.game_id !== id) {
-                        throw new Error("Game ID mismatch");
-                    }
-                    const player_id = toInteger(payload.sub);
-                    session.connectPlayer(player_id, connection);
+                    session.connectPlayer(participant_id, connection);
                 } catch (err) {
-                    this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "JWT verification failed");
-                    connection.socket.close(4001, "Invalid or expired token");
+                    this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "Invalid participant id");
+                    connection.socket.close(4001, "Invalid participant id");
                 }
             } 
         });
@@ -100,9 +102,30 @@ export class LiveSessionManager {
         }
     }
 
-    private async terminateSession_(id: number, session: GameSession): Promise<void> {
-        await this.saveSession(id, session);
-        session.closeAllConnections(1001, "Game ended"); 
+    private terminateSession_(id: number, session: GameSession): void {
+        
+        this.saveSession(id, session);
+        let message: GameEndedMessage;
+        if (session.disconnected_player) {            
+            message = {
+                type: "game_ended",
+                data: {
+                    reason: "player_disconnected",
+                    disconnected_player: session.disconnected_player
+                }
+            };
+            session.broadcast(message);
+            session.closeAllConnections(4000, message.data.reason);
+        } else {
+            message = {
+                type: "game_ended",
+                data: {
+                    reason: "game_over",
+                }
+            };
+            session.broadcast(message);
+            session.closeAllConnections(1001, message.data.reason); 
+        }
         this.game_sessions.delete(id);
     }
 
@@ -115,11 +138,6 @@ export class LiveSessionManager {
             if (!game.started) {
                 game.checkAndStart();
                 continue;
-            }
-            if (game.timeout) {
-                this.logger.info({ game_id: id }, "Terminating inactive game session");
-                this.game_sessions.delete(id);
-                continue ;
             }
 
             game.tick();

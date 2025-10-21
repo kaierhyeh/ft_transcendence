@@ -40,7 +40,6 @@ interface Player {
     slot: PlayerSlot;
     paddle: Paddle;
     velocity: number;
-    connected: boolean;
     team: Team;
 }
 
@@ -108,7 +107,6 @@ export class GameEngine {
                 slot: p.slot,
                 paddle: { x: paddle.x, y: paddle.y },
                 velocity: 0,
-                connected: false,
                 team: p.team
             });
         });
@@ -274,11 +272,6 @@ export class GameEngine {
             score: Object.fromEntries(this.score),
             winner: this.winner_
         };
-    }
-
-    public setConnected(slot: PlayerSlot, value: boolean): void {
-        const player = this.players.get(slot);
-        if (player) player.connected = value;
     }
 
     private movePaddles(dt: number): void {

@@ -75,7 +75,7 @@ export class AIController {
             );
         }
         
-        console.log("AI decision: AITarg =", this.AITarg);
+        // console.log("AI decision: AITarg =", this.AITarg);
     }
     
     /**

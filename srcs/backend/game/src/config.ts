@@ -26,7 +26,6 @@ export const CONFIG = {
   // Game settings
   GAME: {
     TICK_PERIOD: 1000 / 30, // <=> 30 FPS
-    SESSION_TIMEOUT: 5000, // 5s
     MAX_SESSIONS: 100,
   },
   
@@ -51,6 +50,10 @@ export const CONFIG = {
   },
 
   
+  USERS_SERVICE: {
+    BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-users:3000"
+  },
+
   // Internal auth credentials
   INTERNAL_AUTH: {
     CLIENT_ID: clientCredentials.clientId,

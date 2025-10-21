@@ -22,8 +22,8 @@ export const translations = {
     "twoPlayers": "Two players",
     "fourPlayers": "Four players",
     "playOnline": "Play online",
-    "remote2p": "- 2 players -",
-    "remote4p": "- 4 players -",
+    "remote1v1": "- 2 players -",
+    "remote2v2": "- 4 players -",
 
     // Tournament
     "tournament": "Tournament",
@@ -123,8 +123,8 @@ export const translations = {
     "twoPlayers": "雙人遊戲",
     "fourPlayers": "四人遊戲",
     "playOnline": "線上遊戲",
-    "remote2p": "- 雙人遊戲 -",
-    "remote4p": "- 四人遊戲 -",
+    "remote1v1": "- 雙人遊戲 -",
+    "remote2v2": "- 四人遊戲 -",
 
     // Tournament
     "tournament": "比賽",
@@ -224,8 +224,8 @@ export const translations = {
     "twoPlayers": "Deux joueurs",
     "fourPlayers": "Quatre joueurs",
     "playOnline": "Jouer en ligne",
-    "remote2p": "- 2 joueurs -",
-    "remote4p": "- 4 joueurs -",
+    "remote1v1": "- 2 joueurs -",
+    "remote2v2": "- 4 joueurs -",
 
     // Tournament
     "tournament": "Tournoi",

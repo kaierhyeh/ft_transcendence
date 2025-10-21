@@ -1,5 +1,5 @@
 import { GameFormat, GameMode } from "../schemas";
-import { Team, PlayerType } from "../types";
+import { Team, PlayerType, PlayerSlot } from "../types";
 import { Database } from "better-sqlite3";
 
 export interface DbPlayerSession {
@@ -7,6 +7,7 @@ export interface DbPlayerSession {
     username: string | null,
     type: PlayerType,
     team: Team,
+    slot: PlayerSlot,
     score: number,
     winner: boolean
 }
@@ -15,6 +16,8 @@ interface SessionRow {
     format: GameFormat,
     mode: GameMode,
     tournament_id: number | null,
+    online: boolean,
+    forfeit: boolean,
     created_at: string,
     started_at: string,
     ended_at: string,
@@ -59,18 +62,22 @@ export class SessionRepository {
 
     public save(session: DbSession): void {
         const insertSession = this.db.prepare(`
-            INSERT INTO sessions (format, tournament_id, mode, created_at, started_at, ended_at)
-            VALUES (@format, @tournament_id, @mode, @created_at, @started_at, @ended_at)
+            INSERT INTO sessions (format, tournament_id, mode, online, forfeit, created_at, started_at, ended_at)
+            VALUES (@format, @tournament_id, @mode, @online, @forfeit, @created_at, @started_at, @ended_at)
         `);
 
         const insertPlayerSession = this.db.prepare(`
-            INSERT INTO player_sessions (session_id, user_id, username, type, team, score, winner)
-            VALUES (@session_id, @user_id, @username, @type, @team, @score, @winner)
+            INSERT INTO player_sessions (session_id, user_id, username, type, team, slot, score, winner)
+            VALUES (@session_id, @user_id, @username, @type, @team, @slot, @score, @winner)
         `);
 
         // Start a transaction so both inserts happen atomically
         const saveTransaction = this.db.transaction((sessionData: DbSession) => {
-            const result = insertSession.run(sessionData.session);
+            const result = insertSession.run({
+                ...sessionData.session,
+                online: sessionData.session.online ? 1 : 0,
+                forfeit: sessionData.session.forfeit ? 1 : 0,
+            });
             const session_id = result.lastInsertRowid as number;
 
             for (const player of sessionData.player_sessions) {
@@ -80,6 +87,7 @@ export class SessionRepository {
                     username: player.username,
                     type: player.type,
                     team: player.team,
+                    slot: player.slot,
                     score: player.score,
                     winner: player.winner ? 1 : 0,
                 });
@@ -106,7 +114,7 @@ export class SessionRepository {
         // Retrieve data
         const dataStmt = this.db.prepare(`
             WITH filtered_sessions AS (
-                SELECT s.id, s.format, s.mode, s.tournament_id, s.created_at, s.started_at, s.ended_at
+                SELECT s.id, s.format, s.mode, s.tournament_id, s.online, s.forfeit, s.created_at, s.started_at, s.ended_at
                 FROM sessions s
                 WHERE (:user_id IS NULL OR s.id IN (SELECT session_id FROM player_sessions WHERE user_id = :user_id))
                 ORDER BY s.created_at DESC
@@ -116,6 +124,8 @@ export class SessionRepository {
                 fs.format,
                 fs.mode,
                 fs.tournament_id,
+                fs.online,
+                fs.forfeit,
                 fs.created_at,
                 fs.started_at,
                 fs.ended_at,
@@ -125,6 +135,7 @@ export class SessionRepository {
                     'username', ps.username,
                     'type', ps.type,
                     'team', ps.team,
+                    'slot', ps.slot,
                     'score', ps.score,
                     'winner', ps.winner
                 )

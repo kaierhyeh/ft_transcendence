@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createGameSchema, GameCreationData, GameIdParams,gameIdSchema } from "../schemas";
-import { internalAuthMiddleware } from "../middleware/internalAuth";
+// import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
   // POST /create - Create a new game session [protected]
@@ -8,12 +8,19 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     "/create",
     { 
       schema: { body: createGameSchema },
-      preHandler: internalAuthMiddleware  // ← Simple protection!
+      // preHandler: internalAuthMiddleware  // ← Simple protection!
     },
     async (request, reply) => {
       const data = request.body;
-      const game_id = fastify.live_sessions.createGameSession(data);
-      reply.status(201).send({game_id: game_id});
+      try {
+
+        const game_id = await fastify.live_sessions.createGameSession(data);
+        reply.status(201).send({game_id: game_id});
+      } catch(error: any) {
+        if (error.code === 'INVALID_PARTICIPANTS_NUMBER')
+          reply.status(400).send(error.message);
+        reply.status(500).send("Internal server error");
+      }
   });
 
   // GET /:id/conf - Get game session configuration

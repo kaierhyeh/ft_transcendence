@@ -73,7 +73,6 @@ services:
       - internal-access-public.pem
       - users-service-client.env
       - game-service-client.env
-      - matchmaking-service-client.env
       - chat-service-client.env
       - google-oauth.env
     networks:
@@ -162,24 +161,6 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  backend-matchmaking:
-    container_name: backend-matchmaking
-    build:
-      context: ./backend/matchmaking
-      dockerfile: Dockerfile
-    secrets:
-      - matchmaking-service-client.env
-    networks:
-      - pong_network
-    init: true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
-      interval: 5m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-
   backend-chat:
     container_name: backend-chat
     build:
@@ -223,8 +204,6 @@ secrets:
     file: ../secrets/users-service-client.env
   game-service-client.env:
     file: ../secrets/game-service-client.env
-  matchmaking-service-client.env:
-    file: ../secrets/matchmaking-service-client.env
   chat-service-client.env:
     file: ../secrets/chat-service-client.env
   stats-service-client.env:

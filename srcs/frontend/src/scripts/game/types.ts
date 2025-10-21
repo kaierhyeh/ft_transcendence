@@ -54,7 +54,7 @@ interface Players {
     right: Player;
 }
 
-interface Players4p {
+interface Players2v2 {
     "top-left"?: Player;
     "bottom-left"?: Player;
     "top-right"?: Player;
@@ -68,8 +68,8 @@ export interface GameState {
     winner?: Team;
 }
 
-export interface GameState4p {
-    players: Players4p;
+export interface GameState2v2 {
+    players: Players2v2;
     ball: Ball;
     score: Score;
     winner?: Team;
@@ -84,9 +84,5 @@ export type PlayerType = "registered" | "guest" | "ai";
 export interface GameParticipant {
     type: PlayerType;
     user_id?: number;
-}
-
-export interface MatchMakingResult {
-    game_id: number;
-    jwt_tickets: string[];
+    participant_id: string;
 }
