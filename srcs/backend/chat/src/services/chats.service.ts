@@ -212,18 +212,10 @@ export class ChatService {
 
 	public async getUserChat(thisUserId: number, userId: number) {
 		let chatInfo = await this.chatRepository.getChatByUsersIds(thisUserId, userId);
-		console.log("[DEBUG CHAT_INFO] A:", chatInfo);
-		// exist?
 		if (chatInfo === null) {
-			// create
-			console.log("[DEBUG CHAT_INFO] ADD CHAT");
 			chatInfo = await this.chatRepository.addChat(thisUserId, userId);
 		}
-		// new or old chat exist now
-		console.log("[DEBUG CHAT_INFO] B:", chatInfo);
 		return await this.getUserChatListRow(thisUserId, userId, chatInfo);
-
-		// getUserChats()
 	}
 
 	public async getChatById(chatId: number, thisUserId: number) {

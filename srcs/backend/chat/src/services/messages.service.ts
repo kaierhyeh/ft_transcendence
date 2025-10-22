@@ -31,11 +31,9 @@ export class MessageService {
         if (!res.ok) {
             throw new Error(`Failed to fetch friendship status: ${res.status} ${res.statusText}`);
         }
-        console.log("[DEBUG]:res=", res);
+
         const friendshipStatus = await res.json() as FriendshipStatus;
-        console.log("[DEBUG]:status=", friendshipStatus);
         const blocked = friendshipStatus === null ? false : friendshipStatus.status === "blocked";
-        console.log("[DEBUG]:blocked=", blocked);
 
         await this.messageRepository.addMessage(chatId, fromId, toId, msg, blocked);
     }
