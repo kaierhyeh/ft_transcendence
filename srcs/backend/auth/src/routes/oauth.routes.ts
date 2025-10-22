@@ -177,6 +177,7 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 				id: user.user_id,
 				username: user.username,
 				avatar_url: user.avatar_url,
+				avatar_updated_at: user.avatar_updated_at,
 				message: "Google account created and user authenticated."
 			});
 

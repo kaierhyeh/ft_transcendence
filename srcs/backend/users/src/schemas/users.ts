@@ -117,6 +117,14 @@ export const matchHistoryQuerySchema = {
   }
 } as const;
 
+export const avatarQuerySchema = {
+  type: 'object',
+  properties: {
+    v: {type: "string"},
+  }
+} as const;
+
+
 
 export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
@@ -126,3 +134,4 @@ export type UserIdParams = FromSchema<typeof userIdSchema>;
 export type UserLookupParams = FromSchema<typeof userLookupSchema>;
 export type Credentials = FromSchema<typeof credentialsSchema>;
 export type MatchHistoryQuery = FromSchema<typeof matchHistoryQuerySchema>;
+export type AvatarQuery = FromSchema<typeof avatarQuerySchema>;

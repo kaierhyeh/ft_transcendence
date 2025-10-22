@@ -1,3 +1,4 @@
+import { updateHeaderAvatar } from '../header.js';
 import user from '../user/User.js';
 import { setup2fa, activate2fa, disable2fa, get2faStatus } from '../api.js';
 
@@ -152,6 +153,7 @@ export function initSettings() {
 			}
 
 			await user.fetchAndUpdate();
+			updateHeaderAvatar();
 			displayProfile();
 			alert('Avatar updated successfully');
 		} catch (error) {

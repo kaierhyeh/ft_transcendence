@@ -5,6 +5,7 @@ export interface UserListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 	user_status: string | null;
 	friendship_status: string | null;
 	from_id: number | null;
@@ -16,6 +17,7 @@ export interface FriendListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 	user_status: string;
 }
 
@@ -24,6 +26,7 @@ export interface IncomingRequestListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 }
 
 export interface OutgoingRequestListRow {
@@ -31,6 +34,7 @@ export interface OutgoingRequestListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 }
 
 export interface FriendshipStatus {
@@ -50,7 +54,8 @@ export class FriendRepository {
 				u.user_id,
 				u.username,
 				u.alias,
-				u.avatar_filename
+				u.avatar_filename,
+				u.avatar_updated_at
 			FROM users as u
 			ORDER BY u.username ASC
 		`);
@@ -64,6 +69,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
+				u.avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users AS u
@@ -86,7 +92,8 @@ export class FriendRepository {
 				u.user_id,
 				u.username,
 				u.alias,
-				u.avatar_filename
+				u.avatar_filename,
+				u.avatar_updated_at
 			FROM users AS u
 			WHERE u.user_id = ?
 		`);
@@ -100,6 +107,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
+				u.avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
@@ -123,6 +131,7 @@ export class FriendRepository {
 				u.username AS username,
 				u.alias AS alias,
 				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users u
@@ -144,7 +153,8 @@ export class FriendRepository {
 				u.user_id AS user_id,
 				u.username AS username,
 				u.alias AS alias,
-				u.avatar_filename AS avatar_filename
+				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at
 			FROM users u
 			JOIN friendships f ON f.user_id = u.user_id
 			WHERE f.friend_id = ? AND f.status = 'pending'
@@ -159,7 +169,8 @@ export class FriendRepository {
 				u.user_id AS user_id,
 				u.username AS username,
 				u.alias AS alias,
-				u.avatar_filename AS avatar_filename
+				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at
 			FROM users u
 			JOIN friendships f ON f.friend_id = u.user_id
 			WHERE f.user_id = ? AND f.status = 'pending'
@@ -241,6 +252,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
+				u.avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
