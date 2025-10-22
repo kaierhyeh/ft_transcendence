@@ -5,6 +5,7 @@ export interface UserListRow {
 	avatar_filename: string | null;
 	user_status: string;
 	friendship_status: string | null;
+	avatar_updated_at: string | null;
 }
 
 export interface UserInfo {
@@ -16,6 +17,7 @@ export interface UserInfo {
 	friendship_status: string | null;
 	from_id: number | null;
 	to_id: number | null;
+	avatar_updated_at: string | null;
 }
 
 export interface Message {
@@ -48,4 +50,5 @@ export interface ChatUser {
 	user_status: string | null;
 	friendship_status: string | null;
 	from: number | null;
+	avatar_updated_at: string | null;
 }
