@@ -25,7 +25,7 @@ const clientCredentials = loadClientCredentials();
 export const CONFIG = {
 	// Database settings
 	DB: {
-		PATH: process.env.DB_PATH || "/app/sessions/chats.db",
+		PATH: process.env.DB_PATH || "/app/data/db/chats.db",
 		ENABLE_WAL: true,
 	},
 
@@ -57,12 +57,6 @@ export const CONFIG = {
 	INTERNAL_AUTH: {
 		CLIENT_ID: clientCredentials.clientId,
 		CLIENT_SECRET: clientCredentials.clientSecret,
-	},
-
-	WEB_SOCKET: {
-		TICK_PERIOD: 1000 / 30,
-		SESSION_TIMEOUT: 5000,
-		MAX_SESSIONS: 100,
 	},
 
 	// Server settings

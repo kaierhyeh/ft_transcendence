@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { ChatController } from "../controllers/chats.controller";
-import { UserIdParams, userIdSchema, ChatIdParams, chatIdSchema } from "../schemas/users.schema";
+import { UserIdParams, userIdSchema } from "../schemas/users.schema";
+import { ChatIdParams, chatIdSchema } from "../schemas/chats.schema";
 import { userAuthMiddleware } from "../middleware/userAuth";
 
 export default async function chatsRoutes(fastify: FastifyInstance) {
@@ -15,7 +16,7 @@ export default async function chatsRoutes(fastify: FastifyInstance) {
 		chatController.getUserChats.bind(chatController)
 	);
 	
-	// Find chat by user id or create new chat
+	// Find chat by user id or create new chat [Requires user authentication]
 	fastify.get<{ Params: UserIdParams }>(
 		"/open/:id",
 		{

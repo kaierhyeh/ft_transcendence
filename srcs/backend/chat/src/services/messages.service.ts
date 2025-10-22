@@ -1,17 +1,11 @@
 import { InternalAuthClient } from "../clients/InternalAuthClient";
 import { CONFIG } from "../config";
 import { MessageRepository } from "../repositories/messages.repository";
-
-export interface FriendshipStatus {
-	status: string | null;
-    from_id: number | null;
-	to_id: number | null;
-}
+import { FriendshipStatus } from "../types/friendship.type";
 
 export class MessageService {
 
     private internalAuthClient = new InternalAuthClient();
-
     constructor(private messageRepository: MessageRepository) {}
 
     public async sendMessage(chatId:number, fromId:number, toId:number, msg:string) {
@@ -28,6 +22,7 @@ export class MessageService {
 				},
 			}
         );
+        
         if (!res.ok) {
             throw new Error(`Failed to fetch friendship status: ${res.status} ${res.statusText}`);
         }

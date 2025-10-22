@@ -1,76 +1,7 @@
-// // data access layer (DAL)
-
-// import database from "../db/database";
-// import { logError } from "../utils/errorHandler";
-
-// // to use as type for data
-// // data:Message[] - if its list of messages
-// import { Message } from "../types/messages.type";
-// import { colorLog } from "../utils/logger";
-
-// // get all messages from/to user with userId
-// export async function getMessagesByUserId(chatId:number, userId:number) {
-// 	colorLog("cyan", "getMessagesByUserId: chatId=", chatId, " userId=", userId);
-// 	return new Promise((resolve, reject) => {
-
-// 		const query = `
-// 			SELECT id AS id, chat_id AS chatId, from_id AS fromId, to_id AS toId, msg AS msg FROM messages
-// 			WHERE chat_id = ? AND (from_id = ? OR to_id = ?)
-// 			ORDER BY id ASC`;
-
-// 		database.all(query, [chatId, userId, userId], (e:Error|null, data) => {
-// 			if (e) {
-// 				logError(e, "getMessagesByUserId");
-// 				return (reject(e));
-// 			}
-// 			resolve(data);
-// 		});
-
-// 	});
-// }
-
-// // add new mesage in database
-// export async function postMessage(chatId:number, fromId:number, toId:number, msg:string) {
-// 	return new Promise((resolve, reject) => {
-
-// 		const query = `
-// 			INSERT INTO messages (chat_id, from_id, to_id, msg)
-// 			VALUES (?, ?, ?, ?)`;
-
-// 		database.run(query, [chatId, fromId, toId, msg], function (e:Error|null) {
-// 			if (e) {
-// 				logError(e, "postMessage");
-// 				return (reject(e));
-// 			}
-// 			// return the msg info with id
-// 			resolve({ id: this.lastID, chatId, fromId, toId, msg}); 
-// 		});
-
-// 	});
-// }
-
-// export async function deleteMessageById(msgId:number) {
-// 	return new Promise((resolve, reject) => {
-
-// 		const query = `
-// 			DELETE FROM messages
-// 			WHERE id = ?`;
-
-// 		database.run(query, [msgId], function (e:Error|null) {
-// 			if (e) {
-// 				logError(e, "deleteMessageById");
-// 				return (reject(e));
-// 			}
-// 			// return the msg id
-// 			resolve(msgId); 
-// 		});
-
-// 	});
-// }
-
 import { Database } from "better-sqlite3";
 
 export class MessageRepository{
+	
 	constructor(private db: Database) {
 		this.db = db;
 	}

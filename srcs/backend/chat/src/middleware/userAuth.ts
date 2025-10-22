@@ -6,7 +6,8 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { UserSessionPayload, verifyUserSessionJWT } from '../services/JwtVerifierService';
+import { verifyUserSessionJWT } from '../services/JwtVerifierService';
+import { UserSessionPayload } from '../types/jwt.types';
 
 
 // Extend FastifyRequest to include user auth payload

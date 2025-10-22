@@ -6,12 +6,7 @@ import { userAuthMiddleware } from "../middleware/userAuth";
 export default async function messagesRoutes(fastify: FastifyInstance) {
     const messageController = new MessageController(fastify.services.message);
 
-    // Register WS connection
-    // fastify.
-
-    // Delete WS connection
-
-    // Send msg
+    // Send msg  [Requires user authentication]
     fastify.post<{ Body: NewMessageBody }>(
         "/",
         {

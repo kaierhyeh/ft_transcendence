@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { ChatService } from "../services/chats.service";
-import { ChatIdParams, UserIdParams } from "../schemas/users.schema";
+import { UserIdParams } from "../schemas/users.schema";
+import { ChatIdParams } from "../schemas/chats.schema";
 import { toInteger } from "../utils/toInteger";
 
 export class ChatController {
