@@ -69,7 +69,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
-				u.avatar_updated_at,
+				u.avatar_updated_at AS avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users AS u
@@ -107,7 +107,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
-				u.avatar_updated_at,
+				u.avatar_updated_at AS avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
