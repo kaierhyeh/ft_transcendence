@@ -42,11 +42,11 @@ export class AuthService {
 
 	async loginLocalUser(credentials: LoginCredentials): Promise<LoginLocalResult> {
 
-		const { user_id, two_fa_enabled } = await usersClient.resolveLocalUser(credentials);
+		const { user_id, two_fa_enabled, two_fa_secret } = await usersClient.resolveLocalUser(credentials);
 
-		if (two_fa_enabled) {
+		if (two_fa_enabled && two_fa_secret) {
 			const tempToken = await jwtService.generateTempToken(
-				{ user_id }, 
+				{ userId: user_id }, 
 				"2fa", 
 				300);
 			return { step: "2fa_required", tempToken };
@@ -90,12 +90,13 @@ export class AuthService {
 	async verifyTempToken(token: string) {
 		try {
 			const payload = jwt.verify(token, CONFIG.JWT.USER.TEMP_SECRET); // Keep using symmetric for temp tokens
+			
+			// Only delete the temp token if verification succeeds (single use)
+			await redis.del(`temp_${token}`);
+			
 			return { valid: true, payload };
 		} catch (error: any) {
 			return { valid: false, error: error.message };
-		} finally {
-			// Always delete the temp token after verification (single use)
-			await redis.del(`temp_${token}`);
 		}
 	}
 

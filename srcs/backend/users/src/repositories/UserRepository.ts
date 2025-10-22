@@ -265,4 +265,16 @@ export class UserRepository {
         return result.changes as number;
     }
 
+    public update2FASettings(user_id: number, enabled: number, secret?: string | null): number {
+        const stmt = this.db.prepare(`
+            UPDATE users 
+            SET two_fa_enabled = ?,
+                two_fa_secret = ?,
+                updated_at = datetime('now')
+            WHERE user_id = ?
+        `);
+        const result = stmt.run(enabled, secret, user_id);
+        return result.changes as number;
+    }
+
 }

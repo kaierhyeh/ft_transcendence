@@ -10,7 +10,6 @@ export function initLogin() {
 
 	const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
 	const googleLoginBtn = document.getElementById('google-login-btn') as HTMLButtonElement;
-	const twofaBtn = document.getElementById('2fa-btn') as HTMLButtonElement;
 	const loginInput = document.getElementById('login') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
@@ -21,8 +20,17 @@ export function initLogin() {
 	if (googleLoginBtn)
 		googleLoginBtn.addEventListener('click', handleGoogleLogin);
 
-	// if (twofaBtn)
-	// 	twofaBtn.addEventListener('click', handle2FASetup);
+	// Add Enter key support for login form
+	if (loginInput && passwordInput) {
+		const handleEnterKey = (event: KeyboardEvent) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				handleLogin();
+			}
+		};
+		loginInput.addEventListener('keypress', handleEnterKey);
+		passwordInput.addEventListener('keypress', handleEnterKey);
+	}
 
 	async function handleLogin() {
 		const login = loginInput?.value.trim();
@@ -62,7 +70,7 @@ export function initLogin() {
 
 	async function handle2FA(token: string, tempToken: string) {
 		try {
-			const response = await fetch(`${API_TWOFA_ENDPOINT}/verifiy`, {
+			const response = await fetch(`${API_TWOFA_ENDPOINT}/verify`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -87,71 +95,7 @@ export function initLogin() {
 
 	async function handleGoogleLogin() {
 		await initiateGoogleLogin();
-	}	// async function handle2FASetup() {
-	// 	try {
-	// 		const response = await setup2fa();
-	// 		if (!response) {
-	// 			console.error("Failed to set up 2FA");
-	// 			return;
-	// 		}
-
-	// 		// Show the QR code and secret key
-	// 		const qrcodeImg = document.getElementById('qrcode-img') as HTMLImageElement;
-	// 		qrcodeImg.src = response.qrCode;
-
-	// 		const secretKey = document.getElementById('secret-key') as HTMLElement;
-	// 		const secretMatch = response.otpauth_url.match(/secret=([A-Z0-9]+)/i);
-	// 		if (secretMatch && secretMatch[1]) {
-	// 			secretKey.textContent = secretMatch[1];
-	// 		}
-
-	// 		// Show the modal
-	// 		const twofaModal = document.getElementById('2fa-modal') as HTMLElement;
-	// 		twofaModal.style.display = 'flex';
-
-	// 		// Setup modal event handlers
-	// 		const activateBtn = document.getElementById('activate-2fa-btn') as HTMLButtonElement;
-	// 		const cancelBtn = document.getElementById('cancel-2fa-btn') as HTMLButtonElement;
-	// 		const closeBtn = document.getElementById('close-2fa-modal') as HTMLElement;
-
-	// 		const closeModal = () => {
-	// 			twofaModal.style.display = 'none';
-	// 			const twofaErrorMsg = document.getElementById('2fa-error') as HTMLElement;
-	// 			if (twofaErrorMsg) twofaErrorMsg.textContent = '';
-	// 			const twofaTokenInput = document.getElementById('2fa-token') as HTMLInputElement;
-	// 			if (twofaTokenInput) twofaTokenInput.value = '';
-	// 		};
-
-	// 		cancelBtn.onclick = closeModal;
-	// 		closeBtn.onclick = closeModal;
-
-	// 		activateBtn.onclick = async () => {
-	// 			const twofaTokenInput = document.getElementById('2fa-token') as HTMLInputElement;
-	// 			const token = twofaTokenInput.value.trim();
-
-	// 			if (token.length !== 6 || !/^\d+$/.test(token)) {
-	// 				const twofaErrorMsg = document.getElementById('2fa-error') as HTMLElement;
-	// 				twofaErrorMsg.textContent = "The code must contain 6 digits";
-	// 				return;
-	// 			}
-
-	// 			const success = await activate2fa(token);
-	// 			if (success) {
-	// 				closeModal();
-	// 				alert("2FA activated successfully!");
-	// 				// Update the button text
-	// 				if (twofaBtn) twofaBtn.textContent = "Disable 2FA";
-	// 			} else {
-	// 				const twofaErrorMsg = document.getElementById('2fa-error') as HTMLElement;
-	// 				twofaErrorMsg.textContent = "Invalid or expired code. Please try again.";
-	// 			}
-	// 		};
-
-	// 	} catch (error) {
-	// 		console.error("Error setting up 2FA:", error);
-	// 		alert("Failed to set up 2FA. Please try again.");
-	// 	}
-	// }
+	}
 
 	async function checkAuthStatusAndRedirect() {
 		try {
@@ -183,10 +127,8 @@ export function initLogin() {
 			// Clear the stored page and redirect to it
 			sessionStorage.removeItem('previousPage');
 			window.location.href = previousPage;
-		} else {
-			// Default redirect to homepage
+		} else		// Default redirect to homepage
 			window.location.href = '/';
-		}
 	}
 
 }
@@ -279,7 +221,10 @@ function showOAuthLoadingOverlay() {
 
 function hideOAuthLoadingOverlay() {
 	const overlay = document.getElementById('oauth-loading-overlay');
-	if (overlay) {
+
+	if (overlay)
 		overlay.remove();
-	}
 }
+
+// Export to window so it can be called from other modules
+(window as any).hideOAuthLoadingOverlay = hideOAuthLoadingOverlay;

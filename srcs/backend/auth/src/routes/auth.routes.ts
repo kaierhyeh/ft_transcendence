@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { SignOptions } from 'jsonwebtoken';
 import jwksService from '../services/jwks.service';
 import { CONFIG } from '../config';
-import { internalAuthMiddleware } from '../middleware/internal-auth.middleware';
+import { internalAuthMiddleware } from '../middleware/service-auth';
 import jwtService from '../services/jwt.service';
 
 
@@ -31,7 +31,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 
 			if (result.step === "2fa_required") {
 				return reply.code(202).send({
-					...result,
+					step: result.step,
+					temp_token: result.tempToken, // Convert camelCase to snake_case for frontend
 					message: "2FA verification required",
 				});
 			}

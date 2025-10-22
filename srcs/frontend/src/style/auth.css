@@ -348,13 +348,31 @@
 	color: #000;
 }
 
-.modal-footer button:nth-child(2) {
+/* Primary action button (right side - Verify, Activate, OK) */
+.modal-footer button.primary-btn,
+.modal-footer button:last-child:not(.cancel-btn) {
+	background-color: #4ade80;
+	border-color: #4ade80;
+	color: #000;
+}
+
+.modal-footer button.primary-btn:hover,
+.modal-footer button:last-child:not(.cancel-btn):hover {
+	background-color: #22c55e;
+	border-color: #22c55e;
+	color: #000;
+}
+
+/* Cancel button (left side) */
+.modal-footer button.cancel-btn,
+.modal-footer button:first-child:not(.primary-btn) {
 	background-color: #333;
 	border-color: #666;
 	color: #ccc;
 }
 
-.modal-footer button:nth-child(2):hover {
+.modal-footer button.cancel-btn:hover,
+.modal-footer button:first-child:not(.primary-btn):hover {
 	background-color: #666;
 	color: #fff;
 }

@@ -220,4 +220,8 @@ export class UserService {
   public async getMatchHistory(user_id: number, page: number, limit: number): Promise<SessionsPayload> {
     return this.gameClient.getMatchHistory(user_id, page, limit);
   }
+
+  public async update2FASettings(user_id: number, enabled: number, secret?: string | null): Promise<void> {
+    this.userRepository.update2FASettings(user_id, enabled, secret);
+  }
 }
