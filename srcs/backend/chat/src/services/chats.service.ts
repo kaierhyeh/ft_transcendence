@@ -10,6 +10,7 @@ export interface chatListRow {
 	user_status: string | null;
 	friendship_status: string | null;
 	from: number | null;
+	avatar_updated_at: string | null;
 }
 
 export interface ChatInfo {
@@ -25,6 +26,7 @@ export interface UserInfo {
 	user_status: string | null;
 	friendship_status: string | null;
 	from_id: number | null;
+	avatar_updated_at: string | null;
 };
 
 
@@ -87,7 +89,8 @@ export class ChatService {
 							alias: u.alias,
 							user_status: null,
 							friendship_status,
-							from
+							from,
+							avatar_updated_at: u.avatar_updated_at
 						});
 					} else {
 						// this user was blocked by user_id, hide status and friendship from frontend
@@ -98,7 +101,8 @@ export class ChatService {
 							alias: u.alias,
 							user_status: null,
 							friendship_status: null,
-							from: null
+							from: null,
+							avatar_updated_at: u.avatar_updated_at
 						});
 					}
 					break;
@@ -110,7 +114,8 @@ export class ChatService {
 						alias: u.alias,
 						user_status,
 						friendship_status,
-						from
+						from,
+						avatar_updated_at: u.avatar_updated_at
 					});
 					break;
 				default:
@@ -121,7 +126,8 @@ export class ChatService {
 						alias: u.alias,
 						user_status: null,
 						friendship_status: null,
-						from: null
+						from: null,
+						avatar_updated_at: u.avatar_updated_at
 					});
 					break;
 			}
@@ -170,7 +176,8 @@ export class ChatService {
 							alias: user.alias,
 							user_status: null,
 							friendship_status,
-							from
+							from,
+							avatar_updated_at: user.avatar_updated_at
 						};
 					} else {
 						// this user was blocked by user_id
@@ -181,7 +188,8 @@ export class ChatService {
 							alias: user.alias,
 							user_status: null,
 							friendship_status: null,
-							from: null
+							from: null,
+							avatar_updated_at: user.avatar_updated_at
 						};
 					}
 				case "accepted":
@@ -192,7 +200,8 @@ export class ChatService {
 						alias: user.alias,
 						user_status,
 						friendship_status,
-						from
+						from,
+						avatar_updated_at: user.avatar_updated_at
 					};
 				default:
 					return {
@@ -202,7 +211,8 @@ export class ChatService {
 						alias: user.alias,
 						user_status: null,
 						friendship_status: null,
-						from: null
+						from: null,
+						avatar_updated_at: user.avatar_updated_at
 					};
 			}
 		}
@@ -212,18 +222,10 @@ export class ChatService {
 
 	public async getUserChat(thisUserId: number, userId: number) {
 		let chatInfo = await this.chatRepository.getChatByUsersIds(thisUserId, userId);
-		console.log("[DEBUG CHAT_INFO] A:", chatInfo);
-		// exist?
 		if (chatInfo === null) {
-			// create
-			console.log("[DEBUG CHAT_INFO] ADD CHAT");
 			chatInfo = await this.chatRepository.addChat(thisUserId, userId);
 		}
-		// new or old chat exist now
-		console.log("[DEBUG CHAT_INFO] B:", chatInfo);
 		return await this.getUserChatListRow(thisUserId, userId, chatInfo);
-
-		// getUserChats()
 	}
 
 	public async getChatById(chatId: number, thisUserId: number) {

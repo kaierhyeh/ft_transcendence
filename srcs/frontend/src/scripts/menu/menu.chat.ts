@@ -1,5 +1,6 @@
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 // import { i18n } from '../i18n/i18n.js';
+import { User } from "../user/User.js";
 import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 
