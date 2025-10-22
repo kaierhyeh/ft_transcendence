@@ -122,13 +122,16 @@ export class TournamentUIManager {
     }
 
     showCurrentMatch(player1: string, player2: string): void {
+        // Update both the small "next match" display and the in-game header
         const player1Name = document.getElementById('player1-name');
         const player2Name = document.getElementById('player2-name');
+        const tournamentPlayer1 = document.getElementById('tournament-player1');
+        const tournamentPlayer2 = document.getElementById('tournament-player2');
 
-        if (player1Name && player2Name) {
-            player1Name.textContent = player1;
-            player2Name.textContent = player2;
-        }
+        if (player1Name) player1Name.textContent = player1;
+        if (player2Name) player2Name.textContent = player2;
+        if (tournamentPlayer1) tournamentPlayer1.textContent = player1;
+        if (tournamentPlayer2) tournamentPlayer2.textContent = player2;
 
         const currentMatch = document.getElementById('current-match');
         const tournamentGame = document.getElementById('tournament-game');
@@ -152,18 +155,22 @@ export class TournamentUIManager {
         const currentMatch = document.getElementById('current-match');
         const tournamentGame = document.getElementById('tournament-game');
         const gameWrapper = document.querySelector('.pong-game-wrapper') as HTMLElement;
+        const gameHeader = document.querySelector('.game-header') as HTMLElement;
         
         if (bracketDiv) bracketDiv.style.display = 'none';
         if (currentMatch) currentMatch.style.display = 'none';
         if (tournamentGame) tournamentGame.style.display = 'block';
         if (gameWrapper) gameWrapper.style.display = 'block';
+        if (gameHeader) gameHeader.style.display = 'flex';
     }
 
     hideGameInterface(): void {
         const tournamentGame = document.getElementById('tournament-game');
         const gameWrapper = document.querySelector('.pong-game-wrapper') as HTMLElement;
+        const gameHeader = document.querySelector('.game-header') as HTMLElement;
         if (tournamentGame) tournamentGame.style.display = 'none';
         if (gameWrapper) gameWrapper.style.display = 'none';
+        if (gameHeader) gameHeader.style.display = 'none';
     }
 
 
