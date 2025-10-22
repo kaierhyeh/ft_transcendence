@@ -19,6 +19,8 @@ export async function initProfile() {
 
 	let playerChart: any = null;
 
+	let isOtherUser: boolean = false;
+
 	function displayUserProfile(userData: any) {
 		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
@@ -42,8 +44,11 @@ export async function initProfile() {
 
 		if (profileSection)
 			profileSection.style.display = 'block';
-        if (matchHistorySection)
-            matchHistorySection.style.display = 'block';
+
+		const gamesPlayed = (userData.wins || 0) + (userData.losses || 0);
+		if (matchHistorySection && isOtherUser) {
+			matchHistorySection.style.display = gamesPlayed > 0 ? 'block' : 'none';
+		}
 
 		setTimeout(function () {
 			createPlayerChart(userData);
@@ -233,33 +238,63 @@ export async function initProfile() {
 
 	const profileError = document.getElementById('profileError');
 	const profileSection = document.getElementById('profileSection');
-    const matchHistorySection = document.getElementById('matchHistorySection');
+	const matchHistorySection = document.getElementById('matchHistorySection');
 
-	let isConnected = user.isLoggedIn();
-	if (!isConnected) {
-		const serverAuthenticated = await checkAuth();
-		if (serverAuthenticated) {
-			await user.fetchAndUpdate();
-			isConnected = user.isLoggedIn();
+	function getProfileIdFromUrl(): number | null {
+		const params = new URLSearchParams(window.location.search);
+		const id = params.get('id');
+		if (!id) return null;
+		const n = parseInt(id, 10);
+		return isNaN(n) ? null : n;
+	}
+
+	const profileIdFromUrl = getProfileIdFromUrl();
+
+	if (profileIdFromUrl !== null) {
+		try {
+			const resp = await fetch(`${window.location.origin}/api/users/${profileIdFromUrl}/profile`, {
+				method: 'GET'
+			});
+			if (!resp.ok) {
+				throw new Error(`Failed to fetch public profile for id ${profileIdFromUrl}`);
+			}
+			const publicProfile = await resp.json();
+			isOtherUser = true;
+			displayUserProfile(publicProfile);
+		} catch (err) {
+			console.error('Failed to load public profile:', err);
+			if (profileError) profileError.style.display = 'block';
+			if (profileSection) profileSection.style.display = 'none';
+			if (matchHistorySection) matchHistorySection.style.display = 'none';
+			return;
 		}
-	}
+	} else {
+		let isConnected = user.isLoggedIn();
+		if (!isConnected) {
+			const serverAuthenticated = await checkAuth();
+			if (serverAuthenticated) {
+				await user.fetchAndUpdate();
+				isConnected = user.isLoggedIn();
+			}
+		}
 
-	if (!isConnected) {
-		if (profileError) profileError.style.display = 'block';
-		if (profileSection) profileSection.style.display = 'none';
-        if (matchHistorySection) matchHistorySection.style.display = 'none';
-		return;
-	}
+		if (!isConnected) {
+			if (profileError) profileError.style.display = 'block';
+			if (profileSection) profileSection.style.display = 'none';
+			if (matchHistorySection) matchHistorySection.style.display = 'none';
+			return;
+		}
 
-	try {
-		await user.fetchAndUpdate();
-		displayUserProfile(user);
-	} catch (error) {
-		console.error('Failed to load user profile:', error);
-		if (profileError) profileError.style.display = 'block';
-		if (profileSection) profileSection.style.display = 'none';
-        if (matchHistorySection) matchHistorySection.style.display = 'none';
-		return;
+		try {
+			await user.fetchAndUpdate();
+			displayUserProfile(user);
+		} catch (error) {
+			console.error('Failed to load user profile:', error);
+			if (profileError) profileError.style.display = 'block';
+			if (profileSection) profileSection.style.display = 'none';
+			if (matchHistorySection) matchHistorySection.style.display = 'none';
+			return;
+		}
 	}
 
 	await initMatchHistory();

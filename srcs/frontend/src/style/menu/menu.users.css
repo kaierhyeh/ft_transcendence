@@ -59,6 +59,27 @@
 	font-size: 36px;
 	line-height: 12px;
 }
+
+.user-info-profile-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 18px;
+	border-radius: 8px;
+	background: linear-gradient(180deg, #2b2b2b 0%, #1f1f1f 100%);
+	color: #e6f9ea;
+	border: 2px solid #4ade80;
+	cursor: pointer;
+	font-size: 18px;
+	transition: all 0.18s ease;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+.user-info-profile-btn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 6px 18px rgba(74,222,128,0.12);
+	color: #fff;
+	border-color: #86efac;
+}
 .user-info-wins {
 	color: green;
 	font-size: 36px;

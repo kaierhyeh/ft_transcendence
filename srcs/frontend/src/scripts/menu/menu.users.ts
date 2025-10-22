@@ -459,11 +459,17 @@ function renderUserInfo(userInfo: UserInfo): void {
 		${userAlias}
 		${statusHtml}
 		<div id="userStats" class="user-info-stats">
-			<span class="user-info-wins">W: ?</span>
-			<span> | </span>
-			<span class="user-info-losses">L: ?</span>
+			<button id="viewProfileButton" class="user-info-profile-btn">View profile</button>
 		</div>
 	`;
+
+	const viewProfileBtn = document.getElementById('viewProfileButton');
+	if (viewProfileBtn) {
+		viewProfileBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			window.location.href = `/user/profile?id=${userInfo.user_id}`;
+		});
+	}
 	updateButtonsForUserInfo(userInfo);
 }
 
