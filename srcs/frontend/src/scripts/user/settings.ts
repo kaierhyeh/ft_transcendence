@@ -38,7 +38,6 @@ export function initSettings() {
 	function displayProfile() {
 		const profileAvatar = document.getElementById('profileAvatar') as HTMLElement;
 		const profileUsername = document.getElementById('profileUsername');
-		const profileEmail = document.getElementById('profileEmail');
 		const profileAlias = document.getElementById('profileAlias');
 		const aliasInput = document.getElementById('aliasInput') as HTMLInputElement;
 		const profileSection = document.querySelector('.profile-section') as HTMLElement;
@@ -56,9 +55,6 @@ export function initSettings() {
 
 		if (profileUsername)
 			profileUsername.textContent = user.username || 'Unknown';
-
-		if (profileEmail)
-			profileEmail.textContent = user.email || 'Unknown';
 
 		if (profileAlias)
 			profileAlias.textContent = user.alias || 'No alias';

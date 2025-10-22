@@ -327,6 +327,7 @@ export class AuthService {
 		return await usersClient.getUserProfile(userId);
 	}
 
+	// TODO -to remove (not used)
 	async getUserProfileByLogin(login: string): Promise<UserProfile> {
 		return await usersClient.getUser(login);
 	}

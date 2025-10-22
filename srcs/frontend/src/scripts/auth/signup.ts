@@ -10,7 +10,6 @@ export function initSignup() {
 	const registerBtn = document.getElementById('register-btn') as HTMLButtonElement;
 	const googleSignupBtn = document.getElementById('google-signup-btn') as HTMLButtonElement;
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
-	const emailInput = document.getElementById('email') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
 	// Event listeners
@@ -21,7 +20,7 @@ export function initSignup() {
 		googleSignupBtn.addEventListener('click', handleGoogleSignup);
 
 	// Add Enter key support for signup form
-	if (usernameInput && emailInput && passwordInput) {
+	if (usernameInput && passwordInput) {
 		const handleEnterKey = (event: KeyboardEvent) => {
 			if (event.key === 'Enter') {
 				event.preventDefault();
@@ -29,22 +28,20 @@ export function initSignup() {
 			}
 		};
 		usernameInput.addEventListener('keypress', handleEnterKey);
-		emailInput.addEventListener('keypress', handleEnterKey);
 		passwordInput.addEventListener('keypress', handleEnterKey);
 	}
 
 	async function handleRegister() {
 		const username = usernameInput?.value.trim();
-		const email = emailInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
-		if (!username || !email || !password) {
-			alert('Please enter username, email, and password.');
+		if (!username || !password) {
+			alert('Please enter username and password.');
 			return;
 		}
 
-		if (username.length > 50 || email.length > 100 || password.length > 50) {
-			alert('Username, email, or password too long.');
+		if (username.length > 50 || password.length > 50) {
+			alert('Username or password too long.');
 			return;
 		}
 
@@ -53,7 +50,7 @@ export function initSignup() {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ username, email, password })
+				body: JSON.stringify({ username, password })
 			});
 
 			const data = await response.json();

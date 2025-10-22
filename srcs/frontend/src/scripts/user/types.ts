@@ -7,7 +7,7 @@ export type PlayerSlot = "left" | "right" | "top-left" | "bottom-left" | "top-ri
 
 export interface PlayerData {
     user_id: number | null;
-    username: string | null;
+    username: string;
     type: PlayerType;
     team: Team;
     slot: PlayerSlot;

@@ -1,3 +1,4 @@
+import { AuthClient } from '../clients/AuthClient';
 import { GameClient, SessionsPayload } from '../clients/GameClient';
 import { LiteStats, StatsClient, LeaderboardEntry } from '../clients/StatsClient';
 import { CONFIG } from '../config';
@@ -9,7 +10,7 @@ export type UserProfile = Omit<UserRow, "password_hash" | "two_fa_secret" | "goo
   avatar_url: string | null;
 };
 
-export type PublicProfile = Omit<UserProfile, "two_fa_enabled" | "updated_at">;
+export type PublicProfile = Omit<UserProfile, "email" | "two_fa_enabled" | "updated_at">;
 
 export interface LeaderboardEntryWithUsername {
   user_id: number;
@@ -18,12 +19,14 @@ export interface LeaderboardEntryWithUsername {
 }
 
 export class UserService {
+  private authClient: AuthClient;
   private statsClient: StatsClient;
   private gameClient: GameClient;
 
   constructor(
     private userRepository: UserRepository,
   ) {
+    this.authClient = new AuthClient();
     this.statsClient = new StatsClient();
     this.gameClient = new GameClient();
   }
@@ -34,6 +37,7 @@ export class UserService {
 
     const user_data = {
       username: data.username,
+      email: data.email,
       password_hash,
       alias: data.alias ?? data.username,
     };
@@ -46,6 +50,7 @@ export class UserService {
     const user_data = {
       google_sub: data.google_sub,
       username: data.username,
+      email: data.email,
       alias: data.alias ?? data.username,
     };
 
@@ -54,7 +59,7 @@ export class UserService {
   }
 
   public async resolveLocalUser(credentials: Credentials) {
-    const user = await this.getUser(credentials.username);
+    const user = await this.getUser(credentials.login);
     if (user.google_sub) {
       const error = new Error('Not a local user');
       (error as any).code = 'NOT_A_LOCAL_USER';
@@ -74,16 +79,6 @@ export class UserService {
 
   public async getUser(identifier: string): Promise<UserRow> {
     const user = await this.userRepository.find(identifier);
-    if (!user) {
-      const error = new Error('User not found');
-      (error as any).code = 'USER_NOT_FOUND';
-      throw error;
-    }
-    return user;
-  }
-
-  public async getUserByGoogleSub(google_sub: string): Promise<UserRow> {
-    const user = await this.userRepository.findByGoogleSub(google_sub);
     if (!user) {
       const error = new Error('User not found');
       (error as any).code = 'USER_NOT_FOUND';
@@ -126,14 +121,18 @@ export class UserService {
 
   public async getPublicProfile(user_id: number): Promise<PublicProfile> {
     const userProfile = await this.getProfile(user_id);
-    const { two_fa_enabled, updated_at, ...publicProfile } = userProfile;
+    const { email, two_fa_enabled, updated_at, ...publicProfile } = userProfile;
     
     return publicProfile;
   }
 
   public async getAvatar(user_id: number): Promise<string> {
     const { avatar_filename } = await this.getUserById(user_id);
-  
+    if (!avatar_filename) {
+      const error = new Error('Deleted user');
+      (error as any).code = 'DELETED_USER';
+      throw error;
+    }
     return avatar_filename;
   }
 
@@ -144,6 +143,8 @@ export class UserService {
       settings: raw_data.settings,
       // Extract just the hash string from the auth service response
       password_hash: raw_data.password ? await this.updatePassword(user_id, raw_data.password) : undefined,
+      // Extract the TwoFa object from the auth service response
+      two_fa: raw_data.two_fa_enabled !== undefined ? await this.authClient.set2fa(raw_data.two_fa_enabled) : undefined
     };
 
     const changes = this.userRepository.updateById(user_id, data);
@@ -186,6 +187,9 @@ export class UserService {
     return user;
   }
 
+  public async deleteUser(userId: number): Promise<number> {
+    return this.userRepository.markAsDeleted(userId);
+  }
 
   public async getLeaderboard(limit: number = 10): Promise<LeaderboardEntryWithUsername[]> {
     const leaderboardEntries = await this.statsClient.getLeaderboard(limit);
@@ -194,7 +198,7 @@ export class UserService {
     for (const entry of leaderboardEntries) {
       try {
         const user = await this.userRepository.findById(entry.user_id);
-        if (user && user.username) {
+        if (user && user.status !== 'deleted' && user.username) {
           leaderboardWithUsernames.push({
             user_id: entry.user_id,
             username: user.username,

@@ -96,29 +96,23 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 		async (request, reply) => {
 		try {
 
-			const { username, email, password } = request.body;
+			const { username, password } = request.body;
 
 			// Security validation (control chars, XSS)
 			authUtils.checkInputSafety('username', username);
-			authUtils.checkInputSafety('email', email);
 
-			// Normalize email
-			const normalizedEmail = authUtils.normalizeEmail(email);
-
-			// Check if user already exists (by username or email)
-			const existingUser = await authService.checkUserExistence(username) ||
-								 await authService.checkUserExistence(normalizedEmail);
+			// Check if user already exists by username
+			const existingUser = await authService.checkUserExistence(username);
 			if (existingUser) {
 				return reply.code(409).send({
 					success: false,
-					error: 'Username or email already exists'
+					error: 'Username already exists'
 				});
 			}
 
 			// Create user
 			const { user_id } = await authService.register({
 				username,
-				email: normalizedEmail,
 				password,
 			});
 			console.log("user created: ", user_id);

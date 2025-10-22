@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { UserService } from '../services/UserService';
+import { UserService } from '../services/PresenceService';
 import { 
   LocalUserCreationRawData, 
   GoogleUserCreationData, 
@@ -7,8 +7,7 @@ import {
   UserIdParams, 
   Credentials,
   MatchHistoryQuery,
-  UserLookupParams,
-  GoogleSubParams
+  UserLookupParams
 } from '../schemas';
 import fs from 'fs';
 import path from 'path';
@@ -235,15 +234,21 @@ export class UserController {
     }
   }
 
-  public async getUserByGoogleSub(
-    request: FastifyRequest<{ Params: GoogleSubParams }>,
-    reply: FastifyReply
-  ) {
+  public async deleteMe(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const google_sub = request.params.google_sub;
+      const sub = request.authUser?.sub;
       
-      const user = await this.userService.getUserByGoogleSub(google_sub);
-      return reply.send(user);
+      if (!sub) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+      const user_id = toInteger(sub);
+      
+      const changes = await this.userService.deleteUser(user_id);
+      return reply.send({ 
+        success: true,
+        changes,
+        message: "User account successfully deleted"
+      });
     } catch (error) {
       this.handleError(error, reply);
     }
@@ -317,13 +322,18 @@ export class UserController {
   private handleError(error: any, reply: FastifyReply) {
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       reply.status(409).send({ 
-        error: "Username already exists" 
+        error: "Username or email already exists" 
       });
     } else if (error.code === 'USER_NOT_FOUND') {
       reply.status(404).send({ 
         error: "User not found" 
       });
-    } else if (error.code === 'LITE_STATS_NOT_FOUND') {
+    } else if (error.code === 'DELETED_USER') {
+      reply.status(410).send({ 
+        error: "User account has been deleted" 
+      });
+    } 
+    else if (error.code === 'LITE_STATS_NOT_FOUND') {
       reply.status(503).send({ 
         error: "Statistics service unavailable" 
       });

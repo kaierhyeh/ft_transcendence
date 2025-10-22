@@ -1,10 +1,9 @@
 export type UserData = {
     user_id: number;
-    username: string | null;
-    email: string | null;
+    username: string;
     alias: string | null;
-    avatar_url: string | null;
-    avatar_updated_at: string | null;
+    avatar_url: string;
+    avatar_updated_at: string;
     two_fa_enabled: boolean;
     status: "online" | "offline" | "away" | "deleted";
     created_at: string;
@@ -47,10 +46,6 @@ export class User {
 
     public get username(): string | null {
         return this.data?.username ?? null;
-    }
-
-    public get email(): string | null {
-        return this.data?.email ?? null;
     }
 
     public get alias(): string | null {
@@ -136,19 +131,21 @@ export class User {
         // If no existing data, create new user data (for initial login)
         if (!this.data) {
             // Ensure required fields are present for new user
-            if (typeof partialData.user_id !== 'number') {
-                console.error('User.update: user_id is required for new user data');
+            if (typeof partialData.user_id !== 'number' || 
+                typeof partialData.username !== 'string' ||
+                typeof partialData.avatar_url !== 'string' ||
+                typeof partialData.avatar_updated_at !== 'string') {
+                console.error('User.update: Required fields missing for new user data');
                 return false;
             }
             
             // Create new user data with defaults
             this.data = {
                 user_id: partialData.user_id,
-                username: partialData.username || null,
-                email: partialData.email || null,
-                alias: partialData.alias || null,
-                avatar_url: partialData.avatar_url || null,
-                avatar_updated_at: partialData.avatar_updated_at || null,
+                username: partialData.username,
+                alias: partialData.alias ?? null,
+                avatar_url: partialData.avatar_url,
+                avatar_updated_at: partialData.avatar_updated_at,
                 two_fa_enabled: partialData.two_fa_enabled || false,
                 status: partialData.status || "online",
                 created_at: partialData.created_at || new Date().toISOString(),
@@ -203,11 +200,11 @@ export class User {
     }
 
     /**
-     * Get user display name (alias > username > email > "User")
+     * Get user display name (alias > username > "User")
      */
     public getDisplayName(): string {
         if (!this.data) return 'User';
-        return this.data.alias || this.data.username || this.data.email || 'User';
+        return this.data.alias || this.data.username || 'User';
     }
 
     /**
@@ -230,12 +227,9 @@ export class User {
     // public getAvatarUrl(): string {
     //     return this.data?.avatar_url || '';
     // }
-    static getAvatarUrl(user_id: number, avatar_updated_at: string | null): string {
-        if (avatar_updated_at) {
-            const timestamp = new Date(avatar_updated_at).getTime();
-            return `${window.location.origin}/api/users/${user_id}/avatar?v=${timestamp}`;
-        }
-        return '';
+    static getAvatarUrl(user_id: number, avatar_updated_at: string): string {
+        const timestamp = new Date(avatar_updated_at).getTime();
+        return `${window.location.origin}/api/users/${user_id}/avatar?v=${timestamp}`;
     }
 
 }

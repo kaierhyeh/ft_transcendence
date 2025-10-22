@@ -29,11 +29,13 @@ export interface TwoFAStatus {
 
 export interface LocalUserCreationData {
   username: string;
+  email: string;
   password: string;
 }
 
 export interface GoogleUserCreationData {
   google_sub: string;
+  email: string;
   username: string;
   alias?: string;
 }
@@ -92,26 +94,6 @@ export class UsersClient {
       }
 
       return await response.json() as UserProfile;
-  }
-
-  async getUserByGoogleSub(google_sub: string): Promise<UserProfile> {
-    const authHeaders = this.getAuthHeaders();
-
-    const response = await fetch(`${this.base_url}/users/google/${google_sub}`, {
-      headers: authHeaders
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.json() as ErrorResponse;
-      const errorMessage = errorBody.message || errorBody.error || `User not found: ${response.status}`;
-      
-      const error = new Error(errorMessage);
-      (error as any).status = response.status;
-      (error as any).details = errorBody;
-      throw error;
-    }
-
-    return await response.json() as UserProfile;
   }
 
   async resolveLocalUser(credentials: LoginCredentials): Promise<LocalUserResolution> {
