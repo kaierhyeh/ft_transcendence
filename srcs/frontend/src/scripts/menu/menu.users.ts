@@ -1,4 +1,5 @@
 import { User } from "../user/User.js";
+import user from '../user/User.js';
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
@@ -115,10 +116,12 @@ function resetUsersSection(): void {
 		"userLowerPanel"
 	].forEach(hideElementById);
 
-	[	"menuControlPanel",
-		"usersSectionButton",
-		"chatsSectionButton"
-	].forEach(showElementById);
+	if (user.isLoggedIn()) {
+		[	"menuControlPanel",
+			"usersSectionButton",
+			"chatsSectionButton"
+		].forEach(showElementById);
+	}
 
 }
 
@@ -294,15 +297,23 @@ function prepareUserInfoSection(): void {
 	].forEach(hideElementById);
 
 	[	"menuBackButton",
-		"usersInfo",
-		"userLowerPanel",
-		"firstLine",
-		"secondLine"
+		"usersInfo"
 	].forEach(showElementById);
+
+	if (user.isLoggedIn()) {
+		[	"userLowerPanel",
+			"firstLine",
+			"secondLine"
+		].forEach(showElementById);
+	}
 
 }
 
 function updateButtonsForUserInfo(userInfo: UserInfo): void {
+	if (!user.isLoggedIn()) {
+		return;
+	}
+
 	resetUserinfoButtons();
 
 	switch (userInfo.friendship_status) {
@@ -508,7 +519,6 @@ function renderUserList(users: UserListRow[]): void {
 		// const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
 		const avatarSrc = User.getAvatarUrl(u.user_id, u.avatar_updated_at);
 
-
 		const userName = u.alias
 			? `${u.username} aka ${u.alias}`
 			: u.username;
@@ -545,6 +555,9 @@ function renderUserList(users: UserListRow[]): void {
 async function loadUsers(): Promise<void>{
 	try {
 		let res;
+		if (!user.isLoggedIn()) {
+			currentFilter = 'all';
+		}
 		switch (currentFilter) {
 			case 'friends':
 				// console.log("USERS: Loading FRIENDS only");
@@ -606,17 +619,16 @@ async function loadUsers(): Promise<void>{
 async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
-	[	"usersList",
-		"usersList",
-		"menuDropdown"
-	].forEach(showElementById);
-
-	const userBtn = document.getElementById("usersSectionButton");
-	if (userBtn)
-		userBtn.className = "menu-control-panel-button-pressed";
-	const chatsBtn = document.getElementById("chatsSectionButton");
-	if (chatsBtn)
-		chatsBtn.className = "menu-control-panel-button";
+	if (user.isLoggedIn()) {
+		["menuDropdown"].forEach(showElementById);
+		const userBtn = document.getElementById("usersSectionButton");
+		if (userBtn)
+			userBtn.className = "menu-control-panel-button-pressed";
+		const chatsBtn = document.getElementById("chatsSectionButton");
+		if (chatsBtn)
+			chatsBtn.className = "menu-control-panel-button";
+	}
+	["usersList"].forEach(showElementById);
 
 	await loadUsers();
 }
@@ -721,7 +733,9 @@ export async function openUsersSection(): Promise<void> {
 			return;
 	}
 
-	initFilterDropdown();
+	if (user.isLoggedIn()) {
+		initFilterDropdown();
+	}
 
 	await initUsersSection();
 }
