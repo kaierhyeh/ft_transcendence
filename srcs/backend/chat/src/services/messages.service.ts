@@ -1,7 +1,9 @@
 import { InternalAuthClient } from "../clients/InternalAuthClient";
 import { CONFIG } from "../config";
 import { MessageRepository } from "../repositories/messages.repository";
+import { sendMessageToClientWebSocket } from "../routes/ws.routes";
 import { FriendshipStatus } from "../types/friendship.type";
+import { NewMessage } from "../types/messages.type";
 
 export class MessageService {
 
@@ -29,6 +31,17 @@ export class MessageService {
 
         const friendshipStatus = await res.json() as FriendshipStatus;
         const blocked = friendshipStatus === null ? false : friendshipStatus.status === "blocked";
+
+
+
+		try {
+			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg };
+			console.log("----WS sendMessageToClient: ", newMessage);
+			sendMessageToClientWebSocket(toId, newMessage);
+		} catch (error) {
+			console.log("----WS sendMessageToClient FAILED: ", error);
+		}
+
 
         await this.messageRepository.addMessage(chatId, fromId, toId, msg, blocked);
     }

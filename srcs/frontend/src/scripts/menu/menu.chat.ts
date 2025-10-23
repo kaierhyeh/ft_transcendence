@@ -5,6 +5,7 @@ import user from '../user/User.js';
 import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { closeMenuWindow } from "./menu.js";
+import { wsConnectChat } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -249,8 +250,12 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 		"menuBackButton"
 	].forEach(showElementById);
 
+	chatMessages.removeAttribute("data-chat-id");
+	chatMessages.dataset.chatId = `${withUser.chat_id}`;
+
+
 	chatMessages.innerHTML = messages.map(msg => `
-		<div class="chat-msg ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
+		<div class="chat-msg chat_id=${msg.chat_id} ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
 		${msg.from_id !== withUser.user_id
 			? `<span class="green-text">You: </span>`
 			: `<span class="blue-text">${withUser.username}: </span>`}
@@ -347,6 +352,7 @@ export async function openChatsSection(): Promise<void> {
 	}
 
 	// START OF WS
+	wsConnectChat();
 
 	await initChatSection();
 }

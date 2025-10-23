@@ -5,5 +5,5 @@ import wsRoutes from "./ws.routes";
 export default [
 	{ route: chatsRoutes, prefix: "/chat" },
 	{ route: messagesRoutes, prefix: "/message" },
-	{ route: wsRoutes, prefix: "/ws" },
+	{ route: wsRoutes, prefix: "/chat_ws" },
 ];

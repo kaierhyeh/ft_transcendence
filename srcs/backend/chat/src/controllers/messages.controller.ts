@@ -17,19 +17,6 @@ export class MessageController {
 		this.chatClientsWebSocket.delete(clientId);
 	}
 
-	private sendMessageToClient(chatId: number, fromId: number, toId: number, message: any) {
-		try {
-			const socket = this.chatClientsWebSocket.get(toId);
-			if (socket && socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify({ chatId, fromId, toId, message }));
-			} else {
-				this.unregisterChatClient(toId);
-			}
-		} catch (error) {
-			this.unregisterChatClient(toId);
-		}
-	}
-
 	public async addMessage(request: FastifyRequest<{ Body: NewMessageBody }>, reply: FastifyReply) {
 		try {
 			const sub = request.authUser?.sub;
@@ -42,12 +29,6 @@ export class MessageController {
 			const msg = request.body.msg;
 
 			await this.messageService.sendMessage(chatId, fromId, toId, msg);
-
-			try {
-				this.sendMessageToClient(chatId, fromId, toId, msg);
-			} catch (error) {
-				console.log("----------------WS sendMessageToClient FAILED: ", error);
-			}
 
 			reply.status(200).send({
 				success: true,

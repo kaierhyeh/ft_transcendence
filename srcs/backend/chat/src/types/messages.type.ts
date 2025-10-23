@@ -5,3 +5,10 @@ export interface MessageInfo {
 	to_id: number;
 	msg: string;
 }
+
+export interface NewMessage {
+	chat_id: number;
+	username: string;
+	msg: string;
+}
+
