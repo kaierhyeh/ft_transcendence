@@ -1,35 +1,25 @@
-
-// Register WS connection
-
-// Delete WS connection
-
-import { fastifyWebsocket } from '@fastify/websocket';
 import { FastifyInstance } from "fastify";
 
-function handleWebSocketConnection(connection: any, request: any): void {
-	const participantId = request.query.participant_id;
-	const fastify = request.server;
-	
-	console.log("Handling WebSocket connection for participant:", participantId);
+export const chatClientsWebSocket = new Map<number, WebSocket>();
 
-	if (!participantId) {
-		console.log("Missing participant_id");
-		connection.socket.close(4001, "Missing participant_id");
+function registerWebSocketConnection(connection: any, request: any): void {
+	const clientId = request.query.client_id;
+	
+	console.log("Handling WebSocket connection for participant:", clientId);
+
+	if (!clientId) {
+		console.log("Missing client_id");
+		connection.socket.close(4001, "Missing client_id");
 		return;
 	}
-	
-	const isInQueue = fastify.matchmaking.isPlayerAlreadyInQueue(participantId);
-	if (!isInQueue) {
-		console.log(`Participant ${participantId} not in queue`);
-		connection.socket.close(4002, "Not in queue");
-		return;
-	}
-	
-	fastify.matchmaking.saveWebSocket(participantId, connection);
+
+	// save new connection or update old one 
+	chatClientsWebSocket.set(Number(clientId), connection);
 	
 	connection.socket.on("message", function(message: string) {
 		try {
 			const data = JSON.parse(message);
+			// check connection
 			if (data.type == "ping") {
 				connection.socket.send(JSON.stringify({ type: "pong" }));
 			}
@@ -38,16 +28,26 @@ function handleWebSocketConnection(connection: any, request: any): void {
 		}
 	});
 	
+	// if connection closes - remove it from the map
 	connection.socket.on("close", function() {
-		fastify.matchmaking.removeWebSocket(participantId);
+		chatClientsWebSocket.delete(Number(clientId));
 	});
 	
+	// if error occurs - remove connection from the map
 	connection.socket.on("error", function() {
-		fastify.matchmaking.removeWebSocket(participantId);
+		chatClientsWebSocket.delete(Number(clientId));
 	});
 }
 
-export default function matchmakingRoutes(fastify: FastifyInstance, options: any, done: Function): void {
-	fastify.get("/ws", { websocket: true }, handleWebSocketConnection);
+export default function wsRoutes(fastify: FastifyInstance, options: any, done: Function): void {
+
+	fastify.get(
+		"/",
+		{
+			websocket: true
+		},
+		registerWebSocketConnection
+	);
+
 	done();
 }
