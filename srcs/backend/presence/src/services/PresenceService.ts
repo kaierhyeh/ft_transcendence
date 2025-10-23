@@ -3,20 +3,32 @@ import { CONFIG } from '../config';
 import { presenceRepository } from '../repository/presenceRepository';
 import { AppError } from '../errors/AppError';
 import { jwtVerifier } from './JwtVerifierService';
-import { connectionManager } from './ConnectionManagerService';
-import { toInteger } from '../utils/type-converters';
-import { PresenceMessage } from '../types';
+import { toInteger } from '../utils';
+import { Message } from '../types';
 import { UsersClient } from "../clients/UsersClient"
 
+let nextId = 1;
 
-export class PresenceService {
+interface Session {
+    sessionId: number;
+    userId: number;
+    connection: SocketStream;
+}
+
+type SessionMap = Map<SocketStream, Session>;
+
+
+class PresenceService {
   private presenceRepository: presenceRepository;
   private usersClient: UsersClient;
+  private sessions: SessionMap;
+  
 
 
   constructor() {
     this.presenceRepository = new presenceRepository();
     this.usersClient = new UsersClient();
+    this.sessions = new Map();
   }
 
   async checkin(data: any, connection: SocketStream) {
@@ -24,11 +36,11 @@ export class PresenceService {
     const token: string = data.accessToken;
     if (!token) throw new AppError(4000, "Missing access token");
 
-    // WARN - the jwtVerifier should throw an error with a code
     const result = await jwtVerifier.verifyUserSessionToken(token);
-    const userId = toInteger(result.sub);
+    if (!result.success) throw new AppError(4001, "Invalid access token");
+    const userId = toInteger(result.value.sub);
 
-    connectionManager.add(connection, userId);
+    this.registerConection(connection, userId);
 
     await this.presenceRepository.setUserOnline(connection);
 
@@ -38,7 +50,7 @@ export class PresenceService {
     // retrieve connected friends from redis repository
     const onlineFriends = await this.presenceRepository.getOnlineFriends(friendList);
 
-    const msg: PresenceMessage = {
+    const msg: Message = {
       type: "friends",
       data: { friends: onlineFriends },
     };
@@ -59,4 +71,12 @@ export class PresenceService {
 
   }
 
+  private registerConection(connection: SocketStream, userId: number) {
+    const sessionId = nextId++;
+    this.sessions.set(connection, {sessionId, userId, connection});
+  }
+
 }
+
+
+export const presenceService = new PresenceService();

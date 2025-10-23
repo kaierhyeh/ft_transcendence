@@ -1,15 +1,19 @@
-export interface Result {
-    success: boolean;
-    status: number;
-    msg: string;
+export interface ErrorData {
+    code: string;
+    status?: number;
+    message?: string;
 }
 
-export interface PresenceMessage {
+export type Result<T, E = string> = 
+    | { success: true, value: T }
+    | { success: false, error: E };
+
+export interface Message {
     type: string;
     data?: object;
 }
 
-export interface CheckinMessage extends PresenceMessage {
+export interface CheckinMessage extends Message {
     type: "checkin";
     data: {
         accessToken: string;

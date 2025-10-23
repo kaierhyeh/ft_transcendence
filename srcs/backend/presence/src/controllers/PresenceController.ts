@@ -1,14 +1,9 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PresenceService } from '../services/PresenceService';
 import { SocketStream } from "@fastify/websocket";
 import { AppError } from '../errors/AppError';
+import { presenceService } from '../services/PresenceService';
 
-export class PresenceController {
-  private presenceService: PresenceService;
-
-  constructor() {
-    this.presenceService = new PresenceService();
-  }
+class PresenceController {
 
   public async accept(connection: SocketStream, request: FastifyRequest ) {
     connection.socket.once("message", this.checkin);
@@ -20,7 +15,7 @@ export class PresenceController {
   private async checkin(raw: string, connection: SocketStream ) {
     try {
       const msg = JSON.parse(raw);
-      await this.presenceService.checkin(msg.data, connection);
+      await presenceService.checkin(msg.data, connection);
     } catch(err) {
       this.errorHandler(err, connection);
     }
@@ -31,9 +26,9 @@ export class PresenceController {
       const msg = JSON.parse(raw);
 
       if (msg.type === "subscribe_friends") {
-        await this.presenceService.subscribeFriendsPresence(connection);
+        await presenceService.subscribeFriendsPresence(connection);
       } else if (msg.type === "pong") {
-        await this.presenceService.heartbeat(connection);
+        await presenceService.heartbeat(connection);
       } else {
         throw new AppError(4000, "Invalid Message Type");
       }
@@ -45,7 +40,7 @@ export class PresenceController {
 
   private async disconnectionHandler(connection: SocketStream) {
     try {
-      await this.presenceService.disconnect(connection);
+      await presenceService.disconnect(connection);
     } catch(err) {
       this.errorHandler(err, connection);
     }
@@ -59,3 +54,5 @@ export class PresenceController {
 
   }
 }
+
+export const presenceController = new PresenceController();
