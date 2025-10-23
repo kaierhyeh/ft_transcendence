@@ -234,6 +234,11 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 			}
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
 		}
 		// console.log("[DEBUG CHAT] - res:", res);
@@ -483,6 +488,11 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
 		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
 		}
 		const userInfo: UserInfo = await res.json();
@@ -607,6 +617,11 @@ async function loadUsers(): Promise<void>{
 				break;
 		}
 		if (res === null || !res.ok) {
+			if (res !== null && res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error(`Failed to fetch users for menu`);
 		}
 		const users: UserListRow[] = await res.json();

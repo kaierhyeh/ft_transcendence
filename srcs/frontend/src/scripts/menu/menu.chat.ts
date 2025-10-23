@@ -1,8 +1,10 @@
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
+import user from '../user/User.js';
 import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
+import { closeMenuWindow } from "./menu.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -141,6 +143,11 @@ async function loadChats(): Promise<void> {
 			}
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error("Failed to load chats");
 		}
 		const users: ChatUser[] = await res.json();
@@ -269,6 +276,11 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 			body: JSON.stringify(payload)
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error("Failed to send message");
 		}
 	} catch (err) {
@@ -308,6 +320,11 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			}
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error("Failed to load messages");
 		}
 		const messages: Message[] = await res.json();
@@ -328,6 +345,8 @@ export async function openChatsSection(): Promise<void> {
 		console.error("One or more required elements not found, cannot open Chats section");
 		return;
 	}
+
+	// START OF WS
 
 	await initChatSection();
 }

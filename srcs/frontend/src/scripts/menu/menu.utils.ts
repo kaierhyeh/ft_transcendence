@@ -48,8 +48,3 @@ export function setMenuTitle(translationKey: string): void {
 	}
 }
 
-export function ifUserNotLoggedInOpenMenu() {
-	if (!user.isLoggedIn()) {
-		closeMenuWindow();
-	}
-}
