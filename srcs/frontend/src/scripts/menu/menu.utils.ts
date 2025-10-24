@@ -1,4 +1,6 @@
 import { i18n } from '../i18n/i18n.js';
+import user from '../user/User.js';
+import { closeMenuWindow } from "./menu.js";
 
 // Hide an element by its ID
 export function hideElementById(id: string): void {
@@ -45,3 +47,4 @@ export function setMenuTitle(translationKey: string): void {
 		menuTitleElement.textContent = i18n.t(translationKey as any);
 	}
 }
+

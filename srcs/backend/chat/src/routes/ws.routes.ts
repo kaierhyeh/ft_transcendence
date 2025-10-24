@@ -1,78 +1,79 @@
-// import { FastifyInstance, FastifyRequest } from "fastify";
-// import { postMessageController } from "../controllers/messages.controller";
-// import { dataDTO, jwtDTO } from "../types/dto.type";
-// import { sendMessageViaWebSocket, clients } from "../ws/clients";
-// import { colorLog } from "../utils/logger";
+import { FastifyInstance } from "fastify";
+import { WebSocket } from "ws";
+import { NewMessage } from "../types/messages.type";
 
-// // routes, controller, service - all in one place
-// export async function wsRoutes(fastify: FastifyInstance) {
-// 	fastify.get("/ws", { websocket: true }, async (inConnection: any, req: FastifyRequest<{ Querystring: { token: string } }>) => {
-// 			const tok = req.query.token;
+export const chatClientsWebSocket = new Map<number, WebSocket>();
 
-// 			// token check
-// 			if (!tok) {
-// 				inConnection.socket.close(4001, "Token required");
-// 				return;
-// 			}
-// 			let jwtData: jwtDTO;
-// 			try {
-// 				jwtData = fastify.jwt.verify(tok) as jwtDTO;
-// 			} catch {
-// 				inConnection.socket.close(4002, "Invalid token");
-// 				return;
-// 			}
-// 			const userId = jwtData.userId;
-// 			if (!userId) {
-// 				inConnection.socket.close(4003, "User ID missing in token");
-// 				return;
-// 			}
+function registerWebSocketConnection(socket: WebSocket, request: any): void {
+	// const params = new URL(request.url, `https://${request.headers.host}`).searchParams;
+	const clientId = new URLSearchParams(request.url.split('?')[1] || '').get('client_id')
 
-// 			// save connection
-// 			clients.set(userId, inConnection);
-// 			colorLog("cyan", "Connected via WebSocket userId=", userId);
+	console.log("ROUTES WS register id=", clientId);
 
-// 			// handle message
-// 			inConnection.on("message", async (msg: string) => {
-// 				let data;
-// 				try {
-// 					data = JSON.parse(msg);
-// 				} catch {
-// 					return;
-// 				}
+	if (!clientId) {
+		// console.log("Missing client_id");
+		socket.close(4001, "Missing client_id");
+		chatClientsWebSocket.delete(Number(clientId));
+		return;
+	}
 
-// 				if (data.type === "ping") {
-// 					inConnection.send(JSON.stringify({ type: "pong" }));
-// 					return;
-// 				}
+	// save new connection or update old one 
+	chatClientsWebSocket.set(Number(clientId), socket);
 
-// 				if (data.type === "chat_send_message") {
-// 					await postMessageController(data.payload.fromId, data.payload.toId, data.payload.msg);
+	socket.on("message", (msg: string) => {
+		try {
+			console.log("WS on.message");
+			const data = JSON.parse(msg.toString());
+			if (data.type == "ping") {
+				socket.send(JSON.stringify({ type: "pong" }));
+			}
+		} catch (error) {
+			console.log("Invalid PING message:", error);
 
-// 					const dataToSend: dataDTO = {
-// 						type: "chat_incomming_message",
-// 						payload: {
-// 							fromId: data.payload.fromId,
-// 							toId: data.payload.toId,
-// 							msg: data.payload.msg,
-// 						},
-// 					};
+		}
+	});
+	
+	// if connection closes - remove it from the map
+	socket.on("close", () => {
+		console.log("WS on.close");
+		socket?.close();
+		chatClientsWebSocket.delete(Number(clientId));
+		console.log("ROUTES WS disconnected id=", clientId);
+	});
+	
+	// if error occurs - remove connection from the map
+	socket.on("error", () => {
+		console.log("WS on.error");
+		socket?.close();
+		chatClientsWebSocket.delete(Number(clientId));
+		console.error("ROUTES WS error for client id=", clientId);
+	});
+}
 
-// 					sendMessageViaWebSocket(data.payload.fromId, dataToSend);
-// 					return;
-// 				}
+export function sendMessageToClientWebSocket(toId: number, newMessage: NewMessage): boolean {
+	const clientSocket = chatClientsWebSocket.get(toId);
+	console.log("WS send msg toId=", toId, " socket=", clientSocket !== undefined ? "FOUND" : "NOT FOUND");
+	if (clientSocket && clientSocket.readyState === WebSocket.OPEN) {
+		console.log("WS send msg newMessage=", newMessage);
+		clientSocket.send(JSON.stringify({ type: "chat_message", newMessage: newMessage }));
+		console.log("WS send msg: DONE");
+		return true;
+	}
+	console.log("WS send msg: FAILED");
+	// clientSocket?.close();
+	// chatClientsWebSocket.delete(toId);
+	return false;
+}
 
-// 				colorLog("yellow", "No rules to handle type=", data.type);
-// 			});
+export default function wsRoutes(fastify: FastifyInstance, options: any, done: Function): void {
 
-// 			// if close
-// 			inConnection.on("close", () => {
-// 				clients.delete(userId);
-// 			});
+	fastify.get(
+		"/",
+		{
+			websocket: true
+		},
+		registerWebSocketConnection
+	);
 
-// 			// if error
-// 			inConnection.on("error", () => {
-// 				clients.delete(userId);
-// 			});
-// 		}
-// 	);
-// }
+	done();
+}

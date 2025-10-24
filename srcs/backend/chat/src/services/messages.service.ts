@@ -1,17 +1,13 @@
 import { InternalAuthClient } from "../clients/InternalAuthClient";
 import { CONFIG } from "../config";
 import { MessageRepository } from "../repositories/messages.repository";
-
-export interface FriendshipStatus {
-	status: string | null;
-    from_id: number | null;
-	to_id: number | null;
-}
+import { sendMessageToClientWebSocket } from "../routes/ws.routes";
+import { FriendshipStatus } from "../types/friendship.type";
+import { NewMessage } from "../types/messages.type";
 
 export class MessageService {
 
     private internalAuthClient = new InternalAuthClient();
-
     constructor(private messageRepository: MessageRepository) {}
 
     public async sendMessage(chatId:number, fromId:number, toId:number, msg:string) {
@@ -28,12 +24,22 @@ export class MessageService {
 				},
 			}
         );
+        
         if (!res.ok) {
             throw new Error(`Failed to fetch friendship status: ${res.status} ${res.statusText}`);
         }
 
         const friendshipStatus = await res.json() as FriendshipStatus;
         const blocked = friendshipStatus === null ? false : friendshipStatus.status === "blocked";
+
+		try {
+			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg: msg };
+			console.log(" SERVICE sendMessage: ", newMessage);
+			sendMessageToClientWebSocket(toId, newMessage);
+		} catch (error) {
+			console.log(" SERVICE sendMessage: FAILED");
+		}
+
 
         await this.messageRepository.addMessage(chatId, fromId, toId, msg, blocked);
     }

@@ -50,7 +50,8 @@ export function initSettings() {
 		if (profileAvatar && user.avatar_url) {
 			profileAvatar.style.backgroundImage = `url(${user.avatar_url})`;
 			profileAvatar.style.display = 'block';
-		} else if (profileAvatar)
+		}
+		else if (profileAvatar)
 			profileAvatar.style.display = 'none';
 
 		if (profileUsername)
@@ -84,6 +85,42 @@ export function initSettings() {
 		} catch (error) {
 			console.error('Error updating alias:', error);
 			alert('Failed to update alias');
+		}
+	}
+
+	async function removeAvatar() {
+		try {
+			const confirmed = confirm('Are you sure you want to remove your avatar? This will reset it to the default image.');
+			if (!confirmed) return;
+
+			const response = await fetch(`${API_USERS_ENDPOINT}/me/avatar`, {
+				method: 'DELETE',
+				credentials: 'include',
+			});
+
+			let responseBody: any = null;
+			const contentType = response.headers.get('content-type') || '';
+			try {
+				if (contentType.includes('application/json'))
+					responseBody = await response.json();
+				else
+					responseBody = await response.text();
+			} catch (err) {
+				console.warn('Failed to parse response body:', err);
+			}
+
+			if (!response.ok) {
+				console.error('Avatar removal failed:', response.status, responseBody);
+				const serverMessage = responseBody && typeof responseBody === 'object' && responseBody.error ? responseBody.error : (typeof responseBody === 'string' ? responseBody : null);
+				throw new Error(serverMessage || `Failed to remove avatar (status ${response.status})`);
+			}
+
+			await user.fetchAndUpdate();
+			updateHeaderAvatar();
+			displayProfile();
+		} catch (error) {
+			console.error('Error removing avatar:', error);
+			alert(`Failed to remove avatar: ${(error as Error).message}`);
 		}
 	}
 
@@ -164,6 +201,7 @@ export function initSettings() {
 		const changePasswordBtn = document.getElementById('changePasswordBtn');
 		const twoFABtn = document.getElementById('twoFABtn');
 		const avatarInput = document.getElementById('avatarInput') as HTMLInputElement;
+		const removeAvatarBtn = document.getElementById('removeAvatarBtn') as HTMLButtonElement;
 
 		if (updateAliasBtn)
 			updateAliasBtn.addEventListener('click', updateAlias);
@@ -268,6 +306,13 @@ export function initSettings() {
 				}
 
 				updateAvatar(file);
+			});
+		}
+
+		if (removeAvatarBtn) {
+			removeAvatarBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				removeAvatar();
 			});
 		}
 	}

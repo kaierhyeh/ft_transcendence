@@ -23,10 +23,6 @@ async function run() {
 		return { status: 'ok', service: 'chat', timestamp: new Date().toISOString() };
 	});
 
-	// setInterval(() => {
-	// 	fastify.live_sessions.update();
-	// }, CONFIG.WEB_SOCKET.TICK_PERIOD);
-
 	await fastify.listen({ 
 		port: CONFIG.SERVER.PORT, 
 		host: CONFIG.SERVER.HOST 

@@ -1,7 +1,9 @@
 import { User } from "../user/User.js";
+import user from '../user/User.js';
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
+import { chatSocket } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -115,10 +117,12 @@ function resetUsersSection(): void {
 		"userLowerPanel"
 	].forEach(hideElementById);
 
-	[	"menuControlPanel",
-		"usersSectionButton",
-		"chatsSectionButton"
-	].forEach(showElementById);
+	if (user.isLoggedIn()) {
+		[	"menuControlPanel",
+			"usersSectionButton",
+			"chatsSectionButton"
+		].forEach(showElementById);
+	}
 
 }
 
@@ -231,6 +235,12 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 			}
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
+				window.location.href = '/';
+				return;
+			}
 			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
 		}
 		// console.log("[DEBUG CHAT] - res:", res);
@@ -294,15 +304,23 @@ function prepareUserInfoSection(): void {
 	].forEach(hideElementById);
 
 	[	"menuBackButton",
-		"usersInfo",
-		"userLowerPanel",
-		"firstLine",
-		"secondLine"
+		"usersInfo"
 	].forEach(showElementById);
+
+	if (user.isLoggedIn()) {
+		[	"userLowerPanel",
+			"firstLine",
+			"secondLine"
+		].forEach(showElementById);
+	}
 
 }
 
 function updateButtonsForUserInfo(userInfo: UserInfo): void {
+	if (!user.isLoggedIn()) {
+		return;
+	}
+
 	resetUserinfoButtons();
 
 	switch (userInfo.friendship_status) {
@@ -478,6 +496,12 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
 		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
+				window.location.href = '/';
+				return;
+			}
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
 		}
 		const userInfo: UserInfo = await res.json();
@@ -513,7 +537,6 @@ function renderUserList(users: UserListRow[]): void {
 	usersList.innerHTML = users.map(u => {
 		// const avatarSrc = `${window.location.origin}/api/users/${u.user_id}/avatar`;
 		const avatarSrc = User.getAvatarUrl(u.user_id, u.avatar_updated_at);
-
 
 		const userName = u.alias
 			? `${u.username} aka ${u.alias}`
@@ -551,6 +574,9 @@ function renderUserList(users: UserListRow[]): void {
 async function loadUsers(): Promise<void>{
 	try {
 		let res;
+		if (!user.isLoggedIn()) {
+			currentFilter = 'all';
+		}
 		switch (currentFilter) {
 			case 'friends':
 				// console.log("USERS: Loading FRIENDS only");
@@ -600,6 +626,11 @@ async function loadUsers(): Promise<void>{
 				break;
 		}
 		if (res === null || !res.ok) {
+			if (res !== null && res.status === 401) {
+				user.logout();
+				window.location.href = '/';
+				return;
+			}
 			throw new Error(`Failed to fetch users for menu`);
 		}
 		const users: UserListRow[] = await res.json();
@@ -612,17 +643,16 @@ async function loadUsers(): Promise<void>{
 async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
-	[	"usersList",
-		"usersList",
-		"menuDropdown"
-	].forEach(showElementById);
-
-	const userBtn = document.getElementById("usersSectionButton");
-	if (userBtn)
-		userBtn.className = "menu-control-panel-button-pressed";
-	const chatsBtn = document.getElementById("chatsSectionButton");
-	if (chatsBtn)
-		chatsBtn.className = "menu-control-panel-button";
+	if (user.isLoggedIn()) {
+		["menuDropdown"].forEach(showElementById);
+		const userBtn = document.getElementById("usersSectionButton");
+		if (userBtn)
+			userBtn.className = "menu-control-panel-button-pressed";
+		const chatsBtn = document.getElementById("chatsSectionButton");
+		if (chatsBtn)
+			chatsBtn.className = "menu-control-panel-button";
+	}
+	["usersList"].forEach(showElementById);
 
 	await loadUsers();
 }
@@ -727,7 +757,9 @@ export async function openUsersSection(): Promise<void> {
 			return;
 	}
 
-	initFilterDropdown();
+	if (user.isLoggedIn()) {
+		initFilterDropdown();
+	}
 
 	await initUsersSection();
 }
