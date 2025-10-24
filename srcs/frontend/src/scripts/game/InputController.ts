@@ -8,6 +8,7 @@ export class InputController {
     private inputInterval: number | null = null;
     private keydownHandler: (e: KeyboardEvent) => void;
     private keyupHandler: (e: KeyboardEvent) => void;
+    private customKeyHandlers: Map<string, (e: KeyboardEvent) => void> = new Map();
     
     constructor() {
         this.keydownHandler = (e: KeyboardEvent) => {
@@ -35,9 +36,37 @@ export class InputController {
     
     cleanup(): void {
         this.detach();
+        // Remove custom key handlers
+        this.customKeyHandlers.forEach((handler) => {
+            document.removeEventListener("keydown", handler);
+        });
+        this.customKeyHandlers.clear();
         
         document.removeEventListener("keydown", this.keydownHandler);
         document.removeEventListener("keyup", this.keyupHandler);
+    }
+    
+    /**
+     * Register a callback for a specific key press
+     * Note: This will fire on every keydown event (including repeats when key is held)
+     * If you want one-time trigger, check state in your callback
+     */
+    onKey(key: string, callback: () => void): void {
+        // Remove old handler if exists
+        const oldHandler = this.customKeyHandlers.get(key);
+        if (oldHandler) {
+            document.removeEventListener("keydown", oldHandler);
+        }
+        
+        // Create new handler
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === key) {
+                callback();
+            }
+        };
+        
+        this.customKeyHandlers.set(key, handler);
+        document.addEventListener("keydown", handler);
     }
     
     private startInputLoop(): void {
