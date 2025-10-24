@@ -59,18 +59,21 @@ export function initPong() {
     function setupGameButtons(): void {
         document.getElementById('one-player-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
+            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
             if (isTransitioning) return;
             startNewGame('solo', '1v1');
         });
         
         document.getElementById('two-players-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
+            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
             if (isTransitioning) return;
             startNewGame('pvp', '1v1');
         });
         
         document.getElementById('four-players-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
+            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
             if (isTransitioning) return;
             startNewGame('pvp', '2v2');
         });
