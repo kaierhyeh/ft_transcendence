@@ -90,6 +90,29 @@
 	text-align: center;
 }
 
+.avatar-remove-btn {
+	margin-left: 1rem;
+	padding: 0.55rem 0.9rem;
+	background: #ff6b6b;
+	border: none;
+	border-radius: 6px;
+	color: #fff;
+	cursor: pointer;
+	font-size: 0.95rem;
+	font-weight: 600;
+	align-self: center;
+	transition: background 0.15s, transform 0.08s;
+}
+
+.avatar-remove-btn:hover {
+	background: #ff5252;
+	transform: translateY(-1px);
+}
+
+.avatar-remove-btn:active {
+	transform: translateY(0);
+}
+
 .info-section {
 	flex-direction: column;
 	text-align: center;
