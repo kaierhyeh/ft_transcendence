@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { CONFIG } from '../config';
-import { AppError } from '../errors/AppError';
-import { ErrorData, Result } from '../types';
+import { ErrorCode } from '../errors';
+
 
 interface JWK {
 	kty: string;
@@ -139,19 +139,19 @@ export class JWTVerifier {
 	/**
 	 * Verify JWT token with automatic key discovery
 	 */
-	private async verifyToken(token: string, expectedType: JWTType): Promise<Result<JWTPayload>> {
+	private async verifyToken(token: string, expectedType: JWTType): Promise<JWTPayload> {
 		try {
 			// First decode to get key ID from header
 			const decoded = jwt.decode(token, { complete: true });
 			if (!decoded || typeof decoded === 'string') {
 				console.log('❌ JWT decode failed');
-				return { success: false, error: "INVALID_TOKEN" };
+				throw new Error(ErrorCode.INVALID_TOKEN);
 			}
 
 			const kid = decoded.header.kid;
 			if (!kid) {
 				console.log('❌ JWT missing kid in header');
-				return { success: false, error: "INVALID_TOKEN" };
+				throw new Error(ErrorCode.INVALID_TOKEN);
 			}
 
 			// Find the corresponding JWK
@@ -170,10 +170,10 @@ export class JWTVerifier {
 			// Verify token type
 			if (payload.type !== expectedType) {
 				console.log(`❌ JWT type mismatch: expected ${expectedType}, got ${payload.type}`);
-				return { success: false, error: "INVALID_TOKEN" };
+				throw new Error(ErrorCode.INVALID_TOKEN);
 			}
 
-			return {success: true, value: payload};
+			return payload;
 		} catch (error) {
 			if (error instanceof jwt.JsonWebTokenError) {
 				throw new Error(`JWT verification failed: ${error.message}`);
@@ -185,25 +185,25 @@ export class JWTVerifier {
 	/**
 	 * Verify Internal Access JWT token
 	 */
-	async verifyInternalToken(token: string): Promise<Result<InternalAccessPayload>> {
+	async verifyInternalToken(token: string): Promise<InternalAccessPayload> {
 		const result = await this.verifyToken(token, JWTType.INTERNAL_ACCESS);
-		return result as Result<InternalAccessPayload>;
+		return result as InternalAccessPayload;
 	}
 
 	/**
 	 * Verify Game Session JWT token
 	 */
-	async verifyGameSessionToken(token: string): Promise<Result<GameSessionPayload>> {
+	async verifyGameSessionToken(token: string): Promise<GameSessionPayload> {
 		const result = await this.verifyToken(token, JWTType.GAME_SESSION);
-		return result as Result<GameSessionPayload>;
+		return result as GameSessionPayload;
 	}
 
 	/**
 	 * Verify User Session JWT token
 	 */
-	async verifyUserSessionToken(token: string): Promise<Result<UserSessionPayload>> {
+	async verifyUserSessionToken(token: string): Promise<UserSessionPayload> {
 		const payload = await this.verifyToken(token, JWTType.USER_SESSION);
-		return payload as Result<UserSessionPayload>;
+		return payload as UserSessionPayload;
 	}
 
 	
@@ -221,6 +221,6 @@ export class JWTVerifier {
 export const jwtVerifier = new JWTVerifier();
 
 // Export convenience functions
-export const verifyInternalJWT = (token: string): Promise<Result<InternalAccessPayload>> => jwtVerifier.verifyInternalToken(token);
-export const verifyGameSessionJWT = (token: string): Promise<Result<GameSessionPayload>> => jwtVerifier.verifyGameSessionToken(token);
-export const verifyUserSessionJWT = (token: string): Promise<Result<UserSessionPayload>> => jwtVerifier.verifyUserSessionToken(token);
+export const verifyInternalJWT = (token: string): Promise<InternalAccessPayload> => jwtVerifier.verifyInternalToken(token);
+export const verifyGameSessionJWT = (token: string): Promise<GameSessionPayload> => jwtVerifier.verifyGameSessionToken(token);
+export const verifyUserSessionJWT = (token: string): Promise<UserSessionPayload> => jwtVerifier.verifyUserSessionToken(token);

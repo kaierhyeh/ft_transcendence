@@ -1,7 +1,7 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest } from 'fastify';
 import { SocketStream } from "@fastify/websocket";
-import { AppError } from '../errors/AppError';
 import { presenceService } from '../services/PresenceService';
+import { ErrorCode, WsErrorData } from '../errors';
 
 class PresenceController {
 
@@ -30,9 +30,8 @@ class PresenceController {
       } else if (msg.type === "pong") {
         await presenceService.heartbeat(connection);
       } else {
-        throw new AppError(4000, "Invalid Message Type");
+        throw new Error(ErrorCode.INVALID_MESSAGE_TYPE);
       }
-
     } catch(err) {
       this.errorHandler(err, connection);
     }
@@ -48,10 +47,25 @@ class PresenceController {
  
   private errorHandler(error: any, connection: SocketStream) {
     console.log('❌ Presence connection error:', {
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error?.message || String(error)
     });
 
-
+    let data: WsErrorData;
+    
+    if (error instanceof SyntaxError) {
+      data = {status: 4000, reason: "Invalid JSON format"};
+    } else if (error?.message === ErrorCode.INVALID_MESSAGE_TYPE) {
+      data = {status: 4000, reason: "Invalid message type"};
+    }
+    else if (error?.message === ErrorCode.MISSING_TOKEN) {
+      data = {status: 4000, reason: "Missing access token"};
+    }
+    else if (error?.message === ErrorCode.INVALID_TOKEN) {
+      data = {status: 4001, reason: "Invalid access token"};
+    } else {
+      data = {status: 4005, reason: "Internal server error"};
+    }
+    connection.socket.close(data.status, data.reason);
   }
 }
 
