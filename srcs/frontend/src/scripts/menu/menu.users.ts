@@ -3,6 +3,7 @@ import user from '../user/User.js';
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
+import { chatSocket } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -236,6 +237,7 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 		if (!res.ok) {
 			if (res.status === 401) {
 				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
 				window.location.href = '/';
 				return;
 			}
@@ -490,6 +492,7 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 		if (!res.ok) {
 			if (res.status === 401) {
 				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
 				window.location.href = '/';
 				return;
 			}

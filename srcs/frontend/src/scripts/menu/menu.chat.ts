@@ -5,7 +5,7 @@ import user from '../user/User.js';
 import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { closeMenuWindow } from "./menu.js";
-import { wsConnectChat } from "./menu.ws.js";
+import { chatSocket, wsConnectChat } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -146,6 +146,7 @@ async function loadChats(): Promise<void> {
 		if (!res.ok) {
 			if (res.status === 401) {
 				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
 				window.location.href = '/';
 				return;
 			}
@@ -283,6 +284,7 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 		if (!res.ok) {
 			if (res.status === 401) {
 				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
 				window.location.href = '/';
 				return;
 			}
@@ -296,6 +298,7 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 
 export async function initMessageSection(chatId: number, withUser: ChatUser, friendshipStatus: string | null, backTo: string): Promise<void> {
 	try {
+		wsConnectChat();
 		initializeGlobals();
 		chatInput.value = "";
 		clearBeforeInitMessageSection();
@@ -309,10 +312,16 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		}
 		switch (backTo) {
 			case 'users':
-				menuBackButton.addEventListener("click", () => goBackToUserList());
+				menuBackButton.addEventListener("click", () => {
+					chatSocket?.close(1000, "Close socket: go back to user list");
+					goBackToUserList();
+				});
 				break;
 			case 'chats':
-				menuBackButton.addEventListener("click", () => goBackToChatsList());
+				menuBackButton.addEventListener("click", () => {
+					chatSocket?.close(1000, "Close socket: go back to chat list");
+					goBackToChatsList();
+				});
 				break;
 		}
 
@@ -327,6 +336,7 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		if (!res.ok) {
 			if (res.status === 401) {
 				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
 				window.location.href = '/';
 				return;
 			}
@@ -352,7 +362,7 @@ export async function openChatsSection(): Promise<void> {
 	}
 
 	// START OF WS
-	wsConnectChat();
+	// wsConnectChat();
 
 	await initChatSection();
 }

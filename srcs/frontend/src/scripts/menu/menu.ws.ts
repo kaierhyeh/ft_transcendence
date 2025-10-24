@@ -2,20 +2,20 @@ import user from "../user/User.js";
 import { NewMessage } from "./menu.types.js";
 
 let chatSocket: WebSocket | null = null;
-// let pingInterval: number | null = null;
-// let lastPongTime = 0;
+let pingInterval: number | null = null;
+let lastPongTime = 0;
 
-// function cleanupAndReconnect() {
-// 	if (pingInterval) {
-// 		clearInterval(pingInterval);
-// 		pingInterval = null;
-// 	}
-// 	if (chatSocket) {
-// 		try { chatSocket.close(); } catch {}
-// 		chatSocket = null;
-// 	}
-// 	setTimeout(wsConnectChat, 2000);
-// }
+function cleanupAndReconnect() {
+	if (pingInterval) {
+		clearInterval(pingInterval);
+		pingInterval = null;
+	}
+	if (chatSocket) {
+		try { chatSocket.close(1000, "Reconnecting..."); } catch {}
+		chatSocket = null;
+	}
+	setTimeout(wsConnectChat, 2000);
+}
 
 export function wsConnectChat() {
 	console.log("Connecting to WebSocket [ Client <-> Chat-Service ]...");
@@ -23,26 +23,26 @@ export function wsConnectChat() {
 	const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 	console.log("Using protocol:", protocol);
 
-	chatSocket?.close();
-	chatSocket = null;
-	chatSocket = new WebSocket(`${protocol}//${window.location.host}/api/chat_ws?client_id=${user.user_id}`);
+	if (chatSocket === null) {
+		chatSocket = new WebSocket(`${protocol}//${window.location.host}/api/chat_ws?client_id=${user.user_id}`);
+	}
 	console.log("WebSocket instance created [ Client <-> Chat-Service ]");
 
 	chatSocket.onopen = () => {
-		// console.log("WebSocket connection established [ Client <-> Chat-Service ]");
+		console.log("WebSocket connection established [ Client <-> Chat-Service ]");
 
-		// lastPongTime = Date.now();
-		// pingInterval = window.setInterval(() => {
-		// 	if (chatSocket?.readyState === WebSocket.OPEN) {
-		// 		console.log("Sending ping...");
-		// 		chatSocket.send(JSON.stringify({ type: "ping" }));
-		// 	}
+		lastPongTime = Date.now();
+		pingInterval = window.setInterval(() => {
+			if (chatSocket?.readyState === WebSocket.OPEN) {
+				console.log("Sending ping...");
+				chatSocket.send(JSON.stringify({ type: "ping" }));
+			}
 
-		// 	if (Date.now() - lastPongTime > 70000) {
-		// 		console.warn("No pong received — reconnecting...");
-		// 		cleanupAndReconnect();
-		// 	}
-		// }, 30000);
+			if (Date.now() - lastPongTime > 70000) {
+				console.warn("No pong received — reconnecting...");
+				cleanupAndReconnect();
+			}
+		}, 30000);
 	};
 
 	chatSocket.onmessage = (event) => {
@@ -53,16 +53,16 @@ export function wsConnectChat() {
 			switch (data.type) {
 				case 'chat_message':
 					try {
-						console.log("WOOOOOOOW Received 'chat_message' [ Client <-- Chat-Service ]: ", data);
+						console.log("WS Received 'chat_message' [ Client <-- Chat-Service ]: ", data);
 						const newMessage = data.newMessage as NewMessage;
 						const chatMessages = document.querySelector(`#chatMessages[data-chat-id="${newMessage.chat_id}"]`);
 
 						if (!chatMessages) { 
-							// lastPongTime = Date.now();
+							lastPongTime = Date.now();
 							break; 
 						}
 
-						console.log("Appending new message to chatMessages:", newMessage);
+						console.log("WS Appending new message to chatMessages:", newMessage);
 						const child = `
 							<div class="chat-msg chat_id=${newMessage.chat_id} ${newMessage.username}">
 									<span class="blue-text">${newMessage.username}: </span>
@@ -70,25 +70,20 @@ export function wsConnectChat() {
 							</div>
 						`;
 
-						console.log("Inserting new message into chatMessages:", child);
+						console.log("WS Inserting new child into chatMessages:", child);
 						chatMessages.insertAdjacentHTML('beforeend', child);
 						chatMessages.scrollTop = chatMessages.scrollHeight;
-						console.log("Inserting new message into chatMessages: FINISHED");
+						console.log("WS Inserting new child into chatMessages: FINISHED");
 
-					} catch (err) {
-						// lastPongTime = Date.now();
-						break;
-					}
-					// lastPongTime = Date.now();
+					} catch (err) {}
+					lastPongTime = Date.now();
 					break;
 				case 'pong':
-					// Handle pong response
-					console.log("Received 'pong' [ Client <-- Chat-Service ]: ", data);
-					// lastPongTime = Date.now();
+					console.log("WS Received 'pong' [ Client <-- Chat-Service ]: ", data);
+					lastPongTime = Date.now();
 					break;
-				// Add more case handlers as needed
 				default:
-					console.log("Received 'unknown_type' [ Client <-- Chat-Service ]: ", data);
+					console.log("WS Received 'unknown_type' [ Client <-- Chat-Service ]: ", data);
 			}
 
 
@@ -99,15 +94,14 @@ export function wsConnectChat() {
 	};
 
 	chatSocket.onclose = (event) => {
-		chatSocket?.close();
-		chatSocket = null;
 		console.log("WebSocket connection closed [ Client <-> Chat-Service ]:", event);
+		chatSocket?.close(event.code, event.reason);
+		chatSocket = null;
 	};
 
 	chatSocket.onerror = (error) => {
-		chatSocket?.close();
-		chatSocket = null;
 		console.error("WebSocket connection error [ Client <-> Chat-Service ]:", error);
+		chatSocket = null;
 	};
 }
 

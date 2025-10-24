@@ -2,6 +2,7 @@ import { openChatsSection } from "./menu.chat.js";
 import { openUsersSection } from "./menu.users.js";
 import user from '../user/User.js';
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
+import { chatSocket } from "./menu.ws.js";
 // import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
@@ -40,6 +41,7 @@ function openMenuWindow(): void {
 }
 
 export function closeMenuWindow(): void {
+	chatSocket?.close(1000, "Close socket: close social menu");
 	clearEventsInSections();
 	hideSectionsElements();
 	["menuWindow"].forEach(hideElementById);

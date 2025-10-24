@@ -32,14 +32,12 @@ export class MessageService {
         const friendshipStatus = await res.json() as FriendshipStatus;
         const blocked = friendshipStatus === null ? false : friendshipStatus.status === "blocked";
 
-
-
 		try {
-			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg };
-			console.log("----WS sendMessageToClient: ", newMessage);
+			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg: msg };
+			console.log(" SERVICE sendMessage: ", newMessage);
 			sendMessageToClientWebSocket(toId, newMessage);
 		} catch (error) {
-			console.log("----WS sendMessageToClient FAILED: ", error);
+			console.log(" SERVICE sendMessage: FAILED");
 		}
 
 
