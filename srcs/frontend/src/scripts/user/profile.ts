@@ -24,6 +24,7 @@ export async function initProfile() {
 		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
 		const usernameElement = document.getElementById('profileUsername');
+		const emailElement = document.getElementById('profileEmail');
 		const joinDateElement = document.getElementById('profileJoinDate');
 		const currentStreakElement = document.getElementById('statsCurrentStreak');
 		const bestStreakElement = document.getElementById('statsBestStreak');
@@ -31,6 +32,14 @@ export async function initProfile() {
 
 		if (usernameElement)
 			usernameElement.textContent = userData.username || userData.alias;
+		if (emailElement) {
+			if (userData.email) {
+				emailElement.textContent = userData.email;
+				emailElement.style.display = 'block';
+			} else {
+				emailElement.style.display = 'none';
+			}
+		}
 		if (joinDateElement)
 			joinDateElement.textContent = 'Member since ' + joinDate;
 		if (currentStreakElement)

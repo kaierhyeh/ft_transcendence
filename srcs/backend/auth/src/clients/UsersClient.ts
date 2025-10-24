@@ -29,12 +29,14 @@ export interface TwoFAStatus {
 
 export interface LocalUserCreationData {
   username: string;
+  email?: string;
   password: string;
 }
 
 export interface GoogleUserCreationData {
   google_sub: string;
   username: string;
+  email?: string;
   alias?: string;
 }
 

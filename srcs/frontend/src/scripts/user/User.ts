@@ -2,6 +2,7 @@ export type UserData = {
     user_id: number;
     username: string;
     alias: string | null;
+    email: string | null;
     avatar_url: string;
     avatar_updated_at: string;
     two_fa_enabled: boolean;
@@ -52,6 +53,9 @@ export class User {
         return this.data?.alias ?? null;
     }
     
+    public get email(): string | null {
+        return this.data?.email ?? null;
+    }
 
     public get avatar_url(): string | null {
         const data = this.data;
@@ -144,6 +148,7 @@ export class User {
                 user_id: partialData.user_id,
                 username: partialData.username,
                 alias: partialData.alias ?? null,
+                email: partialData.email ?? null,
                 avatar_url: partialData.avatar_url,
                 avatar_updated_at: partialData.avatar_updated_at,
                 two_fa_enabled: partialData.two_fa_enabled || false,

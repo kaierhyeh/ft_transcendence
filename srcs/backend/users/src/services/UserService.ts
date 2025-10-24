@@ -34,8 +34,9 @@ export class UserService {
 
     const user_data = {
       username: data.username,
+      email: data.email,
       password_hash,
-      alias: data.alias ?? data.username,
+      alias: data.username, // Default alias to username
     };
 
     const user_id = this.userRepository.createLocalUser(user_data);
@@ -46,6 +47,7 @@ export class UserService {
     const user_data = {
       google_sub: data.google_sub,
       username: data.username,
+      email: data.email,
       alias: data.alias ?? data.username,
     };
 

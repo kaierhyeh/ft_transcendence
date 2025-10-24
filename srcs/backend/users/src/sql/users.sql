@@ -1,35 +1,35 @@
 CREATE TABLE IF NOT EXISTS users (
-  user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-  -- login identity
-  username                TEXT        NOT NULL COLLATE nocase,
-
-  -- local auth
-  password_hash           TEXT,
-
-  -- display + profile
-  alias                   TEXT,                 -- display name; NOT unique
-  avatar_filename         TEXT        NOT NULL DEFAULT 'default.png',
-  avatar_updated_at       DATETIME    NOT NULL DEFAULT (datetime('now')),
-
-  -- 2FA (TOTP)
-  two_fa_enabled          INTEGER     NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0, 1)),
-  two_fa_secret           TEXT,
-
-  -- Google SSO
-  google_sub              TEXT,
-
-  -- misc
-  settings                TEXT        NOT NULL DEFAULT '{}' CHECK (json_valid(settings)),
-  last_seen               DATETIME,
-  created_at              DATETIME    NOT NULL DEFAULT (datetime('now')),
-  updated_at              DATETIME    NOT NULL DEFAULT (datetime('now')),
-
-  -- 2FA integrity  
-  CHECK (two_fa_enabled = 0 OR two_fa_secret IS NOT NULL),
-
-  -- Auth requirement: users must have password OR google_sub
-  CHECK (password_hash IS NOT NULL OR google_sub IS NOT NULL)
+    -- Primary key
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    
+    -- Core identity fields
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE,  -- Display name, case-insensitive unique
+    password_hash TEXT,                             -- bcrypt hash (NULL for Google accounts)
+    alias TEXT,                                     -- Optional display alias
+    email TEXT,                                     -- Optional email (nullable, not unique)
+    
+    -- Avatar fields
+    avatar_filename TEXT NOT NULL DEFAULT 'default.png',
+    avatar_updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    
+    -- Two-factor authentication
+    two_fa_enabled INTEGER NOT NULL DEFAULT 0 CHECK(two_fa_enabled IN (0, 1)),
+    two_fa_secret TEXT,
+    
+    -- OAuth integration
+    google_sub TEXT UNIQUE,                         -- Google's unique identifier (NULL for local accounts)
+    
+    -- User settings and metadata
+    settings TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_seen TEXT,
+    
+    -- Ensure user is either local (has password) OR Google (has google_sub), not both
+    CHECK (
+        (password_hash IS NOT NULL AND google_sub IS NULL) OR
+        (password_hash IS NULL AND google_sub IS NOT NULL)
+    )
 );
 
 -- Unique constraints

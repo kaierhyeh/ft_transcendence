@@ -1,3 +1,5 @@
+import { FromSchema } from "json-schema-to-ts";
+
 // Username validation rules
 export const usernameSchema = {
   type: "string",
@@ -25,7 +27,7 @@ export const emailSchema = {
     maxLength: "Email cannot exceed 254 characters",
   },
 } as const;
-import { FromSchema } from "json-schema-to-ts";
+
 
 // Password validation rules
 export const passwordSchema = {
@@ -66,6 +68,7 @@ export const signupFormSchema = {
   required: ["username", "password"],
   properties: {
     username: { ...usernameSchema },
+    email: { ...emailSchema },
     password: { ...passwordSchema },
   },
   additionalProperties: false,

@@ -54,6 +54,7 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 				const tempPayload = {
 					google_sub: data.id,
 					google_name: data.given_name || data.name,
+					google_email: data.email,
 					avatar_url: data.picture
 				};
 
@@ -143,6 +144,7 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 			const { user_id } = await usersClient.registerGoogleUser({
 				google_sub: payloadData.google_sub,
 				username: username,
+				email: payloadData.google_email,
 				alias: payloadData.google_name
 			});
 

@@ -10,6 +10,7 @@ export function initSignup() {
 	const registerBtn = document.getElementById('register-btn') as HTMLButtonElement;
 	const googleSignupBtn = document.getElementById('google-signup-btn') as HTMLButtonElement;
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
+	const emailInput = document.getElementById('email') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
 	// Event listeners
@@ -28,11 +29,13 @@ export function initSignup() {
 			}
 		};
 		usernameInput.addEventListener('keypress', handleEnterKey);
+		emailInput?.addEventListener('keypress', handleEnterKey);
 		passwordInput.addEventListener('keypress', handleEnterKey);
 	}
 
 	async function handleRegister() {
 		const username = usernameInput?.value.trim();
+		const email = emailInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
 		if (!username || !password) {
@@ -46,11 +49,21 @@ export function initSignup() {
 		}
 
 		try {
+			const body: { username: string; password: string; email?: string } = { 
+				username, 
+				password 
+			};
+			
+			// Only include email if it's not empty
+			if (email && email.length > 0) {
+				body.email = email;
+			}
+
 			const response = await fetch(`${API_AUTH_ENDPOINT}/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ username, password })
+				body: JSON.stringify(body)
 			});
 
 			const data = await response.json();

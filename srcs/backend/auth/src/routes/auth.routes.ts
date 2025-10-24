@@ -96,10 +96,13 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 		async (request, reply) => {
 		try {
 
-			const { username, password } = request.body;
+			const { username, email, password } = request.body;
 
 			// Security validation (control chars, XSS)
 			authUtils.checkInputSafety('username', username);
+			
+			// Normalize email if provided
+			const normalizedEmail = email ? authUtils.normalizeEmail(email) : undefined;
 
 			// Check if user already exists by username
 			const existingUser = await authService.checkUserExistence(username);
@@ -113,6 +116,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: any)
 			// Create user
 			const { user_id } = await authService.register({
 				username,
+				email: normalizedEmail,
 				password,
 			});
 			console.log("user created: ", user_id);

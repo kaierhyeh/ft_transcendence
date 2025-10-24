@@ -9,6 +9,13 @@ const usernameSchema = {
     description: "Username for login and display"
 } as const;
 
+const emailSchema = {
+    type: "string",
+    format: "email",
+    maxLength: 254,
+    description: "Optional email address"
+} as const;
+
 const passwordSchema = {
   type: "string",
   minLength: 8,
@@ -33,12 +40,12 @@ const settingsSchema = {
 // For local user creation
 export const createLocalUserSchema = {
   type: "object",
-  required: ["username", "password"],
   properties: {
     username: usernameSchema,
+    email: emailSchema,
     password: passwordSchema,
-    alias: aliasSchema
   },
+  required: ["username", "password"],
   additionalProperties: false,
 } as const;
 
@@ -49,6 +56,7 @@ export const createGoogleUserSchema = {
   properties: {
     google_sub: googleSubFieldSchema,
     username: usernameSchema,
+    email: emailSchema,
     alias: aliasSchema
   },
   additionalProperties: false,

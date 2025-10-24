@@ -8,6 +8,7 @@ import path from "path";
 export interface UserRow {
     user_id: number;
     username: string;
+    email: string | null;
     password_hash: string | null;
     alias: string | null;
     avatar_filename: string;
@@ -33,6 +34,7 @@ export interface UpdateData {
 
 type LocalUserCreationData = Omit<LocalUserCreationRawData, "password"> & {
     password_hash: string;
+    alias?: string;
 }
 
 export class UserRepository {
@@ -42,11 +44,12 @@ export class UserRepository {
 
     public createLocalUser(data: LocalUserCreationData): number {
         const stmt = this.db.prepare(`
-            INSERT INTO users (username, password_hash, alias)
-            VALUES (?, ?, ?)
+            INSERT INTO users (username, email, password_hash, alias)
+            VALUES (?, ?, ?, ?)
         `);
         const result = stmt.run(
             data.username,
+            data.email ?? null,
             data.password_hash,
             data.alias ?? null,
         );
@@ -55,12 +58,13 @@ export class UserRepository {
 
     public createGoogleUser(data: GoogleUserCreationData): number {
         const stmt = this.db.prepare(`
-            INSERT INTO users (google_sub, username, alias)
-            VALUES (?, ?, ?)
+            INSERT INTO users (google_sub, username, email, alias)
+            VALUES (?, ?, ?, ?)
         `);
         const result = stmt.run(
             data.google_sub,
             data.username,
+            data.email ?? null,
             data.alias ?? null,
         );
         return result.lastInsertRowid as number;
