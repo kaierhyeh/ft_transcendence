@@ -195,6 +195,12 @@ export function initTournament(): void {
 
     function startMatch(): void {
         if (currentMatchIndex < matches.length) {
+            const cur = matches[currentMatchIndex];
+            const tournamentPlayer1 = document.getElementById('tournament-player1');
+            const tournamentPlayer2 = document.getElementById('tournament-player2');
+            if (tournamentPlayer1) tournamentPlayer1.textContent = cur.player1;
+            if (tournamentPlayer2) tournamentPlayer2.textContent = cur.player2;
+
             uiManager.showGameInterface();
             
             const canvas = uiManager.prepareCanvas();
