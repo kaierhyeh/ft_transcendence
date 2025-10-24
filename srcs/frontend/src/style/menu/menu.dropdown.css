@@ -8,6 +8,15 @@
 	background-color: #1a1a1a;
 	border-radius: 12px;
 }
+
+/* When dropdown is used as menu title */
+.menu-dropdown:has(.menu-header-title) {
+	height: auto;
+	width: auto;
+	background-color: transparent;
+	border-radius: 0;
+	line-height: normal;
+}
 /* style of the button that opens the box with options */
 .menu-dropbtn {
 	height: 40px;
@@ -16,20 +25,49 @@
 	padding: 0px;
 	color: #aaa;
 	background-color: #1a1a1a;	
-    font-size: 16px;
-    border: 2px solid transparent;
+	font-size: 16px;
+	border: 2px solid transparent;
 	border-radius: 12px;
+}
+
+/* When dropdown button is used as menu title */
+.menu-dropbtn.menu-header-title {
+	height: auto;
+	width: auto;
+	min-width: fit-content;
+	white-space: nowrap;
+	font-size: 24px;
+	font-weight: bold;
+	color: #4ade80;
+	background-color: transparent;
+	border: none;
+	border-radius: 0;
+	padding: 0.5rem;
+	text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	letter-spacing: 0.05em;
+	transition: color 0.3s, text-shadow 0.3s;
+	cursor: pointer;
+}
+
+.menu-dropbtn.menu-header-title:hover {
+	color: #fff;
+	text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+	background-color: transparent;
+	border: none;
+	box-shadow: none;
 }
 /* style of the box with options */
 .menu-dropdown-content {
 	overflow: hidden;
-    display: none;
-    position: absolute;
-    background-color: #1a1a1a;
+	display: none;
+	position: absolute;
+	width: auto;
+	min-width: fit-content;
+	white-space: nowrap;
+	background-color: #1a1a1a;
 	border: 2px solid #4ade80;
 	border-radius: 12px;
-    width: 90px;
-    z-index: 1;
+	z-index: 1;
 }
 .menu-dropdown-content.show {
 	display: block;
@@ -37,11 +75,14 @@
 /* style of each option */
 .menu-dropdown-content a {
 	display: block;
+	width: auto;
+	min-width: fit-content;
+	white-space: nowrap;
 	font-size: 14px;
-    color: #aaa;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
+	color: #aaa;
+	padding: 12px 16px;
+	text-decoration: none;
+	display: block;
 }
 
 /* 'action' styles */

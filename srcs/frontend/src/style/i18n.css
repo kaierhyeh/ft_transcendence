@@ -5,7 +5,8 @@
   position: fixed;
   padding: 16px;
   left: 0;
-  top: 0;
+  top: 60px; /* Below the back-to-home button */
+  z-index: 1001; /* Higher than header (1000) */
 }
 
 .language-select {
@@ -13,18 +14,18 @@
   color: #aaa;
   border: 2px solid transparent;
   border-radius: 8px;
-  padding: 8px;
-  font-family: 'Bit5x3', monospace;
+  padding: 8px 12px;
+  font-family: system-ui, -apple-system, 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', sans-serif;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 108px;
-  max-width: 128px;
+  min-width: 150px;
+  max-width: 180px;
   height: auto;
-  min-height: 40px;
+  min-height: 44px;
   box-sizing: border-box;
   vertical-align: middle;
-  line-height: 1.25;
+  line-height: 1.4;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -48,4 +49,5 @@
   padding: 12px 14px;
   font-size: 14px;
   line-height: 2;
+  font-family: system-ui, -apple-system, 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', sans-serif;
 }

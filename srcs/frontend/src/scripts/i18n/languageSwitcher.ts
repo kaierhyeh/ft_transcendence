@@ -14,7 +14,14 @@ export function createLanguageSwitcher(): HTMLElement {
   getAvailableLanguages().forEach(lang => {
     const option = document.createElement('option');
     option.value = lang.code;
-    option.textContent = lang.name;
+    // Add flag emoji before language name
+    const flags: { [key: string]: string } = {
+      'en': '🇺🇸',
+      'zh': '🇨🇳',
+      'fr': '🇫🇷'
+    };
+    const flag = flags[lang.code] || '';
+    option.text = flag ? `${flag} ${lang.name}` : lang.name;
     option.selected = i18n.getCurrentLanguage() === lang.code;
     select.appendChild(option);
   });
@@ -22,7 +29,6 @@ export function createLanguageSwitcher(): HTMLElement {
   // 添加事件監聽器
   select.addEventListener('change', (e) => {
     const target = e.target as HTMLSelectElement;
-	console.log('Language changed to:', target.value);
     setLanguage(target.value as Language);
   });
   
@@ -32,19 +38,24 @@ export function createLanguageSwitcher(): HTMLElement {
 
 // 初始化語言切換器（可以添加到任何頁面）
 export function initLanguages(): void {
-  addLanguageSwitcher();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addLanguageSwitcher);
+  } else {
+    addLanguageSwitcher();
+  }
 }
 
 function addLanguageSwitcher(): void {
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     const languagesSwitcher = document.getElementById('languagesSwitcher');
-
+    
     if (languagesSwitcher) {
         const existingSwitcher = languagesSwitcher.querySelector('.language-switcher');
+        
         if (!existingSwitcher) {
           const switcher = createLanguageSwitcher();
-          languagesSwitcher.innerHTML = switcher.outerHTML;
+          languagesSwitcher.appendChild(switcher);
         }
     }
-  });
+  }, 100);
 }

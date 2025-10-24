@@ -9,6 +9,7 @@ import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
 import user from "./user/User.js";
 import { GameFormat, GameMode, GameParticipant } from "./game/types.js";
 import { generateParticipantId } from "./game/utils.js";
+import { t } from './i18n/i18n.js';    // t for translations
 
 export function initPong() {
     let currentSession: GameSession | null = null;
@@ -39,17 +40,17 @@ export function initPong() {
     // Global reset function for button
     (window as any).resetGameData = () => {
         scoreTracker.resetAll();
-    };
+    }
     
     // Show initial message
-    renderer.showMessage("Select a game mode");
+    renderer.showMessage(t('selectGameMode'));
     
     // Setup buttons
     setTimeout(setupGameButtons, 100);
     
     // Handle restart
-    inputController.onKey(" ", () => {
-        if (currentSession?.isOver() && !isTransitioning) {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === ' ' && currentSession?.isOver() && !isTransitioning) {
             const mode = currentSession.mode;
             const format = currentSession.format;
             startNewGame(mode, format);
@@ -99,7 +100,7 @@ export function initPong() {
             const participants = createParticipants(mode, format);
             
             // Create new session
-            renderer.showMessage("Creating game...");
+            renderer.showMessage(t('creatingGame'));
             currentSession = await createGameSession(mode, format, participants);
             
             // Attach controllers
@@ -127,7 +128,7 @@ export function initPong() {
             console.log(`Game started: ${mode} ${format}`);
         } catch (error) {
             console.error("Failed to start game:", error);
-            renderer.showMessage("Failed to start game");
+            renderer.showMessage(t('failedToStartGame'));
         } finally {
             isTransitioning = false;
         }

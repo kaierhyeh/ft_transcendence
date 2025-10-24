@@ -42,9 +42,10 @@ export function setElementActive(id: string, isActive: boolean): void {
 }
 
 export function setMenuTitle(translationKey: string): void {
-	const menuTitleElement = document.getElementById("menuTitle");
-	if (menuTitleElement) {
-		menuTitleElement.textContent = i18n.t(translationKey as any);
+	const menuDropdownButton = document.getElementById("menuDropdownButton");
+	if (menuDropdownButton) {
+		menuDropdownButton.textContent = i18n.t(translationKey as any);
+		menuDropdownButton.setAttribute('data-i18n', translationKey);
 	}
 }
 

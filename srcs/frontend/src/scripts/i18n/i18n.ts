@@ -73,6 +73,21 @@ class I18n {
       }
     });
 
+    // 更新所有有 data-i18n-prefix 屬性的元素 (例如: Player 1, Player 2)
+    const prefixElements = document.querySelectorAll('[data-i18n-prefix]');
+    prefixElements.forEach(element => {
+      const prefix = element.getAttribute('data-i18n-prefix') as TranslationKey;
+      if (prefix && element instanceof HTMLLabelElement) {
+        const htmlFor = element.getAttribute('for');
+        if (htmlFor) {
+          const match = htmlFor.match(/\d+$/);
+          if (match) {
+            element.textContent = `${this.t(prefix)} ${match[0]}`;
+          }
+        }
+      }
+    });
+
     // 更新所有有 data-i18n-placeholder 屬性的輸入框
     const inputs = document.querySelectorAll('[data-i18n-placeholder]');
     inputs.forEach(input => {

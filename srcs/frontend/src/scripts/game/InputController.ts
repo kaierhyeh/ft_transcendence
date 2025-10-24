@@ -35,17 +35,9 @@ export class InputController {
     
     cleanup(): void {
         this.detach();
+        
         document.removeEventListener("keydown", this.keydownHandler);
         document.removeEventListener("keyup", this.keyupHandler);
-    }
-    
-    onKey(key: string, callback: () => void): void {
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === key && !this.keys[key]) {
-                callback();
-            }
-        };
-        document.addEventListener("keydown", handler);
     }
     
     private startInputLoop(): void {

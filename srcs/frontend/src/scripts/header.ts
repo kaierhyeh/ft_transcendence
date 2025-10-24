@@ -1,5 +1,6 @@
 // Simple header management
 import user from './user/User.js';
+import { i18n } from './i18n/index.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
@@ -38,6 +39,10 @@ async function loadHeader() {
         
         // Replace header content (not outerHTML since we want to keep the <header> tag)
         headerElement.innerHTML = headerHtml;
+        
+        // Translate header after loading
+        i18n.initializePage();
+        
         setupHeaderEvents();
     } catch (error) {
         console.error('Header load failed:', error);

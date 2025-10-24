@@ -296,7 +296,7 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 // user info section
 
 function prepareUserInfoSection(): void {
-	setMenuTitle("User info");
+	setMenuTitle("userInfo");
 
 	[	"usersList",
 		"menuControlPanel",
@@ -586,7 +586,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Friends");
+				setMenuTitle("friends");
 				break;
 			case 'requests_in':
 				// console.log("USERS: Loading REQUESTS IN only");
@@ -596,7 +596,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Requests In");
+				setMenuTitle("requestsIn");
 				break;
 			case 'requests_out':
 				// console.log("USERS: Loading REQUESTS OUT only");
@@ -606,7 +606,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Requests Out");
+				setMenuTitle("requestsOut");
 				break;
 			case 'blocked':
 				// console.log("USERS: Loading BLOCKED users only");
@@ -616,13 +616,13 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Blocked");
+				setMenuTitle("blocked");
 				break;
 			// works for 'all' and an invalid filter
 			default:
 				// console.log("USERS: Loading ALL users");
 				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
-				setMenuTitle("Users");
+				setMenuTitle("allUsers");
 				break;
 		}
 		if (res === null || !res.ok) {
@@ -667,15 +667,20 @@ function addMenuDropdown(): boolean {
 	}
 
 	menuDropdown.innerHTML = `
-		<button id="menuDropdownButton" class="menu-dropbtn">Filter</button>
+		<button id="menuDropdownButton" class="menu-dropbtn menu-header-title" data-i18n="allUsers">All Users</button>
 		<div class="menu-dropdown-content">
-			<a id="menuDropdownAll">All</a>
-			<a id="menuDropdownFriends">Friends</a>
-			<a id="menuDropdownRequestsIn">Req. In</a>
-			<a id="menuDropdownRequestsOut">Req. Out</a>
-			<a id="menuDropdownBlocked">Blocked</a>
+			<a id="menuDropdownAll" data-i18n="allUsers">All Users</a>
+			<a id="menuDropdownFriends" data-i18n="friends">Friends</a>
+			<a id="menuDropdownRequestsIn" data-i18n="requestsIn">Req. In</a>
+			<a id="menuDropdownRequestsOut" data-i18n="requestsOut">Req. Out</a>
+			<a id="menuDropdownBlocked" data-i18n="blocked">Blocked</a>
 		</div>
 	`;
+	
+	// Translate the newly added elements
+	import('../i18n/index.js').then(({ i18n }) => {
+		i18n.initializePage();
+	});
 
 	const menuDropdownButton = document.getElementById('menuDropdownButton');
     const menuDropdownContent = document.querySelector('.menu-dropdown-content');
@@ -700,7 +705,7 @@ function addMenuDropdown(): boolean {
 function initFilterDropdown(): void {
 
 	currentFilter = 'all';
-	setMenuTitle("Users");
+	setMenuTitle("allUsers");
 
 	if (!document.getElementById("menuDropdownButton")) {
 		["menuDropdown"].forEach(showElementById);
@@ -720,26 +725,31 @@ function initFilterDropdown(): void {
 	}
 	dropdownAll.addEventListener("click", () => {
 		currentFilter = 'all';
+		setMenuTitle("allUsers");
 		// console.log("USERS: Filter set to ALL");
 		initUsersSection();
 	});
 	dropdownFriends.addEventListener("click", () => {
 		currentFilter = 'friends';
+		setMenuTitle("friends");
 		// console.log("USERS: Filter set to FRIENDS");
 		initUsersSection();
 	});
 	dropdownRequestsIn.addEventListener("click", () => {
 		currentFilter = 'requests_in';
+		setMenuTitle("requestsIn");
 		// console.log("USERS: Filter set to REQUESTS IN");
 		initUsersSection();
 	});
 	dropdownRequestsOut.addEventListener("click", () => {
 		currentFilter = 'requests_out';
+		setMenuTitle("requestsOut");
 		// console.log("USERS: Filter set to REQUESTS OUT");
 		initUsersSection();
 	});
 	dropdownBlocked.addEventListener("click", () => {
 		currentFilter = 'blocked';
+		setMenuTitle("blocked");
 		// console.log("USERS: Filter set to BLOCKED");
 		initUsersSection();
 	});

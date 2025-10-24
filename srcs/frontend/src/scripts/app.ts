@@ -43,14 +43,20 @@ const initScripts: Record<string, () => void> = {
 	"/pong": () => {
 		if (typeof initPong === "function")
 			initPong();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/signup": () => {
 		if (typeof initSignup === "function")
 			initSignup();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/login": () => {
 		if (typeof initLogin === "function")
 			initLogin();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/tournament": () => {
 		if (typeof initTournament === "function")
