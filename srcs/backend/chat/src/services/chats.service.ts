@@ -1,34 +1,7 @@
 import { InternalAuthClient } from "../clients/InternalAuthClient";
 import { CONFIG } from "../config";
 import { ChatRepository } from "../repositories/chats.repository";
-
-export interface chatListRow {
-	chat_id: number;
-	user_id: number;
-	username: string;
-	alias: string | null;
-	user_status: string | null;
-	friendship_status: string | null;
-	from: number | null;
-	avatar_updated_at: string | null;
-}
-
-export interface ChatInfo {
-	chat_id: number;
-	from_id: number;
-	to_id: number;
-}
-
-export interface UserInfo {
-	user_id: number;
-	username: string;
-	alias: string;
-	user_status: string | null;
-	friendship_status: string | null;
-	from_id: number | null;
-	avatar_updated_at: string | null;
-};
-
+import { UserInfo, chatListRow, ChatInfo } from "../types/chats.types";
 
 export class ChatService {
 

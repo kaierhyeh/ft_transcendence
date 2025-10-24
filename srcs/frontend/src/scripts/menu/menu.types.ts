@@ -28,6 +28,12 @@ export interface Message {
 	msg: string;
 }
 
+export interface NewMessage {
+	chat_id: number;
+	username: string;
+	msg: string;
+}
+
 export interface NewMessageRequest {
 	chatId: number;
 	toId: number;

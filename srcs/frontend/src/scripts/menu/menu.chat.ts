@@ -1,8 +1,11 @@
 import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
+import user from '../user/User.js';
 import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
+import { closeMenuWindow } from "./menu.js";
+import { chatSocket, wsConnectChat } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -141,6 +144,12 @@ async function loadChats(): Promise<void> {
 			}
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
+				window.location.href = '/';
+				return;
+			}
 			throw new Error("Failed to load chats");
 		}
 		const users: ChatUser[] = await res.json();
@@ -242,8 +251,12 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 		"menuBackButton"
 	].forEach(showElementById);
 
+	chatMessages.removeAttribute("data-chat-id");
+	chatMessages.dataset.chatId = `${withUser.chat_id}`;
+
+
 	chatMessages.innerHTML = messages.map(msg => `
-		<div class="chat-msg ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
+		<div class="chat-msg chat_id=${msg.chat_id} ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
 		${msg.from_id !== withUser.user_id
 			? `<span class="green-text">You: </span>`
 			: `<span class="blue-text">${withUser.username}: </span>`}
@@ -269,6 +282,12 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 			body: JSON.stringify(payload)
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
+				window.location.href = '/';
+				return;
+			}
 			throw new Error("Failed to send message");
 		}
 	} catch (err) {
@@ -279,6 +298,7 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 
 export async function initMessageSection(chatId: number, withUser: ChatUser, friendshipStatus: string | null, backTo: string): Promise<void> {
 	try {
+		wsConnectChat();
 		initializeGlobals();
 		chatInput.value = "";
 		clearBeforeInitMessageSection();
@@ -292,10 +312,16 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		}
 		switch (backTo) {
 			case 'users':
-				menuBackButton.addEventListener("click", () => goBackToUserList());
+				menuBackButton.addEventListener("click", () => {
+					chatSocket?.close(1000, "Close socket: go back to user list");
+					goBackToUserList();
+				});
 				break;
 			case 'chats':
-				menuBackButton.addEventListener("click", () => goBackToChatsList());
+				menuBackButton.addEventListener("click", () => {
+					chatSocket?.close(1000, "Close socket: go back to chat list");
+					goBackToChatsList();
+				});
 				break;
 		}
 
@@ -308,6 +334,12 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			}
 		});
 		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unautorized user");
+				window.location.href = '/';
+				return;
+			}
 			throw new Error("Failed to load messages");
 		}
 		const messages: Message[] = await res.json();
@@ -328,6 +360,9 @@ export async function openChatsSection(): Promise<void> {
 		console.error("One or more required elements not found, cannot open Chats section");
 		return;
 	}
+
+	// START OF WS
+	// wsConnectChat();
 
 	await initChatSection();
 }

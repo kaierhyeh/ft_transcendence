@@ -1,6 +1,8 @@
-import {openChatsSection} from "./menu.chat.js";
-import {openUsersSection} from "./menu.users.js";
+import { openChatsSection } from "./menu.chat.js";
+import { openUsersSection } from "./menu.users.js";
+import user from '../user/User.js';
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
+import { chatSocket } from "./menu.ws.js";
 // import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
@@ -25,8 +27,6 @@ function initializeGlobals(): boolean {
 
 /* ============================================ EVENTS ====================================== */
 
-// Need to set and unset ACTIV class to buttons when clicked o use CSS for active button
-
 function openMenuWindow(): void {
 	// run users section as default
 	clearEventsInSections();
@@ -40,7 +40,8 @@ function openMenuWindow(): void {
 	openUsers();
 }
 
-function closeMenuWindow(): void {
+export function closeMenuWindow(): void {
+	chatSocket?.close(1000, "Close socket: close social menu");
 	clearEventsInSections();
 	hideSectionsElements();
 	["menuWindow"].forEach(hideElementById);
@@ -50,14 +51,22 @@ function closeMenuWindow(): void {
 function openUsers(): void {
 	clearEventsInSections();
 	hideSectionsElements();
-	setElementActive("usersSectionButton", true);
-	setElementActive("chatsSectionButton", false);
-	["#menuControlPanel"].forEach(clearEvents);
-	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
-	openUsersSection();
+	if (user.isLoggedIn()) {
+		setElementActive("usersSectionButton", true);
+		setElementActive("chatsSectionButton", false);
+		["#menuControlPanel"].forEach(clearEvents);
+		document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
+		openUsersSection();
+	} else {
+		["#menuControlPanel"].forEach(clearEvents);
+		openUsersSection();
+	}
 }
 
 function openChats(): void {
+	if (!user.isLoggedIn()) {
+		return;
+	}
 	clearEventsInSections();
 	hideSectionsElements();
 	setElementActive("usersSectionButton", false);
@@ -100,7 +109,11 @@ function hideSectionsElements(): void {
 		"menuBackButton"
 	].forEach(hideElementById);
 
-	["menuControlPanel"].forEach(showElementById)
+	if (user.isLoggedIn()) {
+		["menuControlPanel"].forEach(showElementById);
+	} else {
+		["menuControlPanel"].forEach(hideElementById);
+	}
 
 }
 
