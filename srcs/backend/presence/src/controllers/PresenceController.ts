@@ -1,11 +1,10 @@
-import { FastifyRequest } from 'fastify';
 import { SocketStream } from "@fastify/websocket";
 import { presenceService } from '../services/PresenceService';
 import { ErrorCode, WsErrorData } from '../errors';
 
 class PresenceController {
 
-  public async accept(connection: SocketStream, request: FastifyRequest ) {
+  public async accept(connection: SocketStream) {
     connection.socket.once("message", this.checkin);
     connection.socket.on("message", this.messageHandler);
     connection.socket.on("close", this.disconnectionHandler);

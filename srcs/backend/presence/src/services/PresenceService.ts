@@ -3,15 +3,17 @@ import { presenceRepository } from '../repository/presenceRepository';
 import { jwtVerifier } from './JwtVerifierService';
 import { toInteger } from '../utils';
 import { Message } from '../types';
-import { User, UsersClient } from "../clients/UsersClient"
+import { usersClient } from "../clients/UsersClient"
 import { ErrorCode } from '../errors';
 
 let nextId = 1;
+const INACTIVE_SESSION_TIMEOUT = 90_000; // [ms] (90s)
+const PING_INTERVAL = 30_000; // [ms] (30s)
+const CLEANUP_INTERVAL = 60_000; // [ms] (60s)
 
 export interface Session {
-    sessionId: number;
-    userId: number;
-    connection: SocketStream;
+  sessionId: number;
+  userId: number;
 }
 
 interface OnlineUser {
@@ -21,20 +23,16 @@ interface OnlineUser {
 
 type SessionMap = Map<SocketStream, Session>;
 
-
 class PresenceService {
-  private presenceRepository: presenceRepository;
-  private usersClient: UsersClient;
   private sessions: SessionMap;
   private subscribers: Set<number>;
   
-
-
   constructor() {
-    this.presenceRepository = new presenceRepository();
-    this.usersClient = new UsersClient();
     this.sessions = new Map();
     this.subscribers = new Set();
+
+    setInterval(() => this.cleanupInactiveSessions(), CLEANUP_INTERVAL);
+    setInterval(() => this.sendPing(), PING_INTERVAL);
   }
 
   async checkin(data: any, connection: SocketStream) {
@@ -49,13 +47,9 @@ class PresenceService {
 
     const session = this.sessions.get(connection);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
-    await this.presenceRepository.addUserSession(session);
+    await presenceRepository.addUserSession(session);
 
-    // retrieve list of friends from UserClients
-    const friendList =  await this.usersClient.getFriends(token);
-
-    // retrieve connected friends from redis repository
-    const onlineFriends = await this.getOnlineFriends(connection, friendList);
+    const onlineFriends = await this.getOnlineFriends(token);
 
     const msg: Message = {
       type: "friends",
@@ -69,7 +63,7 @@ class PresenceService {
   async heartbeat(connection: SocketStream) {
     const session = this.sessions.get(connection);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
-    this.presenceRepository.heartbeat(session);
+    presenceRepository.heartbeat(session);
   }
 
   async subscribeFriendsPresence(connection: SocketStream) {
@@ -83,14 +77,23 @@ class PresenceService {
   }
 
   async disconnect(connection: SocketStream) {
-
+    const session = this.sessions.get(connection);
+    if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
+    presenceRepository.removeUserSession(session);
+    this.subscribers.delete(session.sessionId);
+    this.sessions.delete(connection);
   }
 
-  private async getOnlineFriends(connection: SocketStream, friendsList: User[]): Promise<OnlineUser[]> {
-    const onlineFriends: OnlineUser[] = [];
-    const onlineUserIds = await this.presenceRepository.getOnlineUsers();
+  private async getOnlineFriends(token: string): Promise<OnlineUser[]> {
+    // retrieve list of friends from UserClients
+    const friendList =  await usersClient.getFriends(token);
     
-    for (const friend of friendsList) {
+    // retrieve online users from presenceRepository
+    const onlineUserIds = await presenceRepository.getOnlineUsers();
+    
+    // retrieve friends' presence status
+    const onlineFriends: OnlineUser[] = [];
+    for (const friend of friendList) {
       if (onlineUserIds.includes(friend.user_id)) {
         onlineFriends.push({ userId: friend.user_id, status: "online" });
       } else {
@@ -102,10 +105,38 @@ class PresenceService {
 
   private registerConection(connection: SocketStream, userId: number) {
     const sessionId = nextId++;
-    this.sessions.set(connection, {sessionId, userId, connection});
+    this.sessions.set(connection, {sessionId, userId});
+  }
+
+  private async cleanupInactiveSessions() {
+    try {
+      const onlineUserIds = await presenceRepository.getOnlineUsers();
+      for (const userId of onlineUserIds) {
+        const sessionIds = await presenceRepository.getUserSessions(userId);
+        for (const sessionId of sessionIds) {
+          const lastHeartbeat = await presenceRepository.getSessionLastHeartbeat(sessionId);
+          const now = Date.now();
+          if (now - lastHeartbeat > INACTIVE_SESSION_TIMEOUT) {
+            console.log(`🧹 Cleaning up inactive session ${sessionId} for user ${userId}`);
+            await presenceRepository.removeUserSession({sessionId, userId});
+          }
+        }
+      }
+    } catch(err) {
+      console.log('❌ Error during cleanupInactiveSessions:', err);
+    }
+  }
+
+  private async sendPing() {
+    for (const connection of this.sessions.keys()) {
+      try {
+        connection.socket.send(JSON.stringify({ type: "ping" }));
+      } catch (err) {
+        console.log('❌ Error sending ping:', err);
+      }
+    }
   }
 
 }
-
 
 export const presenceService = new PresenceService();

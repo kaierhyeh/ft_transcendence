@@ -10,10 +10,8 @@ export interface User {
   user_id: number;
 }
 
-
-export class UsersClient {
+class UsersClient {
   private base_url = CONFIG.USERS_SERVICE.BASE_URL;
-
 
   async getFriends(accessToken: string): Promise<User[]> {
 
@@ -38,4 +36,4 @@ export class UsersClient {
   }
 }
 
-export default new UsersClient();
+export const usersClient = new UsersClient();
