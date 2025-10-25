@@ -19,6 +19,8 @@ let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
+let blockUserButtonInChat: HTMLElement;
+let unblockUserButtonInChat: HTMLElement;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -31,9 +33,12 @@ function initializeGlobals(): boolean {
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
+	blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
+	unblockUserButtonInChat = document.getElementById("unblockUserButtonInChat")!;
 
 	if (!API_CHAT_ENDPOINT || !menuBackButton || !usersSectionButton || !chatsList
-		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton) {
+		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton
+		|| !blockUserButtonInChat || !unblockUserButtonInChat) {
 		return false;
 	}
 	return true;
@@ -57,13 +62,18 @@ function clearBeforeInitMessageSection(): void {
 	[	"#chatSendButton",
 		"#chatMessageToSend",
 		"#chatInviteGameButton",
-		"#menuBackButton"
+		"#menuBackButton",
+		"#blockUserButtonInChat",
+		"#unblockUserButtonInChat"
 	].forEach(clearEvents);
 
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
 	menuBackButton = document.getElementById("menuBackButton")!;
+	blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
+	unblockUserButtonInChat = document.getElementById("unblockUserButtonInChat")!;
+
 }
 
 function resetChatSection(): void {
@@ -206,6 +216,14 @@ async function inviteToGame(toUser: ChatUser): Promise<void> {
 	console.log(`CHAT: Invite pressed: invite [${toUser.username}] to a game (not implemented)`);
 }
 
+async function blockUser(toUser: ChatUser): Promise<void> {
+	console.log(`CHAT: block user pressed: block id=[${toUser.user_id}] (not implemented)`);
+}
+
+async function unblockUser(toUser: ChatUser): Promise<void> {
+	console.log(`CHAT: unblock user pressed: unblock id=[${toUser.user_id}] (not implemented)`);
+}
+
 async function goBackToChatsList(): Promise<void> {
 	chatMessages.innerHTML = ``;
 	initChatSection();
@@ -302,13 +320,17 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		initializeGlobals();
 		chatInput.value = "";
 		clearBeforeInitMessageSection();
-
+		
 		if (friendshipStatus !== "blocked") {
 			// Sent message by using button
 			chatSendButton.addEventListener("click", () => sendMessageByButton(withUser));
 			chatInput.addEventListener("keydown", (event) => sentMessageByEnter(event));
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
+			// Block user
+			blockUserButtonInChat.addEventListener("click", () => blockUser(withUser));
+		} else {
+			unblockUserButtonInChat.addEventListener("click", () => unblockUser(withUser));
 		}
 		switch (backTo) {
 			case 'users':
