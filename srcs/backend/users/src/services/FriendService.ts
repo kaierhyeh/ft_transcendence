@@ -26,6 +26,18 @@ export class FriendService {
 		return this.friendRepository.listFriends(userId);
 	}
 
+	// Get friends for multiple users at once (for presence service)
+	// Returns array of { user_id, friends: User[] }
+	public async getFriendsBatch(userIds: number[]) {
+		const friendLists = await Promise.all(
+			userIds.map(async (userId) => ({
+				user_id: userId,
+				friends: await this.friendRepository.listFriends(userId)
+			}))
+		);
+		return friendLists;
+	}
+
 	// if no requests TO userId, return empty array
 	// requestIn(fromUserId, nickname)
 	public async getPendingIncomingRequests(userId: number) {

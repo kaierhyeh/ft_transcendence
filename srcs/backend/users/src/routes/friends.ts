@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { FriendController } from "../controllers/FriendController";
-import { UserIdParams, userIdSchema, UserIdsBody, userIdsSchema, FriendshipParams, friendshipParamsSchema } from "../schemas/friends";
+import { UserIdParams, userIdSchema, UserIdsBody, userIdsSchema, FriendshipParams, friendshipParamsSchema, BatchUserIdsBody, batchUserIdsSchema } from "../schemas/friends";
 import { userAuthMiddleware, userAuthSwitcher } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
 
@@ -15,6 +15,24 @@ export default async function friendsRoutes(fastify: FastifyInstance) {
 		},
 		friendController.getFriends.bind(friendController)
 	);
+
+	fastify.get<{ Params: UserIdParams}>(
+		"/user/:id",
+		{ 
+			schema: { params: userIdSchema },
+			preHandler: internalAuthMiddleware
+		},
+		friendController.getFriendsByUserId.bind(friendController)
+	)
+
+	fastify.post<{ Body: BatchUserIdsBody }>(
+		"/batch",
+		{ 
+			schema: { body: batchUserIdsSchema },
+			preHandler: internalAuthMiddleware
+		},
+		friendController.getFriendsBatch.bind(friendController)
+	)
 
 	// Get user by id
 	fastify.get<{ Params: UserIdParams }>(

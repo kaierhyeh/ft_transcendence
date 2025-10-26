@@ -2,7 +2,7 @@ import { SocketStream } from '@fastify/websocket';
 import { presenceRepository } from '../repository/presenceRepository';
 import { jwtVerifier } from './JwtVerifierService';
 import { toInteger } from '../utils';
-import { Message } from '../types';
+import { FriendsMessage, FriendStatusChangeMessage, UserStatus } from '../types';
 import { usersClient } from "../clients/UsersClient"
 import { ErrorCode } from '../errors';
 
@@ -10,7 +10,7 @@ let nextId = 1;
 const INACTIVE_SESSION_TIMEOUT = 90_000; // [ms] (90s)
 const PING_INTERVAL = 30_000; // [ms] (30s)
 const CLEANUP_INTERVAL = 60_000; // [ms] (60s)
-const FRIENDS_RETRIEVAL_INTERVAL = 60_000; // [ms] (30s)
+const FRIENDS_RETRIEVAL_INTERVAL = 60_000; // [ms] (60s)
 
 
 export interface Session {
@@ -18,10 +18,6 @@ export interface Session {
   userId: number;
 }
 
-interface UserStatus {
-  userId: number;
-  status: "online" | "offline"; // maybe add "unknown" for the edge case where a friendship while both are connected
-}
 
 type SessionMap = Map<SocketStream, Session>;
 
@@ -36,7 +32,7 @@ class PresenceService {
     setInterval(() => this.cleanupInactiveSessions(), CLEANUP_INTERVAL);
     setInterval(() => this.sendPing(), PING_INTERVAL);
     // setInterval which periodically retrieve user friend lists
-    setInterval(() => this.getFriendLists(), FRIENDS_RETRIEVAL_INTERVAL);
+    setInterval(() => this.updateFriendLists(), FRIENDS_RETRIEVAL_INTERVAL);
 
   }
 
@@ -48,19 +44,18 @@ class PresenceService {
     const result = await jwtVerifier.verifyUserSessionToken(token);
     const userId = toInteger(result.sub);
 
-    this.registerConection(connection, userId);
+    this.registerConnection(connection, userId);
 
     const session = this.sessions.get(connection);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
     // add user session
-    // const changes = await presenceRepository.addUserSession(session); // changes = 1 or 0
-    await presenceRepository.addUserSession(session);
+    const statusChanged = await presenceRepository.addUserSession(session);
 
     // save friend lists into redis
-    // await presenceRepository.setFriends(userId);
+    await this.setFriends(userId);
     
     // broadcast update to subscribers if the new user has no session already
-    // if (changes) broadcastUpdate({ userId, "online" });
+    if (statusChanged) this.broadcastUpdate({ userId, status: "online" });
 
   }
 
@@ -76,60 +71,68 @@ class PresenceService {
     this.subscribers.add(session.sessionId);
 
     // retrieve online friends
-    // const onlineFriends = ...
+    const friendStatus = await this.getFriendStatus(session.sessionId);
     
-    // const msg: Message = {
-    //   type: "friends",
-    //   data: { friends: onlineFriends },
-    // };
+    const msg: FriendsMessage = {
+      type: "friends",
+      data: { friends: friendStatus },
+    };
 
-    // connection.socket.send(JSON.stringify(msg));
+    connection.socket.send(JSON.stringify(msg));
+  }
+
+  private async getFriendStatus(userId: number): Promise<UserStatus[]> {
+    const friends = await presenceRepository.getFriendStatus(userId);
+    const onlineFriends = friends.online.map(id => ({userId: id, status: "online"} as UserStatus));
+    const offlineFriends = friends.offline.map(id => ({userId: id, status: "offline"} as UserStatus));
+    return [...onlineFriends, ...offlineFriends]; // array concat
   }
 
   private async broadcastUpdate(userStatus: UserStatus) {
-    // iterate over subscribers
-    // --> for each subscribers
-    //     --> check if the userId is within the subscribers friendlist
-    //     --> if it is, send the user status update
+    const msg: FriendStatusChangeMessage = {
+      type: "friend_status_change",
+      data: userStatus,
+    };
+
+    for (const [connection, session] of this.sessions.entries()) {
+      if (this.subscribers.has(session.sessionId)) {
+        const friends = await presenceRepository.getFriends(session.userId);
+        if (friends.includes(userStatus.userId)) {
+          try {
+            connection.socket.send(JSON.stringify(msg));
+          } catch (err) {
+            console.log('❌ Error broadcasting presence update:', err);
+          }
+        }
+      }
+    }
   }
 
   async disconnect(connection: SocketStream) {
     const session = this.sessions.get(connection);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
     // remove user session
-    // const nbSessions = await presenceRepository.removeUserSession(session);
-    presenceRepository.removeUserSession(session);
+    const nbSessions = await presenceRepository.removeUserSession(session);
     this.subscribers.delete(session.sessionId);
-    // broadcast update to subscribers if the new user has not no more sessions
-    // if (nbSessions === 0) broadcastUpdate({userId: session.userId, "offline"});
+    // broadcast update to subscribers if the user has no more sessions
+    if (nbSessions === 0) this.broadcastUpdate({userId: session.userId, status: "offline"});
     this.sessions.delete(connection);
   }
 
-  // TODO - to remove or refactor
-  // private async getOnlineFriends(token: string): Promise<UserStatus[]> {
-  //   // retrieve list of friends from UserClients
-  //   const friendList =  await usersClient.getFriends(token);
-    
-  //   // retrieve online users from presenceRepository
-  //   const onlineUserIds = await presenceRepository.getOnlineUsers();
-    
-  //   // retrieve friends' presence status
-  //   const onlineFriends: UserStatus[] = [];
-  //   for (const friend of friendList) {
-  //     if (onlineUserIds.includes(friend.user_id)) {
-  //       onlineFriends.push({ userId: friend.user_id, status: "online" });
-  //     } else {
-  //       onlineFriends.push({ userId: friend.user_id, status: "offline" });
-  //     }
-  //   }
-  //   return onlineFriends;
-  // }
-
-  private async getFriendLists() {
-    
+  private async setFriends(userId: number) {
+    const friendList =  await usersClient.getFriends(userId);
+    await presenceRepository.setFriends(userId, friendList);
   }
 
-  private registerConection(connection: SocketStream, userId: number) {
+  private async updateFriendLists() {
+    const userList = await presenceRepository.getOnlineUsers();
+    const friendLists = await usersClient.getFriendLists(userList);
+    for (const friendList of friendLists) {
+      await presenceRepository.setFriends(friendList.user_id, friendList.friends);
+    }
+  }
+
+  private registerConnection(connection: SocketStream, userId: number) {
     const sessionId = nextId++;
     this.sessions.set(connection, {sessionId, userId});
   }
