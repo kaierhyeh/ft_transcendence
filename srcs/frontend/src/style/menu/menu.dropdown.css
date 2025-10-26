@@ -1,6 +1,6 @@
 .menu-dropdown {
 	position: relative;
-	display: inline-block;
+	display: flex;
 	line-height: 0px;
 	height: 40px;
 	width: 90px;
@@ -19,6 +19,7 @@
 }
 /* style of the button that opens the box with options */
 .menu-dropbtn {
+	flex: 1;
 	height: 40px;
 	width: auto;
 	width: 90px;
@@ -32,6 +33,7 @@
 
 /* When dropdown button is used as menu title */
 .menu-dropbtn.menu-header-title {
+	flex: 1;
 	height: auto;
 	width: auto;
 	min-width: fit-content;

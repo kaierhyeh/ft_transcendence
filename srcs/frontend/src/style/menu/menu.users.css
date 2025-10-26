@@ -19,6 +19,10 @@
 	object-fit: cover;
 }
 .user-info-box {
+	display: flex;
+	align-items: center;
+    flex-direction: column;
+	flex: 1;
 	text-align: center;
 	margin-bottom: auto;
 	width: 100%;

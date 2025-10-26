@@ -50,11 +50,11 @@
 
 /* Menu Window */
 .menu-window {
-	position: fixed;
+	position: absolute;
 	bottom: 20px;
 	right: 40px;
 	width: 400px;
-	height: 750px;
+	height: 600px;
 	background: #1a1a1a;
 	border: 2px solid #444;
 	color: white;
@@ -75,6 +75,7 @@
 }
 /* Menu Header */
 .menu-header {
+	position: relative;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;

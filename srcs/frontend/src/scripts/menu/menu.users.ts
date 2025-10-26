@@ -1,6 +1,6 @@
 import { User } from "../user/User.js";
 import user from '../user/User.js';
-import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
+import { clearEvents, hideElementById, setFilterForUsersList, showElementById, setHeaderTitle } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 import { chatSocket } from "./menu.ws.js";
@@ -296,14 +296,15 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 // user info section
 
 function prepareUserInfoSection(): void {
-	setMenuTitle("userInfo");
+	setHeaderTitle("userInfo");
 
 	[	"usersList",
 		"menuControlPanel",
 		"menuDropdown"
 	].forEach(hideElementById);
 
-	[	"menuBackButton",
+	[	"menuHeaderTitle",
+		"menuBackButton",
 		"usersInfo"
 	].forEach(showElementById);
 
@@ -586,7 +587,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("friends");
+				setFilterForUsersList("friends");
 				break;
 			case 'requests_in':
 				// console.log("USERS: Loading REQUESTS IN only");
@@ -596,7 +597,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("requestsIn");
+				setFilterForUsersList("requestsIn");
 				break;
 			case 'requests_out':
 				// console.log("USERS: Loading REQUESTS OUT only");
@@ -606,7 +607,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("requestsOut");
+				setFilterForUsersList("requestsOut");
 				break;
 			case 'blocked':
 				// console.log("USERS: Loading BLOCKED users only");
@@ -616,13 +617,13 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("blocked");
+				setFilterForUsersList("blocked");
 				break;
 			// works for 'all' and an invalid filter
 			default:
 				// console.log("USERS: Loading ALL users");
 				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
-				setMenuTitle("allUsers");
+				setFilterForUsersList("allUsers");
 				break;
 		}
 		if (res === null || !res.ok) {
@@ -652,6 +653,7 @@ async function initUsersSection(): Promise<void> {
 		if (chatsBtn)
 			chatsBtn.className = "menu-control-panel-button";
 	}
+	["menuHeaderTitle"].forEach(hideElementById);
 	["usersList"].forEach(showElementById);
 
 	await loadUsers();
@@ -705,7 +707,7 @@ function addMenuDropdown(): boolean {
 function initFilterDropdown(): void {
 
 	currentFilter = 'all';
-	setMenuTitle("allUsers");
+	setFilterForUsersList("allUsers");
 
 	if (!document.getElementById("menuDropdownButton")) {
 		["menuDropdown"].forEach(showElementById);
@@ -725,31 +727,31 @@ function initFilterDropdown(): void {
 	}
 	dropdownAll.addEventListener("click", () => {
 		currentFilter = 'all';
-		setMenuTitle("allUsers");
+		setFilterForUsersList("allUsers");
 		// console.log("USERS: Filter set to ALL");
 		initUsersSection();
 	});
 	dropdownFriends.addEventListener("click", () => {
 		currentFilter = 'friends';
-		setMenuTitle("friends");
+		setFilterForUsersList("friends");
 		// console.log("USERS: Filter set to FRIENDS");
 		initUsersSection();
 	});
 	dropdownRequestsIn.addEventListener("click", () => {
 		currentFilter = 'requests_in';
-		setMenuTitle("requestsIn");
+		setFilterForUsersList("requestsIn");
 		// console.log("USERS: Filter set to REQUESTS IN");
 		initUsersSection();
 	});
 	dropdownRequestsOut.addEventListener("click", () => {
 		currentFilter = 'requests_out';
-		setMenuTitle("requestsOut");
+		setFilterForUsersList("requestsOut");
 		// console.log("USERS: Filter set to REQUESTS OUT");
 		initUsersSection();
 	});
 	dropdownBlocked.addEventListener("click", () => {
 		currentFilter = 'blocked';
-		setMenuTitle("blocked");
+		setFilterForUsersList("blocked");
 		// console.log("USERS: Filter set to BLOCKED");
 		initUsersSection();
 	});

@@ -41,7 +41,7 @@ export function setElementActive(id: string, isActive: boolean): void {
 	}
 }
 
-export function setMenuTitle(translationKey: string): void {
+export function setFilterForUsersList(translationKey: string): void {
 	const menuDropdownButton = document.getElementById("menuDropdownButton");
 	if (menuDropdownButton) {
 		menuDropdownButton.textContent = i18n.t(translationKey as any);
@@ -49,3 +49,10 @@ export function setMenuTitle(translationKey: string): void {
 	}
 }
 
+export function setHeaderTitle(translationKey: string) {
+	const menuHeaderTitle = document.getElementById("menuHeaderTitle");
+	if (menuHeaderTitle) {
+		menuHeaderTitle.textContent  = i18n.t(translationKey as any);
+		// need translation for CHATS, USER INFO
+	}
+}

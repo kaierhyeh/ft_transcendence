@@ -1,4 +1,4 @@
-import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
+import { clearEvents, hideElementById, setFilterForUsersList, setHeaderTitle, showElementById } from "./menu.utils.js";
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
 import user from '../user/User.js';
@@ -67,18 +67,19 @@ function clearBeforeInitMessageSection(): void {
 }
 
 function resetChatSection(): void {
+	setHeaderTitle("chats");
+
 	[	"chatLowerPanel",
 		"chatMessages",
 		"menuBackButton",
 		"menuDropdown"
 	].forEach(hideElementById);
 
-	[	"menuControlPanel",
+	[	"menuHeaderTitle",
+		"menuControlPanel",
 		"usersSectionButton",
 		"chatsSectionButton"
 	].forEach(showElementById);
-
-	setMenuTitle("chats");
 }
 
 /* =================================== CHATS SECTION ======================================== */
@@ -325,7 +326,8 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 				break;
 		}
 
-		setMenuTitle(`${withUser.username}`);
+		setHeaderTitle(`${withUser.username}`);
+		["menuHeaderTitle"].forEach(showElementById);
 
 		const res = await fetch(`${API_CHAT_ENDPOINT}/${chatId}`, {
 			method: "GET",
