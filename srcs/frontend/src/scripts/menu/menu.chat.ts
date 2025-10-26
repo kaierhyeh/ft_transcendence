@@ -6,6 +6,7 @@ import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { closeMenuWindow } from "./menu.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
+import { presence } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -104,7 +105,7 @@ function renderChatList(users: ChatUser[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
-		const userStatus = u.user_status || "unknown";
+		const userStatus = presence.onlineStatus(u.user_id);
 		const statusHtml = u.friendship_status === "accepted"
 			? `<span class="user-status-${userStatus.toLowerCase()}">${userStatus}</span>`
 			: `<span class="user-status-unknown"></span>`;

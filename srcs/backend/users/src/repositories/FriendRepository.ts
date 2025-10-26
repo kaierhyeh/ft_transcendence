@@ -6,7 +6,6 @@ export interface UserListRow {
 	alias: string | null;
 	avatar_filename: string | null;
 	avatar_updated_at: string | null;
-	user_status: string | null;
 	friendship_status: string | null;
 	from_id: number | null;
 	to_id: number | null;
@@ -18,7 +17,6 @@ export interface FriendListRow {
 	alias: string | null;
 	avatar_filename: string | null;
 	avatar_updated_at: string | null;
-	user_status: string;
 }
 
 export interface IncomingRequestListRow {
@@ -72,7 +70,6 @@ export class FriendRepository {
 				u.alias,
 				u.avatar_filename,
 				u.avatar_updated_at AS avatar_updated_at,
-				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users AS u
 			LEFT JOIN friendships AS f
@@ -110,7 +107,6 @@ export class FriendRepository {
 				u.alias,
 				u.avatar_filename,
 				u.avatar_updated_at AS avatar_updated_at,
-				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
 				f.friend_id AS to_id
@@ -134,7 +130,6 @@ export class FriendRepository {
 				u.alias AS alias,
 				u.avatar_filename AS avatar_filename,
 				u.avatar_updated_at AS avatar_updated_at,
-				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users u
 			JOIN friendships f
@@ -255,7 +250,6 @@ export class FriendRepository {
 				u.alias,
 				u.avatar_filename,
 				u.avatar_updated_at,
-				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
 				f.friend_id AS to_id

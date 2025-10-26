@@ -9,7 +9,6 @@ import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin, handleOAuthCallback } from "./auth/login.js";
-import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
 import { initPong } from "./pong.js";
 import { initProfile } from "./user/profile.js";

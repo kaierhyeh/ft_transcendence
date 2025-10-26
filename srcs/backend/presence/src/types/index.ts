@@ -1,11 +1,19 @@
+import { SocketStream } from '@fastify/websocket';
+
+export interface SessionSocketStream extends SocketStream {
+  sessionId?: number;
+}
+
 export interface Message {
     type: string;
     data?: object;
 }
 
+export type OnlineStatus = "online" | "offline";
+
 export interface UserStatus {
   userId: number;
-  status: "online" | "offline"; // maybe add "unknown" for the edge case where a friendship while both are connected
+  status: OnlineStatus; // maybe add "unknown" for the edge case where a friendship while both are connected
 }
 
 export interface FriendsMessage extends Message {

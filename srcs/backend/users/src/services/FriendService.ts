@@ -81,7 +81,6 @@ export class FriendService {
 			if (u.friendship_status === null || u.friendship_status === "pending") {
 				return {
 					...u,
-					user_status: null,
 					friendship_status: null,
 					from_id: null,
 					to_id: null,

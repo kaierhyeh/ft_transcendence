@@ -1,5 +1,6 @@
 import user from '../user/User.js';
 import { initiateGoogleLogin, processGoogleOAuth } from '../api.js';
+import { presence } from '../presence.js';
 
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 const API_TWOFA_ENDPOINT = `${window.location.origin}/api/auth/2fa`;
@@ -59,6 +60,7 @@ export function initLogin() {
 			} else if (response.ok && data.success) {
 				// Login successful - fetch user data and redirect
 				await user.fetchAndUpdate();
+				presence.checkin();
 				redirectAfterLogin();
 			} else
 				alert(data.error || 'Login failed.');
@@ -109,6 +111,7 @@ export function initLogin() {
 				if (data.success) {
 					// User is already logged in, fetch user data and redirect
 					await user.fetchAndUpdate();
+					await presence.checkin();
 					redirectAfterLogin();
 				}
 			}

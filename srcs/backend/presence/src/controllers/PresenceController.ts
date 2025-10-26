@@ -1,32 +1,43 @@
 import { SocketStream } from "@fastify/websocket";
 import { presenceService } from '../services/PresenceService';
 import { ErrorCode, WsErrorData } from '../errors';
+import { RawData } from 'ws';
+import { SessionSocketStream } from '../types';
 
 class PresenceController {
 
   public async accept(connection: SocketStream) {
-    connection.socket.once("message", this.checkin);
-    connection.socket.on("message", this.messageHandler);
-    connection.socket.on("close", this.disconnectionHandler);
-    connection.socket.on("error", this.errorHandler)
+    console.log('🔌 New WebSocket connection accepted');
+    const sessionConnection = connection as SessionSocketStream;
+    
+    // Add raw socket listeners to debug
+    sessionConnection.socket.on('message', (data) => {
+      console.log('🔍 RAW message received:', data.toString());
+    });
+    
+    // sessionConnection.socket.once("message", (raw: RawData) => this.checkin(raw, sessionConnection));
+    // sessionConnection.socket.on("message", (raw: RawData) => this.messageHandler(raw, sessionConnection));
+    sessionConnection.socket.on("close", () => this.disconnectionHandler(sessionConnection));
+    sessionConnection.socket.on("error", (error) => this.errorHandler(error, sessionConnection));
+    console.log('✅ WebSocket event handlers registered');
   }
     
-  private async checkin(raw: string, connection: SocketStream ) {
+  private async checkin(raw: RawData, connection: SessionSocketStream) {
+    console.log('📥 Checkin message received:', raw.toString());
     try {
-      const msg = JSON.parse(raw);
+      const msg = JSON.parse(raw.toString());
       await presenceService.checkin(msg.data, connection);
     } catch(err) {
+      console.log('❌ Checkin error:', err);
       this.errorHandler(err, connection);
     }
   }
 
-  private async messageHandler(raw: string, connection: SocketStream) {
+  private async messageHandler(raw: RawData, connection: SessionSocketStream) {
     try {
-      const msg = JSON.parse(raw);
+      const msg = JSON.parse(raw.toString());
 
-      if (msg.type === "subscribe_friends") {
-        await presenceService.subscribeFriendsPresence(connection);
-      } else if (msg.type === "pong") {
+      if (msg.type === "pong") {
         await presenceService.heartbeat(connection);
       } else {
         throw new Error(ErrorCode.INVALID_MESSAGE_TYPE);
@@ -36,7 +47,7 @@ class PresenceController {
     }
   }
 
-  private async disconnectionHandler(connection: SocketStream) {
+  private async disconnectionHandler(connection: SessionSocketStream) {
     try {
       await presenceService.disconnect(connection);
     } catch(err) {
@@ -44,7 +55,7 @@ class PresenceController {
     }
   }
  
-  private errorHandler(error: any, connection: SocketStream) {
+  private errorHandler(error: any, connection: SessionSocketStream) {
     console.log('❌ Presence connection error:', {
       error: error?.message || String(error)
     });
@@ -64,7 +75,11 @@ class PresenceController {
     } else {
       data = {status: 4005, reason: "Internal server error"};
     }
-    connection.socket.close(data.status, data.reason);
+    
+    // Only try to close if socket is still open
+    if (connection.socket.readyState === 1) { // 1 = OPEN
+      connection.socket.close(data.status, data.reason);
+    }
   }
 }
 

@@ -1,8 +1,7 @@
-import { SocketStream } from '@fastify/websocket';
 import { presenceRepository } from '../repository/presenceRepository';
 import { jwtVerifier } from './JwtVerifierService';
 import { toInteger } from '../utils';
-import { FriendsMessage, FriendStatusChangeMessage, UserStatus } from '../types';
+import { FriendsMessage, FriendStatusChangeMessage, UserStatus, SessionSocketStream } from '../types';
 import { usersClient } from "../clients/UsersClient"
 import { ErrorCode } from '../errors';
 
@@ -16,18 +15,17 @@ const FRIENDS_RETRIEVAL_INTERVAL = 60_000; // [ms] (60s)
 export interface Session {
   sessionId: number;
   userId: number;
+  connection: SessionSocketStream;
 }
 
 
-type SessionMap = Map<SocketStream, Session>;
+type SessionMap = Map<number, Session>;
 
 class PresenceService {
   private sessions: SessionMap;
-  private subscribers: Set<number>;
   
   constructor() {
     this.sessions = new Map();
-    this.subscribers = new Set();
 
     setInterval(() => this.cleanupInactiveSessions(), CLEANUP_INTERVAL);
     setInterval(() => this.sendPing(), PING_INTERVAL);
@@ -36,49 +34,55 @@ class PresenceService {
 
   }
 
-  async checkin(data: any, connection: SocketStream) {
+  async checkin(data: any, connection: SessionSocketStream) {
 
+    console.log("data: ", data);
     const token: string = data.accessToken;
-    if (!token) throw new Error(ErrorCode.MISSING_TOKEN);
+    if (!token) {
+      console.log('❌ Checkin failed: Missing access token');
+      throw new Error(ErrorCode.MISSING_TOKEN);
+    }
 
     const result = await jwtVerifier.verifyUserSessionToken(token);
     const userId = toInteger(result.sub);
 
-    this.registerConnection(connection, userId);
+    console.log(`✅ User ${userId} checked in successfully`);
 
-    const session = this.sessions.get(connection);
+    const sessionId = this.registerConnection(connection, userId);
+
+    const session = this.sessions.get(sessionId);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
     // add user session
     const statusChanged = await presenceRepository.addUserSession(session);
 
     // save friend lists into redis
     await this.setFriends(userId);
+
+    // send initial friend list
+    await this.sendFriendsPresence(session);
     
     // broadcast update to subscribers if the new user has no session already
     if (statusChanged) this.broadcastUpdate({ userId, status: "online" });
 
   }
 
-  async heartbeat(connection: SocketStream) {
-    const session = this.sessions.get(connection);
+  async heartbeat(connection: SessionSocketStream) {
+    const sessionId = connection.sessionId;
+    if (!sessionId) throw new Error(ErrorCode.INTERNAL_ERROR);
+    const session = this.sessions.get(sessionId);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
     presenceRepository.heartbeat(session);
   }
 
-  async subscribeFriendsPresence(connection: SocketStream) {
-    const session = this.sessions.get(connection);
-    if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
-    this.subscribers.add(session.sessionId);
-
+  async sendFriendsPresence(session: Session) {
     // retrieve online friends
-    const friendStatus = await this.getFriendStatus(session.sessionId);
+    const friendStatus = await this.getFriendStatus(session.userId);
     
     const msg: FriendsMessage = {
       type: "friends",
       data: { friends: friendStatus },
     };
-
-    connection.socket.send(JSON.stringify(msg));
+    session.connection.socket.send(JSON.stringify(msg));
   }
 
   private async getFriendStatus(userId: number): Promise<UserStatus[]> {
@@ -94,29 +98,41 @@ class PresenceService {
       data: userStatus,
     };
 
-    for (const [connection, session] of this.sessions.entries()) {
-      if (this.subscribers.has(session.sessionId)) {
-        const friends = await presenceRepository.getFriends(session.userId);
-        if (friends.includes(userStatus.userId)) {
+    // Broadcast to all sessions whose users have the affected user as a friend
+    const broadcastPromises: Promise<void>[] = [];
+    
+    for (const session of this.sessions.values()) {
+      broadcastPromises.push(
+        (async () => {
           try {
-            connection.socket.send(JSON.stringify(msg));
+            const friends = await presenceRepository.getFriends(session.userId);
+            if (friends.includes(userStatus.userId)) {
+              session.connection.socket.send(JSON.stringify(msg));
+            }
           } catch (err) {
             console.log('❌ Error broadcasting presence update:', err);
           }
-        }
-      }
+        })()
+      );
     }
+
+    await Promise.all(broadcastPromises);
   }
 
-  async disconnect(connection: SocketStream) {
-    const session = this.sessions.get(connection);
+  async disconnect(connection: SessionSocketStream) {
+    const sessionId = connection.sessionId;
+    if (!sessionId) throw new Error(ErrorCode.INTERNAL_ERROR);
+    const session = this.sessions.get(sessionId);
     if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
+    
     // remove user session
     const nbSessions = await presenceRepository.removeUserSession(session);
-    this.subscribers.delete(session.sessionId);
+    
     // broadcast update to subscribers if the user has no more sessions
     if (nbSessions === 0) this.broadcastUpdate({userId: session.userId, status: "offline"});
-    this.sessions.delete(connection);
+    
+    this.sessions.delete(sessionId);
+    delete connection.sessionId;
   }
 
   private async setFriends(userId: number) {
@@ -126,15 +142,18 @@ class PresenceService {
 
   private async updateFriendLists() {
     const userList = await presenceRepository.getOnlineUsers();
+    if (userList.length === 0) return;
     const friendLists = await usersClient.getFriendLists(userList);
     for (const friendList of friendLists) {
       await presenceRepository.setFriends(friendList.user_id, friendList.friends);
     }
   }
 
-  private registerConnection(connection: SocketStream, userId: number) {
+  private registerConnection(connection: SessionSocketStream, userId: number): number {
     const sessionId = nextId++;
-    this.sessions.set(connection, {sessionId, userId});
+    connection.sessionId = sessionId;
+    this.sessions.set(sessionId, {sessionId, userId, connection});
+    return sessionId;
   }
 
   private async cleanupInactiveSessions() {
@@ -147,7 +166,11 @@ class PresenceService {
           const now = Date.now();
           if (now - lastHeartbeat > INACTIVE_SESSION_TIMEOUT) {
             console.log(`🧹 Cleaning up inactive session ${sessionId} for user ${userId}`);
-            await presenceRepository.removeUserSession({sessionId, userId});
+            const session = this.sessions.get(sessionId);
+            if (session) {
+              await presenceRepository.removeUserSession(session);
+              this.sessions.delete(sessionId);
+            }
           }
         }
       }
@@ -157,9 +180,9 @@ class PresenceService {
   }
 
   private async sendPing() {
-    for (const connection of this.sessions.keys()) {
+    for (const [sessionId, session] of this.sessions.entries()) {
       try {
-        connection.socket.send(JSON.stringify({ type: "ping" }));
+        session.connection.socket.send(JSON.stringify({ type: "ping" }));
       } catch (err) {
         console.log('❌ Error sending ping:', err);
       }

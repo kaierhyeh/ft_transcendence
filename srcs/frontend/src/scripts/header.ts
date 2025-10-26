@@ -1,4 +1,5 @@
 // Simple header management
+import { presence } from './presence.js';
 import user from './user/User.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
@@ -124,6 +125,7 @@ function setupHeaderEvents() {
                 
                 // Clear user data from singleton
                 user.logout();
+                presence.checkout();
                 
                 // Redirect to home
                 window.location.href = '/';

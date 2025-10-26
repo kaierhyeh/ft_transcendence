@@ -3,7 +3,6 @@ export interface UserListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string;
-	user_status: string;
 	friendship_status: string | null;
 	avatar_updated_at: string;
 }
@@ -13,7 +12,6 @@ export interface UserInfo {
 	username: string;
 	alias: string | null;
 	avatar_filename: string;
-	user_status: string;
 	friendship_status: string | null;
 	from_id: number | null;
 	to_id: number | null;
@@ -53,7 +51,6 @@ export interface ChatUser {
 	user_id: number;
 	username: string;
 	alias: string | null;
-	user_status: string | null;
 	friendship_status: string | null;
 	from: number | null;
 	avatar_updated_at: string;
