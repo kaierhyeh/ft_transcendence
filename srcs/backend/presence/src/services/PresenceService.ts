@@ -1,9 +1,7 @@
 import { presenceRepository } from '../repository/presenceRepository';
-import { jwtVerifier } from './JwtVerifierService';
-import { toInteger } from '../utils';
-import { FriendsMessage, FriendStatusChangeMessage, UserStatus, SessionSocketStream } from '../types';
+import { FriendsMessage, FriendStatusChangeMessage, UserStatus } from '../types';
 import { usersClient } from "../clients/UsersClient"
-import { ErrorCode } from '../errors';
+import { SocketStream } from '@fastify/websocket';
 
 let nextId = 1;
 const INACTIVE_SESSION_TIMEOUT = 90_000; // [ms] (90s)
@@ -15,7 +13,7 @@ const FRIENDS_RETRIEVAL_INTERVAL = 60_000; // [ms] (60s)
 export interface Session {
   sessionId: number;
   userId: number;
-  connection: SessionSocketStream;
+  connection: SocketStream;
 }
 
 
@@ -27,31 +25,21 @@ class PresenceService {
   constructor() {
     this.sessions = new Map();
 
-    setInterval(() => this.cleanupInactiveSessions(), CLEANUP_INTERVAL);
+    setInterval(async () => await this.cleanupInactiveSessions(), CLEANUP_INTERVAL);
     setInterval(() => this.sendPing(), PING_INTERVAL);
     // setInterval which periodically retrieve user friend lists
-    setInterval(() => this.updateFriendLists(), FRIENDS_RETRIEVAL_INTERVAL);
-
+    setInterval(async () => await this.updateFriendLists(), FRIENDS_RETRIEVAL_INTERVAL); 
   }
 
-  async checkin(data: any, connection: SessionSocketStream) {
-
-    console.log("data: ", data);
-    const token: string = data.accessToken;
-    if (!token) {
-      console.log('❌ Checkin failed: Missing access token');
-      throw new Error(ErrorCode.MISSING_TOKEN);
-    }
-
-    const result = await jwtVerifier.verifyUserSessionToken(token);
-    const userId = toInteger(result.sub);
-
+  // PresenceService.ts
+  async checkin(userId: number, connection: SocketStream) {
     console.log(`✅ User ${userId} checked in successfully`);
 
     const sessionId = this.registerConnection(connection, userId);
 
     const session = this.sessions.get(sessionId);
-    if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
+    if (!session) throw new Error("Internal error: Session not found after registration");
+    
     // add user session
     const statusChanged = await presenceRepository.addUserSession(session);
 
@@ -61,17 +49,16 @@ class PresenceService {
     // send initial friend list
     await this.sendFriendsPresence(session);
     
-    // broadcast update to subscribers if the new user has no session already
-    if (statusChanged) this.broadcastUpdate({ userId, status: "online" });
+    // broadcast update to connected uesr if the new user has no session already
+    if (statusChanged) await this.broadcastUpdate({ userId, status: "online" });
+}
 
-  }
-
-  async heartbeat(connection: SessionSocketStream) {
-    const sessionId = connection.sessionId;
-    if (!sessionId) throw new Error(ErrorCode.INTERNAL_ERROR);
+  async heartbeat(connection: SocketStream) {
+    const sessionId = (connection as any).sessionId;
+    if (!sessionId) throw new Error("Internal error: [heartbeat] Missing session ID in connection");
     const session = this.sessions.get(sessionId);
-    if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
-    presenceRepository.heartbeat(session);
+    if (!session) throw new Error("Internal error: Session not found for heartbeat");
+    await presenceRepository.heartbeat(session);
   }
 
   async sendFriendsPresence(session: Session) {
@@ -119,20 +106,20 @@ class PresenceService {
     await Promise.all(broadcastPromises);
   }
 
-  async disconnect(connection: SessionSocketStream) {
-    const sessionId = connection.sessionId;
-    if (!sessionId) throw new Error(ErrorCode.INTERNAL_ERROR);
+  async disconnect(connection: SocketStream) {
+    const sessionId = (connection as any).sessionId;
+    if (!sessionId) throw new Error("Internal error: [disconnect] Missing session ID in connection");
     const session = this.sessions.get(sessionId);
-    if (!session) throw new Error(ErrorCode.INTERNAL_ERROR);
+    if (!session) throw new Error("Internal error: Session not found for disconnection");
     
     // remove user session
     const nbSessions = await presenceRepository.removeUserSession(session);
     
     // broadcast update to subscribers if the user has no more sessions
-    if (nbSessions === 0) this.broadcastUpdate({userId: session.userId, status: "offline"});
+    if (nbSessions === 0) await this.broadcastUpdate({userId: session.userId, status: "offline"});
     
     this.sessions.delete(sessionId);
-    delete connection.sessionId;
+    delete (connection as any).sessionId;
   }
 
   private async setFriends(userId: number) {
@@ -140,7 +127,7 @@ class PresenceService {
     await presenceRepository.setFriends(userId, friendList);
   }
 
-  private async updateFriendLists() {
+  private async  updateFriendLists() {
     const userList = await presenceRepository.getOnlineUsers();
     if (userList.length === 0) return;
     const friendLists = await usersClient.getFriendLists(userList);
@@ -149,9 +136,9 @@ class PresenceService {
     }
   }
 
-  private registerConnection(connection: SessionSocketStream, userId: number): number {
+  private registerConnection(connection: SocketStream, userId: number): number {
     const sessionId = nextId++;
-    connection.sessionId = sessionId;
+    (connection as any).sessionId = sessionId;
     this.sessions.set(sessionId, {sessionId, userId, connection});
     return sessionId;
   }
@@ -179,7 +166,7 @@ class PresenceService {
     }
   }
 
-  private async sendPing() {
+  private sendPing() {
     for (const [sessionId, session] of this.sessions.entries()) {
       try {
         session.connection.socket.send(JSON.stringify({ type: "ping" }));

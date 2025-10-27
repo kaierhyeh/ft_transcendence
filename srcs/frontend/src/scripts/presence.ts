@@ -1,4 +1,5 @@
-const API_PRESENCE_ENDPOINT = `${window.location.origin}/api/presence`;
+// No need for URL in the constant - WebSocket URL is relative
+const API_PRESENCE_WS_ENDPOINT = `/api/presence/ws`;
 
 export type OnlineStatus = "online" | "offline" | "unknown";
 
@@ -7,54 +8,68 @@ interface UserStatus {
   status: OnlineStatus;
 }
 
-// Helper function to get cookie value by name
-function getCookie(name: string): string | null {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        const cookieValue = parts.pop()?.split(';').shift();
-        return cookieValue || null;
-    }
-    return null;
-}
-
-let ws: WebSocket;
-
 class Presence {
     private friendStatus: Map<number, OnlineStatus> = new Map();
+    private ws: WebSocket | null = null;
 
-    async checkin() {
-        console.log('🔌 Creating WebSocket connection to:', `${API_PRESENCE_ENDPOINT}/ws`);
-        ws = new WebSocket(`${API_PRESENCE_ENDPOINT}/ws`);
-    
-        ws.onopen = () => {
+    checkin() {
+        // Prevent multiple connections
+        if (this.ws !== null) {
+            console.log('⚠️ WebSocket already exists, skipping checkin');
+            return;
+        }
+
+        // Build WebSocket URL - browser will automatically convert http->ws, https->wss
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}${API_PRESENCE_WS_ENDPOINT}`;
+        
+        console.log('🔌 Creating WebSocket connection to:', wsUrl);
+        
+        try {
+            this.ws = new WebSocket(wsUrl);
+        } catch (error) {
+            console.error('❌ Failed to create WebSocket:', error);
+            this.ws = null;
+            return;
+        }
+
+        this.ws.onopen = () => {
             console.log('🔓 WebSocket opened');
             
-            const accessToken = getCookie('accessToken');
-            console.log('🔑 Access token:', accessToken ? 'Found' : 'NOT FOUND');
-            
-            if (!accessToken) {
-                console.error('❌ No access token in cookies');
-                ws.close();
-                return;
+            // Since the server will authenticate via cookies in the upgrade request,
+            // we just send a checkin message without the token
+            const message = { type: "checkin" };
+            const delayMs = 500; // delay before sending the checkin
+            console.log(`⏳ Delaying checkin by ${delayMs}ms`, message);
+
+            window.setTimeout(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                try {
+                this.ws.send(JSON.stringify(message));
+                console.log('✅ Checkin message sent');
+                } catch (error) {
+                console.error('❌ Failed to send checkin:', error);
+                }
+            } else {
+                console.warn('⚠️ WebSocket not open, skipping checkin send');
             }
-            
-            const message = { type: "checkin", data: { accessToken } };
-            console.log('📤 Sending checkin:', message);
-            ws.send(JSON.stringify(message));
+            }, delayMs);
         };
 
-        ws.onmessage = (event: MessageEvent) => {
+        this.ws.onmessage = (event: MessageEvent) => {
             console.log('📥 Message received:', event.data);
+            
             try {
                 const message = JSON.parse(event.data);
                 
                 if (message.type === "ping") {
-                    console.log('� Ping received, sending pong');
-                    ws.send(JSON.stringify({ type: "pong" }));
+                    console.log('🏓 Ping received, sending pong');
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({ type: "pong" }));
+                    }
                 }
                 else if (message.type === "friends") {
-                    const { friends } = message.data as { friends: UserStatus[]};
+                    const { friends } = message.data as { friends: UserStatus[] };
                     console.log('👥 Friends list received:', friends);
                     this.friendStatus.clear();
                     friends.forEach(friend => {
@@ -71,25 +86,37 @@ class Presence {
             }
         };
 
-        ws.onclose = (event) => {
-            console.log('🔌 WebSocket closed:', event.code, event.reason);
+        this.ws.onclose = (event) => {
+            console.log('🔌 WebSocket closed:', {
+                code: event.code,
+                reason: event.reason || '(no reason)',
+                wasClean: event.wasClean
+            });
+            
+            // Nullify the connection so checkin() can be called again
+            this.ws = null;
+            this.friendStatus.clear();
         };
 
-        ws.onerror = (error) => {
-            console.error('❌ WebSocket error:', error);
+        this.ws.onerror = (error) => {
+            console.error('❌ WebSocket error occurred:', error);
+            if (this.ws) {
+                console.error('   readyState:', this.ws.readyState);
+            }
         };
     }
 
-    async checkout() {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close();
+    checkout() {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            console.log('👋 Closing WebSocket connection');
+            this.ws.close();
         }
+        // Note: this.ws will be nullified in onclose handler
     }
 
     onlineStatus(userId: number): OnlineStatus {
         const status = this.friendStatus.get(userId);
-        if (!status) return "unknown";
-        return status;
+        return status ?? "unknown";
     }
 }
 

@@ -1,43 +1,56 @@
+// PresenceController.ts
 import { SocketStream } from "@fastify/websocket";
 import { presenceService } from '../services/PresenceService';
 import { ErrorCode, WsErrorData } from '../errors';
 import { RawData } from 'ws';
-import { SessionSocketStream } from '../types';
 
 class PresenceController {
-
-  public async accept(connection: SocketStream) {
-    console.log('🔌 New WebSocket connection accepted');
-    const sessionConnection = connection as SessionSocketStream;
-    
-    // Add raw socket listeners to debug
-    sessionConnection.socket.on('message', (data) => {
-      console.log('🔍 RAW message received:', data.toString());
-    });
-    
-    // sessionConnection.socket.once("message", (raw: RawData) => this.checkin(raw, sessionConnection));
-    // sessionConnection.socket.on("message", (raw: RawData) => this.messageHandler(raw, sessionConnection));
-    sessionConnection.socket.on("close", () => this.disconnectionHandler(sessionConnection));
-    sessionConnection.socket.on("error", (error) => this.errorHandler(error, sessionConnection));
-    console.log('✅ WebSocket event handlers registered');
-  }
-    
-  private async checkin(raw: RawData, connection: SessionSocketStream) {
-    console.log('📥 Checkin message received:', raw.toString());
-    try {
-      const msg = JSON.parse(raw.toString());
-      await presenceService.checkin(msg.data, connection);
-    } catch(err) {
-      console.log('❌ Checkin error:', err);
-      this.errorHandler(err, connection);
+    public accept(connection: SocketStream, userId: number) {
+        console.log(`🔌 New WebSocket connection accepted for user ${userId}`);
+              
+        
+        connection.socket.on("message", async (raw: RawData) => {
+          console.log('📨 Message received from user', userId);
+          await this.messageHandler(raw, connection, userId)
+        }
+        );
+        
+        connection.socket.on("close", async (code: number, reason: Buffer) => {
+            console.log('🔌 Socket close event fired:', {
+                code,
+                reason: reason.toString(),
+                hadSessionId: !!(connection as any).sessionId
+            });
+            await this.disconnectionHandler(connection);
+        });
+        
+        connection.socket.on("error", (error) => {
+            console.log('❌ Socket error event fired:', error);
+            this.errorHandler(error, connection);
+        });
+        
+        console.log('✅ WebSocket event handlers registered');
     }
-  }
 
-  private async messageHandler(raw: RawData, connection: SessionSocketStream) {
+    private async checkin(raw: RawData, connection: SocketStream, userId: number) {
+        console.log('📥 Checkin message received:', raw.toString());
+        try {
+          if ((connection as any).sessionId) return;
+            // User is already authenticated, just register the session
+            await presenceService.checkin(userId, connection);
+        } catch(err) {
+            console.log('❌ Checkin error:', err);
+            this.errorHandler(err, connection);
+        }
+    }
+
+  private async messageHandler(raw: RawData, connection: SocketStream, userId: number) {
     try {
       const msg = JSON.parse(raw.toString());
 
-      if (msg.type === "pong") {
+      if (msg.type === "checkin") {
+        await this.checkin(raw, connection, userId);
+      } else if (msg.type === "pong") {
         await presenceService.heartbeat(connection);
       } else {
         throw new Error(ErrorCode.INVALID_MESSAGE_TYPE);
@@ -47,15 +60,20 @@ class PresenceController {
     }
   }
 
-  private async disconnectionHandler(connection: SessionSocketStream) {
+  private async disconnectionHandler(connection: SocketStream) {
     try {
+      // Only disconnect if the connection was checked in (has a sessionId)
+      if (!(connection as any).sessionId) {
+        console.log('⚠️ Connection closed before checkin completed');
+        return;
+      }
       await presenceService.disconnect(connection);
     } catch(err) {
       this.errorHandler(err, connection);
     }
   }
  
-  private errorHandler(error: any, connection: SessionSocketStream) {
+  private errorHandler(error: any, connection: SocketStream) {
     console.log('❌ Presence connection error:', {
       error: error?.message || String(error)
     });

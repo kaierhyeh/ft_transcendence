@@ -1,6 +1,5 @@
 import user from "../user/User.js";
 import { initiateGoogleLogin } from "../api.js";
-import { presence } from "../presence.js";
 
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 
@@ -73,7 +72,6 @@ export function initSignup() {
 				// update_user(new User(data.username, data.id));
 				alert('Registration successful! You are now logged in.');
 				await user.fetchAndUpdate();
-				presence.checkin();
 				redirectAfterLogin();
 			} else
 				alert(data.error || 'Registration failed.');
@@ -100,7 +98,6 @@ export function initSignup() {
 				if (data.success) {
 					// User is already logged in, fetch user data and redirect
 					await user.fetchAndUpdate();
-					await presence.checkin();
 					redirectAfterLogin();
 				}
 			}

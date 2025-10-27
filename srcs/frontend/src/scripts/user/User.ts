@@ -1,3 +1,5 @@
+import { presence } from "../presence.js";
+
 export type UserData = {
     user_id: number;
     username: string;
@@ -188,6 +190,7 @@ export class User {
             }
 
             const userData: UserData = await response.json();
+            presence.checkin();
             return this.update(userData);
         } catch (error) {
             console.error('Error fetching user profile:', error);
