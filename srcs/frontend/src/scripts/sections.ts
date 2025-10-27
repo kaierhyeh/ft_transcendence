@@ -249,10 +249,118 @@ export async function go_section(type: string, option: string) {
 
 export function update_status(username: string, online: boolean) {}
 
-export function show2FAVerificationModal(tempToken: string, username: string) {
+export function show2FAVerificationModal(tempToken: string, context: string) {
 	const modal = document.getElementById('2fa-verification-modal') as HTMLElement;
-	if (modal) {
-		modal.style.display = 'flex';
+	if (!modal) {
+		console.error('2FA verification modal not found');
+		return;
+	}
+
+	// Update the context message
+	const contextMsg = document.getElementById('2fa-context-message') as HTMLElement;
+	if (contextMsg) {
+		contextMsg.textContent = `Please enter the 6-digit code from your authenticator app for ${context}.`;
+	}
+
+	// Clear any previous error messages and input
+	const errorMsg = document.getElementById('2fa-verification-error') as HTMLElement;
+	if (errorMsg) errorMsg.textContent = '';
+	
+	const tokenInput = document.getElementById('2fa-verification-token') as HTMLInputElement;
+	if (tokenInput) tokenInput.value = '';
+
+	// Show the modal
+	modal.style.display = 'flex';
+
+	// Auto-focus the token input field
+	if (tokenInput) {
+		// Small delay to ensure modal is visible before focusing
+		setTimeout(() => {
+			tokenInput.focus();
+		}, 100);
+	}
+
+	// Setup verify button handler
+	const verifyBtn = document.getElementById('verify-2fa-btn') as HTMLButtonElement;
+	const cancelBtn = document.getElementById('cancel-2fa-verification-btn') as HTMLButtonElement;
+	const closeBtn = document.getElementById('close-2fa-verification-modal') as HTMLElement;
+
+	const closeModal = () => {
+		modal.style.display = 'none';
+		if (errorMsg) errorMsg.textContent = '';
+		if (tokenInput) tokenInput.value = '';
+		
+		// Remove event listeners
+		modal.removeEventListener('click', handleOutsideClick);
+		if (tokenInput) tokenInput.removeEventListener('keypress', handleEnterKey);
+		document.removeEventListener('keydown', handleEscKey);
+	};
+
+	// Click outside modal to close
+	const handleOutsideClick = (event: MouseEvent) => {
+		if (event.target === modal) {
+			closeModal();
+		}
+	};
+	modal.addEventListener('click', handleOutsideClick);
+
+	// Press Enter to submit
+	const handleEnterKey = (event: KeyboardEvent) => {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			if (verifyBtn) verifyBtn.click();
+		}
+	};
+	if (tokenInput) {
+		tokenInput.addEventListener('keypress', handleEnterKey);
+	}
+
+	// Press ESC to close
+	const handleEscKey = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			closeModal();
+		}
+	};
+	document.addEventListener('keydown', handleEscKey);
+
+	if (cancelBtn) cancelBtn.onclick = closeModal;
+	if (closeBtn) closeBtn.onclick = closeModal;
+
+	if (verifyBtn) {
+		verifyBtn.onclick = async () => {
+			const token = tokenInput?.value.trim();
+			
+			if (!token || token.length !== 6 || !/^\d+$/.test(token)) {
+				if (errorMsg) errorMsg.textContent = 'Please enter a valid 6-digit code';
+				return;
+			}
+
+			try {
+				const response = await fetch('/api/auth/2fa/verify', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({
+						token,
+						temp_token: tempToken
+					})
+				});
+
+				const data = await response.json();
+
+				if (response.ok && data.success) {
+					closeModal();
+					// Redirect to home page after successful verification
+					window.location.href = '/';
+				} else {
+					if (errorMsg) errorMsg.textContent = data.error || 'Invalid verification code';
+				}
+			} catch (error) {
+				console.error('2FA verification error:', error);
+				if (errorMsg) errorMsg.textContent = 'Verification failed. Please try again.';
+			}
+		};
 	}
 }
 

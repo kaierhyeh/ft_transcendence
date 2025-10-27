@@ -12,6 +12,7 @@ export interface UserRow {
     password_hash: string | null;
     alias: string | null;
     avatar_filename: string | null;
+    avatar_updated_at: string | null;
     two_fa_enabled: 0 | 1;
     two_fa_secret: string | null;
     google_sub: string | null;
@@ -24,7 +25,10 @@ export interface UserRow {
 export interface UpdateData {
     password_hash?: string;
     alias?: string;
-    avatar_filename?: string;
+    avatar?: {
+        filename: string;
+        updated_at: string;
+    };
     settings?: string;
     two_fa?: TwoFa;
 }
@@ -90,9 +94,11 @@ export class UserRepository {
             set_clauses.push("alias = @alias");
             params.alias = data.alias;
         }
-        if (data.avatar_filename !== undefined) {
+        if (data.avatar !== undefined) {
             set_clauses.push("avatar_filename = @avatar_filename");
-            params.avatar_filename = data.avatar_filename;
+            params.avatar_filename = data.avatar.filename;
+            set_clauses.push("avatar_updated_at = @avatar_updated_at");
+            params.avatar_updated_at = data.avatar.updated_at;
         }
         if (data.settings !== undefined) {
             set_clauses.push("settings = @settings");
@@ -256,6 +262,18 @@ export class UserRepository {
             WHERE user_id = ?
         `);
         const result = stmt.run(CONFIG.AVATAR.DEFAULT_FILENAME, user_id);
+        return result.changes as number;
+    }
+
+    public update2FASettings(user_id: number, enabled: number, secret?: string | null): number {
+        const stmt = this.db.prepare(`
+            UPDATE users 
+            SET two_fa_enabled = ?,
+                two_fa_secret = ?,
+                updated_at = datetime('now')
+            WHERE user_id = ?
+        `);
+        const result = stmt.run(enabled, secret, user_id);
         return result.changes as number;
     }
 

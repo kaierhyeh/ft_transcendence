@@ -42,12 +42,17 @@
     </div>
 
     <div id="tournament-game" class="tournament-phase" style="display: none;">
+        <div class="game-header" style="display: none;">
+            <div class="game-player left">
+                <span id="tournament-player1" class="game-player-name">Player 1</span>
+            </div>
+            <div class="game-vs" aria-hidden="true">VS</div>
+            <div class="game-player right">
+                <span id="tournament-player2" class="game-player-name">Player 2</span>
+            </div>
+        </div>
         <div class="pong-game-wrapper" style="display: none;">
             <canvas id="tournament-pong" width="800" height="750" class="pong-canvas"></canvas>
-        </div>
-        <div class="game-controls">
-            <button id="validate-result" class="tournament-btn tournament-btn-success" style="display: none;" onclick="window.tournamentValidateResult()" data-i18n="validateResult">Validate Result</button>
-            <button id="reset-score" class="tournament-btn tournament-btn-secondary" style="display: none;" onclick="window.tournamentResetScore()" data-i18n="resetScore">Reset Score</button>
         </div>
     </div>
 

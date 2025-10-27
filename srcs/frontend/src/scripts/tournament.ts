@@ -2,6 +2,7 @@ import { TournamentMatch } from './tournament/types.js';
 import { TournamentBracketManager } from './tournament/bracket.js';
 import { TournamentGameManager } from './tournament/gameTournament.js';
 import { TournamentUIManager } from './tournament/ui.js';
+import user from './user/User.js';
 
 export function initTournament(): void {
     let selectedPlayerCount: number = 0;
@@ -71,15 +72,19 @@ export function initTournament(): void {
 
     gameManager.setOnGameEndCallback(onGameEnd);
 
-    (window as any).tournamentValidateResult = () => {
+    function validateCurrentMatchAndAdvance(): void {
         const winner = gameManager.getCurrentGameWinner();
-        
+
         if (winner) {
             const gameState = (window as any).gameSystem?.gameState();
             let score1 = 0;
             let score2 = 0;
-            
-            if (gameState && gameState.score) {
+
+            const currentScore = gameManager.getCurrentGameScore ? gameManager.getCurrentGameScore() : null;
+            if (currentScore) {
+                score1 = currentScore.left;
+                score2 = currentScore.right;
+            } else if (gameState && gameState.score) {
                 score1 = gameState.score.left;
                 score2 = gameState.score.right;
             } else {
@@ -87,14 +92,14 @@ export function initTournament(): void {
                 score1 = winner === currentMatch.player1 ? 7 : 0;
                 score2 = winner === currentMatch.player2 ? 7 : 0;
             }
-            
+
             const currentMatch = matches[currentMatchIndex];
             currentMatch.winner = winner;
             currentMatch.score1 = score1;
             currentMatch.score2 = score2;
-            
+
             const matchRound = bracketManager.getCurrentRound();
-            
+
             bracketManager.updateMatchResult(
                 currentMatch.player1,
                 currentMatch.player2,
@@ -103,18 +108,13 @@ export function initTournament(): void {
                 score2,
                 matchRound
             );
-            
-            uiManager.hideGameInterface();
-            uiManager.hideGameControls();
-            advanceToNextMatch();
-        } else
-            console.error('No winner found, cannot validate result');
-    };
 
-    (window as any).tournamentResetScore = () => {
-        if (typeof resetMatch === 'function')
-            resetMatch();
-    };
+            uiManager.hideGameInterface();
+            advanceToNextMatch();
+        } else {
+            console.error('No winner found, cannot validate result');
+        }
+    }
 
     function setupTournamentButtons(): void {
         const players4Btn = document.getElementById('players-4') as HTMLButtonElement;
@@ -195,6 +195,12 @@ export function initTournament(): void {
 
     function startMatch(): void {
         if (currentMatchIndex < matches.length) {
+            const cur = matches[currentMatchIndex];
+            const tournamentPlayer1 = document.getElementById('tournament-player1');
+            const tournamentPlayer2 = document.getElementById('tournament-player2');
+            if (tournamentPlayer1) tournamentPlayer1.textContent = cur.player1;
+            if (tournamentPlayer2) tournamentPlayer2.textContent = cur.player2;
+
             uiManager.showGameInterface();
             
             const canvas = uiManager.prepareCanvas();
@@ -210,7 +216,6 @@ export function initTournament(): void {
 
     function resetMatch(): void {
         gameManager.resetGame();
-        uiManager.hideGameControls();
         
         setTimeout(() => {
             startMatch();
@@ -219,8 +224,8 @@ export function initTournament(): void {
 
     function onGameEnd(winner: string): void {
         console.log('Tournament game ended, winner:', winner);
-        uiManager.showGameControls();
-        alert(`${winner} wins the match!`);
+        window.alert(`${winner} wins the match!`);
+        validateCurrentMatchAndAdvance();
     }
 
     function advanceToNextMatch(): void {

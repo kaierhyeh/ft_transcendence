@@ -1,32 +1,7 @@
 import { InternalAuthClient } from "../clients/InternalAuthClient";
 import { CONFIG } from "../config";
 import { ChatRepository } from "../repositories/chats.repository";
-
-export interface chatListRow {
-	chat_id: number;
-	user_id: number;
-	username: string;
-	alias: string | null;
-	user_status: string | null;
-	friendship_status: string | null;
-	from: number | null;
-}
-
-export interface ChatInfo {
-	chat_id: number;
-	from_id: number;
-	to_id: number;
-}
-
-export interface UserInfo {
-	user_id: number;
-	username: string;
-	alias: string;
-	user_status: string | null;
-	friendship_status: string | null;
-	from_id: number | null;
-};
-
+import { UserInfo, chatListRow, ChatInfo } from "../types/chats.types";
 
 export class ChatService {
 
@@ -87,7 +62,8 @@ export class ChatService {
 							alias: u.alias,
 							user_status: null,
 							friendship_status,
-							from
+							from,
+							avatar_updated_at: u.avatar_updated_at
 						});
 					} else {
 						// this user was blocked by user_id, hide status and friendship from frontend
@@ -98,7 +74,8 @@ export class ChatService {
 							alias: u.alias,
 							user_status: null,
 							friendship_status: null,
-							from: null
+							from: null,
+							avatar_updated_at: u.avatar_updated_at
 						});
 					}
 					break;
@@ -110,7 +87,8 @@ export class ChatService {
 						alias: u.alias,
 						user_status,
 						friendship_status,
-						from
+						from,
+						avatar_updated_at: u.avatar_updated_at
 					});
 					break;
 				default:
@@ -121,15 +99,106 @@ export class ChatService {
 						alias: u.alias,
 						user_status: null,
 						friendship_status: null,
-						from: null
+						from: null,
+						avatar_updated_at: u.avatar_updated_at
 					});
 					break;
 			}
 		}
 
-		chats.sort((a, b) => a.username.localeCompare(b.username));
+		// chats.sort((a, b) => a.username.localeCompare(b.username));
 
 		return chats;
+	}
+
+	private async getUserChatListRow(thisUserId: number, userId: number, chatInfo: ChatInfo): Promise<chatListRow | undefined> {
+
+		const baseUrl = CONFIG.USER_SERVICE.BASE_URL;
+		const body = { id: thisUserId, ids: [userId] };
+		const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
+
+		const res = await fetch(`${baseUrl}/friends/usersChat`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				...internalAuthHeaders
+			},
+			body: JSON.stringify(body)
+		});
+
+		if (!res.ok) {
+			throw new Error(`Failed to fetch users data: ${res.status} ${res.statusText}`);
+		}
+
+		const usersData = (await res.json()) as UserInfo[];
+		const user = usersData.find(u => u.user_id === userId);
+
+		if (user) {
+			let user_status = user.user_status;
+			let friendship_status = user.friendship_status;
+			let from: number | null = user.from_id;
+
+			switch (friendship_status) {
+				case "blocked":
+					if (user.user_id !== from) {
+						// user_id was blocked by this user
+						return {
+							chat_id: chatInfo.chat_id,
+							user_id: user.user_id,
+							username: user.username,
+							alias: user.alias,
+							user_status: null,
+							friendship_status,
+							from,
+							avatar_updated_at: user.avatar_updated_at
+						};
+					} else {
+						// this user was blocked by user_id
+						return {
+							chat_id: chatInfo.chat_id,
+							user_id: user.user_id,
+							username: user.username,
+							alias: user.alias,
+							user_status: null,
+							friendship_status: null,
+							from: null,
+							avatar_updated_at: user.avatar_updated_at
+						};
+					}
+				case "accepted":
+					return {
+						chat_id: chatInfo.chat_id,
+						user_id: user.user_id,
+						username: user.username,
+						alias: user.alias,
+						user_status,
+						friendship_status,
+						from,
+						avatar_updated_at: user.avatar_updated_at
+					};
+				default:
+					return {
+						chat_id: chatInfo.chat_id,
+						user_id: user.user_id,
+						username: user.username,
+						alias: user.alias,
+						user_status: null,
+						friendship_status: null,
+						from: null,
+						avatar_updated_at: user.avatar_updated_at
+					};
+			}
+		}
+
+		return undefined;
+	}
+
+	public async getUserChat(thisUserId: number, userId: number) {
+		let chatInfo = await this.chatRepository.getChatByUsersIds(thisUserId, userId);
+		if (chatInfo === null) {
+			chatInfo = await this.chatRepository.addChat(thisUserId, userId);
+		}
+		return await this.getUserChatListRow(thisUserId, userId, chatInfo);
 	}
 
 	public async getChatById(chatId: number, thisUserId: number) {

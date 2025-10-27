@@ -1,6 +1,7 @@
 /**
  * Internal Authentication Middleware for Auth Service
  * 
+ * This middleware secures internal service-to-service communication.
  * OAuth2-like client credentials flow for service-to-service authentication.
  * Services authenticate using client_id and client_secret to get internal access tokens.
  */
@@ -37,8 +38,6 @@ export async function internalAuthMiddleware(
     
   } catch (error) {
     console.error('Internal auth middleware error:', error);
-    return reply.status(500).send({ 
-      error: 'Internal authentication error'
-    });
+    return reply.status(500).send({ error: 'Internal authentication error'});
   }
 }

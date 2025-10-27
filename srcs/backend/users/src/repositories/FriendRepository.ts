@@ -5,6 +5,7 @@ export interface UserListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 	user_status: string | null;
 	friendship_status: string | null;
 	from_id: number | null;
@@ -16,6 +17,7 @@ export interface FriendListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 	user_status: string;
 }
 
@@ -24,6 +26,7 @@ export interface IncomingRequestListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 }
 
 export interface OutgoingRequestListRow {
@@ -31,10 +34,15 @@ export interface OutgoingRequestListRow {
 	username: string;
 	alias: string | null;
 	avatar_filename: string | null;
+	avatar_updated_at: string | null;
 }
 
 export interface FriendshipStatus {
 	status: string | null;
+	from_id: number | null;
+	to_id: number | null;
+	from_username: string | null;
+	to_username: string | null;
 }
 
 export class FriendRepository {
@@ -48,7 +56,8 @@ export class FriendRepository {
 				u.user_id,
 				u.username,
 				u.alias,
-				u.avatar_filename
+				u.avatar_filename,
+				u.avatar_updated_at
 			FROM users as u
 			ORDER BY u.username ASC
 		`);
@@ -62,6 +71,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users AS u
@@ -84,7 +94,8 @@ export class FriendRepository {
 				u.user_id,
 				u.username,
 				u.alias,
-				u.avatar_filename
+				u.avatar_filename,
+				u.avatar_updated_at
 			FROM users AS u
 			WHERE u.user_id = ?
 		`);
@@ -98,6 +109,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
@@ -121,6 +133,7 @@ export class FriendRepository {
 				u.username AS username,
 				u.alias AS alias,
 				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status
 			FROM users u
@@ -142,7 +155,8 @@ export class FriendRepository {
 				u.user_id AS user_id,
 				u.username AS username,
 				u.alias AS alias,
-				u.avatar_filename AS avatar_filename
+				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at
 			FROM users u
 			JOIN friendships f ON f.user_id = u.user_id
 			WHERE f.friend_id = ? AND f.status = 'pending'
@@ -157,7 +171,8 @@ export class FriendRepository {
 				u.user_id AS user_id,
 				u.username AS username,
 				u.alias AS alias,
-				u.avatar_filename AS avatar_filename
+				u.avatar_filename AS avatar_filename,
+				u.avatar_updated_at AS avatar_updated_at
 			FROM users u
 			JOIN friendships f ON f.friend_id = u.user_id
 			WHERE f.user_id = ? AND f.status = 'pending'
@@ -239,6 +254,7 @@ export class FriendRepository {
 				u.username,
 				u.alias,
 				u.avatar_filename,
+				u.avatar_updated_at,
 				u.status AS user_status,
 				f.status AS friendship_status,
 				f.user_id AS from_id,
@@ -261,11 +277,15 @@ export class FriendRepository {
 	public async getFriendshipStatus(userId: number, friendId: number) {
 		const stmt = this.db.prepare(`
 			SELECT
-				f.status AS status
+				f.status AS status,
+				f.user_id AS from_id,
+				f.friend_id AS to_id
 			FROM friendships f
 			WHERE f.user_id = ? AND f.friend_id = ?
 		`);
-
-		return stmt.get(userId, friendId) as FriendshipStatus;
+		
+		const res = stmt.get(userId, friendId) as FriendshipStatus;
+		console.log("--------------- RES FROM DB: ", res);
+		return res;
 	}
 }

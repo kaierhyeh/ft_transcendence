@@ -14,6 +14,7 @@ import path from 'path';
 import { CONFIG } from '../config';
 import { pipeline } from 'stream/promises';
 import { toInteger } from '../utils/type-converters';
+import { toSqlDateTime } from '../utils';
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -63,6 +64,7 @@ export class UserController {
         success: true,
         user_id: result.user_id,
         two_fa_enabled: result.two_fa_enabled,
+        two_fa_secret: result.two_fa_secret,
         message: "Local user resolved successfully"
       });
     } catch (error) {
@@ -116,7 +118,8 @@ export class UserController {
         return reply.status(400).send({ error: "Filename is reserved" });
       }
 
-      const timestamp = Date.now();
+      const updated_at = new Date();
+      const timestamp = updated_at.getTime();
       const extension = path.extname(data.filename || '') || '.jpg';
       const filename = `user_${user_id}_${timestamp}${extension}`;
       const filepath = path.join(CONFIG.AVATAR.BASE_URL, filename);
@@ -141,7 +144,7 @@ export class UserController {
         }
       }
 
-      const changes = await this.userService.updateAvatar(user_id, filename);
+      const changes = await this.userService.updateAvatar(user_id, filename, toSqlDateTime(updated_at));
 
       return reply.status(201).send(changes);
     } catch (error) {
@@ -169,6 +172,7 @@ export class UserController {
     request: FastifyRequest<{ Params: UserIdParams }>,
     reply: FastifyReply
   ) {
+    // Note: We ignore the 'v' parameter in avatarQuerySchema - it's only for cache busting
     try {
       const user_id = request.params.uid;
       const filename = await this.userService.getAvatar(user_id);
@@ -291,6 +295,25 @@ export class UserController {
       const { limit = 10 } = request.query;
       const leaderboard = await this.userService.getLeaderboard(limit);
       return reply.send(leaderboard);
+    } catch (error) {
+      this.handleError(error, reply);
+    }
+  }
+
+  public async update2FASettings(
+    request: FastifyRequest<{ Params: UserIdParams; Body: { enabled: number; secret?: string | null } }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const user_id = request.params.uid;
+      const { enabled, secret } = request.body;
+
+      await this.userService.update2FASettings(user_id, enabled, secret);
+
+      return reply.send({
+        success: true,
+        message: "2FA settings updated successfully"
+      });
     } catch (error) {
       this.handleError(error, reply);
     }

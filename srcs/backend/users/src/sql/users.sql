@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   -- display + profile
   alias                   TEXT,                 -- display name; NOT unique
   avatar_filename         TEXT        DEFAULT 'default.png',
+  avatar_updated_at       DATETIME    NOT NULL DEFAULT (datetime('now')),
 
   -- 2FA (TOTP)
   two_fa_enabled          INTEGER     NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0, 1)),

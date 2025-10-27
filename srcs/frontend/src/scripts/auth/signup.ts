@@ -20,6 +20,19 @@ export function initSignup() {
 	if (googleSignupBtn)
 		googleSignupBtn.addEventListener('click', handleGoogleSignup);
 
+	// Add Enter key support for signup form
+	if (usernameInput && emailInput && passwordInput) {
+		const handleEnterKey = (event: KeyboardEvent) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				handleRegister();
+			}
+		};
+		usernameInput.addEventListener('keypress', handleEnterKey);
+		emailInput.addEventListener('keypress', handleEnterKey);
+		passwordInput.addEventListener('keypress', handleEnterKey);
+	}
+
 	async function handleRegister() {
 		const username = usernameInput?.value.trim();
 		const email = emailInput?.value.trim();
@@ -70,6 +83,7 @@ export function initSignup() {
 
 			if (response.ok) {
 				const data = await response.json();
+
 				if (data.success) {
 					// User is already logged in, fetch user data and redirect
 					await user.fetchAndUpdate();
@@ -91,37 +105,7 @@ export function initSignup() {
 			// Clear the stored page and redirect to it
 			sessionStorage.removeItem('previousPage');
 			window.location.href = previousPage;
-		} else {
-			// Default redirect to homepage
+		} else		// Default redirect to homepage
 			window.location.href = '/';
-		}
 	}
-
 }
-
-// export async function handleOAuthCallback() {
-// 	const urlParams = new URLSearchParams(window.location.search);
-// 	const code = urlParams.get('code');
-// 	const error = urlParams.get('error');
-
-// 	if (error) {
-// 		alert('OAuth error: ' + error);
-// 		// Redirect to profile page
-// 		window.location.href = '/profile';
-// 		return;
-// 	}
-
-// 	if (code) {
-// 		try {
-// 			await processGoogleOAuth(code);
-// 			// The processGoogleOAuth function handles the redirect
-// 		} catch (error) {
-// 			console.error('OAuth callback error:', error);
-// 			alert('OAuth authentication failed.');
-// 			window.location.href = '/profile';
-// 		}
-// 	} else {
-// 		// No code parameter, redirect to profile
-// 		window.location.href = '/profile';
-// 	}
-// }

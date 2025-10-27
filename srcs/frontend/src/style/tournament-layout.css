@@ -12,7 +12,6 @@ body.tournament-page {
 .tournament-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
     height: 100vh;
     overflow-y: auto;
 }
@@ -22,7 +21,7 @@ body.tournament-page {
     font-size: 3rem;
     color: #4ade80;
     text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
-    margin: 2rem 0 3rem 0;
+    margin: 0.5rem 0 0.5rem 0;
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
@@ -49,6 +48,17 @@ body.tournament-page {
     justify-content: center;
     max-width: 300px;
     margin: 0 auto;
+}
+
+.player-vs .player-name {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    min-width: 110px;
+    font-size: 16px;
+    border: 1px solid rgba(74,222,128,0.35);
+    background: rgba(74,222,128,0.06);
 }
 
 .player-inputs-grid {
@@ -192,17 +202,12 @@ body.tournament-page {
         font-size: 13px;
     }
 
-    .tournament-container {
-        padding: 15px;
-    }
-
     .tournament-phase {
         padding: 20px 15px;
     }
 
     .tournament-title {
         font-size: 2.5rem;
-        margin: 1.5rem 0 2rem 0;
     }
 }
 
@@ -223,17 +228,12 @@ body.tournament-page {
         font-size: 12px;
     }
 
-    .tournament-container {
-        padding: 10px;
-    }
-
     .tournament-phase {
         padding: 15px 10px;
     }
 
     .tournament-title {
         font-size: 2rem;
-        margin: 1rem 0 1.5rem 0;
     }
 
     .tournament-actions {

@@ -10,6 +10,7 @@ let currentPage = 1;
 let isLoading = false;
 let hasMorePages = true;
 let profileUserId: number | null = null; // The user whose profile is being viewed
+let displayedMatches = 0;
 
 /**
  * Gets the user ID from URL query parameters
@@ -57,6 +58,10 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
     
     // Update pagination state
     hasMorePages = pagination.next_page !== null;
+    if (append)
+        displayedMatches += sessions.length;
+    else
+        displayedMatches = sessions.length;
     
     // Handle empty state
     if (sessions.length === 0 && !append) {
@@ -87,7 +92,7 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
             </div>
             ${hasMorePages ? '<button class="load-more-btn">Load More</button>' : ''}
             <div class="pagination-info">
-                Showing ${pagination.total_records} match${pagination.total_records !== 1 ? 'es' : ''}
+                Showing ${displayedMatches} of ${pagination.total_records} match${pagination.total_records !== 1 ? 'es' : ''}
             </div>
         `;
     }
@@ -102,35 +107,45 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
     
     // Setup load more button
     setupLoadMoreButton(container);
+
+    const paginationInfo = container.querySelector('.pagination-info');
+    if (paginationInfo)
+        paginationInfo.textContent = `Showing ${displayedMatches} of ${pagination.total_records} match${pagination.total_records !== 1 ? 'es' : ''}`;
 }
 
 function setupLoadMoreButton(container: Element): void {
     const loadMoreBtn = container.querySelector('.load-more-btn');
     if (!loadMoreBtn) return;
-    
+    const existingListenerFlag = '__load_more_attached__';
+    if ((loadMoreBtn as any)[existingListenerFlag]) return;
+    (loadMoreBtn as any)[existingListenerFlag] = true;
+
     loadMoreBtn.addEventListener('click', async () => {
         if (isLoading || !hasMorePages) return;
-        
+
         try {
             isLoading = true;
             loadMoreBtn.textContent = 'Loading...';
             loadMoreBtn.setAttribute('disabled', 'true');
-            
+
             currentPage++;
             const response = await fetchMatchHistory({
                 userId: profileUserId!,
                 page: currentPage
             });
-            
+
             renderMatches(container, response, true);
-            
+
+            if (hasMorePages)
+                loadMoreBtn.textContent = 'Load More';
+
         } catch (error) {
             console.error('Failed to load more matches:', error);
             loadMoreBtn.textContent = 'Failed to load. Try again?';
         } finally {
             isLoading = false;
             loadMoreBtn.removeAttribute('disabled');
-            
+
             // Remove button if no more pages
             if (!hasMorePages) {
                 loadMoreBtn.remove();

@@ -3,3 +3,4 @@
 node_modules
 secrets
 .pswd
+.DS_Store

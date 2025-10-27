@@ -14,7 +14,9 @@ import {
   MatchHistoryQuery,
   matchHistoryQuerySchema,
   UserLookupParams,
-  userLookupSchema
+  userLookupSchema,
+  AvatarQuery,
+  avatarQuerySchema
 } from "../schemas";
 import { userAuthMiddleware } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
@@ -91,10 +93,20 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   );
 
   // GET /:uid/avatar - Retrieve avatar image file
-  fastify.get<{ Params: UserIdParams }> (
+  fastify.get<{ Params: UserIdParams, Querystring: AvatarQuery }> (
     "/:uid/avatar",
-    { schema: { params: userIdSchema }  },
+    { schema: { querystring: avatarQuerySchema, params: userIdSchema } },
     userController.getAvatar.bind(userController)
+  );
+
+  // PUT /:uid/2fa - Update 2FA settings (internal service use only)
+  fastify.put<{ Params: UserIdParams; Body: { enabled: number; secret?: string | null } }>(
+    "/:uid/2fa",
+    { 
+      schema: { params: userIdSchema },
+      preHandler: internalAuthMiddleware 
+    },
+    userController.update2FASettings.bind(userController)
   );
 
   // GET /:uid/profile - Get public user profile

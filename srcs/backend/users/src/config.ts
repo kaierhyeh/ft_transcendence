@@ -54,10 +54,6 @@ export const CONFIG = {
   },
 
 
-  API: {
-    BASE_URL: process.env.API_URL || "https://localhost:4443/api"
-  },
-
   // Internal auth credentials
   INTERNAL_AUTH: {
     CLIENT_ID: clientCredentials.clientId,

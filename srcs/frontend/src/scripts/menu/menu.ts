@@ -1,6 +1,8 @@
-import {openChatsSection} from "./menu.chat.js";
-import {openUsersSection} from "./menu.users.js";
+import { openChatsSection } from "./menu.chat.js";
+import { openUsersSection } from "./menu.users.js";
+import user from '../user/User.js';
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
+import { chatSocket } from "./menu.ws.js";
 // import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
@@ -25,15 +27,12 @@ function initializeGlobals(): boolean {
 
 /* ============================================ EVENTS ====================================== */
 
-// Need to set and unset ACTIV class to buttons when clicked o use CSS for active button
-
 function openMenuWindow(): void {
 	// run users section as default
-	console.log("MENU: button open Menu pressed");
 	clearEventsInSections();
 	hideSectionsElements();
-	showElementById("menuWindow");
-	hideElementById("menuButton");
+	["menuButton"].forEach(hideElementById);
+	["menuWindow"].forEach(showElementById);
 
 	// Initialize language switcher when menu opens
 	// initializeLanguageSwitcher();
@@ -41,61 +40,59 @@ function openMenuWindow(): void {
 	openUsers();
 }
 
-function closeMenuWindow(): void {
-	console.log("MENU: button close	Menu pressed");
+export function closeMenuWindow(): void {
+	chatSocket?.close(1000, "Close socket: close social menu");
 	clearEventsInSections();
 	hideSectionsElements();
-	hideElementById("menuWindow");
-	showElementById("menuButton");
+	["menuWindow"].forEach(hideElementById);
+	["menuButton"].forEach(showElementById);
 }
 
 function openUsers(): void {
-	console.log("MENU: button Users pressed");
-
 	clearEventsInSections();
 	hideSectionsElements();
-
-	setElementActive("usersSectionButton", true);
-	setElementActive("chatsSectionButton", false);
-
-	clearEvents("#menuControlPanel");
-	document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
-
-	openUsersSection(/* 1 */);
+	if (user.isLoggedIn()) {
+		setElementActive("usersSectionButton", true);
+		setElementActive("chatsSectionButton", false);
+		["#menuControlPanel"].forEach(clearEvents);
+		document.getElementById("chatsSectionButton")!.addEventListener("click", openChats);
+		openUsersSection();
+	} else {
+		["#menuControlPanel"].forEach(clearEvents);
+		openUsersSection();
+	}
 }
 
 function openChats(): void {
-	console.log("MENU: button Chats pressed");
+	if (!user.isLoggedIn()) {
+		return;
+	}
 	clearEventsInSections();
 	hideSectionsElements();
-
 	setElementActive("usersSectionButton", false);
 	setElementActive("chatsSectionButton", true);
-
-	clearEvents("#menuControlPanel");
+	["#menuControlPanel"].forEach(clearEvents);
 	document.getElementById("usersSectionButton")!.addEventListener("click", openUsers);
-
-	openChatsSection(/* 1 */); // Replace 1 with actual current user ID
+	openChatsSection();
 }
 
 /* ============================================ UTILS ======================================= */
 
 // Clear events in all sections
 function clearEventsInSections(): void {
-	// clearEvents("#usersSection");
-	clearEvents("#usersList");
-	clearEvents("#usersInfo");
-	clearEvents('#userLowerPanel');
-	// clearEvents("#friendsSection");
-	// clearEvents("#chatsSection");
-	clearEvents("#chatsList");
-	clearEvents("#chatMessages");
-	clearEvents("#chatLowerPanel");
-	// Common elements
-	clearEvents("#menuBackButton");
+	[	"#usersList",
+		"#usersInfo",
+		'#userLowerPanel',
+		"#chatsList",
+		"#chatMessages",
+		"#chatLowerPanel",
+		"#menuBackButton"
+	].forEach(clearEvents);
+
 	if(!initializeGlobals()) {
 		console.error("MENU: globals reinitialization failed: Missing elements");
 	}
+
 	document.getElementById("usersList")!.innerHTML = '';
 	document.getElementById("chatsList")!.innerHTML = '';
 }
@@ -103,26 +100,21 @@ function clearEventsInSections(): void {
 // To hide elements that are not part of the menu
 // This is to prevent mix of elements from different sections
 function hideSectionsElements(): void {
-	// Hide all in users section
-	// hideElementById("usersSection");
-	hideElementById("usersList");
-	hideElementById("usersInfo");
-	hideElementById("userLowerPanel");
+	[	"usersList",
+		"usersInfo",
+		"userLowerPanel",
+		"chatsList",
+		"chatMessages",
+		"chatLowerPanel",
+		"menuBackButton"
+	].forEach(hideElementById);
 
-	// Hide all in friends section
-	// hideElementById("friendsSection");
+	if (user.isLoggedIn()) {
+		["menuControlPanel"].forEach(showElementById);
+	} else {
+		["menuControlPanel"].forEach(hideElementById);
+	}
 
-	// Hide all in chats section
-	// hideElementById("chatsSection");
-	hideElementById("chatsList");
-	hideElementById("chatMessages");
-	hideElementById("chatLowerPanel");
-	
-	// Common elements
-	hideElementById("menuBackButton");
-
-	// Show menu control panel if was hidden
-	showElementById("menuControlPanel");
 }
 
 
@@ -136,9 +128,9 @@ export async function initMenu(): Promise<void> {
 		return;
 	}
 
-	// set events to open Menu, Users, Chats, close Menu
 	menuButton.addEventListener("click", openMenuWindow);
 	menuCloseButton.addEventListener("click", closeMenuWindow);
 	usersButton.addEventListener("click", openUsers);
 	chatsButton.addEventListener("click", openChats);
+
 }

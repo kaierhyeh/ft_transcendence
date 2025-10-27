@@ -202,8 +202,10 @@ export class FriendController {
 		try {
 			const userId = request.params.userId;
 			const friendId = request.params.friendId;
+			console.log("-----FRIENDSHIP : " + userId + " -> " + friendId);
 			const status = await this.friendService.getFriendshipStatus(userId, friendId);
-			reply.status(200).send({ status: status ?? null })
+			console.log("-------- BEFORE SEND: ", status);
+			reply.status(200).send( status ?? null )
 		} catch (error) {
 			this.handleError(error, reply);
 		}
