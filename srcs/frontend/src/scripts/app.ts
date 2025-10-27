@@ -111,6 +111,20 @@ async function navigate(path: string, push: boolean = true)
 		cleanupRemoteGame();
 	}
 
+	// Cleanup tournament when leaving /tournament page
+	if (currentPath === "/tournament" && path !== "/tournament") {
+		if ((window as any).cleanupTournament) {
+			(window as any).cleanupTournament();
+		}
+	}
+
+	//clean up locals pongs
+	if (currentPath === "/pong" && path !== "/pong") {
+		if ((window as any).cleanupPong) {
+			(window as any).cleanupPong();
+		}
+	}
+
 	const file = routes[path];
 
 	if (file)
