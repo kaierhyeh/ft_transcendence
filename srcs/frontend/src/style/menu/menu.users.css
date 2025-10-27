@@ -11,70 +11,84 @@
 .user-status-offline {
 	color: red;
 }
-.user-info-avatar-small {
+.user-list-avatar {
 	width: 40px;
 	height: 40px;
 	border-radius: 10px;
 	border: 2px solid #4ade80;
 	object-fit: cover;
 }
+
+/* USER INFO in USERS secvtion */
 .user-info-box {
 	display: flex;
 	align-items: center;
     flex-direction: column;
 	flex: 1;
 	text-align: center;
-	margin-bottom: auto;
+	/* margin-bottom: auto; */
+	height: 100%;
 	width: 100%;
-	padding-top: 50px;
-	font-size: 36px;
-	line-height: 12px;
-
+	overflow: hidden;
+	/* padding-top: 50px; */
+	/* font-size: 36px; */
+	font-size: auto;
+	/* line-height: 12px; */
+}
+.user-info-avatar-box {
+    display: flex;
+	height: 60%;
+	padding-top: 10%;
+	padding-bottom: 3%;
 }
 .user-info-avatar {
-	width: 250px;
-	height: 250px;
+	/* width: auto; */
+	/* height: auto; */
+	aspect-ratio: 1 / 1;
 	border-radius: 10px;
 	border: 2px solid #4ade80;
 	object-fit: cover;
 }
-.user-info-username {
-	margin: auto;
-	padding: 15px;
-	padding-top: 30px;
-	font-size: 36px;
-	line-height: 12px;
+.user-info-username,
+.user-info-alias,
+.user-info-online-status,
+.user-info-stats-btn-box {
+	height: 9%;
+	align-content: center;
+	/* margin: auto; */
+	padding: 1%;
+	/* font-size: auto; */
+	/* line-height: 12px; */
 }
-.user-info-alias {
-	margin: auto;
-	padding: 15px;
-	font-size: 36px;
-	line-height: 12px;
-}
+.user-info-alias,
 .user-info-online-status {
-	margin: auto;
-	padding: 15px;
-	font-size: 36px;
-	line-height: 12px;
+	min-height: 20px;
+	height: 5%;
 }
-.user-info-stats {
-	margin: auto;
-	padding: 15px;
-	font-size: 36px;
-	line-height: 12px;
+.user-info-username {
+	min-height: 30px;
+	font-size: 20px;
+	font-weight: bold;
+	color: #4ade80;
+	text-shadow: 0 0 16px #4ade80;
 }
-
+.user-info-stats-btn-box {
+	height: 21%;
+    padding-bottom: 2%;
+	min-height: 40px;
+}
 .user-info-profile-btn {
+	min-height: 40px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 10px 18px;
+	padding: 5px 18px;
 	border-radius: 8px;
 	background: linear-gradient(180deg, #2b2b2b 0%, #1f1f1f 100%);
 	color: #e6f9ea;
 	border: 2px solid #4ade80;
 	cursor: pointer;
-	font-size: 18px;
+	/* font-size: 18px; */
 	transition: all 0.18s ease;
 	box-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
@@ -84,25 +98,18 @@
 	color: #fff;
 	border-color: #86efac;
 }
-.user-info-wins {
-	color: green;
-	font-size: 36px;
-	line-height: 12px;
-}
-.user-info-losses {
-	color: red;
-	font-size: 36px;
-	line-height: 12px;
-}
+/* end of USER INFO  */
+
 .user-lower-panel {
-	border-top: 2px solid #444;
+	display: flex;
+	gap: 5px;
 	padding-bottom: 5px;
 	padding-top: 5px;
 	padding-left: 8px;
 	padding-right: 8px;
-	display: flex;
+	margin-bottom: 0;
 	flex-direction: column;
-	gap: 5px;
+	border-top: 2px solid #444;
 }
 .user-lower-panel-line {
 	display: flex;

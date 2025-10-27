@@ -122,7 +122,8 @@ export const translations = {
     "language": "Language",
     "english": "English",
     "chinese": "中文",
-    "french": "Français"
+    "french": "Français",
+    "russian": "Русский"
   },
 
   zh: {
@@ -248,7 +249,8 @@ export const translations = {
     "language": "語言",
     "english": "English",
     "chinese": "中文",
-    "french": "Français"
+    "french": "Français",
+    "russian": "Русский"
   },
 
   fr: {
@@ -374,8 +376,136 @@ export const translations = {
     "language": "Langue",
     "english": "English",
     "chinese": "中文",
-    "french": "Français"
-  }
+    "french": "Français",
+    "russian": "Русский"
+  },
+
+  ru: {
+    // Navigation & Menu
+    "menu": "МЕНЮ",
+    "users": "Пользователи",
+    "userInfo": "О пользователе",
+    "friends": "Друзья",
+    "chats": "Чаты",
+    "noUsers": "Нет пользователей",
+    "noFriends": "Нет друзей",
+    "noChats": "Нет чатов",
+    "backToHome": "На главную", // alt Вернуться на главную
+    "filter": "Фильтр",
+    "all": "Все",
+    "allUsers": "Все пользователи",
+    "requestsIn": "Входящие запросы",
+    "requestsOut": "Исходящие запросы",
+    "blocked": "Заблокированные",
+
+    // Home Page
+    "pongTitle": "Pong 1972",
+    "playPong": "Играть в Pong",
+    "launchTournament": "Запустить турнир",
+    "myProfile": "Мой профиль",
+    "seeStats": "Посмотреть статистику",  // alt: Статистика
+
+    // Pong Game
+    "onePlayer": "Один игрок",
+    "twoPlayers": "Два игрока",
+    "fourPlayers": "Четыре игрока",
+    "playOnline": "Играть онлайн",    // alt: Игра по сети 11:21
+    "remote1v1": "- 2 игрока -",
+    "remote2v2": "- 4 игрока -",
+    "points": "Очки",
+    "avgRebounds": "Avg rebounds",
+    "reset": "Reset",
+    "failedToStartGame": "Не удалось начать игру",
+
+    // Tournament
+    "tournament": "Турнир",
+    "choosePlayers": "Выберите число игроков",
+    "players4": "4 Игрока",
+    "players8": "8 Игрока",
+    "enterPlayerNames": "Введите имена игроков",  // is it alias?
+    "enterPlayerName": "Введите имя",             // is it alias? 
+    "player": "Игрок",
+    "startTournament": "Начать турнир",
+    "back": "Назад",
+    "tournamentBracket": "Tournament Bracket",
+    "nextMatch": "Следующий матч",
+    "vs": "ПРОТИВ",  // alt: "VS" - also possible 
+    "startMatch": "Начать матч",
+    "tournamentComplete": "Турнир завершен!",
+    "champion": "Чемпион",
+    "goHome": "Вернуться назад", // alt: "Назад" (Back)
+    "seeHistory": "Посмотреть историю турнира", // alt: "История турнира" or if tournamentS "история турниров"
+    "newTournament": "Начать Новый Турнир",
+
+    // Profile & Auth
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "loginRegister": "Login / Register",
+    "signupButton": "ЗАРЕГИСТРИРОВАТЬСЯ", // alt "РЕГИСТРАЦИЯ"
+    "loginButton": "ВОЙТИ",               // alt "ВХОД"
+    "usernameOrEmail": "Имя пользователя или электронная почта:", // alt "Имя пользователя или почта" / "Имя пользователя или Email"
+    "enterUsernameOrEmail": "Введите имя пользователя или электронную почту", // alt "Ведите пользователя или почта" / "Ведите пользователя или Email"
+    "enterUsername": "Введите имя пользователя", // alt "Имя пользователя"
+    "enterEmail": "Введите элетроннцую почту", // "Введите email"
+    "password": "Пароль:", 
+    "enterPassword": "Введите пароль",
+    "register": "Зарегестрироваться",
+    "loginWithGoogle": "Войти с помощью Google",
+    "signUpWithGoogle": "Зарегестрироваться с помощью Google",
+    "login": "Вход",
+    "or": "Или",
+    "alreadyHaveAccount": "Уже есть аккаунт? Войдите",
+    "dontHaveAccount": "Нет аккаунта? Зарегестрируйтесь",
+    "myProfileTitle": "Мой профиль",
+    "profileAvatar": "Аватар профиля",
+    "settings": "Настройки",
+    "enable2FA": "Включить 2FA", // more correct but long: "Включить двухфакторную аутентификацию" 
+    "logout": "Выйти", // also possible "Выход" = "Exit"
+    "2faConfiguration": "Настройки 2FA", // = "Settings of 2FA"
+    "scanQRCode": "Scan this QR code with your authenticator app:",
+    "orUseSecretCode": "Or use this secret code manually:",
+    "qrCode": "QR-код",
+    "enterSixDigitCode": "Введите код из 6 цифер:",
+    "activate2FA": "Включить 2FA",
+    "cancel": "Отмена",
+    "2faVerification": "2FA Проверка", // or "2FA Подтверждение" 
+    "enterVerificationCode": "Please enter the verification code from your authenticator app:",
+    "verify": "Подтвердить",
+    "username": "Имя пользователя",
+    "email": "Элетронная почта", // alt "Email"
+    "joinDate": "Join Date",
+
+    // Stats
+    "currentWinStreak": "Current Winstreak",
+    "bestWinStreak": "Best Winstreak",
+    "winsLosses": "Wins / Losses",
+    "scoredPointsRanking": "Scored points ranking",
+
+    // Chat
+    "typeMessage": "Напишите сообщение...",
+    "inviteToGame": "Пригласить играть",
+
+    // Game Status
+    "waiting": "Ожидание...",
+    "joining": "Joining...",
+    "creatingGame": "Создание игры...",
+    "connecting": "Соединение...",
+    "matchFound": "Матч найтен!",
+    "left": "Left",
+    "right": "Right",
+    "selectGameMode": "Выберите режим игры",
+
+    // Tooltips
+    "viewStats": "Показать статистику", // "Статистика" = "Statistics"
+    "viewProfile": "Показать профиль",  // "Профиль" = "Profile"
+
+    // Language
+    "language": "Язык",
+    "english": "English",
+    "chinese": "中文",
+    "french": "Français",
+    "russian": "Русский"
+  },
 };
 
 export type Language = keyof typeof translations;

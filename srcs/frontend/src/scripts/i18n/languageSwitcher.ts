@@ -18,7 +18,8 @@ export function createLanguageSwitcher(): HTMLElement {
     const flags: { [key: string]: string } = {
       'en': '🇺🇸',
       'zh': '🇨🇳',
-      'fr': '🇫🇷'
+      'fr': '🇫🇷',
+      'ru': '🇷🇺'
     };
     const flag = flags[lang.code] || '';
     option.text = flag ? `${flag} ${lang.name}` : lang.name;

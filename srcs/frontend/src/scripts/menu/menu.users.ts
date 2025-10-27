@@ -461,23 +461,24 @@ function renderUserInfo(userInfo: UserInfo): void {
 	// const avatarSrc = `${window.location.origin}/api/users/${userInfo.user_id}/avatar`;
 	const avatarSrc = User.getAvatarUrl(userInfo.user_id, userInfo.avatar_updated_at);
 
-
-	const userAlias = userInfo.alias
-		? `<div id="userAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
+	const userInfo_userAlias = userInfo.alias
+		? `<div id="userInfo_boxAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
 		: '';
 
 	const statusHtml = (userInfo.friendship_status === 'accepted')
-		? `<div id="userOnlineStatus" class="user-info-online-status">
+		? `<div id="userInfo_boxOnline" class="user-info-online-status">
 				Status: <span class="user-status-${userInfo.user_status.toLowerCase()}">${userInfo.user_status}</span>
 			</div>`
 		: '';
 
 	usersInfo.innerHTML = `
-		<img id="selectedUserAvatar" class="user-info-avatar" src="${avatarSrc}">
-		<div id="userName" class="user-info-username">${userInfo.username}</div>
-		${userAlias}
+		<div id="userInfo_boxAvatar" class="user-info-avatar-box">
+			<img id="userInfo_avatar" class="user-info-avatar" src="${avatarSrc}">
+		</div>
+		<div id="userInfo_boxUsername" class="user-info-username">${userInfo.username}</div>
+		${userInfo_userAlias}
 		${statusHtml}
-		<div id="userStats" class="user-info-stats">
+		<div id="userInfo_boxSatatsBtn" class="user-info-stats-btn-box">
 			<button id="viewProfileButton" class="user-info-profile-btn">View profile</button>
 		</div>
 	`;
@@ -550,7 +551,7 @@ function renderUserList(users: UserListRow[]): void {
 
 		return `
 			<div class="menu-list-element " data-user-id="${u.user_id}">
-				<img class="user-info-avatar-small" src="${avatarSrc}">
+				<img class="user-list-avatar" src="${avatarSrc}">
 				<div class="user-list-element-info">
 					<span>${userName}</span>
 					${statusHtml}

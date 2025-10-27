@@ -58,7 +58,8 @@ class I18n {
     return [
       { code: 'en', name: this.translations.en.english },
       { code: 'zh', name: this.translations.zh.chinese },
-      { code: 'fr', name: this.translations.fr.french }
+      { code: 'fr', name: this.translations.fr.french },
+      { code: 'ru', name: this.translations.ru.russian },
     ];
   }
 
