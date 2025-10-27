@@ -6,6 +6,7 @@ import { ScoreDisplay } from './live_stats/ScoreDisplay.js';
 import { ScoreTracker } from './live_stats/ScoreTracker.js';
 import user from "./user/User.js";
 import { PlayerSlot } from './user/types.js';
+import { t } from './i18n/i18n.js';
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
@@ -111,11 +112,11 @@ export default function initRemoteGame(): void {
 
         if (btn1v1 !== null) {
             btn1v1.disabled = false;
-            btn1v1.textContent = "2 Players Online";
+            btn1v1.textContent = t("remote1v1");
         }
         if (btn2v2 !== null) {
             btn2v2.disabled = false;
-            btn2v2.textContent = "4 Players Online";
+            btn2v2.textContent = t("remote2v2");
         }
         if (btnCancel !== null) {
             btnCancel.style.display = 'none';
@@ -191,7 +192,7 @@ export default function initRemoteGame(): void {
         }
 
         if (currentButton !== null) {
-            currentButton.textContent = "Joining...";
+            currentButton.textContent = t("joining");
         }
 
         currentParticipantId = generateParticipantId();
@@ -216,14 +217,14 @@ export default function initRemoteGame(): void {
 
             if (data.type === "game_ready") {
                 if (currentButton !== null) {
-                    currentButton.textContent = "Match found!";
+                    currentButton.textContent = t("matchFound");
                 }
                 myTeam = data.team;
                 mySlot = data.slot;
                 connectToGame(data.game_id);
             } else if (data.type === "queue_joined") {
                 if (currentButton !== null) {
-                    currentButton.textContent = "Waiting...";
+                    currentButton.textContent = t("waiting");
                 }
 
                 if (btnCancel !== null) {
@@ -234,11 +235,11 @@ export default function initRemoteGame(): void {
             } else if (data.type === "error") {
                 if (btn1v1 !== null) {
                     btn1v1.disabled = false;
-                    btn1v1.textContent = "Join 2 Players";
+                    btn1v1.textContent = t("twoPlayers");
                 }
                 if (btn2v2 !== null) {
                     btn2v2.disabled = false;
-                    btn2v2.textContent = "Join 4 Players";
+                    btn2v2.textContent = t("fourPlayers");
                 }
             }
         } catch (error) {
@@ -282,7 +283,7 @@ export default function initRemoteGame(): void {
                     }
 
                     if (currentButton !== null) {
-                        currentButton.textContent = 'Match found!';
+                        currentButton.textContent = t("matchFound");
                     }
                     myTeam = data.team;
                     mySlot = data.slot;

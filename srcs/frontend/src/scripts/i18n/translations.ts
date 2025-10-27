@@ -86,6 +86,10 @@ export const translations = {
     // Game Status
     "waiting": "Waiting...",
     "joining": "Joining...",
+    "matchFound": "Match found!",
+    "selectGameMode": "Select a game mode",
+    "creatingGame": "Creating game...",
+    "failedToStartGame": "Failed to start game",
 
     // Tooltips
     "viewStats": "View Stats",
@@ -185,6 +189,10 @@ export const translations = {
     // Game Status
     "waiting": "等待中...",
     "joining": "加入中...",
+    "matchFound": "找到對手！",
+    "selectGameMode": "選擇遊戲模式",
+    "creatingGame": "建立遊戲中...",
+    "failedToStartGame": "遊戲啟動失敗",
 
     // Tooltips
     "viewStats": "查看統計",
@@ -284,6 +292,10 @@ export const translations = {
     // Game Status
     "waiting": "En attente...",
     "joining": "Connexion...",
+    "matchFound": "Match trouvé !",
+    "selectGameMode": "Sélectionnez un mode de jeu",
+    "creatingGame": "Création de la partie...",
+    "failedToStartGame": "Échec du démarrage de la partie",
 
     // Tooltips
     "viewStats": "Voir les statistiques",

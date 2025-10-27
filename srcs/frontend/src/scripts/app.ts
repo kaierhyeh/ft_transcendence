@@ -118,6 +118,13 @@ async function navigate(path: string, push: boolean = true)
 		}
 	}
 
+	//clean up locals pongs
+	if (currentPath === "/pong" && path !== "/pong") {
+		if ((window as any).cleanupPong) {
+			(window as any).cleanupPong();
+		}
+	}
+
 	const file = routes[path];
 
 	if (file)
