@@ -10,8 +10,8 @@ class PresenceRepository {
     }
 
     async getFriendStatus(userId: number): Promise<{ online: number[], offline: number[] }> {
-        const onlineIds = await redis.sinter(`presence:online_users`, `presence:user:${userId}:friends`);
-        const offlineIds = await redis.sdiff(`presence:user:${userId}:friends`, `presence:online_users`);
+        const onlineIds = await redis.sinter(`presence:online_users`, `friends:${userId}`);
+        const offlineIds = await redis.sdiff(`friends:${userId}`, `presence:online_users`);
         return {
             online: onlineIds.map(id => Number(id)),
             offline: offlineIds.map(id => Number(id)),
@@ -21,14 +21,23 @@ class PresenceRepository {
     async setFriends(userId: number, friendList: User[]) {
         const friendIds = friendList.map(friend => friend.user_id);
         if (friendIds.length > 0) {
-            await redis.del(`presence:user:${userId}:friends`);
-            await redis.sadd(`presence:user:${userId}:friends`, ...friendIds.map(id => id.toString()));
+            await redis.del(`friends:${userId}`);
+            await redis.sadd(`friends:${userId}`, ...friendIds.map(id => id.toString()));
         }
     }
 
     async getFriends(userId: number): Promise<number[]> {
-        const friendIds = await redis.smembers(`presence:user:${userId}:friends`);
+        const friendIds = await redis.smembers(`friends:${userId}`);
         return friendIds.map(id => Number(id));
+    }
+
+    async deleteFriends(userId: number): Promise<void> {
+        await redis.del(`friends:${userId}`);
+    }
+
+    async isUserOnline(userId: number): Promise<boolean> {
+        const isOnline = await redis.sismember('presence:online_users', userId);
+        return isOnline === 1;
     }
 
     async addUserSession(session: Session): Promise<boolean> {
@@ -60,7 +69,7 @@ class PresenceRepository {
         if (nbSessions === 0) {
             await redis.srem(`presence:online_users`, session.userId);
             await redis.del(`presence:user:${session.userId}:sessions`);
-            await redis.del(`presence:user:${session.userId}:friends`);
+            // Don't delete friends:<userId> here - that's done in PresenceService
         }
         return nbSessions;
     }

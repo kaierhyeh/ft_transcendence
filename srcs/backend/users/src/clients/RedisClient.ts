@@ -18,7 +18,7 @@ const subscriber = new Redis({
 
 // Handle connection events for main client
 redis.on('connect', () => {
-  console.log('✅ Redis connected (Presence Service)');
+  console.log('✅ Redis connected (User Service)');
 });
 
 redis.on('error', (err) => {
@@ -26,7 +26,7 @@ redis.on('error', (err) => {
 });
 
 redis.on('ready', () => {
-  console.log('🔄 Redis ready for user session management');
+  console.log('🔄 Redis ready for friendship management');
 });
 
 redis.on('close', () => {
@@ -35,7 +35,7 @@ redis.on('close', () => {
 
 // Handle connection events for subscriber
 subscriber.on('connect', () => {
-  console.log('✅ Redis subscriber connected (Presence Service)');
+  console.log('✅ Redis subscriber connected (User Service)');
 });
 
 subscriber.on('error', (err) => {

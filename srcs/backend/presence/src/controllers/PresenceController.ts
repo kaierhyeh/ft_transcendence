@@ -10,7 +10,7 @@ class PresenceController {
               
         
         connection.socket.on("message", async (raw: RawData) => {
-          console.log('📨 Message received from user', userId);
+          // console.log('📨 Message received from user', userId);
           await this.messageHandler(raw, connection, userId)
         }
         );

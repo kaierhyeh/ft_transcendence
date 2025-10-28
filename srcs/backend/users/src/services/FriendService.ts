@@ -63,7 +63,7 @@ export class FriendService {
 	}
 
 	public async acceptFriendRequest(userId: number, friendId: number) {
-		this.friendRepository.acceptFriendRequest(userId, friendId);
+		await this.friendRepository.acceptFriendRequest(userId, friendId);
 	}
 
 	public async declineFriendRequest(userId: number, friendId: number) {
@@ -71,7 +71,7 @@ export class FriendService {
 	}
 
 	public async removeFriendship(userId: number, friendId: number) {
-		this.friendRepository.removeFriendship(userId, friendId);
+		await this.friendRepository.removeFriendship(userId, friendId);
 	}
 
 	public async getUsersByIds(thisUserId: number, userIds: number[]) {

@@ -84,13 +84,13 @@ class Presence {
         const ws = this.ws; // Capture to avoid null issues
 
         ws.onmessage = (event: MessageEvent) => {
-            console.log('📥 Message received:', event.data);
+            // console.log('📥 Message received:', event.data);
             
             try {
                 const message = JSON.parse(event.data);
                 
                 if (message.type === "ping") {
-                    console.log('🏓 Ping received, sending pong');
+                    // console.log('🏓 Ping received, sending pong');
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify({ type: "pong" }));
                     }
