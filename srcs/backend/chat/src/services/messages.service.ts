@@ -33,7 +33,7 @@ export class MessageService {
         const blocked = friendshipStatus === null ? false : friendshipStatus.status === "blocked";
 
 		try {
-			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg: msg };
+			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg: msg };            // need this user nickname
 			console.log(" SERVICE sendMessage: ", newMessage);
 			sendMessageToClientWebSocket(toId, newMessage);
 		} catch (error) {

@@ -4,7 +4,7 @@ import { User } from "../user/User.js";
 import user from '../user/User.js';
 import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
-import { closeMenuWindow } from "./menu.js";
+// import { closeMenuWindow } from "./menu.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
 import { presence, OnlineStatus } from "../presence.js";
 
@@ -20,6 +20,8 @@ let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
+// let blockUserButtonInChat: HTMLElement;
+let statusIsBlocked: HTMLElement;
 
 let presenceUnsubscribe: (() => void) | null = null;
 
@@ -34,9 +36,12 @@ function initializeGlobals(): boolean {
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
+	// blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
+	statusIsBlocked = document.getElementById("statusIsBlocked")!;
 
 	if (!API_CHAT_ENDPOINT || !menuBackButton || !usersSectionButton || !chatsList
-		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton) {
+		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton
+		|| /* !blockUserButtonInChat || */ !statusIsBlocked) {
 		return false;
 	}
 	return true;
@@ -60,13 +65,18 @@ function clearBeforeInitMessageSection(): void {
 	[	"#chatSendButton",
 		"#chatMessageToSend",
 		"#chatInviteGameButton",
-		"#menuBackButton"
+		"#menuBackButton",
+		/* "#blockUserButtonInChat", */
+		"#statusIsBlocked"
 	].forEach(clearEvents);
 
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
 	menuBackButton = document.getElementById("menuBackButton")!;
+	// blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
+	statusIsBlocked = document.getElementById("statusIsBlocked")!;
+
 }
 
 function resetChatSection(): void {
@@ -229,6 +239,14 @@ async function inviteToGame(toUser: ChatUser): Promise<void> {
 	console.log(`CHAT: Invite pressed: invite [${toUser.username}] to a game (not implemented)`);
 }
 
+// async function blockUser(toUser: ChatUser): Promise<void> {
+// 	console.log(`CHAT: block user pressed: block id=[${toUser.user_id}] (not implemented)`);
+// }
+
+// async function unblockUser(toUser: ChatUser): Promise<void> {
+// 	console.log(`CHAT: unblock user pressed: unblock id=[${toUser.user_id}] (not implemented)`);
+// }
+
 async function goBackToChatsList(): Promise<void> {
 	chatMessages.innerHTML = ``;
 	initChatSection();
@@ -249,23 +267,23 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 
 	if (friendshipStatus !== "blocked") {
 
-		["unblockUserButtonInChat"].forEach(hideElementById);
+		["statusIsBlocked"].forEach(hideElementById);
 
 		[	"chatLowerPanel",
 			"chatInviteGameButton",
-			"blockUserButtonInChat",
+			/* "blockUserButtonInChat", */
 			"chatMessageBox"
 		].forEach(showElementById);
 
 	} else {
 
 		[	"chatInviteGameButton",
-			"blockUserButtonInChat",
+			// "blockUserButtonInChat",
 			"chatMessageBox"
 		].forEach(hideElementById);
 
 		[	"chatLowerPanel",
-			"unblockUserButtonInChat"
+			"statusIsBlocked"
 		].forEach(showElementById);
 
 	}
@@ -325,13 +343,17 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		initializeGlobals();
 		chatInput.value = "";
 		clearBeforeInitMessageSection();
-
+		
 		if (friendshipStatus !== "blocked") {
 			// Sent message by using button
 			chatSendButton.addEventListener("click", () => sendMessageByButton(withUser));
 			chatInput.addEventListener("keydown", (event) => sentMessageByEnter(event));
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
+			// Block user
+			// blockUserButtonInChat.addEventListener("click", () => blockUser(withUser));
+		} else {
+			// statusIsBlocked.addEventListener("click", () => unblockUser(withUser));
 		}
 		switch (backTo) {
 			case 'users':
