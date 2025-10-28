@@ -12,14 +12,13 @@ class Presence {
     private friendStatus: Map<number, OnlineStatus> = new Map();
     private ws: WebSocket | null = null;
 
-    checkin() {
+    async checkin() {
         // Prevent multiple connections
         if (this.ws !== null) {
             console.log('⚠️ WebSocket already exists, skipping checkin');
             return;
         }
 
-        // Build WebSocket URL - browser will automatically convert http->ws, https->wss
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}${API_PRESENCE_WS_ENDPOINT}`;
         
@@ -33,30 +32,55 @@ class Presence {
             return;
         }
 
-        this.ws.onopen = () => {
-            console.log('🔓 WebSocket opened');
-            
-            // Since the server will authenticate via cookies in the upgrade request,
-            // we just send a checkin message without the token
-            const message = { type: "checkin" };
-            const delayMs = 500; // delay before sending the checkin
-            console.log(`⏳ Delaying checkin by ${delayMs}ms`, message);
-
-            window.setTimeout(() => {
-            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                try {
-                this.ws.send(JSON.stringify(message));
-                console.log('✅ Checkin message sent');
-                } catch (error) {
-                console.error('❌ Failed to send checkin:', error);
+        // Wait for connection to open, then send checkin
+        try {
+            await new Promise<void>((resolve, reject) => {
+                if (!this.ws) {
+                    reject(new Error('WebSocket is null'));
+                    return;
                 }
-            } else {
-                console.warn('⚠️ WebSocket not open, skipping checkin send');
-            }
-            }, delayMs);
-        };
 
-        this.ws.onmessage = (event: MessageEvent) => {
+                const ws = this.ws; // Capture in closure to avoid null issues
+
+                ws.onopen = () => {
+                    console.log('🔓 WebSocket opened');
+                    try {
+                        ws.send(JSON.stringify({ type: "checkin" }));
+                        console.log('✅ Checkin message sent');
+                        resolve();
+                    } catch (error) {
+                        console.error('❌ Failed to send checkin:', error);
+                        reject(error);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('❌ WebSocket error during connection:', error);
+                    reject(error);
+                };
+
+                // Timeout after 5 seconds
+                setTimeout(() => reject(new Error('WebSocket connection timeout')), 5000);
+            });
+
+            // Now set up the regular message handlers
+            this.setupMessageHandlers();
+            
+        } catch (error) {
+            console.error('❌ Failed to establish WebSocket connection:', error);
+            if (this.ws) {
+                this.ws.close();
+                this.ws = null;
+            }
+        }
+    }
+
+    private setupMessageHandlers() {
+        if (!this.ws) return;
+
+        const ws = this.ws; // Capture to avoid null issues
+
+        ws.onmessage = (event: MessageEvent) => {
             console.log('📥 Message received:', event.data);
             
             try {
@@ -64,8 +88,8 @@ class Presence {
                 
                 if (message.type === "ping") {
                     console.log('🏓 Ping received, sending pong');
-                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                        this.ws.send(JSON.stringify({ type: "pong" }));
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: "pong" }));
                     }
                 }
                 else if (message.type === "friends") {
@@ -86,23 +110,19 @@ class Presence {
             }
         };
 
-        this.ws.onclose = (event) => {
+        ws.onclose = (event) => {
             console.log('🔌 WebSocket closed:', {
                 code: event.code,
                 reason: event.reason || '(no reason)',
                 wasClean: event.wasClean
             });
             
-            // Nullify the connection so checkin() can be called again
             this.ws = null;
             this.friendStatus.clear();
         };
 
-        this.ws.onerror = (error) => {
+        ws.onerror = (error) => {
             console.error('❌ WebSocket error occurred:', error);
-            if (this.ws) {
-                console.error('   readyState:', this.ws.readyState);
-            }
         };
     }
 

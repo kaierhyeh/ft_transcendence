@@ -8,7 +8,6 @@ export type UserData = {
     avatar_url: string;
     avatar_updated_at: string;
     two_fa_enabled: boolean;
-    status: "online" | "offline" | "away" | "deleted";
     created_at: string;
     updated_at: string;
     last_seen: string | null;
@@ -72,10 +71,6 @@ export class User {
 
     public get two_fa_enabled(): boolean | null {
         return this.data?.two_fa_enabled ?? null;
-    }
-
-    public get status(): "online" | "offline" | "away" | "deleted" | null {
-        return this.data?.status ?? null;
     }
 
     public get created_at(): string | null {
@@ -154,7 +149,6 @@ export class User {
                 avatar_url: partialData.avatar_url,
                 avatar_updated_at: partialData.avatar_updated_at,
                 two_fa_enabled: partialData.two_fa_enabled || false,
-                status: partialData.status || "online",
                 created_at: partialData.created_at || new Date().toISOString(),
                 updated_at: partialData.updated_at || new Date().toISOString(),
                 last_seen: partialData.last_seen || null,
@@ -190,7 +184,7 @@ export class User {
             }
 
             const userData: UserData = await response.json();
-            presence.checkin();
+            await presence.checkin();
             return this.update(userData);
         } catch (error) {
             console.error('Error fetching user profile:', error);
@@ -205,6 +199,7 @@ export class User {
     public logout(): void {
         this.data = null;
         this.isAuthenticated = false;
+        presence.checkout();
     }
 
     /**

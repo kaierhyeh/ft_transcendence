@@ -125,7 +125,6 @@ function setupHeaderEvents() {
                 
                 // Clear user data from singleton
                 user.logout();
-                presence.checkout();
                 
                 // Redirect to home
                 window.location.href = '/';
