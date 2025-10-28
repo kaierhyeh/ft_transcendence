@@ -61,20 +61,20 @@ const repositoriesPlugin: FastifyPluginAsync = async (fastify) => {
     const existingUsers= rowU.count;
     if (existingUsers === 0) {
       const insert = db.prepare(`
-        INSERT INTO users (username, email, password_hash, alias, avatar_filename, status)
-        VALUES (@username, @email, @password_hash, @alias, @avatar_filename, @status)
+        INSERT INTO users (username, email, password_hash, alias, avatar_filename)
+        VALUES (@username, @email, @password_hash, @alias, @avatar_filename)
         `);
         const now = new Date().toISOString();
         // Example seed users
         const seedData = [
-          { username: 'alice',    email: 'alice@ya.com',    password_hash: 'hash1', alias: 'A_lice',    avatar_filename: 'test2.gif',   status: 'online' },
-          { username: 'bob',      email: 'bob@ya.com',      password_hash: 'hash2', alias: 'B_ob',      avatar_filename: 'test1.jpg',   status: 'offline' },
-          { username: 'charlie',  email: 'charlie@ya.com',  password_hash: 'hash3', alias: 'C_harlie',  avatar_filename: 'default.png', status: 'away' },
-          { username: 'dave',     email: 'dave@ya.com',     password_hash: 'hash4', alias: null,        avatar_filename: 'test2.gif',   status: 'online' },
-          { username: 'eve',      email: 'eve@ya.com',      password_hash: 'hash5', alias: 'E_ve',      avatar_filename: 'test2.gif',   status: 'offline' },
-          { username: 'frank',    email: 'frank@ya.com',    password_hash: 'hash6', alias: null,        avatar_filename: 'test1.jpg',   status: 'online' },
-          { username: 'grace',    email: 'grace@ya.com',    password_hash: 'hash7', alias: 'G_race',    avatar_filename: 'test2.gif',   status: 'offline' },
-          { username: 'heidi',    email: 'heidi@ya.com',    password_hash: 'hash8', alias: 'H_eidi',    avatar_filename: 'default.png', status: 'online' }
+          { username: 'alice',    email: 'alice@ya.com',    password_hash: 'hash1', alias: 'A_lice',    avatar_filename: 'test2.gif' },
+          { username: 'bob',      email: 'bob@ya.com',      password_hash: 'hash2', alias: 'B_ob',      avatar_filename: 'test1.jpg' },
+          { username: 'charlie',  email: 'charlie@ya.com',  password_hash: 'hash3', alias: 'C_harlie',  avatar_filename: 'default.png' },
+          { username: 'dave',     email: 'dave@ya.com',     password_hash: 'hash4', alias: null,        avatar_filename: 'test2.gif' },
+          { username: 'eve',      email: 'eve@ya.com',      password_hash: 'hash5', alias: 'E_ve',      avatar_filename: 'test2.gif' },
+          { username: 'frank',    email: 'frank@ya.com',    password_hash: 'hash6', alias: null,        avatar_filename: 'test1.jpg' },
+          { username: 'grace',    email: 'grace@ya.com',    password_hash: 'hash7', alias: 'G_race',    avatar_filename: 'test2.gif' },
+          { username: 'heidi',    email: 'heidi@ya.com',    password_hash: 'hash8', alias: 'H_eidi',    avatar_filename: 'default.png' }
         ];
         const insertMany = db.transaction((users) => {
           for (const user of users) insert.run(user);

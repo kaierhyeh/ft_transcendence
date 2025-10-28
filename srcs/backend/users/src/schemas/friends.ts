@@ -35,6 +35,19 @@ export const userIdsSchema = {
   additionalProperties: false,
 } as const;
 
+export const batchUserIdsSchema = {
+  type: "object",
+  required: ["user_ids"],
+  properties: {
+    user_ids: {
+      type: "array",
+      items: { type: "number", minimum: 0 },
+      minItems: 1
+    },
+  },
+  additionalProperties: false,
+} as const;
+
 export const friendshipParamsSchema = {
 	type: "object",
 	required: ["userId", "friendId"],
@@ -55,3 +68,4 @@ export type FriendshipParams = FromSchema<typeof friendshipParamsSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;
 export type FriendshipIdParams = FromSchema<typeof friendshipIdSchema>;
 export type UserIdsBody = FromSchema<typeof userIdsSchema>;
+export type BatchUserIdsBody = FromSchema<typeof batchUserIdsSchema>;

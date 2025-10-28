@@ -47,8 +47,8 @@ export const translations = {
     "loading": "Loading...",
     "error": "Error",
     "loginRegister": "Login / Register",
-    "usernameOrEmail": "Username or Email:",
-    "enterUsernameOrEmail": "Enter username or email",
+    "usernameOrEmail": "Username:",
+    "enterUsernameOrEmail": "Enter username",
     "password": "Password:",
     "enterPassword": "Enter password",
     "register": "Register",
@@ -86,6 +86,10 @@ export const translations = {
     // Game Status
     "waiting": "Waiting...",
     "joining": "Joining...",
+    "matchFound": "Match found!",
+    "selectGameMode": "Select a game mode",
+    "creatingGame": "Creating game...",
+    "failedToStartGame": "Failed to start game",
 
     // Tooltips
     "viewStats": "View Stats",
@@ -146,8 +150,8 @@ export const translations = {
     "loading": "載入中...",
     "error": "錯誤",
     "loginRegister": "登入 / 註冊",
-    "usernameOrEmail": "使用者名稱或電子信箱：",
-    "enterUsernameOrEmail": "輸入使用者名稱或電子信箱",
+    "usernameOrEmail": "使用者名稱：",
+    "enterUsernameOrEmail": "輸入使用者名稱",
     "password": "密碼：",
     "enterPassword": "輸入密碼",
     "register": "註冊",
@@ -185,6 +189,10 @@ export const translations = {
     // Game Status
     "waiting": "等待中...",
     "joining": "加入中...",
+    "matchFound": "找到對手！",
+    "selectGameMode": "選擇遊戲模式",
+    "creatingGame": "建立遊戲中...",
+    "failedToStartGame": "遊戲啟動失敗",
 
     // Tooltips
     "viewStats": "查看統計",
@@ -245,8 +253,8 @@ export const translations = {
     "loading": "Chargement...",
     "error": "Erreur",
     "loginRegister": "Connexion / Inscription",
-    "usernameOrEmail": "Nom d'utilisateur ou Email :",
-    "enterUsernameOrEmail": "Entrez le nom d'utilisateur ou l'email",
+    "usernameOrEmail": "Nom d'utilisateur :",
+    "enterUsernameOrEmail": "Entrez le nom d'utilisateur",
     "password": "Mot de passe :",
     "enterPassword": "Entrez le mot de passe",
     "register": "S'inscrire",
@@ -284,6 +292,10 @@ export const translations = {
     // Game Status
     "waiting": "En attente...",
     "joining": "Connexion...",
+    "matchFound": "Match trouvé !",
+    "selectGameMode": "Sélectionnez un mode de jeu",
+    "creatingGame": "Création de la partie...",
+    "failedToStartGame": "Échec du démarrage de la partie",
 
     // Tooltips
     "viewStats": "Voir les statistiques",

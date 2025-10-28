@@ -21,7 +21,7 @@ export function initSignup() {
 		googleSignupBtn.addEventListener('click', handleGoogleSignup);
 
 	// Add Enter key support for signup form
-	if (usernameInput && emailInput && passwordInput) {
+	if (usernameInput && passwordInput) {
 		const handleEnterKey = (event: KeyboardEvent) => {
 			if (event.key === 'Enter') {
 				event.preventDefault();
@@ -29,7 +29,7 @@ export function initSignup() {
 			}
 		};
 		usernameInput.addEventListener('keypress', handleEnterKey);
-		emailInput.addEventListener('keypress', handleEnterKey);
+		emailInput?.addEventListener('keypress', handleEnterKey);
 		passwordInput.addEventListener('keypress', handleEnterKey);
 	}
 
@@ -38,22 +38,32 @@ export function initSignup() {
 		const email = emailInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
-		if (!username || !email || !password) {
-			alert('Please enter username, email, and password.');
+		if (!username || !password) {
+			alert('Please enter username and password.');
 			return;
 		}
 
-		if (username.length > 50 || email.length > 100 || password.length > 50) {
-			alert('Username, email, or password too long.');
+		if (username.length > 50 || password.length > 50) {
+			alert('Username or password too long.');
 			return;
 		}
 
 		try {
+			const body: { username: string; password: string; email?: string } = { 
+				username, 
+				password 
+			};
+			
+			// Only include email if it's not empty
+			if (email && email.length > 0) {
+				body.email = email;
+			}
+
 			const response = await fetch(`${API_AUTH_ENDPOINT}/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ username, email, password })
+				body: JSON.stringify(body)
 			});
 
 			const data = await response.json();
@@ -61,6 +71,7 @@ export function initSignup() {
 			if (response.ok && data.success) {
 				// update_user(new User(data.username, data.id));
 				alert('Registration successful! You are now logged in.');
+				await user.fetchAndUpdate();
 				redirectAfterLogin();
 			} else
 				alert(data.error || 'Registration failed.');

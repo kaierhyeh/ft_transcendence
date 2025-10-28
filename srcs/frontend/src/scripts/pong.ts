@@ -9,6 +9,7 @@ import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
 import user from "./user/User.js";
 import { GameFormat, GameMode, GameParticipant } from "./game/types.js";
 import { generateParticipantId } from "./game/utils.js";
+import { t } from "./i18n/i18n.js";
 
 export function initPong() {
     let currentSession: GameSession | null = null;
@@ -42,7 +43,7 @@ export function initPong() {
     };
     
     // Show initial message
-    renderer.showMessage("Select a game mode");
+    renderer.showMessage(t("selectGameMode"));
     
     // Setup buttons
     setTimeout(setupGameButtons, 100);
@@ -59,18 +60,21 @@ export function initPong() {
     function setupGameButtons(): void {
         document.getElementById('one-player-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
+            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
             if (isTransitioning) return;
             startNewGame('solo', '1v1');
         });
         
         document.getElementById('two-players-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
+            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
             if (isTransitioning) return;
             startNewGame('pvp', '1v1');
         });
         
         document.getElementById('four-players-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
+            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
             if (isTransitioning) return;
             startNewGame('pvp', '2v2');
         });
@@ -95,11 +99,14 @@ export function initPong() {
             
             await new Promise(resolve => setTimeout(resolve, 100));
             
+            // Verify authentication before creating participants
+            const isAuthenticated = await user.ensureAuthenticated();
+            
             // Create participants
-            const participants = createParticipants(mode, format);
+            const participants = createParticipants(mode, format, isAuthenticated);
             
             // Create new session
-            renderer.showMessage("Creating game...");
+            renderer.showMessage(t("creatingGame"));
             currentSession = await createGameSession(mode, format, participants);
             
             // Attach controllers
@@ -127,17 +134,17 @@ export function initPong() {
             console.log(`Game started: ${mode} ${format}`);
         } catch (error) {
             console.error("Failed to start game:", error);
-            renderer.showMessage("Failed to start game");
+            renderer.showMessage(t("failedToStartGame"));
         } finally {
             isTransitioning = false;
         }
     }
     
-    function createParticipants(mode: GameMode, format: GameFormat): GameParticipant[] {
+    function createParticipants(mode: GameMode, format: GameFormat, isAuthenticated: boolean): GameParticipant[] {
         if (format === '1v1') {
             const participants: GameParticipant[] = [
                 {
-                    type: user.isLoggedIn() ? "registered" : "guest",
+                    type: isAuthenticated ? "registered" : "guest",
                     user_id: user.user_id ?? undefined,
                     participant_id: generateParticipantId()
                 }
@@ -163,7 +170,7 @@ export function initPong() {
         } else {
             const participants: GameParticipant[] = [
                 {
-                    type: user.isLoggedIn() ? "registered" : "guest",
+                    type: isAuthenticated ? "registered" : "guest",
                     user_id: user.user_id ?? undefined,
                     participant_id: generateParticipantId()
                 }
@@ -176,5 +183,15 @@ export function initPong() {
         }
     }
 
+    function cleanupPong(): void {
+        if (currentSession) {
+            inputController.detach();
+            aiController.detach();
+            renderer.detach();
+            currentSession.cleanup();
+            currentSession = null;
+        }
+    }
 
+    (window as any).cleanupPong = cleanupPong;
 }

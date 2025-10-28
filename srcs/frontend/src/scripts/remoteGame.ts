@@ -6,6 +6,7 @@ import { ScoreDisplay } from './live_stats/ScoreDisplay.js';
 import { ScoreTracker } from './live_stats/ScoreTracker.js';
 import user from "./user/User.js";
 import { PlayerSlot } from './user/types.js';
+import { t } from './i18n/i18n.js';
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
 
@@ -68,6 +69,11 @@ export default function initRemoteGame(): void {
     let gameContext: CanvasRenderingContext2D | null = null;
     let remotePartyFormat: string = '';
 
+
+    let btn1v1: HTMLButtonElement | null = null;
+    let btn2v2: HTMLButtonElement | null = null;
+    let btnCancel: HTMLButtonElement | null = null;
+
     const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
     const scoreChart = new ScoreChart();
     const scoreDisplay = new ScoreDisplay();
@@ -98,23 +104,19 @@ export default function initRemoteGame(): void {
             gameWebSocket.close(1000, "UI Reset");
             gameWebSocket = null;
         }
-        
+
         currentGameId = null;
         currentParticipantId = null;
         remotePartyFormat = '';
         gameDisconnected = false;
 
-        const btn1v1 = document.getElementById('remote-1v1-btn') as HTMLButtonElement;
-        const btn2v2 = document.getElementById('remote-2v2-btn') as HTMLButtonElement;
-        const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
-
         if (btn1v1 !== null) {
             btn1v1.disabled = false;
-            btn1v1.textContent = "2 Players Online";
+            btn1v1.textContent = t("remote1v1");
         }
         if (btn2v2 !== null) {
             btn2v2.disabled = false;
-            btn2v2.textContent = "4 Players Online";
+            btn2v2.textContent = t("remote2v2");
         }
         if (btnCancel !== null) {
             btnCancel.style.display = 'none';
@@ -133,33 +135,37 @@ export default function initRemoteGame(): void {
             console.error('Pong header element not found');
         }
 
+        btn1v1 = document.getElementById('remote-1v1-btn') as HTMLButtonElement;
+        btn2v2 = document.getElementById('remote-2v2-btn') as HTMLButtonElement;
+        btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
+
+        if (btnCancel !== null) {
+            btnCancel.style.display = 'none';
+        }
+        
         setupRemoteEvents();
     }
 
     function setupRemoteEvents(): void {
-        const btn1v1 = document.getElementById('remote-1v1-btn');
-        const btn2v2 = document.getElementById('remote-2v2-btn');
-        const btnCancel = document.getElementById('remote-cancel-btn');
-
         if (btn1v1 !== null) {
-            btn1v1.addEventListener('click', function() { 
-                joinQueue("1v1"); 
+            btn1v1.addEventListener('click', function() {
+                joinQueue("1v1");
             });
         } else {
             console.error('Remote 1v1 button not found');
         }
 
         if (btn2v2 !== null) {
-            btn2v2.addEventListener('click', function() { 
-                joinQueue("2v2"); 
+            btn2v2.addEventListener('click', function() {
+                joinQueue("2v2");
             });
         } else {
             console.error('Remote 2v2 button not found');
         }
 
         if (btnCancel !== null) {
-            btnCancel.addEventListener('click', function() { 
-                resetRemoteUI(); 
+            btnCancel.addEventListener('click', function() {
+                resetRemoteUI();
             });
         } else {
             console.error('Remote cancel button not found');
@@ -170,9 +176,6 @@ export default function initRemoteGame(): void {
         remotePartyFormat = format;
 
         scoreTracker.resetGame();
-        
-        const btn1v1 = document.getElementById('remote-1v1-btn') as HTMLButtonElement;
-        const btn2v2 = document.getElementById('remote-2v2-btn') as HTMLButtonElement;
 
         if (btn1v1 !== null) {
             btn1v1.disabled = true;
@@ -189,12 +192,14 @@ export default function initRemoteGame(): void {
         }
 
         if (currentButton !== null) {
-            currentButton.textContent = "Joining...";
+            currentButton.textContent = t("joining");
         }
 
+        const isAuthenticated = await user.ensureAuthenticated();
+        
         currentParticipantId = generateParticipantId();
         const participant: GameParticipant = {
-            type: user.isLoggedIn() ? "registered" : "guest",
+            type: isAuthenticated ? "registered" : "guest",
             user_id: user.user_id ?? undefined,
             participant_id: currentParticipantId
         };
@@ -214,17 +219,16 @@ export default function initRemoteGame(): void {
 
             if (data.type === "game_ready") {
                 if (currentButton !== null) {
-                    currentButton.textContent = "Match found!";
+                    currentButton.textContent = t("matchFound");
                 }
                 myTeam = data.team;
                 mySlot = data.slot;
                 connectToGame(data.game_id);
             } else if (data.type === "queue_joined") {
                 if (currentButton !== null) {
-                    currentButton.textContent = "Waiting...";
+                    currentButton.textContent = t("waiting");
                 }
 
-                const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
                 if (btnCancel !== null) {
                     btnCancel.style.display = 'block';
                 }
@@ -233,11 +237,11 @@ export default function initRemoteGame(): void {
             } else if (data.type === "error") {
                 if (btn1v1 !== null) {
                     btn1v1.disabled = false;
-                    btn1v1.textContent = "Join 2 Players";
+                    btn1v1.textContent = t("twoPlayers");
                 }
                 if (btn2v2 !== null) {
                     btn2v2.disabled = false;
-                    btn2v2.textContent = "Join 4 Players";
+                    btn2v2.textContent = t("fourPlayers");
                 }
             }
         } catch (error) {
@@ -273,15 +277,15 @@ export default function initRemoteGame(): void {
                         matchmakingWebSocket = null;
                     }
 
-                    let currentButton: HTMLElement | null = null;
+                    let currentButton: HTMLButtonElement | null = null;
                     if (remotePartyFormat === '1v1') {
-                        currentButton = document.getElementById('remote-1v1-btn');
+                        currentButton = btn1v1;
                     } else {
-                        currentButton = document.getElementById('remote-2v2-btn');
+                        currentButton = btn2v2;
                     }
 
                     if (currentButton !== null) {
-                        currentButton.textContent = 'Match found!';
+                        currentButton.textContent = t("matchFound");
                     }
                     myTeam = data.team;
                     mySlot = data.slot;
@@ -309,7 +313,6 @@ export default function initRemoteGame(): void {
     function connectToGame(gameId: number): void {
         currentGameId = gameId;
 
-        const btnCancel = document.getElementById('remote-cancel-btn') as HTMLButtonElement;
         if (btnCancel !== null) {
             btnCancel.style.display = 'none';
         }

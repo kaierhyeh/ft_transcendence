@@ -26,11 +26,15 @@ export class TournamentGameManager {
         this.cleanupGame();
         
         try {
+            // Verify authentication before creating tournament participants
+            // This ensures tokens are still valid when creating the game session
+            const isAuthenticated = await user.ensureAuthenticated();
+            
             const participants: GameParticipant[] = [
-                (match.player1 === user.alias && user.isLoggedIn()) ?
+                (match.player1 === user.alias && isAuthenticated) ?
                     { type: "registered", user_id: user.user_id ?? undefined, participant_id: generateParticipantId() } :
                     { type: "guest", user_id: undefined, participant_id: generateParticipantId() },
-                (match.player2 === user.alias && user.isLoggedIn()) ?
+                (match.player2 === user.alias && isAuthenticated) ?
                     { type: "registered", user_id: user.user_id ?? undefined, participant_id: generateParticipantId() } :
                     { type: "guest", user_id: undefined, participant_id: generateParticipantId() }
             ];

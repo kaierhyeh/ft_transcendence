@@ -16,7 +16,9 @@ import {
   UserLookupParams,
   userLookupSchema,
   AvatarQuery,
-  avatarQuerySchema
+  avatarQuerySchema,
+  GoogleSubParams,
+  googleSubParamsSchema
 } from "../schemas";
 import { userAuthMiddleware } from "../middleware/userAuth";
 import { internalAuthMiddleware } from "../middleware/internalAuth";
@@ -54,7 +56,7 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.createGoogleAccount.bind(userController)
   );
 
-  // PUT /me - Update user profile data
+  // PUT /me - Update some user profile data
   fastify.put<{ Body: UpdateRawData }>(
     "/me",
     {
@@ -76,13 +78,6 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     "/me",
     { preHandler: userAuthMiddleware },
     userController.getMe.bind(userController)
-  );
-
-  // DELETE /me - Delete user account (soft delete)
-  fastify.delete(
-    "/me",
-    { preHandler: userAuthMiddleware },
-    userController.deleteMe.bind(userController)
   );
 
   // DELETE /me/avatar - Reset avatar to default
@@ -116,7 +111,17 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     userController.getPublicProfile.bind(userController)
   );
 
-  // GET /:identifier - Get all user data by identifier (id, username, email) [protected]
+  // GET /google/:google_sub - Get user by Google sub [protected]
+  fastify.get<{ Params: GoogleSubParams }>(
+    "/google/:google_sub",
+    {
+      schema: { params: googleSubParamsSchema },
+      preHandler: internalAuthMiddleware,
+    },
+    userController.getUserByGoogleSub.bind(userController)
+  );
+
+  // GET /:identifier - Get all user data by identifier (id, username) [protected]
   fastify.get<{ Params: UserLookupParams }>(
     "/:identifier",
     {
