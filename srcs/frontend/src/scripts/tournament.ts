@@ -273,10 +273,12 @@ export function initTournament(): void {
     else
         setupTournamentButtons();
     
-    (window as any).cleanupTournament = function() {
+    function cleanupTournament(): void {
         document.body.classList.remove('tournament-page');
         gameManager.cleanup();
-    };
+    }
+
+    (window as any).cleanupTournament = cleanupTournament;
 
     async function saveTournamentResult(playersCount: number, winnerName: string) {
         if (!(window as any).ethereum) {

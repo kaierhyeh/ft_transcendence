@@ -9,6 +9,7 @@ import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
 import user from "./user/User.js";
 import { GameFormat, GameMode, GameParticipant } from "./game/types.js";
 import { generateParticipantId } from "./game/utils.js";
+import { t } from "./i18n/i18n.js";
 
 export function initPong() {
     let currentSession: GameSession | null = null;
@@ -42,7 +43,7 @@ export function initPong() {
     };
     
     // Show initial message
-    renderer.showMessage("Select a game mode");
+    renderer.showMessage(t("selectGameMode"));
     
     // Setup buttons
     setTimeout(setupGameButtons, 100);
@@ -102,7 +103,7 @@ export function initPong() {
             const participants = createParticipants(mode, format);
             
             // Create new session
-            renderer.showMessage("Creating game...");
+            renderer.showMessage(t("creatingGame"));
             currentSession = await createGameSession(mode, format, participants);
             
             // Attach controllers
@@ -130,7 +131,7 @@ export function initPong() {
             console.log(`Game started: ${mode} ${format}`);
         } catch (error) {
             console.error("Failed to start game:", error);
-            renderer.showMessage("Failed to start game");
+            renderer.showMessage(t("failedToStartGame"));
         } finally {
             isTransitioning = false;
         }
@@ -179,5 +180,15 @@ export function initPong() {
         }
     }
 
+    function cleanupPong(): void {
+        if (currentSession) {
+            inputController.detach();
+            aiController.detach();
+            renderer.detach();
+            currentSession.cleanup();
+            currentSession = null;
+        }
+    }
 
+    (window as any).cleanupPong = cleanupPong;
 }
