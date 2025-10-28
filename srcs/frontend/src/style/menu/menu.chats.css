@@ -145,3 +145,24 @@
 	width: 20px;
 	height: 20px;
 }
+.chat-info-blocked {
+	justify-content: center;
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	padding: 4%;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	border-radius: 8px;
+	color: red;
+	/* border-color: #4ade80; */
+	/* box-shadow: inset 0 0 10px rgba(74, 222, 128, 0.5); */
+	/* background-color: #333; */
+	background: transparent;
+	border: 2px solid transparent;
+	/* transition: all 0.3s ease; */
+	/* cursor: pointer; */
+	/* width: 30%; */
+	height: 40px;
+	gap : 5px;
+}

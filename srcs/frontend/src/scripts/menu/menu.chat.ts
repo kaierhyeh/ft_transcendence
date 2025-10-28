@@ -19,8 +19,8 @@ let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
-let blockUserButtonInChat: HTMLElement;
-let unblockUserButtonInChat: HTMLElement;
+// let blockUserButtonInChat: HTMLElement;
+let statusIsBlocked: HTMLElement;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -33,12 +33,12 @@ function initializeGlobals(): boolean {
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
-	blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
-	unblockUserButtonInChat = document.getElementById("unblockUserButtonInChat")!;
+	// blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
+	statusIsBlocked = document.getElementById("statusIsBlocked")!;
 
 	if (!API_CHAT_ENDPOINT || !menuBackButton || !usersSectionButton || !chatsList
 		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton
-		|| !blockUserButtonInChat || !unblockUserButtonInChat) {
+		|| /* !blockUserButtonInChat || */ !statusIsBlocked) {
 		return false;
 	}
 	return true;
@@ -63,16 +63,16 @@ function clearBeforeInitMessageSection(): void {
 		"#chatMessageToSend",
 		"#chatInviteGameButton",
 		"#menuBackButton",
-		"#blockUserButtonInChat",
-		"#unblockUserButtonInChat"
+		/* "#blockUserButtonInChat", */
+		"#statusIsBlocked"
 	].forEach(clearEvents);
 
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
 	menuBackButton = document.getElementById("menuBackButton")!;
-	blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
-	unblockUserButtonInChat = document.getElementById("unblockUserButtonInChat")!;
+	// blockUserButtonInChat = document.getElementById("blockUserButtonInChat")!;
+	statusIsBlocked = document.getElementById("statusIsBlocked")!;
 
 }
 
@@ -244,23 +244,23 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 
 	if (friendshipStatus !== "blocked") {
 
-		["unblockUserButtonInChat"].forEach(hideElementById);
+		["statusIsBlocked"].forEach(hideElementById);
 
 		[	"chatLowerPanel",
 			"chatInviteGameButton",
-			"blockUserButtonInChat",
+			/* "blockUserButtonInChat", */
 			"chatMessageBox"
 		].forEach(showElementById);
 
 	} else {
 
 		[	"chatInviteGameButton",
-			"blockUserButtonInChat",
+			// "blockUserButtonInChat",
 			"chatMessageBox"
 		].forEach(hideElementById);
 
 		[	"chatLowerPanel",
-			"unblockUserButtonInChat"
+			"statusIsBlocked"
 		].forEach(showElementById);
 
 	}
@@ -328,9 +328,9 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 			// Block user
-			blockUserButtonInChat.addEventListener("click", () => blockUser(withUser));
+			// blockUserButtonInChat.addEventListener("click", () => blockUser(withUser));
 		} else {
-			unblockUserButtonInChat.addEventListener("click", () => unblockUser(withUser));
+			// statusIsBlocked.addEventListener("click", () => unblockUser(withUser));
 		}
 		switch (backTo) {
 			case 'users':
