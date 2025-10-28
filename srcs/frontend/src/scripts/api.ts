@@ -659,8 +659,26 @@ export async function getUserAccountType(): Promise<{ is_google_account: boolean
 
 export async function initiateGoogleLogin() {
 	try {
-		const clientId = '831735139130-5j7vdkeoqqc7arpnqm3j1q49gq3h8d2e.apps.googleusercontent.com';
-		const redirectUri = `https://localhost:4443/auth/google/callback`;
+		// Fetch Google OAuth configuration from backend
+		const configResponse = await fetch('/api/auth/google/config', {
+			method: 'GET',
+			credentials: 'include'
+		});
+
+		if (!configResponse.ok) {
+			showError('Google OAuth is not configured.');
+			return;
+		}
+
+		const configData = await configResponse.json();
+		
+		if (!configData.success || !configData.clientId) {
+			showError('Google OAuth is not available.');
+			return;
+		}
+
+		const clientId = configData.clientId;
+		const redirectUri = configData.redirectUri || 'https://localhost:4443/auth/google/callback';
 		const scope = 'email profile';
 		const responseType = 'code';
 		const accessType = 'offline';
@@ -678,6 +696,7 @@ export async function initiateGoogleLogin() {
 
 	} catch (error) {
 		console.error('Failed to initiate Google login:', error);
+		showError('Failed to start Google login.');
 	}
 }
 

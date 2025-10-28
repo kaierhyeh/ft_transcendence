@@ -20,6 +20,30 @@ const oauth2Client = new google.auth.OAuth2(
 export default async function oauthRoutes(fastify: FastifyInstance, options: any) {
 	const logger = (fastify as any).logger;
 	
+	// GET /api/auth/google/config - Serve Google OAuth client configuration
+	fastify.get('/config', async (request: FastifyRequest, reply: FastifyReply) => {
+		try {
+			if (!CONFIG.OAUTH.GOOGLE_CLIENT_ID) {
+				return reply.code(503).send({ 
+					success: false, 
+					error: 'Google OAuth is not configured' 
+				});
+			}
+
+			return reply.code(200).send({
+				success: true,
+				clientId: CONFIG.OAUTH.GOOGLE_CLIENT_ID,
+				redirectUri: CONFIG.OAUTH.GOOGLE_REDIRECT_URI || 'https://localhost:4443/auth/google/callback'
+			});
+		} catch (error) {
+			logger.error('Error fetching Google OAuth config', error as Error);
+			return reply.code(500).send({ 
+				success: false, 
+				error: 'Failed to fetch OAuth configuration' 
+			});
+		}
+	});
+	
 	fastify.post('/', async (request: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
 		try {
 			const { code } = request.body;
