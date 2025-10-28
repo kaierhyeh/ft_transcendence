@@ -8,9 +8,12 @@ interface UserStatus {
   status: OnlineStatus;
 }
 
+type PresenceUpdateCallback = (updates: Map<number, OnlineStatus>) => void;
+
 class Presence {
     private friendStatus: Map<number, OnlineStatus> = new Map();
     private ws: WebSocket | null = null;
+    private callbacks: Set<PresenceUpdateCallback> = new Set();
 
     async checkin() {
         // Prevent multiple connections
@@ -96,14 +99,22 @@ class Presence {
                     const { friends } = message.data as { friends: UserStatus[] };
                     console.log('👥 Friends list received:', friends);
                     this.friendStatus.clear();
+                    const updates = new Map<number, OnlineStatus>();
                     friends.forEach(friend => {
                         this.friendStatus.set(friend.userId, friend.status);
+                        updates.set(friend.userId, friend.status);
                     });
+                    // Notify subscribers of initial friend list
+                    this.notifySubscribers(updates);
                 }
                 else if (message.type === "friend_status_change") {
                     const friendStatus = message.data as UserStatus;
                     console.log('🔄 Friend status change:', friendStatus);
                     this.friendStatus.set(friendStatus.userId, friendStatus.status);
+                    // Notify subscribers of single status change
+                    const updates = new Map<number, OnlineStatus>();
+                    updates.set(friendStatus.userId, friendStatus.status);
+                    this.notifySubscribers(updates);
                 }
             } catch (error) {
                 console.error('❌ Failed to parse message:', error);
@@ -137,6 +148,31 @@ class Presence {
     onlineStatus(userId: number): OnlineStatus {
         const status = this.friendStatus.get(userId);
         return status ?? "unknown";
+    }
+
+    /**
+     * Subscribe to presence updates
+     * @param callback Function to call when friend statuses change
+     * @returns Unsubscribe function
+     */
+    onUpdate(callback: PresenceUpdateCallback): () => void {
+        this.callbacks.add(callback);
+        // Return unsubscribe function
+        return () => this.callbacks.delete(callback);
+    }
+
+    /**
+     * Notify all subscribers of presence updates
+     * @param updates Map of user_id to online status
+     */
+    private notifySubscribers(updates: Map<number, OnlineStatus>): void {
+        this.callbacks.forEach(callback => {
+            try {
+                callback(updates);
+            } catch (error) {
+                console.error('❌ Error in presence update callback:', error);
+            }
+        });
     }
 }
 

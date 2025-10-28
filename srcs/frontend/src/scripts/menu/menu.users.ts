@@ -4,7 +4,7 @@ import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./m
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 import { chatSocket } from "./menu.ws.js";
-import { presence } from "../presence.js";
+import { presence, OnlineStatus } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -33,6 +33,7 @@ let openChatButton: HTMLElement;
 let blockUserButton: HTMLElement;
 
 let currentFilter: string = 'all';
+let presenceUnsubscribe: (() => void) | null = null;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -481,6 +482,9 @@ function renderUserInfo(userInfo: UserInfo): void {
 			<button id="viewProfileButton" class="user-info-profile-btn">View profile</button>
 		</div>
 	`;
+	
+	// Add user_id as data attribute for easy access
+	usersInfo.dataset.userId = userInfo.user_id.toString();
 
 	const viewProfileBtn = document.getElementById('viewProfileButton');
 	if (viewProfileBtn) {
@@ -521,6 +525,33 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 }
 
 /* ========================================= USERS SECTION ================================== */
+
+function updateUserListStatus(updates: Map<number, OnlineStatus>): void {
+    updates.forEach((status, userId) => {
+        // Update in user list
+        const userElement = document.querySelector(`#usersList .menu-list-element[data-user-id="${userId}"]`);
+        if (userElement) {
+            const statusSpan = userElement.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
+            if (statusSpan) {
+                statusSpan.className = `user-status-${status.toLowerCase()}`;
+                statusSpan.textContent = status;
+            }
+        }
+        
+        // Update in user info section if this user is currently displayed
+        const usersInfoElement = document.getElementById('usersInfo');
+        if (usersInfoElement && usersInfoElement.dataset.userId === userId.toString()) {
+            const userOnlineStatus = document.getElementById('userOnlineStatus');
+            if (userOnlineStatus) {
+                const statusSpan = userOnlineStatus.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
+                if (statusSpan) {
+                    statusSpan.className = `user-status-${status.toLowerCase()}`;
+                    statusSpan.textContent = status;
+                }
+            }
+        }
+    });
+}
 
 function renderUserList(users: UserListRow[]): void {
 
@@ -656,9 +687,22 @@ async function initUsersSection(): Promise<void> {
 	["usersList"].forEach(showElementById);
 
 	await loadUsers();
+	
+	// Subscribe to presence updates if not already subscribed
+	if (!presenceUnsubscribe) {
+		presenceUnsubscribe = presence.onUpdate(updateUserListStatus);
+	}
 }
 
 /* ========================================= INITIALIZATION SECTION ========================= */
+
+export function cleanupUsersPresenceSubscription(): void {
+	if (presenceUnsubscribe) {
+		presenceUnsubscribe();
+		presenceUnsubscribe = null;
+	}
+}
+
 function addMenuDropdown(): boolean {
 
 	const menuDropdown = document.querySelector(".menu-dropdown");

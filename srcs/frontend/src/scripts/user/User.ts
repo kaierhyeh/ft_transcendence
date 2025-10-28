@@ -28,10 +28,41 @@ export class User {
 
 
     /**
-     * Check if user is authenticated and has data
+     * Check if user is authenticated and has data (synchronous, no network call)
      */
     public isLoggedIn(): boolean {
         return this.isAuthenticated && this.data !== null;
+    }
+
+    /**
+     * Verify authentication with backend and ensure tokens are still valid
+     * Use this before critical operations (game/tournament creation) when you need
+     * to guarantee the user is actually authenticated, not just locally cached
+     * @returns true if authenticated, false otherwise
+     */
+    public async ensureAuthenticated(): Promise<boolean> {
+        if (!this.isLoggedIn()) {
+            return false;
+        }
+
+        try {
+            const response = await fetch(`${window.location.origin}/api/auth/verify`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.warn('Authentication verification failed:', response.status);
+                this.logout();
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error verifying authentication:', error);
+            this.logout();
+            return false;
+        }
     }
 
     /**

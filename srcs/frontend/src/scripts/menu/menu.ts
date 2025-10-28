@@ -1,5 +1,5 @@
-import { openChatsSection } from "./menu.chat.js";
-import { openUsersSection } from "./menu.users.js";
+import { openChatsSection, cleanupChatPresenceSubscription } from "./menu.chat.js";
+import { openUsersSection, cleanupUsersPresenceSubscription } from "./menu.users.js";
 import user from '../user/User.js';
 import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
 import { chatSocket } from "./menu.ws.js";
@@ -42,6 +42,8 @@ function openMenuWindow(): void {
 
 export function closeMenuWindow(): void {
 	chatSocket?.close(1000, "Close socket: close social menu");
+	cleanupChatPresenceSubscription();
+	cleanupUsersPresenceSubscription();
 	clearEventsInSections();
 	hideSectionsElements();
 	["menuWindow"].forEach(hideElementById);

@@ -195,9 +195,11 @@ export default function initRemoteGame(): void {
             currentButton.textContent = t("joining");
         }
 
+        const isAuthenticated = await user.ensureAuthenticated();
+        
         currentParticipantId = generateParticipantId();
         const participant: GameParticipant = {
-            type: user.isLoggedIn() ? "registered" : "guest",
+            type: isAuthenticated ? "registered" : "guest",
             user_id: user.user_id ?? undefined,
             participant_id: currentParticipantId
         };

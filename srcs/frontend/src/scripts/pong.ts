@@ -99,8 +99,11 @@ export function initPong() {
             
             await new Promise(resolve => setTimeout(resolve, 100));
             
+            // Verify authentication before creating participants
+            const isAuthenticated = await user.ensureAuthenticated();
+            
             // Create participants
-            const participants = createParticipants(mode, format);
+            const participants = createParticipants(mode, format, isAuthenticated);
             
             // Create new session
             renderer.showMessage(t("creatingGame"));
@@ -137,11 +140,11 @@ export function initPong() {
         }
     }
     
-    function createParticipants(mode: GameMode, format: GameFormat): GameParticipant[] {
+    function createParticipants(mode: GameMode, format: GameFormat, isAuthenticated: boolean): GameParticipant[] {
         if (format === '1v1') {
             const participants: GameParticipant[] = [
                 {
-                    type: user.isLoggedIn() ? "registered" : "guest",
+                    type: isAuthenticated ? "registered" : "guest",
                     user_id: user.user_id ?? undefined,
                     participant_id: generateParticipantId()
                 }
@@ -167,7 +170,7 @@ export function initPong() {
         } else {
             const participants: GameParticipant[] = [
                 {
-                    type: user.isLoggedIn() ? "registered" : "guest",
+                    type: isAuthenticated ? "registered" : "guest",
                     user_id: user.user_id ?? undefined,
                     participant_id: generateParticipantId()
                 }
