@@ -2,17 +2,24 @@ import { FromSchema } from "json-schema-to-ts";
 
 // Elementary field schemas (reusable building blocks)
 
-const loginSchema = {
+const usernameSchema = {
     type: "string",
-    minLength: 1,      // Allow any identifier length
-    maxLength: 254,    // Max email length
-    description: "Username, email address, or Google sub"
+    minLength: 1,
+    maxLength: 50,
+    description: "Username for login and display"
+} as const;
+
+const emailSchema = {
+    type: "string",
+    format: "email",
+    maxLength: 254,
+    description: "Optional email address"
 } as const;
 
 const passwordSchema = {
   type: "string",
   minLength: 8,
-  maxLength: 128,    // Reasonable password limit
+  maxLength: 128,
 } as const;
 
 const aliasSchema = {
@@ -21,7 +28,7 @@ const aliasSchema = {
   maxLength: 50
 } as const;
 
-const googleSubSchema = {
+const googleSubFieldSchema = {
   type: "string"
 } as const;
 
@@ -29,33 +36,38 @@ const settingsSchema = {
   type: "string"
 } as const;
 
-const twoFAEnabledSchema = {
-  type: "boolean"
-} as const;
-
 
 // For local user creation
 export const createLocalUserSchema = {
   type: "object",
-  required: ["username", "email", "password"],
   properties: {
-    username: loginSchema,
-    email: loginSchema,
+    username: usernameSchema,
+    email: emailSchema,
     password: passwordSchema,
-    alias: aliasSchema
   },
+  required: ["username", "password"],
   additionalProperties: false,
 } as const;
 
 // For Google OAuth account creation
 export const createGoogleUserSchema = {
   type: "object",
-  required: ["google_sub", "email", "username"],
+  required: ["google_sub", "username"],
   properties: {
-    google_sub: googleSubSchema,
-    email: loginSchema,
-    username: loginSchema,
+    google_sub: googleSubFieldSchema,
+    username: usernameSchema,
+    email: emailSchema,
     alias: aliasSchema
+  },
+  additionalProperties: false,
+} as const;
+
+// For looking up users by Google sub
+export const googleSubParamsSchema = {
+  type: "object",
+  required: ["google_sub"],
+  properties: {
+    google_sub: { type: "string" }
   },
   additionalProperties: false,
 } as const;
@@ -76,7 +88,6 @@ export const updateSchema = {
     password: updatePasswordSchema,
     alias: aliasSchema,
     settings: settingsSchema,
-    two_fa_enabled: twoFAEnabledSchema
   },
   additionalProperties: false
 } as const;
@@ -101,9 +112,9 @@ export const userLookupSchema = {
 
 export const credentialsSchema = {
   type: "object",
-  required: ["login", "password"],
+  required: ["username", "password"],
   properties: {
-    login: {type: "string"},
+    username: usernameSchema,
     password: passwordSchema,
   },
   additionalProperties: false,
@@ -128,6 +139,7 @@ export const avatarQuerySchema = {
 
 export type LocalUserCreationRawData = FromSchema<typeof createLocalUserSchema>;
 export type GoogleUserCreationData = FromSchema<typeof createGoogleUserSchema>;
+export type GoogleSubParams = FromSchema<typeof googleSubParamsSchema>;
 export type UpdateRawData = FromSchema<typeof updateSchema>;
 export type PasswordUpdateData = FromSchema<typeof updatePasswordSchema>;
 export type UserIdParams = FromSchema<typeof userIdSchema>;

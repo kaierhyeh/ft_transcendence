@@ -57,9 +57,15 @@ export function initSettings() {
 
 		if (profileUsername)
 			profileUsername.textContent = user.username || 'Unknown';
-
-		if (profileEmail)
-			profileEmail.textContent = user.email || 'Unknown';
+		
+		if (profileEmail) {
+			if (user.email) {
+				profileEmail.textContent = user.email;
+				profileEmail.style.display = 'block';
+			} else {
+				profileEmail.style.display = 'none';
+			}
+		}
 
 		if (profileAlias)
 			profileAlias.textContent = user.alias || 'No alias';

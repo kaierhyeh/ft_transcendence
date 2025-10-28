@@ -6,6 +6,7 @@ import { openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { closeMenuWindow } from "./menu.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
+import { presence, OnlineStatus } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -19,6 +20,8 @@ let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
+
+let presenceUnsubscribe: (() => void) | null = null;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -83,6 +86,21 @@ function resetChatSection(): void {
 
 /* =================================== CHATS SECTION ======================================== */
 
+function updateChatListStatus(updates: Map<number, OnlineStatus>): void {
+    updates.forEach((status, userId) => {
+        // Find all chat list elements for this user
+        const chatElement = document.querySelector(`#chatsList .menu-list-element[data-user-id="${userId}"]`);
+        if (chatElement) {
+            const statusSpan = chatElement.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
+            if (statusSpan) {
+                // Update class and text
+                statusSpan.className = `user-status-${status.toLowerCase()}`;
+                statusSpan.textContent = status;
+            }
+        }
+    });
+}
+
 function renderChatList(users: ChatUser[]): void {
 	["chatsList"].forEach(showElementById);
 
@@ -104,7 +122,7 @@ function renderChatList(users: ChatUser[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
-		const userStatus = u.user_status || "unknown";
+		const userStatus = presence.onlineStatus(u.user_id);
 		const statusHtml = u.friendship_status === "accepted"
 			? `<span class="user-status-${userStatus.toLowerCase()}">${userStatus}</span>`
 			: `<span class="user-status-unknown"></span>`;
@@ -170,6 +188,11 @@ async function initChatSection(): Promise<void> {
 	if (chatsBtn)
 		chatsBtn.className = "menu-control-panel-button-pressed";
 	await loadChats();
+	
+	// Subscribe to presence updates if not already subscribed
+	if (!presenceUnsubscribe) {
+		presenceUnsubscribe = presence.onUpdate(updateChatListStatus);
+	}
 }
 
 /* =================================== MESSAGES SECTION ===================================== */
@@ -350,6 +373,13 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 }
 
 /* =============================== INITIALIZATION OF CHAT SECTION =========================== */
+
+export function cleanupChatPresenceSubscription(): void {
+	if (presenceUnsubscribe) {
+		presenceUnsubscribe();
+		presenceUnsubscribe = null;
+	}
+}
 
 export async function openChatsSection(): Promise<void> {
 	console.log("MENU: Chats Section opened");

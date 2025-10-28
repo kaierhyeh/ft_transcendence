@@ -26,6 +26,18 @@ export class FriendService {
 		return this.friendRepository.listFriends(userId);
 	}
 
+	// Get friends for multiple users at once (for presence service)
+	// Returns array of { user_id, friends: User[] }
+	public async getFriendsBatch(userIds: number[]) {
+		const friendLists = await Promise.all(
+			userIds.map(async (userId) => ({
+				user_id: userId,
+				friends: await this.friendRepository.listFriends(userId)
+			}))
+		);
+		return friendLists;
+	}
+
 	// if no requests TO userId, return empty array
 	// requestIn(fromUserId, nickname)
 	public async getPendingIncomingRequests(userId: number) {
@@ -51,7 +63,7 @@ export class FriendService {
 	}
 
 	public async acceptFriendRequest(userId: number, friendId: number) {
-		this.friendRepository.acceptFriendRequest(userId, friendId);
+		await this.friendRepository.acceptFriendRequest(userId, friendId);
 	}
 
 	public async declineFriendRequest(userId: number, friendId: number) {
@@ -59,7 +71,7 @@ export class FriendService {
 	}
 
 	public async removeFriendship(userId: number, friendId: number) {
-		this.friendRepository.removeFriendship(userId, friendId);
+		await this.friendRepository.removeFriendship(userId, friendId);
 	}
 
 	public async getUsersByIds(thisUserId: number, userIds: number[]) {
@@ -69,7 +81,6 @@ export class FriendService {
 			if (u.friendship_status === null || u.friendship_status === "pending") {
 				return {
 					...u,
-					user_status: null,
 					friendship_status: null,
 					from_id: null,
 					to_id: null,

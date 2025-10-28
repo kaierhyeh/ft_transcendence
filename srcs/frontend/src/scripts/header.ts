@@ -1,4 +1,5 @@
 // Simple header management
+import { presence } from './presence.js';
 import user from './user/User.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];

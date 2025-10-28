@@ -10,7 +10,7 @@ export function initLogin() {
 
 	const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
 	const googleLoginBtn = document.getElementById('google-login-btn') as HTMLButtonElement;
-	const loginInput = document.getElementById('login') as HTMLInputElement;
+	const usernameInput = document.getElementById('username') as HTMLInputElement;
 	const passwordInput = document.getElementById('password') as HTMLInputElement;
 
 	// Event listeners
@@ -21,22 +21,22 @@ export function initLogin() {
 		googleLoginBtn.addEventListener('click', handleGoogleLogin);
 
 	// Add Enter key support for login form
-	if (loginInput && passwordInput) {
+	if (usernameInput && passwordInput) {
 		const handleEnterKey = (event: KeyboardEvent) => {
 			if (event.key === 'Enter') {
 				event.preventDefault();
 				handleLogin();
 			}
 		};
-		loginInput.addEventListener('keypress', handleEnterKey);
+		usernameInput.addEventListener('keypress', handleEnterKey);
 		passwordInput.addEventListener('keypress', handleEnterKey);
 	}
 
 	async function handleLogin() {
-		const login = loginInput?.value.trim();
+		const username = usernameInput?.value.trim();
 		const password = passwordInput?.value.trim();
 
-		if (!login || !password) {
+		if (!username || !password) {
 			alert('Please enter both username and password.');
 			return;
 		}
@@ -46,7 +46,7 @@ export function initLogin() {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ login, password })
+				body: JSON.stringify({ username, password })
 			});
 
 			const data = await response.json();

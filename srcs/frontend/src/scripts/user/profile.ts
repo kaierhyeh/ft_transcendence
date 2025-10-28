@@ -8,7 +8,6 @@ export async function initProfile() {
 	interface User {
 		id: number;
 		username: string;
-		email: string;
 		created_at: string;
 		wins: number;
 		losses: number;
@@ -33,8 +32,14 @@ export async function initProfile() {
 
 		if (usernameElement)
 			usernameElement.textContent = userData.username || userData.alias;
-		if (emailElement)
-			emailElement.textContent = userData.email;
+		if (emailElement) {
+			if (userData.email) {
+				emailElement.textContent = userData.email;
+				emailElement.style.display = 'block';
+			} else {
+				emailElement.style.display = 'none';
+			}
+		}
 		if (joinDateElement)
 			joinDateElement.textContent = 'Member since ' + joinDate;
 		if (currentStreakElement)

@@ -1,0 +1,28 @@
+{
+  "name": "presence-service",
+  "version": "1.0.0",
+  "description": "Microservice for presence management in the Pong game",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node --watch index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^9.0.0",
+    "@fastify/websocket": "^8.0.0",
+    "dotenv": "^16.0.0",
+    "fastify": "^4.0.0",
+    "json-schema-to-ts": "^3.0.0",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.18.1",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  }
+}

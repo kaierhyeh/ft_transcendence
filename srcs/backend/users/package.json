@@ -17,6 +17,7 @@
     "better-sqlite3": "^12.2.0",
     "dotenv": "^16.0.0",
     "fastify": "^5.0.0",
+    "ioredis": "^5.3.2",
     "json-schema-to-ts": "^3.0.0",
     "jsonwebtoken": "^9.0.0"
   },
