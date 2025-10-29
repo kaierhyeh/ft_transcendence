@@ -23,6 +23,7 @@ export async function initProfile() {
 	function displayUserProfile(userData: any) {
 		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
+		const profileAvatarElement = document.getElementById('profileAvatar') as HTMLElement;
 		const usernameElement = document.getElementById('profileUsername');
 		const emailElement = document.getElementById('profileEmail');
 		const joinDateElement = document.getElementById('profileJoinDate');
@@ -30,6 +31,14 @@ export async function initProfile() {
 		const bestStreakElement = document.getElementById('statsBestStreak');
 		const profileSection = document.getElementById('profileSection');
 
+		if (profileAvatarElement && userData.avatar_url)
+		{
+			profileAvatarElement.style.backgroundImage = `url(${userData.avatar_url})`;
+			profileAvatarElement.style.display = 'block';
+			console.log(userData.avatar_url);
+		}
+		else
+			profileAvatarElement.style.display = 'none';
 		if (usernameElement)
 			usernameElement.textContent = userData.username || userData.alias;
 		if (emailElement) {
