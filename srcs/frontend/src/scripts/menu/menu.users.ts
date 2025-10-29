@@ -237,12 +237,12 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 			}
 		});
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
 		}
 		// console.log("[DEBUG CHAT] - res:", res);
@@ -496,17 +496,17 @@ function renderUserInfo(userInfo: UserInfo): void {
 	updateButtonsForUserInfo(userInfo);
 }
 
-async function initUserInfoSection(targetUserId: number): Promise<void> {
+export async function initUserInfoSection(targetUserId: number): Promise<void> {
 	try {
 		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
 		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
 		}
 		const userInfo: UserInfo = await res.json();
@@ -658,11 +658,11 @@ async function loadUsers(): Promise<void>{
 				break;
 		}
 		if (res === null || !res.ok) {
-			if (res !== null && res.status === 401) {
-				user.logout();
-				window.location.href = '/';
-				return;
-			}
+			// if (res !== null && res.status === 401) {
+			// 	user.logout();
+			// 	window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error(`Failed to fetch users for menu`);
 		}
 		const users: UserListRow[] = await res.json();
@@ -672,17 +672,19 @@ async function loadUsers(): Promise<void>{
 	}
 }
 
-async function initUsersSection(): Promise<void> {
+export async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
 	if (user.isLoggedIn()) {
 		["menuDropdown"].forEach(showElementById);
 		const userBtn = document.getElementById("usersSectionButton");
-		if (userBtn)
+		if (userBtn) {
 			userBtn.className = "menu-control-panel-button-pressed";
+		}
 		const chatsBtn = document.getElementById("chatsSectionButton");
-		if (chatsBtn)
+		if (chatsBtn) {
 			chatsBtn.className = "menu-control-panel-button";
+		}
 	}
 	["usersList"].forEach(showElementById);
 
