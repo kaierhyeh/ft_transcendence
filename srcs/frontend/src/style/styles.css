@@ -57,8 +57,8 @@ body {
 /* Back to Home Button - Universal Style */
 .back-to-home-btn {
 	position: absolute;
-	top: 20px;
 	left: 20px;
+	top: 10px;
 	z-index: 100;
 	padding: 12px 24px;
 	background-color: #222;
