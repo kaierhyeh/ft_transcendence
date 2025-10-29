@@ -311,7 +311,8 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 
 	const chatId = toUser.chat_id;
 	const toId = toUser.user_id;
-	const payload: NewMessageRequest = { chatId, toId, msg };
+	const fromUsername = user.username;
+	const payload: NewMessageRequest = { chatId, toId, fromUsername: fromUsername ? fromUsername : "unknown", msg };
 
 	try {
 		const res = await fetch(`${API_MSG_ENDPOINT}/`, {

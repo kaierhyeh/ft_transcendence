@@ -26,9 +26,10 @@ export class MessageController {
 			const chatId = request.body.chatId;
 			const fromId = toInteger(sub);
 			const toId = request.body.toId
+			const fromUsername = request.body.fromUsername;
 			const msg = request.body.msg;
 
-			await this.messageService.sendMessage(chatId, fromId, toId, msg);
+			await this.messageService.sendMessage(chatId, fromId, toId, fromUsername ? fromUsername : "incognito", msg);
 
 			reply.status(200).send({
 				success: true,
