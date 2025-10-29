@@ -76,6 +76,12 @@ function setupHeaderEvents() {
         usernameSpan.textContent = user.getDisplayName() || 'User';
     }
 
+    // Setup username
+    const usernameDiv = document.querySelector('.user-name');
+    if (usernameDiv && user.isLoggedIn()) {
+        usernameDiv.textContent = user.getDisplayName() || 'User';
+    }
+
     // Setup avatar with user data
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
     if (userAvatar && user.isLoggedIn()) {
