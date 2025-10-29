@@ -35,6 +35,7 @@ export interface NewMessage {
 export interface NewMessageRequest {
 	chatId: number;
 	toId: number;
+	fromUsername: string;
 	msg: string;
 }
 

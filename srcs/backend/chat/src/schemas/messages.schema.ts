@@ -12,6 +12,10 @@ export const newMessageSchema = {
 			type: "number",
 			minimum: 0 
 		},
+		fromUsername: {
+			type: 'string',
+			minLength: 1
+		},
 		msg: {
 			type: 'string',
 			minLength: 1
