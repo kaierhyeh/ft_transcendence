@@ -113,10 +113,36 @@ function setupHeaderEvents() {
             dropdown.classList.toggle('show');
         });
         
+        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
             dropdown.classList.remove('show');
         });
+        
+        // Add navigation event listeners to dropdown items with data-route
+        dropdown.querySelectorAll('[data-route]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const route = (e.currentTarget as HTMLElement).dataset.route;
+                if (route && (window as any).navigateTo) {
+                    // Close dropdown
+                    dropdown.classList.remove('show');
+                    // Use the global navigate function
+                    (window as any).navigateTo(route);
+                }
+            });
+        });
     }
+    
+    // Add SPA navigation for unauthenticated header buttons (signup/login)
+    document.querySelectorAll('header [data-route]').forEach(element => {
+        element.addEventListener('click', (e) => {
+            e.preventDefault();
+            const route = (element as HTMLElement).getAttribute('data-route');
+            if (route && (window as any).navigateTo) {
+                (window as any).navigateTo(route);
+            }
+        });
+    });
 
     // Logout button
     const logoutBtn = document.querySelector('.logout-btn');
@@ -133,13 +159,20 @@ function setupHeaderEvents() {
                 user.logout();
                 
                 // Redirect to home
-                window.location.href = '/';
+                redirectAfterLogout();
             } catch (error) {
                 console.error('Logout failed:', error);
             }
         });
     }
+
+    function redirectAfterLogout() {
+        (window as any).navigateTo("/");
+
+    }
 }
+
+
 
 function updateHeaderAvatar() {
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;

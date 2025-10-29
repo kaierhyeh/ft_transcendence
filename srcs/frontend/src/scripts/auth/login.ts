@@ -19,6 +19,15 @@ export function initLogin() {
 
 	if (googleLoginBtn)
 		googleLoginBtn.addEventListener('click', handleGoogleLogin);
+	
+	// Add SPA navigation for auth links
+	document.querySelectorAll('[data-route]').forEach(element => {
+		element.addEventListener('click', (e) => {
+			e.preventDefault();
+			const route = (element as HTMLElement).getAttribute('data-route');
+			if (route) (window as any).navigateTo(route);
+		});
+	});
 
 	// Add Enter key support for login form
 	if (usernameInput && passwordInput) {
@@ -124,11 +133,13 @@ export function initLogin() {
 		const previousPage = sessionStorage.getItem('previousPage');
 		
 		if (previousPage && previousPage !== '/login' && previousPage !== '/signup') {
-			// Clear the stored page and redirect to it
+			// Clear the stored page and redirect to it using SPA navigation
 			sessionStorage.removeItem('previousPage');
-			window.location.href = previousPage;
-		} else		// Default redirect to homepage
-			window.location.href = '/';
+			(window as any).navigateTo(previousPage);
+		} else {
+			// Default redirect to homepage using SPA navigation
+			(window as any).navigateTo('/');
+		}
 	}
 
 }

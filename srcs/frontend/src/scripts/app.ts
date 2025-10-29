@@ -162,6 +162,9 @@ window.onpopstate = (e) => {
 	navigate(path, false);
 };
 
+// Make navigate available globally for header and other components
+(window as any).navigateTo = navigate;
+
 addBrowserClass();
 logBrowserInfo();
 
