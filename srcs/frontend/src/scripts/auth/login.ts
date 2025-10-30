@@ -19,15 +19,6 @@ export function initLogin() {
 
 	if (googleLoginBtn)
 		googleLoginBtn.addEventListener('click', handleGoogleLogin);
-	
-	// Add SPA navigation for auth links
-	document.querySelectorAll('[data-route]').forEach(element => {
-		element.addEventListener('click', (e) => {
-			e.preventDefault();
-			const route = (element as HTMLElement).getAttribute('data-route');
-			if (route) (window as any).navigateTo(route);
-		});
-	});
 
 	// Add Enter key support for login form
 	if (usernameInput && passwordInput) {

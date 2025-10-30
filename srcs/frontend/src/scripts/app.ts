@@ -90,11 +90,16 @@ async function load404(push: boolean)
 
 function update_event()
 {
-	app.querySelectorAll("[data-route]").forEach(btn => {
+	// Search entire document for data-route elements (includes header + app content)
+	document.querySelectorAll("[data-route]").forEach(btn => {
 		const element = btn as HTMLElement;
 		if (element.id === 'one-player-btn' || element.id === 'two-players-btn' || element.id == 'four-players-btn') return;
 		
-		btn.addEventListener("click", (e) => {
+		// Remove existing listener to prevent duplicates (if already attached)
+		const newBtn = btn.cloneNode(true) as HTMLElement;
+		btn.parentNode?.replaceChild(newBtn, btn);
+		
+		newBtn.addEventListener("click", (e) => {
 			e.preventDefault();
 			const path = (e.currentTarget as HTMLElement).dataset.route!;
 			navigate(path);

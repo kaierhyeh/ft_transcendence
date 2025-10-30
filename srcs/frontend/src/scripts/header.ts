@@ -1,5 +1,4 @@
 // Simple header management
-import { presence } from './presence.js';
 import user from './user/User.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
@@ -118,31 +117,15 @@ function setupHeaderEvents() {
             dropdown.classList.remove('show');
         });
         
-        // Add navigation event listeners to dropdown items with data-route
+        // Add special handling for dropdown items: close dropdown before navigation
         dropdown.querySelectorAll('[data-route]').forEach(item => {
             item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const route = (e.currentTarget as HTMLElement).dataset.route;
-                if (route && (window as any).navigateTo) {
-                    // Close dropdown
-                    dropdown.classList.remove('show');
-                    // Use the global navigate function
-                    (window as any).navigateTo(route);
-                }
+                // Close dropdown first
+                dropdown.classList.remove('show');
+                // Navigation will be handled by update_event() in app.ts
             });
         });
     }
-    
-    // Add SPA navigation for unauthenticated header buttons (signup/login)
-    document.querySelectorAll('header [data-route]').forEach(element => {
-        element.addEventListener('click', (e) => {
-            e.preventDefault();
-            const route = (element as HTMLElement).getAttribute('data-route');
-            if (route && (window as any).navigateTo) {
-                (window as any).navigateTo(route);
-            }
-        });
-    });
 
     // Logout button
     const logoutBtn = document.querySelector('.logout-btn');

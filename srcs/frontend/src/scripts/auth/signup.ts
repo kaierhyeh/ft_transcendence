@@ -20,15 +20,6 @@ export function initSignup() {
 	if (googleSignupBtn)
 		googleSignupBtn.addEventListener('click', handleGoogleSignup);
 	
-	// Add SPA navigation for auth links
-	document.querySelectorAll('[data-route]').forEach(element => {
-		element.addEventListener('click', (e) => {
-			e.preventDefault();
-			const route = (element as HTMLElement).getAttribute('data-route');
-			if (route) (window as any).navigateTo(route);
-		});
-	});
-
 	// Add Enter key support for signup form
 	if (usernameInput && passwordInput) {
 		const handleEnterKey = (event: KeyboardEvent) => {

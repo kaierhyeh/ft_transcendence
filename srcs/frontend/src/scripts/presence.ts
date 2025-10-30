@@ -43,16 +43,31 @@ class Presence {
                     return;
                 }
 
+                
                 const ws = this.ws; // Capture in closure to avoid null issues
-
+                
                 ws.onopen = () => {
-                    console.log('🔓 WebSocket opened');
+                    console.log('🔓 WebSocket opened, waiting for server ready...');
+                };
+                
+                // Wait for "ready" message from server before sending checkin
+                ws.onmessage = (event: MessageEvent) => {
                     try {
-                        ws.send(JSON.stringify({ type: "checkin" }));
-                        console.log('✅ Checkin message sent');
-                        resolve();
+                        const message = JSON.parse(event.data);
+                        
+                        if (message.type === "ready") {
+                            console.log('✅ Server ready signal received');
+                            try {
+                                ws.send(JSON.stringify({ type: "checkin" }));
+                                console.log('✅ Checkin message sent');
+                                resolve();
+                            } catch (error) {
+                                console.error('❌ Failed to send checkin:', error);
+                                reject(error);
+                            }
+                        }
                     } catch (error) {
-                        console.error('❌ Failed to send checkin:', error);
+                        console.error('❌ Failed to parse ready message:', error);
                         reject(error);
                     }
                 };
