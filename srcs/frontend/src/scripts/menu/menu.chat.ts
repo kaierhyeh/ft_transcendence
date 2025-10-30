@@ -2,7 +2,7 @@ import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./m
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
 import user from '../user/User.js';
-import { initUserInfoSection, openUsersSection } from "./menu.users.js";
+import { initUserInfoSectionFromChat, openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
 import { presence, OnlineStatus } from "../presence.js";
@@ -240,24 +240,16 @@ async function inviteToGame(toUser: ChatUser): Promise<void> {
 
 async function openUserInfo(toUser: ChatUser): Promise<void> {
 	console.log(`CHAT: User info pressed: show info for username=[${toUser.username}] id=[${toUser.user_id}]`);
-	// chatMessages.innerHTML = ``;
-	// chatsList.innerHTML = ``;
-	// chatSocket?.close(1000, "Close socket: open user info");
+	chatMessages.innerHTML = ``;
+	chatsList.innerHTML = ``;
+	chatSocket?.close(1000, "Close socket: open user info");
 
-	// [	"chatList",
-	// 	"chatMessages",
-	// 	"chatLowerPanel"
-	// ].forEach(hideElementById);
+	[	"chatList",
+		"chatMessages",
+		"chatLowerPanel"
+	].forEach(hideElementById);
 
-	// ["menuBackButton"].forEach(hideElementById);
-
-	// // menuBackButton = document.getElementById("menuBackButton")!;
-	// // menuBackButton.addEventListener("click", () => {
-	// // 	// console.log("USERS: Back button clicked");
-	// // 	initUsersSection();
-	// // });
-
-	// initUserInfoSection(toUser.user_id);
+	initUserInfoSectionFromChat(toUser.user_id);
 }
 
 async function goBackToChatsList(): Promise<void> {

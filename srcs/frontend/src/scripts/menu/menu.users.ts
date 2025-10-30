@@ -316,6 +316,8 @@ function prepareUserInfoSection(): void {
 		].forEach(showElementById);
 	}
 
+	usersInfo = document.getElementById("usersInfo")!;
+
 }
 
 function updateButtonsForUserInfo(userInfo: UserInfo): void {
@@ -496,7 +498,7 @@ function renderUserInfo(userInfo: UserInfo): void {
 	updateButtonsForUserInfo(userInfo);
 }
 
-export async function initUserInfoSection(targetUserId: number): Promise<void> {
+async function initUserInfoSection(targetUserId: number): Promise<void> {
 	try {
 		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
 		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
@@ -522,6 +524,19 @@ export async function initUserInfoSection(targetUserId: number): Promise<void> {
 		console.error("Error loading user info:", err);
 	}
 
+}
+
+export function initUserInfoSectionFromChat(targetUserId :number) {
+
+	["#menuBackButton"].forEach(clearEvents);
+
+	menuBackButton = document.getElementById("menuBackButton")!;
+
+	menuBackButton.addEventListener("click", () => {
+		initUsersSection();
+	});
+
+	initUserInfoSection(targetUserId);
 }
 
 /* ========================================= USERS SECTION ================================== */
