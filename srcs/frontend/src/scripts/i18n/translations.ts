@@ -22,8 +22,8 @@ export const translations = {
     "twoPlayers": "Two players",
     "fourPlayers": "Four players",
     "playOnline": "Play online",
-    "remote1v1": "- 2 players -",
-    "remote2v2": "- 4 players -",
+    "remote1v1": "2 players online",
+    "remote2v2": "4 players online",
 
     // Tournament
     "tournament": "Tournament",
@@ -93,6 +93,14 @@ export const translations = {
     "creatingGame": "Creating game...",
     "failedToStartGame": "Failed to start game",
 
+    // Player Position
+    "positionLeft": "Your position: Left",
+    "positionRight": "Your position: Right",
+    "positionTopLeft": "Your position: Top Left",
+    "positionBottomLeft": "Your position: Bottom Left",
+    "positionTopRight": "Your position: Top Right",
+    "positionBottomRight": "Your position: Bottom Right",
+
     // Tooltips
     "viewStats": "View Stats",
     "viewProfile": "View Profile",
@@ -127,8 +135,8 @@ export const translations = {
     "twoPlayers": "雙人遊戲",
     "fourPlayers": "四人遊戲",
     "playOnline": "線上遊戲",
-    "remote1v1": "- 雙人遊戲 -",
-    "remote2v2": "- 四人遊戲 -",
+    "remote1v1": "雙人線上遊戲",
+    "remote2v2": "四人線上遊戲",
 
     // Tournament
     "tournament": "比賽",
@@ -198,6 +206,14 @@ export const translations = {
     "creatingGame": "建立遊戲中...",
     "failedToStartGame": "遊戲啟動失敗",
 
+    // Player Position
+    "positionLeft": "你的位置：左",
+    "positionRight": "你的位置：右",
+    "positionTopLeft": "你的位置：左上",
+    "positionBottomLeft": "你的位置：左下",
+    "positionTopRight": "你的位置：右上",
+    "positionBottomRight": "你的位置：右下",
+
     // Tooltips
     "viewStats": "查看統計",
     "viewProfile": "查看個人資料",
@@ -232,8 +248,8 @@ export const translations = {
     "twoPlayers": "Deux joueurs",
     "fourPlayers": "Quatre joueurs",
     "playOnline": "Jouer en ligne",
-    "remote1v1": "- 2 joueurs -",
-    "remote2v2": "- 4 joueurs -",
+    "remote1v1": "2 joueurs en ligne",
+    "remote2v2": "4 joueurs en ligne",
 
     // Tournament
     "tournament": "Tournoi",
@@ -302,6 +318,14 @@ export const translations = {
     "selectGameMode": "Sélectionnez un mode de jeu",
     "creatingGame": "Création de la partie...",
     "failedToStartGame": "Échec du démarrage de la partie",
+
+    // Player Position
+    "positionLeft": "Votre position : Gauche",
+    "positionRight": "Votre position : Droite",
+    "positionTopLeft": "Votre position : Haut Gauche",
+    "positionBottomLeft": "Votre position : Bas Gauche",
+    "positionTopRight": "Votre position : Haut Droite",
+    "positionBottomRight": "Votre position : Bas Droite",
 
     // Tooltips
     "viewStats": "Voir les statistiques",
