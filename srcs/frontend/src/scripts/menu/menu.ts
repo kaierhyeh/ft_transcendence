@@ -7,19 +7,19 @@ import { chatSocket } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
-let menuWindow: HTMLElement;
+// let menuWindow: HTMLElement;
 let menuCloseButton: HTMLElement;
 let menuButton: HTMLElement;
 let usersButton: HTMLElement;
 let chatsButton: HTMLElement;
 
 function initializeGlobals(): boolean {
-	menuWindow = document.getElementById("menuWindow")!;
+	// menuWindow = document.getElementById("menuWindow")!;
 	menuCloseButton = document.getElementById("menuCloseButton")!;
 	menuButton = document.getElementById("menuButton")!;
 	usersButton = document.getElementById("usersSectionButton")!;
 	chatsButton = document.getElementById("chatsSectionButton")!;
-	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !chatsButton) {
+	if (/* !menuWindow || */ !menuCloseButton || !menuButton || !usersButton || !chatsButton) {
 		return false;
 	}
 	return true;
@@ -65,7 +65,7 @@ function openUsers(): void {
 	}
 }
 
-function openChats(): void {
+export function openChats(): void {
 	if (!user.isLoggedIn()) {
 		return;
 	}

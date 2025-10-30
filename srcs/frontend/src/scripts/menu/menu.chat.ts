@@ -12,15 +12,15 @@ import { presence, OnlineStatus } from "../presence.js";
 let API_CHAT_ENDPOINT: string;
 let API_MSG_ENDPOINT: string;
 let menuBackButton: HTMLElement;
-let usersSectionButton: HTMLElement;
+// let usersSectionButton: HTMLElement;
 let chatsList: HTMLElement;
 let chatMessages: HTMLElement;
-let chatLowerPanel: HTMLElement;
+// let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
 let chatUserInfoButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
-let statusIsBlocked: HTMLElement;
+// let statusIsBlocked: HTMLElement;
 
 let presenceUnsubscribe: (() => void) | null = null;
 
@@ -28,19 +28,19 @@ function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
 	API_MSG_ENDPOINT = `${window.location.origin}/api/message`;
 	menuBackButton = document.getElementById("menuBackButton")!;
-	usersSectionButton = document.getElementById("usersSectionButton")!;
+	// usersSectionButton = document.getElementById("usersSectionButton")!;
 	chatsList = document.getElementById("chatsList")!;
 	chatMessages = document.getElementById("chatMessages")!;
-	chatLowerPanel = document.getElementById("chatLowerPanel")!;
+	// chatLowerPanel = document.getElementById("chatLowerPanel")!;
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
 	chatUserInfoButton = document.getElementById("chatUserInfoButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
-	statusIsBlocked = document.getElementById("statusIsBlocked")!;
+	// statusIsBlocked = document.getElementById("statusIsBlocked")!;
 
-	if (!API_CHAT_ENDPOINT || !menuBackButton || !usersSectionButton || !chatsList
-		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatUserInfoButton || !chatInput || !chatSendButton
-		|| !statusIsBlocked) {
+	if (!API_CHAT_ENDPOINT || !menuBackButton /* || !usersSectionButton */ || !chatsList
+		|| !chatMessages/*  || !chatLowerPanel  */|| !chatInviteGameButton || !chatUserInfoButton || !chatInput || !chatSendButton
+		/* || !statusIsBlocked */) {
 		return false;
 	}
 	return true;
@@ -74,7 +74,7 @@ function clearBeforeInitMessageSection(): void {
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
 	menuBackButton = document.getElementById("menuBackButton")!;
-	statusIsBlocked = document.getElementById("statusIsBlocked")!;
+	// statusIsBlocked = document.getElementById("statusIsBlocked")!;
 
 }
 
@@ -412,8 +412,8 @@ export async function openChatsSection(): Promise<void> {
 	console.log("MENU: Chats Section opened");
 	initializeGlobals();
 
-	if (!menuBackButton || !usersSectionButton || !chatsList || !chatMessages
-		|| !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton) {
+	if (!menuBackButton /* || !usersSectionButton */ || !chatsList || !chatMessages
+		/* || !chatLowerPanel */ || !chatInviteGameButton || !chatInput || !chatSendButton) {
 		console.error("One or more required elements not found, cannot open Chats section");
 		return;
 	}
