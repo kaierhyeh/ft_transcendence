@@ -79,6 +79,10 @@ header {
     background: #666; /* Fallback background */
 }
 
+.user-name {
+    margin-left: 1rem;
+}
+
 .user-avatar {
     width: 100%;
     height: 100%;
@@ -115,6 +119,7 @@ header {
     min-width: 120px;
     display: none;
     margin-top: 0.5rem;
+    width: 100%;
 }
 
 .dropdown.show {
@@ -133,6 +138,7 @@ header {
     width: 100%;
     text-align: left;
     cursor: pointer;
+    box-sizing: border-box;
 }
 
 .dropdown-item:hover {

@@ -1,5 +1,4 @@
 // Simple header management
-import { presence } from './presence.js';
 import user from './user/User.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
@@ -76,6 +75,12 @@ function setupHeaderEvents() {
         usernameSpan.textContent = user.getDisplayName() || 'User';
     }
 
+    // Setup username
+    const usernameDiv = document.querySelector('.user-name');
+    if (usernameDiv && user.isLoggedIn()) {
+        usernameDiv.textContent = user.getDisplayName() || 'User';
+    }
+
     // Setup avatar with user data
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
     if (userAvatar && user.isLoggedIn()) {
@@ -107,8 +112,18 @@ function setupHeaderEvents() {
             dropdown.classList.toggle('show');
         });
         
+        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
             dropdown.classList.remove('show');
+        });
+        
+        // Add special handling for dropdown items: close dropdown before navigation
+        dropdown.querySelectorAll('[data-route]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Close dropdown first
+                dropdown.classList.remove('show');
+                // Navigation will be handled by update_event() in app.ts
+            });
         });
     }
 
@@ -127,13 +142,20 @@ function setupHeaderEvents() {
                 user.logout();
                 
                 // Redirect to home
-                window.location.href = '/';
+                redirectAfterLogout();
             } catch (error) {
                 console.error('Logout failed:', error);
             }
         });
     }
+
+    function redirectAfterLogout() {
+        (window as any).navigateTo("/");
+
+    }
 }
+
+
 
 function updateHeaderAvatar() {
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
