@@ -23,7 +23,10 @@ function loadClientCredentials() {
 const clientCredentials = loadClientCredentials();
 
 export const CONFIG = {
-  
+  INACTIVE_SESSION_TIMEOUT: 90_000, // [ms] (90s)
+  PING_INTERVAL: 30_000, // [ms] (30s)
+  INACTIVE_SESSION_CLEANUP_INTERVAL: 60_000, // [ms] (60s)
+  DISCONNECT_GRACE_PERIOD: 2_000, // [ms] (2s) - Grace period before marking user offline
 
   JWT: {
     ISSUER: process.env.JWT_ISSUER || "ft_transcendence",

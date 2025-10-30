@@ -1,13 +1,14 @@
 <div class="user-menu">
     <button class="user-btn">
+        <div class="user-name"></div>
         <div class="avatar-container">
             <img alt="User Avatar" class="user-avatar">
         </div>
         <span class="dropdown-arrow">▼</span>
     </button>
     <div class="dropdown">
-        <a href="/user/profile" class="dropdown-item">Profile</a>
-        <a href="/user/settings" class="dropdown-item">Settings</a>
+        <button class="dropdown-item" data-route="/user/profile">Profile</button>
+        <button class="dropdown-item" data-route="/user/settings">Settings</button>
         <button class="dropdown-item logout-btn">Logout</button>
     </div>
 </div>
