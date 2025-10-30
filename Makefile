@@ -52,18 +52,25 @@ del-vol:
 	@echo "Removing project volumes..."
 	@docker compose -f $(COMPOSE_FILE) down -v
 
-# Project cleanup (containers, images, volumes)
-clean:
+# Project cleanup (containers, images, volumes, orphans, secrets)
+clean: clear-generated-secrets
 	@echo "Performing project cleanup..."
 	@docker compose -f $(COMPOSE_FILE) down -v --rmi all --remove-orphans
+	
 
 # Complete system cleanup (use with caution - removes ALL Docker data)
-fclean:
+fclean: clear-generated-secrets
 	@docker stop $$(docker ps -aq) 2>/dev/null || true
 	@docker rm $$(docker ps -aq) 2>/dev/null || true
 	@docker rmi $$(docker images -aq) 2>/dev/null || true
 	@docker volume prune -af
 	@docker system prune --all --force --volumes
+	
+
+clear-generated-secrets:
+	@echo "Removing generated secrets..."
+	@rm -f ./secrets/*.pem
+	@rm -f ./secrets/*service-client.env
 
 # Restart services
 re: down up
