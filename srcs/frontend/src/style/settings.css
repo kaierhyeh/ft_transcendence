@@ -15,6 +15,10 @@
 	color: #ff6b6b;
 }
 
+#content {
+	margin-top: 5rem;
+}
+
 .profile-section {
 	background: #1a1a1a;
 	border: 2px solid #444;

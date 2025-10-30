@@ -91,7 +91,7 @@ export const translations = {
     "enterVerificationCode": "Please enter the verification code from your authenticator app:",
     "verify": "Verify",
     "username": "Username",
-    "email": "Email",
+    "email": "Email (optional):",
     "joinDate": "Join Date",
 
     // Stats
@@ -103,6 +103,7 @@ export const translations = {
     // Chat
     "typeMessage": "Type a message...",
     "inviteToGame": "Invite to game",
+	"blockedStatus": "BLOCKED",
 
     // Game Status
     "waiting": "Waiting...",
@@ -113,6 +114,7 @@ export const translations = {
     "left": "Left",
     "right": "Right",
     "selectGameMode": "Select a game mode",
+
 
     // Tooltips
     "viewStats": "View Stats",
@@ -230,6 +232,7 @@ export const translations = {
     // Chat
     "typeMessage": "輸入訊息...",
     "inviteToGame": "邀請遊戲",
+	"blockedStatus": "BLOCKED",				// to translate
 
     // Game Status
     "waiting": "等待中...",
@@ -357,6 +360,7 @@ export const translations = {
     // Chat
     "typeMessage": "Tapez un message...",
     "inviteToGame": "Inviter à jouer",
+	"blockedStatus": "BLOCKED",				// to translate
 
     // Game Status
     "waiting": "En attente...",
@@ -484,6 +488,7 @@ export const translations = {
     // Chat
     "typeMessage": "Напишите сообщение...",
     "inviteToGame": "Пригласить играть",
+	"blockedStatus": "BLOCKED",				// to translate
 
     // Game Status
     "waiting": "Ожидание...",

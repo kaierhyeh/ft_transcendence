@@ -9,7 +9,6 @@ import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin, handleOAuthCallback } from "./auth/login.js";
-import { initMatchHistory } from "./user/match_history.js";
 import { initSettings } from "./user/settings.js";
 import { initPong } from "./pong.js";
 import { initProfile } from "./user/profile.js";
@@ -115,6 +114,20 @@ async function navigate(path: string, push: boolean = true)
 	const currentPath = window.location.pathname;
 	if (currentPath === "/online" && path !== "/online") {
 		cleanupRemoteGame();
+	}
+
+	// Cleanup tournament when leaving /tournament page
+	if (currentPath === "/tournament" && path !== "/tournament") {
+		if ((window as any).cleanupTournament) {
+			(window as any).cleanupTournament();
+		}
+	}
+
+	//clean up locals pongs
+	if (currentPath === "/pong" && path !== "/pong") {
+		if ((window as any).cleanupPong) {
+			(window as any).cleanupPong();
+		}
 	}
 
 	const file = routes[path];

@@ -4,6 +4,7 @@ import { clearEvents, hideElementById, setFilterForUsersList, showElementById, s
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 import { chatSocket } from "./menu.ws.js";
+import { presence, OnlineStatus } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -32,6 +33,7 @@ let openChatButton: HTMLElement;
 let blockUserButton: HTMLElement;
 
 let currentFilter: string = 'all';
+let presenceUnsubscribe: (() => void) | null = null;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -235,12 +237,12 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 			}
 		});
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
 		}
 		// console.log("[DEBUG CHAT] - res:", res);
@@ -314,6 +316,8 @@ function prepareUserInfoSection(): void {
 			"secondLine"
 		].forEach(showElementById);
 	}
+
+	usersInfo = document.getElementById("usersInfo")!;
 
 }
 
@@ -467,7 +471,7 @@ function renderUserInfo(userInfo: UserInfo): void {
 
 	const statusHtml = (userInfo.friendship_status === 'accepted')
 		? `<div id="userInfo_boxOnline" class="user-info-online-status">
-				Status: <span class="user-status-${userInfo.user_status.toLowerCase()}">${userInfo.user_status}</span>
+				Status: <span class="user-status-${presence.onlineStatus(userInfo.user_id).toLowerCase()}">${presence.onlineStatus(userInfo.user_id)}</span>
 			</div>`
 		: '';
 
@@ -482,6 +486,9 @@ function renderUserInfo(userInfo: UserInfo): void {
 			<button id="viewProfileButton" class="user-info-profile-btn">View profile</button>
 		</div>
 	`;
+	
+	// Add user_id as data attribute for easy access
+	usersInfo.dataset.userId = userInfo.user_id.toString();
 
 	const viewProfileBtn = document.getElementById('viewProfileButton');
 	if (viewProfileBtn) {
@@ -498,12 +505,12 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
 		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
 		}
 		const userInfo: UserInfo = await res.json();
@@ -521,7 +528,47 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 
 }
 
+export function initUserInfoSectionFromChat(targetUserId :number) {
+
+	["#menuBackButton"].forEach(clearEvents);
+
+	menuBackButton = document.getElementById("menuBackButton")!;
+
+	menuBackButton.addEventListener("click", () => {
+		initUsersSection();
+	});
+
+	initUserInfoSection(targetUserId);
+}
+
 /* ========================================= USERS SECTION ================================== */
+
+function updateUserListStatus(updates: Map<number, OnlineStatus>): void {
+    updates.forEach((status, userId) => {
+        // Update in user list
+        const userElement = document.querySelector(`#usersList .menu-list-element[data-user-id="${userId}"]`);
+        if (userElement) {
+            const statusSpan = userElement.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
+            if (statusSpan) {
+                statusSpan.className = `user-status-${status.toLowerCase()}`;
+                statusSpan.textContent = status;
+            }
+        }
+        
+        // Update in user info section if this user is currently displayed
+        const usersInfoElement = document.getElementById('usersInfo');
+        if (usersInfoElement && usersInfoElement.dataset.userId === userId.toString()) {
+            const userOnlineStatus = document.getElementById('userOnlineStatus');
+            if (userOnlineStatus) {
+                const statusSpan = userOnlineStatus.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
+                if (statusSpan) {
+                    statusSpan.className = `user-status-${status.toLowerCase()}`;
+                    statusSpan.textContent = status;
+                }
+            }
+        }
+    });
+}
 
 function renderUserList(users: UserListRow[]): void {
 
@@ -546,7 +593,7 @@ function renderUserList(users: UserListRow[]): void {
 
   		// Only show user_status if friendship exists
 		const statusHtml = u.friendship_status
-			? `<span class="user-status-${u.user_status.toLowerCase()}">${u.user_status}</span>`
+			? `<span class="user-status-${presence.onlineStatus(u.user_id).toLowerCase()}">${presence.onlineStatus(u.user_id)}</span>`
 			: `<span class="user-status-unknown"></span>`;
 
 		return `
@@ -628,11 +675,11 @@ async function loadUsers(): Promise<void>{
 				break;
 		}
 		if (res === null || !res.ok) {
-			if (res !== null && res.status === 401) {
-				user.logout();
-				window.location.href = '/';
-				return;
-			}
+			// if (res !== null && res.status === 401) {
+			// 	user.logout();
+			// 	window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error(`Failed to fetch users for menu`);
 		}
 		const users: UserListRow[] = await res.json();
@@ -642,25 +689,40 @@ async function loadUsers(): Promise<void>{
 	}
 }
 
-async function initUsersSection(): Promise<void> {
+export async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
 	if (user.isLoggedIn()) {
 		["menuDropdown"].forEach(showElementById);
 		const userBtn = document.getElementById("usersSectionButton");
-		if (userBtn)
+		if (userBtn) {
 			userBtn.className = "menu-control-panel-button-pressed";
+		}
 		const chatsBtn = document.getElementById("chatsSectionButton");
-		if (chatsBtn)
+		if (chatsBtn) {
 			chatsBtn.className = "menu-control-panel-button";
+		}
 	}
 	["menuHeaderTitle"].forEach(hideElementById);
 	["usersList"].forEach(showElementById);
 
 	await loadUsers();
+	
+	// Subscribe to presence updates if not already subscribed
+	if (!presenceUnsubscribe) {
+		presenceUnsubscribe = presence.onUpdate(updateUserListStatus);
+	}
 }
 
 /* ========================================= INITIALIZATION SECTION ========================= */
+
+export function cleanupUsersPresenceSubscription(): void {
+	if (presenceUnsubscribe) {
+		presenceUnsubscribe();
+		presenceUnsubscribe = null;
+	}
+}
+
 function addMenuDropdown(): boolean {
 
 	const menuDropdown = document.querySelector(".menu-dropdown");

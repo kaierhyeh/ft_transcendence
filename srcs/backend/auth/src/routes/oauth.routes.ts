@@ -20,6 +20,30 @@ const oauth2Client = new google.auth.OAuth2(
 export default async function oauthRoutes(fastify: FastifyInstance, options: any) {
 	const logger = (fastify as any).logger;
 	
+	// GET /api/auth/google/config - Serve Google OAuth client configuration
+	fastify.get('/config', async (request: FastifyRequest, reply: FastifyReply) => {
+		try {
+			if (!CONFIG.OAUTH.GOOGLE_CLIENT_ID) {
+				return reply.code(503).send({ 
+					success: false, 
+					error: 'Google OAuth is not configured' 
+				});
+			}
+
+			return reply.code(200).send({
+				success: true,
+				clientId: CONFIG.OAUTH.GOOGLE_CLIENT_ID,
+				redirectUri: CONFIG.OAUTH.GOOGLE_REDIRECT_URI || 'https://localhost:4443/auth/google/callback'
+			});
+		} catch (error) {
+			logger.error('Error fetching Google OAuth config', error as Error);
+			return reply.code(500).send({ 
+				success: false, 
+				error: 'Failed to fetch OAuth configuration' 
+			});
+		}
+	});
+	
 	fastify.post('/', async (request: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
 		try {
 			const { code } = request.body;
@@ -34,14 +58,14 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 			const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
 			const { data } = await oauth2.userinfo.get();
 
-			if (!data.email || !data.id) {
+			if (!data.id) {
 				return reply.code(400).send({ success: false, error: 'Invalid Google user data' });
 			}
 
-			// Check if user exists via usersClient
+			// Check if user exists via usersClient using google_sub
 			let user;
 			try {
-				user = await usersClient.getUser(data.email);
+				user = await usersClient.getUserByGoogleSub(data.id);
 			} catch (error: any) {
 				if (error.status !== 404) {
 					throw error; // Re-throw if not "user not found"
@@ -53,8 +77,8 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 			if (!user) {
 				const tempPayload = {
 					google_sub: data.id,
-					email: data.email,
 					google_name: data.given_name || data.name,
+					google_email: data.email,
 					avatar_url: data.picture
 				};
 
@@ -129,17 +153,6 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 			// Security validation
 			authUtils.checkInputSafety('username', username);
 
-			// Check if email already exists
-			try {
-				await usersClient.getUser(payloadData.email);
-				return reply.code(400).send({ success: false, error: "Account already exists with this email." });
-			} catch (error: any) {
-				if (error.status !== 404) {
-					throw error;
-				}
-				// Email doesn't exist, continue
-			}
-
 			// Check if username already exists
 			try {
 				await usersClient.getUser(username);
@@ -154,8 +167,8 @@ export default async function oauthRoutes(fastify: FastifyInstance, options: any
 			// Create the user via usersClient
 			const { user_id } = await usersClient.registerGoogleUser({
 				google_sub: payloadData.google_sub,
-				email: payloadData.email,
 				username: username,
+				email: payloadData.google_email,
 				alias: payloadData.google_name
 			});
 

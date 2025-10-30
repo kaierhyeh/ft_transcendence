@@ -139,8 +139,3 @@ header {
     background: #555;
     color: #4ade80;
 }
-
-/* Body padding when header exists */
-body:has(header:not(:empty)) {
-    padding-top: 80px;
-}

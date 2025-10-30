@@ -2,10 +2,10 @@ import { clearEvents, hideElementById, setFilterForUsersList, setHeaderTitle, sh
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
 import user from '../user/User.js';
-import { openUsersSection } from "./menu.users.js";
+import { initUserInfoSectionFromChat, openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
-import { closeMenuWindow } from "./menu.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
+import { presence, OnlineStatus } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -17,8 +17,12 @@ let chatsList: HTMLElement;
 let chatMessages: HTMLElement;
 let chatLowerPanel: HTMLElement;
 let chatInviteGameButton: HTMLElement;
+let chatUserInfoButton: HTMLElement;
 let chatInput: HTMLInputElement;
 let chatSendButton: HTMLElement;
+let statusIsBlocked: HTMLElement;
+
+let presenceUnsubscribe: (() => void) | null = null;
 
 function initializeGlobals(): boolean {
 	API_CHAT_ENDPOINT = `${window.location.origin}/api/chat`;
@@ -29,11 +33,14 @@ function initializeGlobals(): boolean {
 	chatMessages = document.getElementById("chatMessages")!;
 	chatLowerPanel = document.getElementById("chatLowerPanel")!;
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
+	chatUserInfoButton = document.getElementById("chatUserInfoButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
+	statusIsBlocked = document.getElementById("statusIsBlocked")!;
 
 	if (!API_CHAT_ENDPOINT || !menuBackButton || !usersSectionButton || !chatsList
-		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatInput || !chatSendButton) {
+		|| !chatMessages || !chatLowerPanel || !chatInviteGameButton || !chatUserInfoButton || !chatInput || !chatSendButton
+		|| !statusIsBlocked) {
 		return false;
 	}
 	return true;
@@ -57,13 +64,18 @@ function clearBeforeInitMessageSection(): void {
 	[	"#chatSendButton",
 		"#chatMessageToSend",
 		"#chatInviteGameButton",
-		"#menuBackButton"
+		"#chatUserInfoButton",
+		"#menuBackButton",
+		"#statusIsBlocked"
 	].forEach(clearEvents);
 
 	chatInviteGameButton = document.getElementById("chatInviteGameButton")!;
+	chatUserInfoButton = document.getElementById("chatUserInfoButton")!;
 	chatInput = document.getElementById("chatMessageToSend") as HTMLInputElement;
 	chatSendButton = document.getElementById("chatSendButton")!;
 	menuBackButton = document.getElementById("menuBackButton")!;
+	statusIsBlocked = document.getElementById("statusIsBlocked")!;
+
 }
 
 function resetChatSection(): void {
@@ -83,6 +95,21 @@ function resetChatSection(): void {
 }
 
 /* =================================== CHATS SECTION ======================================== */
+
+function updateChatListStatus(updates: Map<number, OnlineStatus>): void {
+    updates.forEach((status, userId) => {
+        // Find all chat list elements for this user
+        const chatElement = document.querySelector(`#chatsList .menu-list-element[data-user-id="${userId}"]`);
+        if (chatElement) {
+            const statusSpan = chatElement.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
+            if (statusSpan) {
+                // Update class and text
+                statusSpan.className = `user-status-${status.toLowerCase()}`;
+                statusSpan.textContent = status;
+            }
+        }
+    });
+}
 
 function renderChatList(users: ChatUser[]): void {
 	["chatsList"].forEach(showElementById);
@@ -105,7 +132,7 @@ function renderChatList(users: ChatUser[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
-		const userStatus = u.user_status || "unknown";
+		const userStatus = presence.onlineStatus(u.user_id);
 		const statusHtml = u.friendship_status === "accepted"
 			? `<span class="user-status-${userStatus.toLowerCase()}">${userStatus}</span>`
 			: `<span class="user-status-unknown"></span>`;
@@ -145,12 +172,12 @@ async function loadChats(): Promise<void> {
 			}
 		});
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error("Failed to load chats");
 		}
 		const users: ChatUser[] = await res.json();
@@ -171,6 +198,11 @@ async function initChatSection(): Promise<void> {
 	if (chatsBtn)
 		chatsBtn.className = "menu-control-panel-button-pressed";
 	await loadChats();
+	
+	// Subscribe to presence updates if not already subscribed
+	if (!presenceUnsubscribe) {
+		presenceUnsubscribe = presence.onUpdate(updateChatListStatus);
+	}
 }
 
 /* =================================== MESSAGES SECTION ===================================== */
@@ -207,6 +239,20 @@ async function inviteToGame(toUser: ChatUser): Promise<void> {
 	console.log(`CHAT: Invite pressed: invite [${toUser.username}] to a game (not implemented)`);
 }
 
+async function openUserInfo(toUser: ChatUser): Promise<void> {
+	console.log(`CHAT: User info pressed: show info for username=[${toUser.username}] id=[${toUser.user_id}]`);
+	chatMessages.innerHTML = ``;
+	chatsList.innerHTML = ``;
+	chatSocket?.close(1000, "Close socket: open user info");
+
+	[	"chatList",
+		"chatMessages",
+		"chatLowerPanel"
+	].forEach(hideElementById);
+
+	initUserInfoSectionFromChat(toUser.user_id);
+}
+
 async function goBackToChatsList(): Promise<void> {
 	chatMessages.innerHTML = ``;
 	initChatSection();
@@ -227,23 +273,23 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 
 	if (friendshipStatus !== "blocked") {
 
-		["unblockUserButtonInChat"].forEach(hideElementById);
+		["statusIsBlocked"].forEach(hideElementById);
 
 		[	"chatLowerPanel",
 			"chatInviteGameButton",
-			"blockUserButtonInChat",
+			"chatUserInfoButton",
 			"chatMessageBox"
 		].forEach(showElementById);
 
 	} else {
 
 		[	"chatInviteGameButton",
-			"blockUserButtonInChat",
 			"chatMessageBox"
 		].forEach(hideElementById);
 
 		[	"chatLowerPanel",
-			"unblockUserButtonInChat"
+			"chatUserInfoButton",
+			"statusIsBlocked"
 		].forEach(showElementById);
 
 	}
@@ -271,7 +317,8 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 
 	const chatId = toUser.chat_id;
 	const toId = toUser.user_id;
-	const payload: NewMessageRequest = { chatId, toId, msg };
+	const fromUsername = user.username;
+	const payload: NewMessageRequest = { chatId, toId, fromUsername: fromUsername ? fromUsername : "unknown", msg };
 
 	try {
 		const res = await fetch(`${API_MSG_ENDPOINT}/`, {
@@ -283,12 +330,12 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 			body: JSON.stringify(payload)
 		});
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error("Failed to send message");
 		}
 	} catch (err) {
@@ -303,7 +350,7 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		initializeGlobals();
 		chatInput.value = "";
 		clearBeforeInitMessageSection();
-
+		
 		if (friendshipStatus !== "blocked") {
 			// Sent message by using button
 			chatSendButton.addEventListener("click", () => sendMessageByButton(withUser));
@@ -311,6 +358,9 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 		}
+
+		chatUserInfoButton.addEventListener("click", () => openUserInfo(withUser));
+
 		switch (backTo) {
 			case 'users':
 				menuBackButton.addEventListener("click", () => {
@@ -336,12 +386,12 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			}
 		});
 		if (!res.ok) {
-			if (res.status === 401) {
-				user.logout();
-				chatSocket?.close(1000, "Close socket: unautorized user");
-				window.location.href = '/';
-				return;
-			}
+			// if (res.status === 401) {
+			// 	// user.logout();
+			// 	chatSocket?.close(1000, "Close socket: unautorized user");
+			// 	// window.location.href = '/';
+			// 	return;
+			// }
 			throw new Error("Failed to load messages");
 		}
 		const messages: Message[] = await res.json();
@@ -353,6 +403,13 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 
 /* =============================== INITIALIZATION OF CHAT SECTION =========================== */
 
+export function cleanupChatPresenceSubscription(): void {
+	if (presenceUnsubscribe) {
+		presenceUnsubscribe();
+		presenceUnsubscribe = null;
+	}
+}
+
 export async function openChatsSection(): Promise<void> {
 	console.log("MENU: Chats Section opened");
 	initializeGlobals();
@@ -362,9 +419,6 @@ export async function openChatsSection(): Promise<void> {
 		console.error("One or more required elements not found, cannot open Chats section");
 		return;
 	}
-
-	// START OF WS
-	// wsConnectChat();
 
 	await initChatSection();
 }

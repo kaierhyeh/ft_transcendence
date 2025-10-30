@@ -53,12 +53,16 @@ services:
         condition: service_healthy
       backend-stats:
         condition: service_healthy
+      backend-presence:
+        condition: service_healthy
+      # backend-chat:
+      #   condition: service_healthy
 
   ###################
   ## Backend Services
   ###################
 
-    # Auth service (with built-in Redis)
+  # Auth service
   backend-auth:
     container_name: backend-auth
     build:
@@ -67,13 +71,15 @@ services:
     secrets:
       - user-session-private.pem
       - user-session-public.pem
-      - game-session-private.pem
-      - game-session-public.pem
+      - game-session-private.pem # TODO: Remove if not needed
+      - game-session-public.pem # TODO: Remove if not needed
       - internal-access-private.pem
       - internal-access-public.pem
-      - users-service-client.env
-      - game-service-client.env
       - chat-service-client.env
+      - game-service-client.env
+      - presence-service-client.env
+      - stats-service-client.env
+      - users-service-client.env
       - google-oauth.env
     networks:
       - pong_network
@@ -85,6 +91,9 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      backend-redis:
+        condition: service_healthy
 
   backend-redis:
     container_name: backend-redis
@@ -140,6 +149,29 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+
+  
+  backend-presence:
+    container_name: backend-presence
+    build:
+      context: ./backend/presence
+      dockerfile: Dockerfile
+    secrets:
+      - presence-service-client.env
+    # env_file: .env
+    networks:
+      - pong_network
+    init: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health", "-s", "-o", "/dev/null"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    depends_on:
+      backend-redis:
+        condition: service_healthy
 
   backend-stats:
     container_name: backend-stats
@@ -208,7 +240,9 @@ secrets:
     file: ../secrets/chat-service-client.env
   stats-service-client.env:
     file: ../secrets/stats-service-client.env
-  
+  presence-service-client.env:
+    file: ../secrets/presence-service-client.env
+
   # OAuth Credentials
   google-oauth.env:
     file: ../secrets/google-oauth.env

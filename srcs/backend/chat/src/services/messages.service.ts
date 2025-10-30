@@ -10,7 +10,7 @@ export class MessageService {
     private internalAuthClient = new InternalAuthClient();
     constructor(private messageRepository: MessageRepository) {}
 
-    public async sendMessage(chatId:number, fromId:number, toId:number, msg:string) {
+    public async sendMessage(chatId:number, fromId:number, toId:number, fromUsername:string, msg:string) {
 
         const baseUrl = CONFIG.USER_SERVICE.BASE_URL;
         const internalAuthHeaders = await this.internalAuthClient.getAuthHeaders();
@@ -32,14 +32,15 @@ export class MessageService {
         const friendshipStatus = await res.json() as FriendshipStatus;
         const blocked = friendshipStatus === null ? false : friendshipStatus.status === "blocked";
 
-		try {
-			const newMessage: NewMessage = { chat_id: chatId, username: "incognito", msg: msg };
-			console.log(" SERVICE sendMessage: ", newMessage);
-			sendMessageToClientWebSocket(toId, newMessage);
-		} catch (error) {
-			console.log(" SERVICE sendMessage: FAILED");
+		if (!blocked) {
+			try {
+				const newMessage: NewMessage = { chat_id: chatId, username: fromUsername, msg: msg };
+				console.log(" SERVICE sendMessage: ", newMessage);
+				sendMessageToClientWebSocket(toId, newMessage);
+			} catch (error) {
+				console.log(" SERVICE sendMessage: FAILED");
+			}
 		}
-
 
         await this.messageRepository.addMessage(chatId, fromId, toId, msg, blocked);
     }

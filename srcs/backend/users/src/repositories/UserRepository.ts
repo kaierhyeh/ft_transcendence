@@ -7,16 +7,16 @@ import path from "path";
 
 export interface UserRow {
     user_id: number;
-    username: string | null;
+    username: string;
     email: string | null;
     password_hash: string | null;
     alias: string | null;
-    avatar_filename: string | null;
-    avatar_updated_at: string | null;
+    avatar_filename: string;
+    avatar_updated_at: string;
     two_fa_enabled: 0 | 1;
     two_fa_secret: string | null;
     google_sub: string | null;
-    status: "online" | "offline" | "away" | "deleted";
+    settings: string;
     created_at: string;
     updated_at: string;
     last_seen: string | null;
@@ -30,11 +30,11 @@ export interface UpdateData {
         updated_at: string;
     };
     settings?: string;
-    two_fa?: TwoFa;
 }
 
 type LocalUserCreationData = Omit<LocalUserCreationRawData, "password"> & {
     password_hash: string;
+    alias?: string;
 }
 
 export class UserRepository {
@@ -49,9 +49,9 @@ export class UserRepository {
         `);
         const result = stmt.run(
             data.username,
-            data.email,
+            data.email ?? null,
             data.password_hash,
-            data.alias ?? null,  // Use nullish coalescing for more explicit null handling
+            data.alias ?? null,
         );
         return result.lastInsertRowid as number;
     }
@@ -64,8 +64,8 @@ export class UserRepository {
         const result = stmt.run(
             data.google_sub,
             data.username,
-            data.email,
-            data.alias ?? null,  // Use nullish coalescing for more explicit null handling
+            data.email ?? null,
+            data.alias ?? null,
         );
         return result.lastInsertRowid as number;
     }
@@ -73,10 +73,9 @@ export class UserRepository {
     public find(identifier: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE (user_id = ? OR username = ? OR email = ?) 
-              AND status != 'deleted'
+            WHERE (user_id = ? OR username = ?)
         `);
-        const result = stmt.get(identifier, identifier, identifier) as UserRow | undefined;
+        const result = stmt.get(identifier, identifier) as UserRow | undefined;
         return result || null;
     }
 
@@ -103,18 +102,6 @@ export class UserRepository {
         if (data.settings !== undefined) {
             set_clauses.push("settings = @settings");
             params.settings = data.settings;
-        }
-
-        // Handle 2FA nested object
-        if (data.two_fa !== undefined) {
-            if (data.two_fa.enabled !== undefined) {
-                set_clauses.push("two_fa_enabled = @two_fa_enabled");
-                params.two_fa_enabled = data.two_fa.enabled ? 1 : 0;
-            }
-            if (data.two_fa.secret !== undefined) {
-                set_clauses.push("two_fa_secret = @two_fa_secret");
-                params.two_fa_secret = data.two_fa.secret;
-            }
         }
 
         // If no fields to update, return 0
@@ -145,53 +132,14 @@ export class UserRepository {
         return result || null;
     }
 
-    // TODO - remove findByEmail because not used
-    public findByEmail(email: string): UserRow | null {
-        const stmt = this.db.prepare(`
-            SELECT * FROM users 
-            WHERE email = ? AND status != 'deleted'
-        `);
-        const result = stmt.get(email) as UserRow | undefined;
-        return result || null;
-    }
-
     public findByGoogleSub(google_sub: string): UserRow | null {
         const stmt = this.db.prepare(`
             SELECT * FROM users 
-            WHERE google_sub = ? AND status != 'deleted'
+            WHERE google_sub = ?
         `);
         const result = stmt.get(google_sub) as UserRow | undefined;
         return result || null;
     }
-
-//     createLocalUser(input: {
-//     username: string;
-//     email: string;
-//     passwordHash: string; // already hashed
-//     alias?: string;
-//     avatarUrl?: string;
-//   }): number; // returns user_id
-
-//   linkGoogle(userId: number, googleSub: string): void;
-
-//   enable2FA(userId: number, totpSecret: string): void;
-//   disable2FA(userId: number): void;
-
-//   getById(userId: number): UserRow | null;
-//   getByUsername(username: string): UserRow | null;
-//   getByEmail(email: string): UserRow | null;
-//   getByGoogleSub(googleSub: string): UserRow | null;
-
-//   setPasswordHash(userId: number, passwordHash: string): void;
-//   setEmailVerified(userId: number, verified: boolean): void;
-
-//   updateProfile(userId: number, patch: {
-//     alias?: string;
-//     avatarUrl?: string;
-//     settingsJson?: string;
-//   }): void;
-
-//   bumpPresence(userId: number, status: 'online'|'offline'|'away', when?: string): void; // updates last_seen & status
 
     private safeDeleteAvatarFile(avatar_filename: string | null): void {
         // Never delete the default avatar
@@ -208,38 +156,6 @@ export class UserRepository {
         } catch (error) {
             console.warn(`Failed to delete avatar file: ${avatarPath}`, error);
         }
-    }
-
-    public markAsDeleted(user_id: number): number {
-        // First get the current avatar filename before deletion
-        const userStmt = this.db.prepare(`
-            SELECT avatar_filename FROM users WHERE user_id = ?
-        `);
-        const user = userStmt.get(user_id) as { avatar_filename: string | null } | undefined;
-        
-        // Safely delete avatar file (never deletes default.png)
-        if (user?.avatar_filename) {
-            this.safeDeleteAvatarFile(user.avatar_filename);
-        }
-        
-        // Now update the user record (clear avatar_filename for deleted users)
-        const stmt = this.db.prepare(`
-            UPDATE users 
-            SET status = 'deleted',
-                username = NULL,
-                email = NULL,
-                password_hash = NULL,
-                alias = NULL,
-                avatar_filename = NULL,
-                google_sub = NULL,
-                two_fa_enabled = 0,
-                two_fa_secret = NULL,
-                settings = '{}',
-                updated_at = datetime('now')
-            WHERE user_id = ?
-        `);
-        const result = stmt.run(user_id);
-        return result.changes as number;
     }
 
     public resetAvatarToDefault(user_id: number): number {
