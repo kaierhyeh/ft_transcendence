@@ -2,35 +2,108 @@
 
 ## 📊 Module Status Overview
 
-### Major Modules (10 points each)
+### Web Sector
 
-| Module | Status | Points | Verification |
-|--------|--------|--------|-------------|
-| **Authentication & JWT** | ✅ Complete | 10 | API testing + security audit |
-| **Google OAuth Integration** | ✅ Complete | 10 | API testing + configuration |
-| **Two-Factor Authentication** | ✅ Complete | 10 | API testing + TOTP verification |
-| **Game Management** | ✅ Complete | 10 | API testing + session creation |
-| **User Management** | ✅ Complete | 10 | API testing + database verification |
-| **Real-time Multiplayer** | ✅ Complete | 10 | WebSocket testing + game logic |
-| **Stats & Matchmaking** | ✅ Complete | 10 | API testing + database verification |
-| **Security (XSS/SQL Injection)** | ✅ Complete | 10 | Security audit + input validation |
-| **Microservices Architecture** | ✅ Complete | 10 | Docker testing + service health |
-| **Database Integration** | ✅ Complete | 10 | SQLite verification + prepared statements |
-| **WebSocket Communication** | ✅ Complete | 10 | Real-time testing + presence system |
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Backend Framework** | ✅ Complete | 10 | All | Microservices architecture with Fastify/Node.js |
+| **Blockchain Score Storage** | ✅ Complete | 10 | Kilfen | Avalanche blockchain integration with ethers.js |
 
-### Minor Modules (5 points each)
+#### Minor Modules (5 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Frontend Framework/Toolkit** | ✅ Complete | 5 | Steven + All | TypeScript with custom UI framework |
+| **Database Backend** | ✅ Complete | 5 | All | SQLite with prepared statements |
 
-| Module | Status | Points | Verification |
-|--------|--------|--------|-------------|
-| **Multiple Languages** | ✅ Complete | 5 | Code inspection + i18n system |
-| **Browser Compatibility** | ✅ Complete | 5 | Code inspection + vendor prefixes |
-| **Device Support** | ✅ Complete | 5 | Code inspection + responsive design |
-| **Game Customization** | ✅ Complete | 5 | API testing + configuration options |
-| **User Stats Dashboard** | ✅ Complete | 5 | API testing + data visualization |
-| **Friends System** | ✅ Complete | 5 | API testing + social features |
-| **Notifications System** | ✅ Complete | 5 | API testing + real-time updates |
+### User Management Sector
 
-**TOTAL SCORE: 11 Major (110 points) + 7 Minor (35 points) = 145 points**
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Standard User Management** | ✅ Complete | 10 | Steven | Authentication, JWT, user profiles |
+| **Remote Authentication** | ✅ Complete | 10 | Alex | Google OAuth integration |
+
+### Gameplay and User Experience Sector
+
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Remote Players** | ✅ Complete | 10 | Marine + Alex | WebSocket real-time multiplayer |
+| **Multiplayer (>2 players)** | ✅ Complete | 10 | Marine | 4-player Pong support |
+| **Additional Game + History** | ✅ Complete | 10 | Marine | Tournament system with matchmaking |
+| **Live Chat** | ✅ Complete | 10 | Aleksei | Real-time chat with WebSocket |
+
+#### Minor Modules (5 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Game Customization Options** | ❌ Not implemented | 0 | Alex, Marine | Power-ups and game options missing |
+
+### AI-Algo Sector
+
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **AI Opponent** | ✅ Complete | 10 | Kilfen | AIController.ts implementation |
+
+#### Minor Modules (5 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **User & Game Stats Dashboards** | ✅ Complete | 5 | Kilfen | Data visualization and charts |
+
+### Cybersecurity Sector
+
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **WAF/ModSecurity + Vault** | ❌ Not implemented | 0 | - | No WAF or HashiCorp Vault |
+| **Two-Factor Authentication + JWT** | ✅ Complete | 10 | Alex | TOTP 2FA + JWT implementation |
+
+#### Minor Modules (5 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **GDPR Compliance** | ❌ Not implemented | 0 | - | No anonymization or account deletion |
+
+### Devops Sector
+
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Log Management Infrastructure** | ❌ Not implemented | 0 | - | No centralized logging setup |
+| **Microservices Backend** | ✅ Complete | 10 | Steven | Docker microservices architecture |
+
+#### Minor Modules (5 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Monitoring System** | ❌ Not implemented | 0 | +Alex | No monitoring stack |
+
+### Graphics Sector
+
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Advanced 3D Techniques** | ❌ Not implemented | 0 | - | 2D canvas implementation only |
+
+### Accessibility Sector
+
+#### Minor Modules (5 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Support on All Devices** | ⚠️ Partial | 0 | - | Responsive design (touch screen NOT supported) |
+| **Browser Compatibility** | ✅ Complete | 5 | - | Firefox, Chrome, Safari, Edge support |
+| **Multiple Languages** | ✅ Complete | 5 | Aleksei, Kilfen | English, Chinese, French with i18n |
+| **Accessibility Features** | ❌ Not implemented | 0 | - | No screen reader or keyboard navigation |
+| **Server-Side Rendering** | ❌ Not implemented | 0 | - | Client-side rendering only |
+
+### Server-Side Pong Sector
+
+#### Major Modules (10 points each)
+| Module | Status | Points | Assigned To | Verification |
+|--------|--------|--------|-------------|-------------|
+| **Server-side Pong + API** | ✅ Complete | 10 | Steven | Server-side game logic with API |
+| **CLI vs Web Users** | ❌ Not implemented | 0 | - | No CLI interface |
+
+**TOTAL SCORE: 11 Major (110 points) + 5 Minor (25 points) = 135 points**
 
 ---
 
@@ -46,10 +119,14 @@
 - **User Management**: Profiles, friends, stats, customization
 - **Microservices**: Health checks, inter-service communication, Docker orchestration
 
-### Accessibility Features ✅
-- **Multi-language Support**: English, Chinese, French with real-time switching
-- **Browser Compatibility**: Firefox, Chrome, Safari, Edge with vendor prefixes
-- **Device Support**: Mobile, tablet, desktop responsive design
+### Accessibility Features ⚠️
+- **Multi-language Support**: ✅ English, Chinese, French with real-time switching
+- **Browser Compatibility**: ✅ Firefox, Chrome, Safari, Edge with vendor prefixes
+- **Device Support**: ⚠️ Mobile, tablet, desktop responsive (touch screen NOT supported)
+- **Game Customization**: ❌ Power-ups and game options not implemented
+- **User Stats Dashboard**: ✅ Data visualization implemented
+- **Friends System**: ❌ Basic user management only
+- **Notifications System**: ❌ Not implemented
 
 ---
 
@@ -61,7 +138,7 @@ A comprehensive automated test suite is available to verify all implemented feat
 
 ```bash
 # Run the complete test suite
-cd /home/kyeh/develop/srcs
+cd ~/develop/srcs
 ./test.sh
 ```
 
@@ -89,13 +166,13 @@ cd /home/kyeh/develop/srcs
 
 1. **Start the application**
    ```bash
-   cd /home/kyeh/develop
+   cd ~/develop
    make up-d
    ```
 
 2. **Run automated tests**
 ```bash
-cd /home/kyeh/develop
+cd ~/develop
 ./test.sh
 ```3. **Open in different browsers**
    ```bash
@@ -168,7 +245,7 @@ Documentation:
 Run the comprehensive test suite for instant verification:
 
 ```bash
-cd /home/kyeh/develop
+cd ~/develop
 ./test.sh
 ```
 
@@ -188,23 +265,21 @@ cd /home/kyeh/develop
 - [x] **WebSocket Communication**: Real-time presence, notifications
 
 #### Accessibility Features (Minor Modules - 5 pts each)
+- [x] **Database (SQLite)**: SQLite used throughout backend
+- [x] **User and Game Stats Dashboards**: Stats displays and charts
 - [x] **Multiple Languages**: English, Chinese, French support
 - [x] **Browser Compatibility**: Firefox, Chrome, Safari, Edge
-- [x] **Device Support**: Mobile, tablet, desktop responsive
-- [x] **Game Customization**: Configuration options available
-- [x] **User Stats Dashboard**: Data visualization implemented
-- [x] **Friends System**: Social features working
-- [x] **Notifications System**: Real-time updates functional
-
----
+- [ ] **Device Support**: Mobile, tablet, desktop responsive (⚠️ Touch screen NOT supported)
+- [ ] **Game Customization**: Power-ups and game options not implemented
+- [ ] **Friends System**: Basic user management only
 
 ## ✨ Current Progress
 
 - **Mandatory Part**: ✅ Complete (25%)
 - **Major Modules**: 11/11 complete (110 points)
-- **Minor Modules**: 7/7 complete (35 points)
-- **Total Score**: **145 points** (145% of mandatory requirement)
+- **Minor Modules**: 4/7 complete (20 points) - 3 accessibility modules not implemented
+- **Total Score**: **130 points** (130% of mandatory requirement)
 - **Security Audit**: ✅ Passed (9/10 - minor notification fix needed)
 - **All Features**: ✅ Tested and verified functional (100% test success rate)
 
-**Status**: 🎉 COMPLETE! All modules implemented and tested!
+**Status**: 🎉 COMPLETE! Core functionality implemented with partial accessibility support!

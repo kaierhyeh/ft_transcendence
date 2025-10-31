@@ -376,7 +376,7 @@ main() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════════════════════${NC}"
     if ! test_service_health 2>/dev/null; then
         echo -e "\n${RED}❌ Services are not fully available. Please ensure Docker containers are running:${NC}"
-        echo -e "${YELLOW}   cd /home/kyeh/develop && make up-d${NC}"
+        echo -e "${YELLOW}   cd ~/develop && make up-d${NC}"
         echo -e "${YELLOW}   Then re-run: ./test.sh${NC}"
         exit 1
     fi
