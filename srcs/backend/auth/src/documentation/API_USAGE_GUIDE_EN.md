@@ -46,7 +46,7 @@ app.post('/protected-route', {
 
 **Game Service can use it like this**:
 ```typescript
-// In /home/kyeh/develop/srcs/backend/game/src/routes
+// In ~/develop/srcs/backend/game/src/routes
 
 // 1. Create game session (call Auth Service)
 async function createGameSession(userId: number, gameId: string) {
