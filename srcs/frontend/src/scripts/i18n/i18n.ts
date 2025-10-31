@@ -58,7 +58,8 @@ class I18n {
     return [
       { code: 'en', name: this.translations.en.english },
       { code: 'zh', name: this.translations.zh.chinese },
-      { code: 'fr', name: this.translations.fr.french }
+      { code: 'fr', name: this.translations.fr.french },
+      { code: 'ru', name: this.translations.ru.russian },
     ];
   }
 
@@ -70,6 +71,21 @@ class I18n {
       const key = element.getAttribute('data-i18n') as TranslationKey;
       if (key && element.textContent !== null) {
         element.textContent = this.t(key);
+      }
+    });
+
+    // 更新所有有 data-i18n-prefix 屬性的元素 (例如: Player 1, Player 2)
+    const prefixElements = document.querySelectorAll('[data-i18n-prefix]');
+    prefixElements.forEach(element => {
+      const prefix = element.getAttribute('data-i18n-prefix') as TranslationKey;
+      if (prefix && element instanceof HTMLLabelElement) {
+        const htmlFor = element.getAttribute('for');
+        if (htmlFor) {
+          const match = htmlFor.match(/\d+$/);
+          if (match) {
+            element.textContent = `${this.t(prefix)} ${match[0]}`;
+          }
+        }
       }
     });
 
