@@ -4,8 +4,8 @@ import {initTournament} from "./tournament.js";
 import initRemoteGame, { cleanupRemoteGame } from "./remoteGame.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
-import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
-import { initDeviceDetection } from "./utils/deviceDetect.js";
+// import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
+// import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin, handleOAuthCallback } from "./auth/login.js";
@@ -42,14 +42,20 @@ const initScripts: Record<string, () => void> = {
 	"/pong": () => {
 		if (typeof initPong === "function")
 			initPong();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/signup": () => {
 		if (typeof initSignup === "function")
 			initSignup();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/login": () => {
 		if (typeof initLogin === "function")
 			initLogin();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/tournament": () => {
 		if (typeof initTournament === "function")
@@ -170,9 +176,9 @@ window.onpopstate = (e) => {
 // Make navigate available globally for header and other components
 (window as any).navigateTo = navigate;
 
-addBrowserClass();
-logBrowserInfo();
+// addBrowserClass();																			// For Alexis
+// logBrowserInfo();
 
-initDeviceDetection();
+// initDeviceDetection();																		// For Alexis
 
 navigate(location.pathname, false);

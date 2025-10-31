@@ -22,25 +22,27 @@
 	<!-- Menu Window -->
 	<div id="menuWindow" class="menu-window hidden">
 
-		<!-- MENU HEADER -->
-		<div class="menu-header">
+	<!-- MENU HEADER -->
+	<div class="menu-header">
 
-			<!-- Menu Title : MENU, USERS, FRIENDS, FRIEND REQUESTS, BLOCKED USERS, CHATS, {USERNAME} -->
-			<h1 id="menuTitle" class="menu-header-title" data-i18n="menu">MENU</h1>
-			<div class="menu-header-buttons">
+		<!-- Menu Title : MENU, USERS, FRIENDS, FRIEND REQUESTS, BLOCKED USERS, CHATS, {USERNAME} -->
+		<h1 id="menuHeaderTitle" class="menu-header-title hidden" data-i18n="allUsers">All Users</h1>
 
-				<div id="menuDropdown" class="menu-dropdown hidden">
-					<button id="menuDropdownButton" class="menu-dropbtn">Filter</button>
-					<div class="menu-dropdown-content">
-						<a id="menuDropdownAll">All</a>
-						<a id="menuDropdownFriends">Friends</a>
-						<a id="menuDropdownRequestsIn">Req. In</a>
-						<a id="menuDropdownRequestsOut">Req. Out</a>
-						<a id="menuDropdownBlocked">Blocked</a>
-					</div>
-				</div>
+		<!-- Menu Dropdown Filter as Title -->
+		<div id="menuDropdown" class="menu-dropdown">
+			<button id="menuDropdownButton" class="menu-dropbtn menu-header-title" data-i18n="allUsers">All Users</button>
+			<div class="menu-dropdown-content">
+				<a id="menuDropdownAll" data-i18n="allUsers">All Users</a>
+				<a id="menuDropdownFriends" data-i18n="friends">Friends</a>
+				<a id="menuDropdownRequestsIn" data-i18n="requestsIn">Req. In</a>
+				<a id="menuDropdownRequestsOut" data-i18n="requestsOut">Req. Out</a>
+				<a id="menuDropdownBlocked" data-i18n="blocked">Blocked</a>
+			</div>
+		</div>
 
-				<!-- Back Button for FRIEND REQUESTS, BLOCKED USERS, {USERNAME} menu windows -->
+		<div class="menu-header-buttons">
+
+			<!-- Back Button for FRIEND REQUESTS, BLOCKED USERS, {USERNAME} menu windows -->
 				<button id="menuBackButton" class="menu-button hidden">
 					<svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 						<path fill="currentColor" d="M12 19h-2v-2H8v-2H6v-2H4v-2h2V9h2V7h2V5h2v4h8v6h-8v4z"/>
@@ -126,9 +128,7 @@
 
 		<!-- CHAT SECTION -->
 
-		<div id="chatsList" class="menu-list-users-chats">
-			<!-- <h1 id="noChats" class="menu-empty-list-text" data-i18n="noChats">No chats</h1> -->
-		</div>
+		<div id="chatsList" class="menu-list-users-chats"></div>
 
 		<div id="chatMessages" class="chat-messages hidden"></div>
 		
@@ -137,10 +137,7 @@
 			<!-- Invite to game button -->
 			<div id="chatInputActions" class="chat-input-actions">
 				<button id="statusIsBlocked" class="chat-info-blocked hidden">
-					<!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="user-pixel-icon">
-						<path fill="currentColor" d="M5 3h14v2H5V3zm0 16H3V5h2v14zm14 0v2H5v-2h14zm0 0h2V5h-2v14zM10 8H8v2h2V8zm4 0h2v2h-2V8zm-5 6v-2H7v2h2zm6 0v2H9v-2h6zm0 0h2v-2h-2v2z"></path>
-					</svg> -->
-					<span data-i18n="blocked">BLOCKED</span>
+					<span data-i18n="blockedStatus">BLOCKED</span>
 				</button>
 				<div class="chat-btns-group">
 					<button id="chatInviteGameButton" class="menu-control-panel-button">
@@ -155,12 +152,6 @@
 						</svg>
 						<span data-i18n="userInfo">User info</span>
 					</button>
-					<!-- <button id="blockUserButtonInChat" class="user-action-button-red">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="user-pixel-icon">
-							<path fill="currentColor" d="M5 3h14v2H5V3zm0 16H3V5h2v14zm14 0v2H5v-2h14zm0 0h2V5h-2v14zM10 8H8v2h2V8zm4 0h2v2h-2V8zm-5 8v-2h6v2h2v-2h-2v-2H9v2H7v2h2z"></path>
-						</svg>
-						<span>Block</span>
-					</button> -->
 				</div>
 			</div>
 			

@@ -41,10 +41,25 @@ export function setElementActive(id: string, isActive: boolean): void {
 	}
 }
 
-export function setMenuTitle(translationKey: string): void {
-	const menuTitleElement = document.getElementById("menuTitle");
-	if (menuTitleElement) {
-		menuTitleElement.textContent = i18n.t(translationKey as any);
+export function setFilterForUsersList(translationKey: string): void {
+	const menuDropdownButton = document.getElementById("menuDropdownButton");
+	if (menuDropdownButton) {
+		menuDropdownButton.textContent = i18n.t(translationKey as any);
+		menuDropdownButton.setAttribute('data-i18n', translationKey);
 	}
 }
 
+export function setHeaderTitle(translationKey: string) {
+	const menuHeaderTitle = document.getElementById("menuHeaderTitle");
+	if (menuHeaderTitle) {
+		if (translationKey === 'allUsers' || translationKey === 'chats' || translationKey === 'userInfo') {
+			menuHeaderTitle.textContent = i18n.t(translationKey as any);
+			menuHeaderTitle.setAttribute("data-i18n", translationKey);
+		} else {
+			if (menuHeaderTitle.hasAttribute("data-i18n")) {
+				menuHeaderTitle.removeAttribute("data-i18n");
+			}
+			menuHeaderTitle.textContent = translationKey;
+		}
+	}
+}
