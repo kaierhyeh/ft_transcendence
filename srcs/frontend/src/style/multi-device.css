@@ -78,9 +78,9 @@ h3 { font-size: 1.25rem; }
 
 /* Mobile navigation */
 .back-to-home-btn {
-  top: 10px;
-  left: 10px;
-  padding: 8px 16px;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.4rem 0.8rem;
   font-size: 12px;
 }
 
@@ -132,9 +132,9 @@ h3 { font-size: 1.25rem; }
   }
 
   .back-to-home-btn {
-    top: 20px;
-    left: 20px;
-    padding: 12px 24px;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
     font-size: 14px;
   }
 }

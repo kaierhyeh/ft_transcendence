@@ -1,6 +1,6 @@
 import { User } from "../user/User.js";
 import user from '../user/User.js';
-import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
+import { clearEvents, hideElementById, setFilterForUsersList, showElementById, setHeaderTitle } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 import { chatSocket } from "./menu.ws.js";
@@ -298,14 +298,15 @@ async function unblockUser(userInfo: UserInfo): Promise<void> {
 // user info section
 
 function prepareUserInfoSection(): void {
-	setMenuTitle("User info");
+	setHeaderTitle("userInfo");
 
 	[	"usersList",
 		"menuControlPanel",
 		"menuDropdown"
 	].forEach(hideElementById);
 
-	[	"menuBackButton",
+	[	"menuHeaderTitle",
+		"menuBackButton",
 		"usersInfo"
 	].forEach(showElementById);
 
@@ -464,24 +465,25 @@ function renderUserInfo(userInfo: UserInfo): void {
 	// const avatarSrc = `${window.location.origin}/api/users/${userInfo.user_id}/avatar`;
 	const avatarSrc = User.getAvatarUrl(userInfo.user_id, userInfo.avatar_updated_at);
 
-
-	const userAlias = userInfo.alias
-		? `<div id="userAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
+	const userInfo_userAlias = userInfo.alias
+		? `<div id="userInfo_boxAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
 		: '';
 
 	const userOnlineStatus = presence.onlineStatus(userInfo.user_id);
 	const statusHtml = (userInfo.friendship_status === 'accepted')
-		? `<div id="userOnlineStatus" class="user-info-online-status">
+		? `<div id="userInfo_boxOnline" class="user-info-online-status">
 				<span class="user-status-${userOnlineStatus.toLowerCase()}">${Presence.display(userOnlineStatus)}</span>
 			</div>`
 		: '';
 
 	usersInfo.innerHTML = `
-		<img id="selectedUserAvatar" class="user-info-avatar" src="${avatarSrc}">
-		<div id="userName" class="user-info-username">${userInfo.username}</div>
-		${userAlias}
+		<div id="userInfo_boxAvatar" class="user-info-avatar-box">
+			<img id="userInfo_avatar" class="user-info-avatar" src="${avatarSrc}">
+		</div>
+		<div id="userInfo_boxUsername" class="user-info-username">${userInfo.username}</div>
+		${userInfo_userAlias}
 		${statusHtml}
-		<div id="userStats" class="user-info-stats">
+		<div id="userInfo_boxSatatsBtn" class="user-info-stats-btn-box">
 			<button id="viewProfileButton" class="user-info-profile-btn">View profile</button>
 		</div>
 	`;
@@ -599,7 +601,7 @@ function renderUserList(users: UserListRow[]): void {
 
 		return `
 			<div class="menu-list-element " data-user-id="${u.user_id}">
-				<img class="user-info-avatar-small" src="${avatarSrc}">
+				<img class="user-list-avatar" src="${avatarSrc}">
 				<div class="user-list-element-info">
 					<span>${userName}</span>
 					${statusHtml}
@@ -636,7 +638,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Friends");
+				setFilterForUsersList("friends");
 				break;
 			case 'requests_in':
 				// console.log("USERS: Loading REQUESTS IN only");
@@ -646,7 +648,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Requests In");
+				setFilterForUsersList("requestsIn");
 				break;
 			case 'requests_out':
 				// console.log("USERS: Loading REQUESTS OUT only");
@@ -656,7 +658,7 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Requests Out");
+				setFilterForUsersList("requestsOut");
 				break;
 			case 'blocked':
 				// console.log("USERS: Loading BLOCKED users only");
@@ -666,13 +668,14 @@ async function loadUsers(): Promise<void>{
 						credentials: 'include'
 					}
 				});
-				setMenuTitle("Blocked");
+				setFilterForUsersList("blocked");
 				break;
 			// works for 'all' and an invalid filter
 			default:
 				// console.log("USERS: Loading ALL users");
 				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
-				setMenuTitle("Users");
+				setFilterForUsersList("allUsers");
+				setHeaderTitle("allUsers");
 				break;
 		}
 		if (res === null || !res.ok) {
@@ -694,6 +697,7 @@ export async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
 	if (user.isLoggedIn()) {
+		["menuHeaderTitle"].forEach(hideElementById);
 		["menuDropdown"].forEach(showElementById);
 		const userBtn = document.getElementById("usersSectionButton");
 		if (userBtn) {
@@ -732,15 +736,20 @@ function addMenuDropdown(): boolean {
 	}
 
 	menuDropdown.innerHTML = `
-		<button id="menuDropdownButton" class="menu-dropbtn">Filter</button>
+		<button id="menuDropdownButton" class="menu-dropbtn menu-header-title" data-i18n="allUsers">All Users</button>
 		<div class="menu-dropdown-content">
-			<a id="menuDropdownAll">All</a>
-			<a id="menuDropdownFriends">Friends</a>
-			<a id="menuDropdownRequestsIn">Req. In</a>
-			<a id="menuDropdownRequestsOut">Req. Out</a>
-			<a id="menuDropdownBlocked">Blocked</a>
+			<a id="menuDropdownAll" data-i18n="allUsers">All Users</a>
+			<a id="menuDropdownFriends" data-i18n="friends">Friends</a>
+			<a id="menuDropdownRequestsIn" data-i18n="requestsIn">Req. In</a>
+			<a id="menuDropdownRequestsOut" data-i18n="requestsOut">Req. Out</a>
+			<a id="menuDropdownBlocked" data-i18n="blocked">Blocked</a>
 		</div>
 	`;
+	
+	// Translate the newly added elements
+	import('../i18n/index.js').then(({ i18n }) => {
+		i18n.initializePage();
+	});
 
 	const menuDropdownButton = document.getElementById('menuDropdownButton');
     const menuDropdownContent = document.querySelector('.menu-dropdown-content');
@@ -765,7 +774,7 @@ function addMenuDropdown(): boolean {
 function initFilterDropdown(): void {
 
 	currentFilter = 'all';
-	setMenuTitle("Users");
+	setFilterForUsersList("allUsers");
 
 	if (!document.getElementById("menuDropdownButton")) {
 		["menuDropdown"].forEach(showElementById);
@@ -785,26 +794,31 @@ function initFilterDropdown(): void {
 	}
 	dropdownAll.addEventListener("click", () => {
 		currentFilter = 'all';
+		setFilterForUsersList("allUsers");
 		// console.log("USERS: Filter set to ALL");
 		initUsersSection();
 	});
 	dropdownFriends.addEventListener("click", () => {
 		currentFilter = 'friends';
+		setFilterForUsersList("friends");
 		// console.log("USERS: Filter set to FRIENDS");
 		initUsersSection();
 	});
 	dropdownRequestsIn.addEventListener("click", () => {
 		currentFilter = 'requests_in';
+		setFilterForUsersList("requestsIn");
 		// console.log("USERS: Filter set to REQUESTS IN");
 		initUsersSection();
 	});
 	dropdownRequestsOut.addEventListener("click", () => {
 		currentFilter = 'requests_out';
+		setFilterForUsersList("requestsOut");
 		// console.log("USERS: Filter set to REQUESTS OUT");
 		initUsersSection();
 	});
 	dropdownBlocked.addEventListener("click", () => {
 		currentFilter = 'blocked';
+		setFilterForUsersList("blocked");
 		// console.log("USERS: Filter set to BLOCKED");
 		initUsersSection();
 	});
@@ -824,6 +838,10 @@ export async function openUsersSection(): Promise<void> {
 
 	if (user.isLoggedIn()) {
 		initFilterDropdown();
+		["menuHeaderTitle"].forEach(hideElementById);
+	} else {
+		["menuDropdown"].forEach(hideElementById);
+		["menuHeaderTitle"].forEach(showElementById);
 	}
 
 	await initUsersSection();
