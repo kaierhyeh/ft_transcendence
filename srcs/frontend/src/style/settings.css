@@ -56,14 +56,16 @@
 .profile-section .settings-profile-avatar {
 	width: 130px;
 	height: 130px;
-	border-radius: 50%;
-	border: 4px solid #4ade80;
+	border-radius: 10px;
+	border: 2px solid #4ade80;
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
 	transition: opacity 0.3s;
 	box-shadow: none;
 	display: block;
+	object-fit: cover;
+	overflow: hidden;
 }
 
 .profile-section .settings-avatar-overlay {
