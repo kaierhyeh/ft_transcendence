@@ -5,7 +5,7 @@
   position: fixed;
   padding: 16px;
   left: 0;
-  top: 60px; /* Below the back-to-home button */
+  top: 0;
   z-index: 1001; /* Higher than header (1000) */
 }
 

@@ -52,7 +52,14 @@ export function setFilterForUsersList(translationKey: string): void {
 export function setHeaderTitle(translationKey: string) {
 	const menuHeaderTitle = document.getElementById("menuHeaderTitle");
 	if (menuHeaderTitle) {
-		menuHeaderTitle.textContent  = i18n.t(translationKey as any);
-		// need translation for CHATS, USER INFO
+		if (translationKey === 'allUsers' || translationKey === 'chats' || translationKey === 'userInfo') {
+			menuHeaderTitle.textContent = i18n.t(translationKey as any);
+			menuHeaderTitle.setAttribute("data-i18n", translationKey);
+		} else {
+			if (menuHeaderTitle.hasAttribute("data-i18n")) {
+				menuHeaderTitle.removeAttribute("data-i18n");
+			}
+			menuHeaderTitle.textContent = translationKey;
+		}
 	}
 }

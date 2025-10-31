@@ -672,6 +672,7 @@ async function loadUsers(): Promise<void>{
 				// console.log("USERS: Loading ALL users");
 				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
 				setFilterForUsersList("allUsers");
+				setHeaderTitle("allUsers");
 				break;
 		}
 		if (res === null || !res.ok) {
@@ -693,6 +694,7 @@ export async function initUsersSection(): Promise<void> {
 	clearBeforeOpenUsersSection();
 	resetUsersSection();
 	if (user.isLoggedIn()) {
+		["menuHeaderTitle"].forEach(hideElementById);
 		["menuDropdown"].forEach(showElementById);
 		const userBtn = document.getElementById("usersSectionButton");
 		if (userBtn) {
@@ -703,7 +705,6 @@ export async function initUsersSection(): Promise<void> {
 			chatsBtn.className = "menu-control-panel-button";
 		}
 	}
-	["menuHeaderTitle"].forEach(hideElementById);
 	["usersList"].forEach(showElementById);
 
 	await loadUsers();
@@ -834,6 +835,10 @@ export async function openUsersSection(): Promise<void> {
 
 	if (user.isLoggedIn()) {
 		initFilterDropdown();
+		["menuHeaderTitle"].forEach(hideElementById);
+	} else {
+		["menuDropdown"].forEach(hideElementById);
+		["menuHeaderTitle"].forEach(showElementById);
 	}
 
 	await initUsersSection();

@@ -1,4 +1,4 @@
-import { clearEvents, hideElementById, setFilterForUsersList, setHeaderTitle, showElementById } from "./menu.utils.js";
+import { clearEvents, hideElementById, setHeaderTitle, showElementById } from "./menu.utils.js";
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
 import user from '../user/User.js';
