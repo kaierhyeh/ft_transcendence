@@ -1,5 +1,3 @@
-# ft_transcendence Modules Implementation Summary
-
 ## 📊 Module Status Overview
 
 ### Web Sector
