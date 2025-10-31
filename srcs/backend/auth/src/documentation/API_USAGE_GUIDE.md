@@ -44,7 +44,7 @@ app.post('/protected-route', {
 
 **Game Service 可以這樣使用**:
 ```typescript
-// 在 /home/kyeh/develop/srcs/backend/game/src/routes 中
+// 在 ~/develop/srcs/backend/game/src/routes 中
 
 // 1. 創建遊戲會話 (呼叫 Auth Service)
 async function createGameSession(userId: number, gameId: string) {
@@ -331,7 +331,7 @@ const gameValidation = jwtService.validateToken(userToken, 'GAME_SESSION');
 
 ```bash
 # 進入測試目錄
-cd /home/kyeh/develop/srcs/backend/auth/test
+cd ~/develop/srcs/backend/auth/test
 
 # 運行完整測試套件 (Docker 容器內)
 ./run-tests.sh

@@ -107,14 +107,21 @@ function setupHeaderEvents() {
     const dropdown = document.querySelector('.dropdown');
     
     if (userBtn && dropdown) {
+        (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
+        (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
+
         userBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            dropdown.classList.toggle('show');
+            const isShown = dropdown.classList.toggle('show');
+            (userBtn as HTMLElement).setAttribute('aria-expanded', isShown ? 'true' : 'false');
+            (dropdown as HTMLElement).setAttribute('aria-hidden', isShown ? 'false' : 'true');
         });
         
         // Close dropdown when clicking outside
         document.addEventListener('click', () => {
             dropdown.classList.remove('show');
+            (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
+            (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
         });
         
         // Add special handling for dropdown items: close dropdown before navigation
@@ -122,6 +129,8 @@ function setupHeaderEvents() {
             item.addEventListener('click', (e) => {
                 // Close dropdown first
                 dropdown.classList.remove('show');
+                (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
+                (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
                 // Navigation will be handled by update_event() in app.ts
             });
         });
