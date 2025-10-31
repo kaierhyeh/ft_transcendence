@@ -559,7 +559,7 @@ function updateUserListStatus(updates: Map<number, OnlineStatus>): void {
         // Update in user info section if this user is currently displayed
         const usersInfoElement = document.getElementById('usersInfo');
         if (usersInfoElement && usersInfoElement.dataset.userId === userId.toString()) {
-            const userOnlineStatus = document.getElementById('userOnlineStatus');
+            const userOnlineStatus = document.getElementById('userInfo_boxOnline');
             if (userOnlineStatus) {
                 const statusSpan = userOnlineStatus.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
                 if (statusSpan) {
