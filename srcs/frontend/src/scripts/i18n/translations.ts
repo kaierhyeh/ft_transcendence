@@ -525,6 +525,14 @@ export const translations = {
     "right": "Right",
     "selectGameMode": "Выберите режим игры",
 
+	// Player Position
+    "positionLeft": "Your position: Left",
+    "positionRight": "Your position: Right",
+    "positionTopLeft": "Your position: Top Left",
+    "positionBottomLeft": "Your position: Bottom Left",
+    "positionTopRight": "Your position: Top Right",
+    "positionBottomRight": "Your position: Bottom Right",
+
     // Tooltips
     "viewStats": "Показать статистику", // "Статистика" = "Statistics"
     "viewProfile": "Показать профиль",  // "Профиль" = "Profile"
