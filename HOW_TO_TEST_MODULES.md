@@ -5,103 +5,103 @@
 ### Web Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Backend Framework** | ✅ Complete | 10 | All | Microservices architecture with Fastify/Node.js |
-| **Blockchain Score Storage** | ✅ Complete | 10 | Kilfen | Avalanche blockchain integration with ethers.js |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Backend Framework** | ✅ Complete | 10 | Microservices architecture with Fastify/Node.js |
+| **Blockchain Score Storage** | ✅ Complete | 10 | Avalanche blockchain integration with ethers.js |
 
 #### Minor Modules (5 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Frontend Framework/Toolkit** | ✅ Complete | 5 | Steven + All | TypeScript with custom UI framework |
-| **Database Backend** | ✅ Complete | 5 | All | SQLite with prepared statements |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Frontend Framework/Toolkit** | ✅ Complete | 5 | TypeScript with custom UI framework |
+| **Database Backend** | ✅ Complete | 5 | SQLite with prepared statements |
 
 ### User Management Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Standard User Management** | ✅ Complete | 10 | Steven | Authentication, JWT, user profiles |
-| **Remote Authentication** | ✅ Complete | 10 | Alex | Google OAuth integration |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Standard User Management** | ✅ Complete | 10 | Authentication, JWT, user profiles |
+| **Remote Authentication** | ✅ Complete | 10 | Google OAuth integration |
 
 ### Gameplay and User Experience Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Remote Players** | ✅ Complete | 10 | Marine + Alex | WebSocket real-time multiplayer |
-| **Multiplayer (>2 players)** | ✅ Complete | 10 | Marine | 4-player Pong support |
-| **Additional Game + History** | ✅ Complete | 10 | Marine | Tournament system with matchmaking |
-| **Live Chat** | ✅ Complete | 10 | Aleksei | Real-time chat with WebSocket |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Remote Players** | ✅ Complete | 10 | WebSocket real-time multiplayer |
+| **Multiplayer (>2 players)** | ✅ Complete | 10 | 4-player Pong support |
+| **Additional Game + History** | ✅ Complete | 10 | Tournament system with matchmaking |
+| **Live Chat** | ✅ Complete | 10 | Real-time chat with WebSocket |
 
 #### Minor Modules (5 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Game Customization Options** | ❌ Not implemented | 0 | Alex, Marine | Power-ups and game options missing |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Game Customization Options** | ❌ Not implemented | 0 | Power-ups and game options missing |
 
 ### AI-Algo Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **AI Opponent** | ✅ Complete | 10 | Kilfen | AIController.ts implementation |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **AI Opponent** | ✅ Complete | 10 | AIController.ts implementation |
 
 #### Minor Modules (5 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **User & Game Stats Dashboards** | ✅ Complete | 5 | Kilfen | Data visualization and charts |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **User & Game Stats Dashboards** | ✅ Complete | 5 | Data visualization and charts |
 
 ### Cybersecurity Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **WAF/ModSecurity + Vault** | ❌ Not implemented | 0 | - | No WAF or HashiCorp Vault |
-| **Two-Factor Authentication + JWT** | ✅ Complete | 10 | Alex | TOTP 2FA + JWT implementation |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **WAF/ModSecurity + Vault** | ❌ Not implemented | 0 | No WAF or HashiCorp Vault |
+| **Two-Factor Authentication + JWT** | ✅ Complete | 10 | TOTP 2FA + JWT implementation |
 
 #### Minor Modules (5 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **GDPR Compliance** | ❌ Not implemented | 0 | - | No anonymization or account deletion |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **GDPR Compliance** | ❌ Not implemented | 0 | No anonymization or account deletion |
 
 ### Devops Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Log Management Infrastructure** | ❌ Not implemented | 0 | - | No centralized logging setup |
-| **Microservices Backend** | ✅ Complete | 10 | Steven | Docker microservices architecture |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Log Management Infrastructure** | ❌ Not implemented | 0 | No centralized logging setup |
+| **Microservices Backend** | ✅ Complete | 10 | Docker microservices architecture |
 
 #### Minor Modules (5 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Monitoring System** | ❌ Not implemented | 0 | +Alex | No monitoring stack |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Monitoring System** | ❌ Not implemented | 0 | No monitoring stack |
 
 ### Graphics Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Advanced 3D Techniques** | ❌ Not implemented | 0 | - | 2D canvas implementation only |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Advanced 3D Techniques** | ❌ Not implemented | 0 | 2D canvas implementation only |
 
 ### Accessibility Sector
 
 #### Minor Modules (5 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Support on All Devices** | ⚠️ Partial | 0 | - | Responsive design (touch screen NOT supported) |
-| **Browser Compatibility** | ✅ Complete | 5 | - | Firefox, Chrome, Safari, Edge support |
-| **Multiple Languages** | ✅ Complete | 5 | Aleksei, Kilfen | English, Chinese, French with i18n |
-| **Accessibility Features** | ❌ Not implemented | 0 | - | No screen reader or keyboard navigation |
-| **Server-Side Rendering** | ❌ Not implemented | 0 | - | Client-side rendering only |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Support on All Devices** | ⚠️ Partial | 0 | Responsive design (touch screen NOT supported) |
+| **Browser Compatibility** | ✅ Complete | 5 | Firefox, Chrome, Safari, Edge support |
+| **Multiple Languages** | ✅ Complete | 5 | English, Chinese, French with i18n |
+| **Accessibility Features** | ❌ Not implemented | 0 | No screen reader or keyboard navigation |
+| **Server-Side Rendering** | ❌ Not implemented | 0 | Client-side rendering only |
 
 ### Server-Side Pong Sector
 
 #### Major Modules (10 points each)
-| Module | Status | Points | Assigned To | Verification |
-|--------|--------|--------|-------------|-------------|
-| **Server-side Pong + API** | ✅ Complete | 10 | Steven | Server-side game logic with API |
-| **CLI vs Web Users** | ❌ Not implemented | 0 | - | No CLI interface |
+| Module | Status | Points | Verification |
+|--------|--------|--------|-------------|
+| **Server-side Pong + API** | ✅ Complete | 10 | Server-side game logic with API |
+| **CLI vs Web Users** | ❌ Not implemented | 0 | No CLI interface |
 
 **TOTAL SCORE: 11 Major (110 points) + 5 Minor (25 points) = 135 points**
 
