@@ -96,8 +96,8 @@ async function load404(push: boolean)
 
 function update_event()
 {
-	// Search entire document for data-route elements (includes header + app content)
-	document.querySelectorAll("[data-route]").forEach(btn => {
+	// Search app for data-route elements (header handles its own listeners)
+	app.querySelectorAll("[data-route]").forEach(btn => {
 		const element = btn as HTMLElement;
 		if (element.id === 'one-player-btn' || element.id === 'two-players-btn' || element.id == 'four-players-btn') return;
 		
@@ -135,12 +135,14 @@ async function navigate(path: string, push: boolean = true)
 		}
 	}
 
-	const file = routes[path];
+	// Split path and query string
+	const [basePath, queryString] = path.split('?');
+	const file = routes[basePath];
 
 	if (file)
 	{
 		try {
-			if (path === '/login' && push) {
+			if (basePath === '/login' && push) {
 				const currentPath = window.location.pathname;
 				if (currentPath !== '/login' && currentPath !== '/signup') {
 					sessionStorage.setItem('previousPage', currentPath);
@@ -152,13 +154,13 @@ async function navigate(path: string, push: boolean = true)
 				throw new Error("File not found.");
 			app.innerHTML = await res.text();
 			if (push)
-				history.pushState({path}, "", path);
+				history.pushState({path}, "", path); // Push full path with query params
 			
 			await loadHeader();
 			update_event();
 			i18n.initializePage();
-			if (initScripts[path])
-				initScripts[path]();
+			if (initScripts[basePath])
+				initScripts[basePath]();
 		}
 		catch {
 			load404(push);

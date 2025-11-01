@@ -132,11 +132,16 @@ function setupHeaderEvents() {
         // Add special handling for dropdown items: close dropdown before navigation
         dropdown.querySelectorAll('[data-route]').forEach(item => {
             item.addEventListener('click', (e) => {
+                e.preventDefault();
                 // Close dropdown first
                 dropdown.classList.remove('show');
                 (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
                 (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
-                // Navigation will be handled by update_event() in app.ts
+                // Navigate to the route
+                const path = (e.currentTarget as HTMLElement).dataset.route;
+                if (path && (window as any).navigateTo) {
+                    (window as any).navigateTo(path);
+                }
             });
         });
     }
@@ -162,6 +167,18 @@ function setupHeaderEvents() {
             }
         });
     }
+
+    // Handle auth buttons (Login/Signup) in unauthenticated header
+    const authButtons = document.querySelectorAll('.auth-buttons [data-route]');
+    authButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const path = (e.currentTarget as HTMLElement).dataset.route;
+            if (path && (window as any).navigateTo) {
+                (window as any).navigateTo(path);
+            }
+        });
+    });
 
     function redirectAfterLogout() {
         (window as any).navigateTo("/");
