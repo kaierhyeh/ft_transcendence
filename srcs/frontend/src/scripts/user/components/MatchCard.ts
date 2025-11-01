@@ -165,7 +165,7 @@ function formatPlayerName(player: PlayerData | undefined, profileUserId: number 
         }
         
         // Otherwise show username with link
-        return `<a href="/user/profile?id=${player.user_id}" class="player-link">${player.username}</a>`;
+        return `<a data-route="/user/profile?id=${player.user_id}" class="player-link">${player.username}</a>`;
     }
     
     return 'Player';
@@ -342,7 +342,7 @@ export function createEmptyState(): string {
             <div class="empty-icon">🎮</div>
             <h3>No matches yet</h3>
             <p>Your match history will appear here after you play some games!</p>
-            <a href="/pong" class="match-history-btn">Play Now</a>
+            <a data-route="/pong" class="match-history-btn">Play Now</a>
         </div>
     `;
 }
@@ -359,4 +359,24 @@ export function createErrorState(message: string = 'Failed to load match history
             <button class="btn-secondary retry-btn">Try Again</button>
         </div>
     `;
+}
+
+/**
+ * Attaches navigation event listeners to match card links
+ * Call this after rendering match cards to enable SPA navigation
+ */
+export function attachMatchCardListeners(): void {
+    const matchContainer = document.querySelector('.match-history-container');
+    if (!matchContainer) return;
+    
+    // Attach listeners to player links and "Play Now" button
+    matchContainer.querySelectorAll('[data-route]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const path = (e.currentTarget as HTMLElement).dataset.route;
+            if (path && (window as any).navigateTo) {
+                (window as any).navigateTo(path);
+            }
+        });
+    });
 }

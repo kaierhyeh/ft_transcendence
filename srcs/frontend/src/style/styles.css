@@ -59,6 +59,12 @@ body {
 	height: 100vh;
 }
 
+/* SPA Navigation Links */
+a[data-route],
+button[data-route] {
+	cursor: pointer;
+}
+
 /* Back to Home Button - Universal Style */
 .back-to-home-btn {
 	position: fixed;

@@ -59,11 +59,6 @@ export async function initProfile() {
 		if (profileSection)
 			profileSection.style.display = 'block';
 
-		const gamesPlayed = (userData.wins || 0) + (userData.losses || 0);
-		if (matchHistorySection && isOtherUser) {
-			matchHistorySection.style.display = gamesPlayed > 0 ? 'block' : 'none';
-		}
-
 		setTimeout(function () {
 			createPlayerChart(userData);
 			displayPlayerRanking(userData);
@@ -252,7 +247,6 @@ export async function initProfile() {
 
 	const profileError = document.getElementById('profileError');
 	const profileSection = document.getElementById('profileSection');
-	const matchHistorySection = document.getElementById('matchHistorySection');
 
 	function getProfileIdFromUrl(): number | null {
 		const params = new URLSearchParams(window.location.search);
@@ -279,7 +273,6 @@ export async function initProfile() {
 			console.error('Failed to load public profile:', err);
 			if (profileError) profileError.style.display = 'block';
 			if (profileSection) profileSection.style.display = 'none';
-			if (matchHistorySection) matchHistorySection.style.display = 'none';
 			return;
 		}
 	} else {
@@ -295,7 +288,6 @@ export async function initProfile() {
 		if (!isConnected) {
 			if (profileError) profileError.style.display = 'block';
 			if (profileSection) profileSection.style.display = 'none';
-			if (matchHistorySection) matchHistorySection.style.display = 'none';
 			return;
 		}
 
@@ -306,7 +298,6 @@ export async function initProfile() {
 			console.error('Failed to load user profile:', error);
 			if (profileError) profileError.style.display = 'block';
 			if (profileSection) profileSection.style.display = 'none';
-			if (matchHistorySection) matchHistorySection.style.display = 'none';
 			return;
 		}
 	}
