@@ -1,7 +1,7 @@
 // user/match_history.ts
 import user from './User.js';
 import { fetchMatchHistory } from './api.js';
-import { createMatchCard, createSkeletonCard, createEmptyState, createErrorState } from './components/MatchCard.js';
+import { createMatchCard, createSkeletonCard, createEmptyState, createErrorState, attachMatchCardListeners } from './components/MatchCard.js';
 import type { MatchHistoryResponse } from './types.js';
 
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
@@ -53,6 +53,10 @@ function showLoadingState(container: Element): void {
     `;
 }
 
+function isViewingOwnProfile(): boolean {
+    return profileUserId === user.user_id;
+}
+
 function renderMatches(container: Element, response: MatchHistoryResponse, append: boolean = false): void {
     const { data: sessions, pagination } = response;
     
@@ -65,7 +69,15 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
     
     // Handle empty state
     if (sessions.length === 0 && !append) {
-        container.innerHTML = createEmptyState();
+        if (isViewingOwnProfile()) {
+            // Show "Play Now" button for current user
+            container.innerHTML = createEmptyState();
+            attachMatchCardListeners();
+        } else {
+            // Hide section for other users with no games
+            const matchHistorySection = document.getElementById('matchHistorySection');
+            if (matchHistorySection) matchHistorySection.style.display = 'none';
+        }
         return;
     }
     
@@ -111,6 +123,9 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
     const paginationInfo = container.querySelector('.pagination-info');
     if (paginationInfo)
         paginationInfo.textContent = `Showing ${displayedMatches} of ${pagination.total_records} match${pagination.total_records !== 1 ? 'es' : ''}`;
+    
+    // Attach event listeners to player links in match cards
+    attachMatchCardListeners();
 }
 
 function setupLoadMoreButton(container: Element): void {
@@ -155,8 +170,8 @@ function setupLoadMoreButton(container: Element): void {
 }
 
 async function loadMatchHistory(): Promise<void> {
-    const historyContainer = document.querySelector('.match-history-container');
-    if (!historyContainer) return;
+    const matchHistorySection = document.getElementById('matchHistorySection');
+    if (!matchHistorySection) return;
 
     try {
         // Check authentication first
@@ -167,7 +182,8 @@ async function loadMatchHistory(): Promise<void> {
             if (serverAuthenticated) {
                 await user.fetchAndUpdate();
             } else {
-                // Don't show anything when not logged in
+                // Hide section if not authenticated
+                matchHistorySection.style.display = 'none';
                 return;
             }
         }
@@ -182,8 +198,23 @@ async function loadMatchHistory(): Promise<void> {
         
         if (profileUserId === null) {
             console.error('No user ID available');
+            matchHistorySection.style.display = 'none';
             return;
         }
+
+        // Inject the match history structure
+        matchHistorySection.innerHTML = `
+            <div class="match-history-header">
+                <h1>⚔️ Match History ⚔️</h1>
+            </div>
+            <div class="match-history-container"></div>
+        `;
+        
+        // Show the section
+        matchHistorySection.style.display = 'block';
+        
+        const historyContainer = matchHistorySection.querySelector('.match-history-container');
+        if (!historyContainer) return;
 
         // Show loading state
         showLoadingState(historyContainer);
@@ -203,11 +234,18 @@ async function loadMatchHistory(): Promise<void> {
         
     } catch (error) {
         console.error('Failed to load match history:', error);
-        historyContainer.innerHTML = createErrorState();
         
-        // Setup retry button
-        const retryBtn = historyContainer.querySelector('.retry-btn');
-        retryBtn?.addEventListener('click', () => loadMatchHistory());
+        const historyContainer = matchHistorySection.querySelector('.match-history-container');
+        
+        if (isViewingOwnProfile() && historyContainer) {
+            // Show error state with retry for current user
+            historyContainer.innerHTML = createErrorState();
+            const retryBtn = historyContainer.querySelector('.retry-btn');
+            retryBtn?.addEventListener('click', () => loadMatchHistory());
+        } else {
+            // Hide section for other users or if no container
+            matchHistorySection.style.display = 'none';
+        }
     }
 }
 

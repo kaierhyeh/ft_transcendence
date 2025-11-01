@@ -494,7 +494,9 @@ function renderUserInfo(userInfo: UserInfo): void {
 	if (viewProfileBtn) {
 		viewProfileBtn.addEventListener('click', (e) => {
 			e.preventDefault();
-			window.location.href = `/user/profile?id=${userInfo.user_id}`;
+			if ((window as any).navigateTo) {
+				(window as any).navigateTo(`/user/profile?id=${userInfo.user_id}`);
+			}
 		});
 	}
 	updateButtonsForUserInfo(userInfo);

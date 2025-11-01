@@ -73,10 +73,11 @@ body {
 	z-index: 1000;
 }
 
-/* style for childs */
-/* .top-left-btns > * {
-    width: 100%;
-} */
+/* SPA Navigation Links */
+a[data-route],
+button[data-route] {
+	cursor: pointer;
+}
 
 /* Back to Home Button - Universal Style */
 .back-to-home-btn {
