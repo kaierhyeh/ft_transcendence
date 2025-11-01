@@ -1,6 +1,10 @@
 <div class="profile-container">
-	<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
-	
+
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<!-- <div id="languagesSwitcher"></div> -->
+	</div>
+
 	<div class="stats-section">
 		<div class="profile-section" id="profileSection">
 			<div class="profile-header">
@@ -38,16 +42,12 @@
 				</div>
 			</div>
 		</div>
-	
+
 		<div id="profileError" class="error-state" style="display: none;">
 			<h3>You are not connected...</h3>
 		</div>
 
-		<div class="match-history-section" id="matchHistorySection">
-			<div class="match-history-header">
-				<h1>⚔️ Match History ⚔️</h1>
-			</div>
-			<div class="match-history-container"></div>
-		</div>
+		<!-- Match history section - content managed by match_history.ts -->
+		<div class="match-history-section" id="matchHistorySection" style="display: none;"></div>
 	</div>
 </div>

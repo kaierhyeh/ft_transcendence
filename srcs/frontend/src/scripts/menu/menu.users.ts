@@ -474,7 +474,9 @@ function renderUserInfo(userInfo: UserInfo): void {
 		? `<div id="userInfo_boxOnline" class="user-info-online-status">
 				<span class="user-status-${userOnlineStatus.toLowerCase()}">${Presence.display(userOnlineStatus)}</span>
 			</div>`
-		: '';
+		: `<div id="userInfo_boxOnline" class="user-info-online-status">
+				<span></span>
+			</div>`;
 
 	usersInfo.innerHTML = `
 		<div id="userInfo_boxAvatar" class="user-info-avatar-box">
@@ -495,7 +497,9 @@ function renderUserInfo(userInfo: UserInfo): void {
 	if (viewProfileBtn) {
 		viewProfileBtn.addEventListener('click', (e) => {
 			e.preventDefault();
-			window.location.href = `/user/profile?id=${userInfo.user_id}`;
+			if ((window as any).navigateTo) {
+				(window as any).navigateTo(`/user/profile?id=${userInfo.user_id}`);
+			}
 		});
 	}
 	updateButtonsForUserInfo(userInfo);
