@@ -5,7 +5,7 @@
   position: fixed;
   padding: 16px;
   left: 0;
-  top: 0;
+  top: 60px; /* Positioned below back-to-home button to avoid overlap */
   z-index: 1001; /* Higher than header (1000) */
 }
 
