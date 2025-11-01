@@ -353,7 +353,13 @@ export default function initRemoteGame(): void {
                         drawRemoteGame(msg.data);
 
                         if (msg.data.winner !== undefined && msg.data.winner !== null) {
-                            handleGameEnd(" 🏆 WINNER 🏆 : " + msg.data.winner, " Select an online format to retry");
+                            let winnerTeam = msg.data.winner as string;
+                            let resultMessage: string;
+                            if (myTeam !== null)
+                                resultMessage = (myTeam === winnerTeam) ? "You Win" : "You Lose";
+                            else
+                                resultMessage = "WINNER: " + winnerTeam;
+                            handleGameEnd(resultMessage, " Select an online format to retry");
                         }
                     }
                 } else if (msg.type === "player_disconnected") {
@@ -560,7 +566,12 @@ export default function initRemoteGame(): void {
 
         if (state.winner !== undefined) {
             ctx.font = "32px Bit5x3, monospace";
-            ctx.fillText("WINNER: " + state.winner, canvas.width / 2, canvas.height / 2);
+            let displayText = "";
+            if (myTeam !== null)
+                displayText = (myTeam === state.winner) ? "You Win" : "You Lose";
+            else
+                displayText = "WINNER: " + state.winner;
+            ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
         }
     }
 
