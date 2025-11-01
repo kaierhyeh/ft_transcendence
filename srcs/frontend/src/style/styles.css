@@ -59,6 +59,20 @@ body {
 	height: 100vh;
 }
 
+/* Wrap for Back to Home Btn and Language switcher */
+.top-left-btns {
+    position: absolute;
+    height: auto;
+    width: auto;
+	display: flex;
+	left: 0;
+	top: 0;
+	padding: 16px;
+	gap: 8px;
+    flex-direction: column;
+	z-index: 1000;
+}
+
 /* SPA Navigation Links */
 a[data-route],
 button[data-route] {
@@ -67,14 +81,11 @@ button[data-route] {
 
 /* Back to Home Button - Universal Style */
 .back-to-home-btn {
-	position: fixed;
-	top: 1rem;
-	left: 1rem;
-	z-index: 1000;
+	flex: 1;
 	padding: 0.5rem 1rem;
 	background-color: #333;
 	color: #fff;
-	border: 2px solid #666;
+	border: 2px solid #444;
 	cursor: pointer;
 	font-size: 14px;
 	font-weight: bold;

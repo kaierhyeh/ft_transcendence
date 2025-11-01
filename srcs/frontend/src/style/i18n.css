@@ -1,12 +1,10 @@
 /* Language Switcher Styles */
 .language-switcher {
-  display: inline-flex;
+  flex: 1;
+  /* display: inline-flex; */
+  display: flex;
   align-items: center;
-  position: fixed;
-  padding: 16px;
-  left: 0;
-  top: 60px; /* Positioned below back-to-home button to avoid overlap */
-  z-index: 1001; /* Higher than header (1000) */
+  width: 100%;
 }
 
 .language-select {
@@ -19,14 +17,16 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 150px;
-  max-width: 180px;
+  /* min-width: 150px; */
+  /* max-width: 180px; */
+  width: 100%;
   height: auto;
   min-height: 44px;
   box-sizing: border-box;
-  vertical-align: middle;
+  /* vertical-align: middle; */
   line-height: 1.4;
-  display: inline-flex;
+  /* display: inline-flex; */
+  display: block;
   align-items: center;
   justify-content: center;
 }
