@@ -22,7 +22,7 @@
 	justify-content: center;
 	background: #1a1a1a;
 	border: 2px solid #444;
-	border-radius: 50%;
+	border-radius: 12px;
 	color: #fff;
 	cursor: pointer;
 	transition: all 0.3s ease;
@@ -204,7 +204,7 @@
 	color: #4ade80;
 	background: transparent;
 	border: 2px solid transparent;
-	cursor: pointer;
+	/* cursor: pointer; */
 	height: 40px;
 	gap : 5px;
 }
