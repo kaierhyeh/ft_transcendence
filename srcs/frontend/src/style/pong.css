@@ -150,7 +150,6 @@
 	color: #000;
 }
 
-/* Remote mode: hide local buttons, show remote buttons */
 .pong-header .remote-game-btn {
 	display: none;
 }
@@ -163,17 +162,6 @@
 	display: inline-block;
 }
 
-/* Hide cancel button initially */
-.pong-header.remote-mode #remote-cancel-btn {
-	display: none;
-	position: absolute;
-	right: 1rem;
-}
-
-/* Show cancel button when active */
-.pong-header.remote-mode #remote-cancel-btn.show {
-	display: inline-block;
-}
 
 .pong-game-wrapper {
 	background: #1a1a1a;
