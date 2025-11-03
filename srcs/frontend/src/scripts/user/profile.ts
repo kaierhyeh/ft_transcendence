@@ -20,7 +20,7 @@ export async function initProfile() {
 
 	let isOtherUser: boolean = false;
 
-	function displayUserProfile(userData: any) {
+	async function displayUserProfile(userData: any) {
 		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
 		const profileAvatarElement = document.getElementById('profileAvatar') as HTMLElement;
@@ -56,13 +56,28 @@ export async function initProfile() {
 		if (bestStreakElement)
 			bestStreakElement.textContent = userData.best_winstreak?.toString() || '0';
 
-		if (profileSection)
+		const profileLoadingElement = document.getElementById('profileLoading');
+		if (profileSection) {
 			profileSection.style.display = 'block';
+			profileSection.style.visibility = 'hidden';
+		}
+		if (profileLoadingElement) {
+			profileLoadingElement.style.display = 'flex';
+		}
 
-		setTimeout(function () {
+		try {
 			createPlayerChart(userData);
-			displayPlayerRanking(userData);
-		}, 50);
+			await displayPlayerRanking(userData);
+		} catch (e) {
+			console.error('Error while preparing profile stats:', e);
+		}
+
+		if (profileLoadingElement)
+			profileLoadingElement.style.display = 'none';
+		if (profileSection) {
+			profileSection.style.visibility = 'visible';
+			profileSection.style.display = 'block';
+		}
 	}
 
 	function createPlayerChart(user: any) {
@@ -268,7 +283,7 @@ export async function initProfile() {
 			}
 			const publicProfile = await resp.json();
 			isOtherUser = true;
-			displayUserProfile(publicProfile);
+			await displayUserProfile(publicProfile);
 		} catch (err) {
 			console.error('Failed to load public profile:', err);
 			if (profileError) profileError.style.display = 'block';
@@ -293,7 +308,7 @@ export async function initProfile() {
 
 		try {
 			await user.fetchAndUpdate();
-			displayUserProfile(user);
+			await displayUserProfile(user);
 		} catch (error) {
 			console.error('Failed to load user profile:', error);
 			if (profileError) profileError.style.display = 'block';

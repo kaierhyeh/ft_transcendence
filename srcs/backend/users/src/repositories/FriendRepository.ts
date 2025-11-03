@@ -1,5 +1,4 @@
 import { Database } from "better-sqlite3";
-import redis from '../clients/RedisClient';
 
 export interface UserListRow {
 	user_id: number;
@@ -196,26 +195,12 @@ export class FriendRepository {
 
 	// friendId = sender, userId = recipient
 	public async acceptFriendRequest(userId: number, friendId: number) {
-		// Update database
 		const stmt = this.db.prepare(`
 			UPDATE friendships
 			SET status = 'accepted'
 			WHERE user_id = ? AND friend_id = ? AND status = 'pending'
 		`);
 		stmt.run(friendId, userId);
-		
-		// Update Redis cache and publish event
-		try {
-			await redis.sadd(`friends:${userId}`, friendId);
-			await redis.sadd(`friends:${friendId}`, userId);
-			
-			await redis.publish('friendship_added', JSON.stringify({
-				userId1: userId,
-				userId2: friendId
-			}));
-		} catch (err) {
-			console.error('Redis update failed for friendship_added:', err);
-		}
 	}
 
 	// friendId = sender, userId = recipient
@@ -229,26 +214,12 @@ export class FriendRepository {
 
 	// remove friendship (if status="accepted")
 	public async removeFriendship(userId: number, friendId: number) {
-		// Update database
 		const stmt = this.db.prepare(`
 			DELETE FROM friendships
 			WHERE ((user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?))
 			AND status = 'accepted'
 		`);
 		stmt.run(friendId, userId, userId, friendId);
-		
-		// Update Redis cache and publish event
-		try {
-			await redis.srem(`friends:${userId}`, friendId);
-			await redis.srem(`friends:${friendId}`, userId);
-			
-			await redis.publish('friendship_removed', JSON.stringify({
-				userId1: userId,
-				userId2: friendId
-			}));
-		} catch (err) {
-			console.error('Redis update failed for friendship_removed:', err);
-		}
 	}
 
 	// useful when need to find two users relationship status

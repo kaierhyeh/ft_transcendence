@@ -5,7 +5,7 @@ import user from '../user/User.js';
 import { initUserInfoSectionFromChat, openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
-import { presence, OnlineStatus } from "../presence.js";
+import { presence, OnlineStatus, Presence } from "../presence.js";
 import { fetchWithAuth } from "../utils/fetch.js";
 
 /* ============================================ GLOBALS ===================================== */
@@ -106,7 +106,7 @@ function updateChatListStatus(updates: Map<number, OnlineStatus>): void {
             if (statusSpan) {
                 // Update class and text
                 statusSpan.className = `user-status-${status.toLowerCase()}`;
-                statusSpan.textContent = status;
+                statusSpan.textContent = Presence.display(status);
             }
         }
     });
@@ -133,9 +133,9 @@ function renderChatList(users: ChatUser[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
-		const userStatus = presence.onlineStatus(u.user_id);
+		const userOnlineStatus = presence.onlineStatus(u.user_id);
 		const statusHtml = u.friendship_status === "accepted"
-			? `<span class="user-status-${userStatus.toLowerCase()}">${userStatus}</span>`
+			? `<span class="user-status-${userOnlineStatus.toLowerCase()}">${Presence.display(userOnlineStatus)}</span>`
 			: `<span class="user-status-unknown"></span>`;
 
 		return `
@@ -252,6 +252,7 @@ async function openUserInfo(toUser: ChatUser): Promise<void> {
 	initUserInfoSectionFromChat(toUser.user_id);
 }
 
+
 async function goBackToChatsList(): Promise<void> {
 	chatMessages.innerHTML = ``;
 	initChatSection();
@@ -357,9 +358,9 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 		}
-
+		
 		chatUserInfoButton.addEventListener("click", () => openUserInfo(withUser));
-
+		
 		switch (backTo) {
 			case 'users':
 				menuBackButton.addEventListener("click", () => {
