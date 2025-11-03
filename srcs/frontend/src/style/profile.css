@@ -28,6 +28,10 @@
 
 .stats-section {
     margin-top: 5rem;
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
 }
 
 .stats-section h2 {
@@ -45,6 +49,21 @@
     display: none;
     margin: 0 auto;
     max-width: 1100px;
+}
+
+#profileLoading {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: #111;
+    color: #ccc;
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 2rem;
+    margin: 0 auto;
+    max-width: 900px;
+    font-size: 1.25rem;
+    box-sizing: border-box;
 }
 
 .profile-header {
@@ -153,6 +172,13 @@
     text-align: center;
 }
 
+#noDataChart,
+#noDataRanking,
+.chart-container .no-data-message {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .ranking-container {
     display: flex;
     flex-direction: column;
@@ -162,7 +188,6 @@
     overflow-y: auto;
 }
 
-/* Custom scrollbar for ranking container */
 .ranking-container::-webkit-scrollbar {
     width: 6px;
 }
