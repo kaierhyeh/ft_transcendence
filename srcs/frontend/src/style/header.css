@@ -55,7 +55,7 @@ header {
     background: #1a1a1a;
     border: 2px solid #444;
     padding: 0.25rem 0.5rem;
-    padding-left: 0.25rem; /* same distance between avatar and up. down and left bordere */
+    padding-left: 0.25rem; /* same distance between avatar and up down and left borders */
     color: #fff;
     font-family: 'Bit5x3', monospace;
     text-transform: uppercase;

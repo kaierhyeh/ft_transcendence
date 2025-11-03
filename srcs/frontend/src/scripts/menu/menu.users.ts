@@ -4,7 +4,7 @@ import { clearEvents, hideElementById, setFilterForUsersList, showElementById, s
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 import { chatSocket } from "./menu.ws.js";
-import { presence, OnlineStatus } from "../presence.js";
+import { presence, OnlineStatus, Presence } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -469,11 +469,14 @@ function renderUserInfo(userInfo: UserInfo): void {
 		? `<div id="userInfo_boxAlias" class="user-info-alias">aka ${userInfo.alias}</div>`
 		: '';
 
+	const userOnlineStatus = presence.onlineStatus(userInfo.user_id);
 	const statusHtml = (userInfo.friendship_status === 'accepted')
 		? `<div id="userInfo_boxOnline" class="user-info-online-status">
-				Status: <span class="user-status-${presence.onlineStatus(userInfo.user_id).toLowerCase()}">${presence.onlineStatus(userInfo.user_id)}</span>
+				<span class="user-status-${userOnlineStatus.toLowerCase()}">${Presence.display(userOnlineStatus)}</span>
 			</div>`
-		: '';
+		: `<div id="userInfo_boxOnline" class="user-info-online-status">
+				<span></span>
+			</div>`;
 
 	usersInfo.innerHTML = `
 		<div id="userInfo_boxAvatar" class="user-info-avatar-box">
@@ -553,19 +556,19 @@ function updateUserListStatus(updates: Map<number, OnlineStatus>): void {
             const statusSpan = userElement.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
             if (statusSpan) {
                 statusSpan.className = `user-status-${status.toLowerCase()}`;
-                statusSpan.textContent = status;
+                statusSpan.textContent = Presence.display(status);
             }
         }
         
         // Update in user info section if this user is currently displayed
         const usersInfoElement = document.getElementById('usersInfo');
         if (usersInfoElement && usersInfoElement.dataset.userId === userId.toString()) {
-            const userOnlineStatus = document.getElementById('userOnlineStatus');
+            const userOnlineStatus = document.getElementById('userInfo_boxOnline');
             if (userOnlineStatus) {
                 const statusSpan = userOnlineStatus.querySelector('.user-status-online, .user-status-offline, .user-status-unknown');
                 if (statusSpan) {
                     statusSpan.className = `user-status-${status.toLowerCase()}`;
-                    statusSpan.textContent = status;
+                    statusSpan.textContent = Presence.display(status);
                 }
             }
         }
@@ -593,9 +596,11 @@ function renderUserList(users: UserListRow[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
+		const userOnlineStatus = presence.onlineStatus(u.user_id);
+
   		// Only show user_status if friendship exists
 		const statusHtml = u.friendship_status
-			? `<span class="user-status-${presence.onlineStatus(u.user_id).toLowerCase()}">${presence.onlineStatus(u.user_id)}</span>`
+			? `<span class="user-status-${userOnlineStatus.toLowerCase()}">${Presence.display(userOnlineStatus)}</span>`
 			: `<span class="user-status-unknown"></span>`;
 
 		return `

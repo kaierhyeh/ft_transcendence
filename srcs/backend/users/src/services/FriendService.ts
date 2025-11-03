@@ -1,4 +1,5 @@
 import { FriendRepository } from '../repositories';
+import { friendshipEventService } from './FriendshipEventService';
 
 export class FriendService {
 	constructor(private friendRepository: FriendRepository) {}
@@ -63,7 +64,11 @@ export class FriendService {
 	}
 
 	public async acceptFriendRequest(userId: number, friendId: number) {
+		// Update database
 		await this.friendRepository.acceptFriendRequest(userId, friendId);
+		
+		// Publish event to Redis (cache + pub/sub)
+		await friendshipEventService.publishFriendshipAdded(userId, friendId);
 	}
 
 	public async declineFriendRequest(userId: number, friendId: number) {
@@ -71,7 +76,11 @@ export class FriendService {
 	}
 
 	public async removeFriendship(userId: number, friendId: number) {
+		// Update database
 		await this.friendRepository.removeFriendship(userId, friendId);
+		
+		// Publish event to Redis (cache + pub/sub)
+		await friendshipEventService.publishFriendshipRemoved(userId, friendId);
 	}
 
 	public async getUsersByIds(thisUserId: number, userIds: number[]) {

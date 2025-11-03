@@ -49,7 +49,6 @@ export class BlockRepository {
 		});
 
 		operation();
-
 	}
 
 	public async unblockUser(userId: number, targetUserId: number) {

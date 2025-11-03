@@ -10,7 +10,7 @@ interface UserStatus {
 
 type PresenceUpdateCallback = (updates: Map<number, OnlineStatus>) => void;
 
-class Presence {
+export class Presence {
     private friendStatus: Map<number, OnlineStatus> = new Map();
     private ws: WebSocket | null = null;
     private callbacks: Set<PresenceUpdateCallback> = new Set();
@@ -163,6 +163,10 @@ class Presence {
     onlineStatus(userId: number): OnlineStatus {
         const status = this.friendStatus.get(userId);
         return status ?? "unknown";
+    }
+
+    static display(status: OnlineStatus): string {
+        return status === "unknown" ? "" : status;
     }
 
     /**
