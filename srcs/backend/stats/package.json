@@ -12,7 +12,7 @@
   "dependencies": {
     "fastify": "^4.0.0",
     "fastify-plugin": "^4.0.0",
-    "better-sqlite3": "12.2.0",
+    "better-sqlite3": "^11.0.0",
     "json-schema-to-ts": "^3.0.0",
     "jsonwebtoken": "^9.0.0",
     "dotenv": "^16.0.0"
