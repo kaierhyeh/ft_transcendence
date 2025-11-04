@@ -1,26 +1,32 @@
 import { initMatchHistory } from './match_history.js';
 import { fetchLeaderboard } from './api.js';
 import user from './User.js';
+import { User } from './User.js';
 
 declare const Chart: any;
 
 export async function initProfile() {
-	interface User {
-		id: number;
+	interface UserPublicData {
+		user_id: number;
 		username: string;
+		alias: string | null;
+		email: string | null;
+		avatar_url: string;
+		avatar_updated_at: string;
 		created_at: string;
+		// + some LiteStats
 		wins: number;
 		losses: number;
 		curr_winstreak: number;
 		best_winstreak: number;
-		total_points_scored: number;
+		total_point_scored: number;
 	}
 
 	let playerChart: any = null;
 
 	let isOtherUser: boolean = false;
 
-	async function displayUserProfile(userData: any) {
+	async function displayUserProfile(userData: UserPublicData) {
 		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
 		const profileAvatarElement = document.getElementById('profileAvatar') as HTMLElement;
@@ -281,7 +287,8 @@ export async function initProfile() {
 			if (!resp.ok) {
 				throw new Error(`Failed to fetch public profile for id ${profileIdFromUrl}`);
 			}
-			const publicProfile = await resp.json();
+			const publicProfile = await resp.json() as UserPublicData;
+			publicProfile.avatar_url = User.getAvatarUrl(publicProfile.user_id, publicProfile.avatar_updated_at);
 			isOtherUser = true;
 			await displayUserProfile(publicProfile);
 		} catch (err) {
@@ -308,7 +315,10 @@ export async function initProfile() {
 
 		try {
 			await user.fetchAndUpdate();
-			await displayUserProfile(user);
+			const userData = user.getData();
+			if (!userData)
+				throw new Error('No user data available after fetch');
+			await displayUserProfile(userData);
 		} catch (error) {
 			console.error('Failed to load user profile:', error);
 			if (profileError) profileError.style.display = 'block';
