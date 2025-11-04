@@ -194,9 +194,8 @@ export class GameEngine {
         const prevBallX = this.ball.x - this.ball.dx * deltaSeconds;
         const prevBallY = this.ball.y - this.ball.dy * deltaSeconds;
 
-        // Check collision based on paddle team
         const ballEdge = {
-            x: player.team === "left" ? this.ball.x + BALL_SIZE : this.ball.x,
+            x: player.team === "left" ? this.ball.x : this.ball.x + BALL_SIZE,
             y: this.ball.y
         };
         const collision =
