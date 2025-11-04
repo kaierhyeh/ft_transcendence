@@ -258,9 +258,6 @@ export class User {
     // /**
     //  * Get avatar URL with fallback
     //  */
-    // public getAvatarUrl(): string {
-    //     return this.data?.avatar_url || '';
-    // }
     static getAvatarUrl(user_id: number, avatar_updated_at: string): string {
         const timestamp = new Date(avatar_updated_at).getTime();
         return `${window.location.origin}/api/users/${user_id}/avatar?v=${timestamp}`;
