@@ -184,21 +184,26 @@ export class GameEngine {
     }
 
     private checkPaddleCollision(player: Player): void {
-        const isMovingTowardsPaddle =
+        const isBallMovingTowardsPaddle =
             (player.team === "left" && this.ball.dx < 0) ||
             (player.team === "right" && this.ball.dx > 0);
 
-        if (!isMovingTowardsPaddle) return;
+        if (!isBallMovingTowardsPaddle) return;
 
         const deltaSeconds = this.lastDelta / 1000;
         const prevBallX = this.ball.x - this.ball.dx * deltaSeconds;
         const prevBallY = this.ball.y - this.ball.dy * deltaSeconds;
 
+        // Check collision based on paddle team
+        const ballEdge = {
+            x: player.team === "left" ? this.ball.x + BALL_SIZE : this.ball.x,
+            y: this.ball.y
+        };
         const collision =
-            this.ball.x + BALL_SIZE >= player.paddle.x &&
-            this.ball.x <= player.paddle.x + PADDLE_WIDTH &&
-            this.ball.y + BALL_SIZE >= player.paddle.y &&
-            this.ball.y <= player.paddle.y + PADDLE_HEIGHT;
+            ballEdge.x >= player.paddle.x &&
+            ballEdge.x <= player.paddle.x + PADDLE_WIDTH &&
+            ballEdge.y + BALL_SIZE >= player.paddle.y &&
+            ballEdge.y <= player.paddle.y + PADDLE_HEIGHT;
 
         let continuousCollision = false;
         if (!collision) {
