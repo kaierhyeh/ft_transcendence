@@ -77,6 +77,15 @@ clear-generated-secrets:
 
 # Restart services
 re: down up
+
+# Store all build output
+build-log:
+	docker compose -f $(COMPOSE_FILE) build | tee build.log
+
+# Store only warnings
+build-warnings:
+	docker compose -f $(COMPOSE_FILE) build | grep -i warning | tee warnings.log
+
 # Show help
 help:
 	@echo "Usage: make [target] [OPTS=\"...\"] [ARGS=\"...\"]"
