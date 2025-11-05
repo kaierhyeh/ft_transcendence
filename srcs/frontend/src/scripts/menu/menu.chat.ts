@@ -222,7 +222,7 @@ async function sendMessageByButton(toUser: ChatUser): Promise<void> {
 		chatInput.value = "";
 		if (message) {
 			await sendMessage(toUser, message);
-			appendMessageToChat(message);
+			// appendMessageToChat(message);
 		}
 	}
 }
@@ -338,6 +338,10 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 			}
 			throw new Error("Failed to send message");
 		}
+
+		// Show msg in sender chat window only in case of success
+		appendMessageToChat(msg);
+
 	} catch (err) {
 		throw err;
 	}
