@@ -6,6 +6,7 @@ import { initUserInfoSectionFromChat, openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
 import { presence, OnlineStatus, Presence } from "../presence.js";
+import { fetchWithAuth } from "../utils/fetch.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -159,19 +160,17 @@ function renderChatList(users: ChatUser[]): void {
 
 async function loadChats(): Promise<void> {
 	try {
-		const res = await fetch(`${API_CHAT_ENDPOINT}/`, {
-			method: "GET",
-			headers: {
-				credentials: "include"
-			}
+		const res = await fetchWithAuth(`${API_CHAT_ENDPOINT}/`, {
+			method: "GET"
 		});
 		if (!res.ok) {
-			// if (res.status === 401) {
-			// 	user.logout();
-			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	window.location.href = '/';
-			// 	return;
-			// }
+			if (res.status === 401) {
+				// Token refresh also failed - user needs to re-authenticate
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unauthorized user");
+				(window as any).navigateTo('/login');
+				return;
+			}
 			throw new Error("Failed to load chats");
 		}
 		const users: ChatUser[] = await res.json();
@@ -217,7 +216,7 @@ async function sendMessageByButton(toUser: ChatUser): Promise<void> {
 		chatInput.value = "";
 		if (message) {
 			await sendMessage(toUser, message);
-			appendMessageToChat(message);
+			// appendMessageToChat(message);
 		}
 	}
 }
@@ -316,23 +315,27 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 	const payload: NewMessageRequest = { chatId, toId, fromUsername: fromUsername ? fromUsername : "unknown", msg };
 
 	try {
-		const res = await fetch(`${API_MSG_ENDPOINT}/`, {
+		const res = await fetchWithAuth(`${API_MSG_ENDPOINT}/`, {
 			method: "POST",
 			headers: {
-				credentials: 'include',
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify(payload)
 		});
 		if (!res.ok) {
-			// if (res.status === 401) {
-			// 	user.logout();
-			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	window.location.href = '/';
-			// 	return;
-			// }
+			if (res.status === 401) {
+				// Token refresh also failed - user needs to re-authenticate
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unauthorized user");
+				(window as any).navigateTo('/login');
+				return;
+			}
 			throw new Error("Failed to send message");
 		}
+
+		// Show msg in sender chat window only in case of success
+		appendMessageToChat(msg);
+
 	} catch (err) {
 		throw err;
 	}
@@ -374,19 +377,17 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		setHeaderTitle(`${withUser.username}`);
 		["menuHeaderTitle"].forEach(showElementById);
 
-		const res = await fetch(`${API_CHAT_ENDPOINT}/${chatId}`, {
-			method: "GET",
-			headers: {
-				credentials: "include"
-			}
+		const res = await fetchWithAuth(`${API_CHAT_ENDPOINT}/${chatId}`, {
+			method: "GET"
 		});
 		if (!res.ok) {
-			// if (res.status === 401) {
-			// 	user.logout();
-			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	window.location.href = '/';
-			// 	return;
-			// }
+			if (res.status === 401) {
+				// Token refresh also failed - user needs to re-authenticate
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unauthorized user");
+				(window as any).navigateTo('/login');
+				return;
+			}
 			throw new Error("Failed to load messages");
 		}
 		const messages: Message[] = await res.json();

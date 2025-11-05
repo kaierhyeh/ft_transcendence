@@ -10,6 +10,7 @@ import {
 import { CONFIG } from '../config';
 import redis from '../clients/RedisClient';
 import jwksService from './jwks.service';
+import authUtils from '../utils/auth.utils';
 
 // 使用 require 來避免 TypeScript 模組問題
 const crypto = require('crypto');
@@ -267,8 +268,8 @@ export class JWTService {
 				token_type: 'access',  // Distinguish access vs refresh
 				iss: CONFIG.JWT.USER.ISSUER
 			}, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
-			// Convert expiry to seconds for Redis
-			const expiryInSeconds = CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
+			// Convert expiry to seconds for Redis using centralized parser
+			const expiryInSeconds = authUtils.parseDurationToSeconds(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
 			await redis.setex(`access_${userId}`, expiryInSeconds, accessToken);
 		}
 
@@ -290,8 +291,8 @@ export class JWTService {
 				token_type: 'refresh',  // Distinguish access vs refresh
 				iss: CONFIG.JWT.USER.ISSUER
 			}, CONFIG.JWT.USER.PRIVATE_KEY!, signOptions);
-			// Convert expiry to seconds for Redis
-			const expiryInSeconds = CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY === '7d' ? 7 * 24 * 60 * 60 : parseInt(CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY);
+			// Convert expiry to seconds for Redis using centralized parser
+			const expiryInSeconds = authUtils.parseDurationToSeconds(CONFIG.JWT.USER.REFRESH_TOKEN_EXPIRY);
 			await redis.setex(`refresh_${userId}`, expiryInSeconds, refreshToken);
 		}
 		

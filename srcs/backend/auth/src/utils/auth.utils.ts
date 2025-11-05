@@ -29,8 +29,13 @@ export class AuthUtils {
 		});
 	}
 
-	private parseDuration(duration: string): number {
-		// Supports "15m", "7d", "1h", "30s"
+	/**
+	 * Parse duration string to milliseconds
+	 * Supports formats: "15m", "7d", "1h", "30s"
+	 * @param duration - Duration string (e.g., "15m", "7d", "1h", "30s")
+	 * @returns Duration in milliseconds
+	 */
+	public parseDuration(duration: string): number {
 		const match = /^(\d+)([smhd])$/.exec(duration);
 		if (!match) throw new Error(`Invalid duration format: ${duration}`);
 		const value = parseInt(match[1], 10);
@@ -41,6 +46,15 @@ export class AuthUtils {
 			case 'd': return value * 24 * 60 * 60 * 1000;
 			default: throw new Error(`Unknown duration unit: ${match[2]}`);
 		}
+	}
+
+	/**
+	 * Convert duration string to seconds (for Redis TTL)
+	 * @param duration - Duration string (e.g., "15m", "7d", "1h", "30s")
+	 * @returns Duration in seconds
+	 */
+	public parseDurationToSeconds(duration: string): number {
+		return Math.floor(this.parseDuration(duration) / 1000);
 	}
 
 		/**
@@ -109,10 +123,11 @@ export class AuthUtils {
 			sign_options
 		);
 
-		// Cache the token with expiry time (1 hour from now)
+		// Cache the token with expiry time using centralized parser
+		const expiryInMs = this.parseDuration(CONFIG.JWT.INTERNAL.ACCESS_TOKEN_EXPIRY);
 		this.internalJWTCache = {
 			token,
-			expiresAt: now + (60 * 60 * 1000) // 1 hour in milliseconds
+			expiresAt: now + expiryInMs
 		};
 
 		return token;
