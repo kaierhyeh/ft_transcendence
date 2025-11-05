@@ -6,19 +6,18 @@ import { chatSocket } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
-let menuWindow: HTMLElement;
+// let menuWindow: HTMLElement;
 let menuCloseButton: HTMLElement;
 let menuButton: HTMLElement;
 let usersButton: HTMLElement;
 let chatsButton: HTMLElement;
 
 function initializeGlobals(): boolean {
-	menuWindow = document.getElementById("menuWindow")!;
 	menuCloseButton = document.getElementById("menuCloseButton")!;
 	menuButton = document.getElementById("menuButton")!;
 	usersButton = document.getElementById("usersSectionButton")!;
 	chatsButton = document.getElementById("chatsSectionButton")!;
-	if (!menuWindow || !menuCloseButton || !menuButton || !usersButton || !chatsButton) {
+	if (!menuCloseButton || !menuButton || !usersButton || !chatsButton) {
 		return false;
 	}
 	return true;
@@ -27,12 +26,10 @@ function initializeGlobals(): boolean {
 /* ============================================ EVENTS ====================================== */
 
 function openMenuWindow(): void {
-	// run users section as default
 	clearEventsInSections();
 	hideSectionsElements();
 	["menuButton"].forEach(hideElementById);
 	["menuWindow"].forEach(showElementById);
-
 	openUsers();
 }
 
@@ -61,7 +58,7 @@ function openUsers(): void {
 	}
 }
 
-function openChats(): void {
+export function openChats(): void {
 	if (!user.isLoggedIn()) {
 		return;
 	}
@@ -115,7 +112,6 @@ function hideSectionsElements(): void {
 	}
 
 }
-
 
 /* ========================================= INITIALIZATION ================================= */
 

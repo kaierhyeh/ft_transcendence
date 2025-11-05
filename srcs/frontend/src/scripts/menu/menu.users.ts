@@ -3,9 +3,10 @@ import user from '../user/User.js';
 import { clearEvents, hideElementById, setFilterForUsersList, showElementById, setHeaderTitle } from "./menu.utils.js";
 import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
-import { chatSocket } from "./menu.ws.js";
+import { openChats } from "./menu.js";
 import { presence, OnlineStatus, Presence } from "../presence.js";
 import { fetchWithAuth } from "../utils/fetch.js";
+import { chatSocket } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -14,22 +15,15 @@ let API_USERS_FRIENDS: string;
 let API_USERS_BLOCKS: string;
 let menuBackButton: HTMLElement;
 
-let menuControlPanel: HTMLElement;
-let usersSectionButton: HTMLElement;
-let chatsSectionButton: HTMLElement;
-
 let usersList: HTMLElement;
 let usersInfo: HTMLElement;
 
-let userLowerPanel: HTMLElement;
-let firstLine: HTMLElement;
 let sendFriendRequestButton: HTMLElement;
 let cancelFriendRequestButton: HTMLElement;
 let acceptFriendRequestButton: HTMLElement;
 let declineFriendRequestButton: HTMLElement;
 let removeFriendButton: HTMLElement;
 let unblockUserButton: HTMLElement;
-let secondLine: HTMLElement;
 let openChatButton: HTMLElement;
 let blockUserButton: HTMLElement;
 
@@ -44,42 +38,29 @@ function initializeGlobals(): boolean {
 	["#menuBackButton"].forEach(clearEvents);
 	menuBackButton = document.getElementById("menuBackButton")!;
 
-	menuControlPanel = document.getElementById("menuControlPanel")!;
-	usersSectionButton = document.getElementById("usersSectionButton")!;
-	chatsSectionButton = document.getElementById("chatsSectionButton")!;
-
 	usersList = document.getElementById("usersList")!;
 	usersInfo = document.getElementById("usersInfo")!;
 
-	userLowerPanel = document.getElementById("userLowerPanel")!;
-	firstLine = document.getElementById("firstLine")!;
 	sendFriendRequestButton = document.getElementById("sendFriendRequestButton")!;
 	cancelFriendRequestButton = document.getElementById("cancelFriendRequestButton")!;
 	acceptFriendRequestButton = document.getElementById("acceptFriendRequestButton")!;
 	declineFriendRequestButton = document.getElementById("declineFriendRequestButton")!;
 	removeFriendButton = document.getElementById("removeFriendButton")!;
 	unblockUserButton = document.getElementById("unblockUserButton")!;
-	secondLine = document.getElementById("secondLine")!;
 	openChatButton = document.getElementById("openChatButton")!;
 	blockUserButton = document.getElementById("blockUserButton")!;
 
 	if (
 		!API_USERS_FRIENDS ||
 		!menuBackButton ||
-		!menuControlPanel ||
-		!usersSectionButton ||
-		!chatsSectionButton ||
 		!usersList ||
 		!usersInfo ||
-		!userLowerPanel ||
-		!firstLine ||
 		!sendFriendRequestButton ||
 		!cancelFriendRequestButton ||
 		!acceptFriendRequestButton ||
 		!declineFriendRequestButton ||
 		!removeFriendButton ||
 		!unblockUserButton ||
-		!secondLine ||
 		!openChatButton ||
 		!blockUserButton
 	) {
@@ -135,14 +116,12 @@ function resetUserinfoButtons(): void {
 		"#secondLine"
 	].forEach(clearEvents);
 
-	firstLine = document.getElementById("firstLine")!;
 	sendFriendRequestButton = document.getElementById("sendFriendRequestButton")!;
 	cancelFriendRequestButton = document.getElementById("cancelFriendRequestButton")!;
 	acceptFriendRequestButton = document.getElementById("acceptFriendRequestButton")!;
 	declineFriendRequestButton = document.getElementById("declineFriendRequestButton")!;
 	removeFriendButton = document.getElementById("removeFriendButton")!;
 	unblockUserButton = document.getElementById("unblockUserButton")!;
-	secondLine = document.getElementById("secondLine")!;
 	openChatButton = document.getElementById("openChatButton")!;
 	blockUserButton = document.getElementById("blockUserButton")!;
 
@@ -514,13 +493,16 @@ async function initUserInfoSection(targetUserId: number): Promise<void> {
 
 export function initUserInfoSectionFromChat(targetUserId :number) {
 
-	["#menuBackButton"].forEach(clearEvents);
+	[	"#menuBackButton",
+		"#usersSectionButton"].forEach(clearEvents);
 
 	menuBackButton = document.getElementById("menuBackButton")!;
+	menuBackButton.addEventListener("click", initUsersSection);
 
-	menuBackButton.addEventListener("click", () => {
-		initUsersSection();
-	});
+	const chatsSectionButton = document.getElementById("chatsSectionButton")!;
+	if (chatsSectionButton) {
+		chatsSectionButton.addEventListener("click", openChats);
+	}
 
 	initUserInfoSection(targetUserId);
 }
@@ -801,10 +783,9 @@ export async function openUsersSection(): Promise<void> {
 	// console.log("USERS: Users Section opened");
 	initializeGlobals();
 
-	if (!menuBackButton || !menuControlPanel || !usersSectionButton || !chatsSectionButton
-		|| !usersList || !usersInfo || !userLowerPanel || !firstLine || !sendFriendRequestButton
+	if (!menuBackButton || !usersList || !usersInfo || !sendFriendRequestButton
 		|| !cancelFriendRequestButton || !acceptFriendRequestButton || !declineFriendRequestButton
-		|| !removeFriendButton || !unblockUserButton || !secondLine || !openChatButton || !blockUserButton) {
+		|| !removeFriendButton || !unblockUserButton || !openChatButton || !blockUserButton) {
 			console.error("One or more required elements not found, cannot open Users section");
 			return;
 	}
