@@ -35,7 +35,10 @@
  	color: green;
 	font-weight: bold;
 }
-
+.yellow-text {
+	color: yellow;
+	font-weight: bold;
+}
 .red-text {
 	color: red;
 	font-weight: bold;

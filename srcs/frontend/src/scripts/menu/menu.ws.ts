@@ -1,5 +1,5 @@
 import user from "../user/User.js";
-import { NewMessage } from "./menu.types.js";
+import { NewGame, NewMessage } from "./menu.types.js";
 
 let chatSocket: WebSocket | null = null;
 let pingInterval: number | null = null;
@@ -78,10 +78,67 @@ export function wsConnectChat() {
 					} catch (err) {}
 					lastPongTime = Date.now();
 					break;
+
 				case 'pong':
 					console.log("WS Received 'pong' [ Client <-- Chat-Service ]: ", data);
 					lastPongTime = Date.now();
 					break;
+
+				case 'game_created':
+					try {
+						console.log("WS Received 'game_created' [ Client <-- Chat-Service ]: ", data);
+						const newGame = data.newGame as NewGame;
+						const chatMessages = document.querySelector(`#chatMessages[data-chat-id="${newGame.chat_id}"]`);
+
+						if (!chatMessages) { 
+							lastPongTime = Date.now();
+							break; 
+						}
+						
+						console.log("WS Appending game invite to chatMessages:", newGame);
+						const child = `
+							<div class="chat-msg-invite-to-game-link">
+								<span> Server: </span>
+								<a data-route="/arena?game_id=${newGame.game_id}" class="auth-link" data-i18n="startGameInChat">Start Game</a>
+							</div>
+						`;
+
+						console.log("WS Inserting game invite into chatMessages:", child);
+						chatMessages.insertAdjacentHTML('beforeend', child);
+						chatMessages.scrollTop = chatMessages.scrollHeight;
+						console.log("WS Inserting game invite into chatMessages: FINISHED");
+
+					} catch (err) {}
+					lastPongTime = Date.now();
+					break;
+
+				case 'invite_failed':
+					try {
+						console.log("WS Received 'invite_failed' [ Client <-- Chat-Service ]: ", data);
+						const newGame = data.newGame as NewGame;
+						const chatMessages = document.querySelector(`#chatMessages[data-chat-id="${newGame.chat_id}"]`);
+
+						if (!chatMessages) { 
+							lastPongTime = Date.now();
+							break; 
+						}
+						
+						console.log("WS Appending invite failed message to chatMessages:", newGame);
+						const child = `
+							<div class="chat-msg-invite-to-game-failed">
+								<span class="yellow-text"> Server: </span>
+								<span>Game invite failed. The user may be not in the chat.</span>
+							</div>
+						`;
+						console.log("WS Inserting invite failed message into chatMessages:", child);
+						chatMessages.insertAdjacentHTML('beforeend', child);
+						chatMessages.scrollTop = chatMessages.scrollHeight;
+						console.log("WS Inserting invite failed message into chatMessages: FINISHED");
+
+					} catch (err) {}
+					lastPongTime = Date.now();
+					break;
+
 				default:
 					console.log("WS Received 'unknown_type' [ Client <-- Chat-Service ]: ", data);
 			}
