@@ -26,6 +26,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
             code === 'INVALID_INVITATION_MODE' ||
             code === 'INVALID_INVITATION_ONLINE' ||
             code === 'INVALID_INVITATION_PARTICIPANTS' ||
+            code === 'INVITATION_BLOCKED' ||
             code === 'MISSING_USER_ID' ||
             code === 'PARTICIPANT_ID_MISMATCH' ||
             code === 'DUPLICATE_USER' ||

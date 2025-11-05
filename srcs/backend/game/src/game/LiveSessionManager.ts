@@ -1,4 +1,4 @@
-import { SocketStream } from "@fastify/websocket";
+import type { WebSocket } from "ws";
 import { GameCreationData } from "../schemas";
 import { GameEndedMessage, GameSession, PlayerMap, PublicPlayer } from "./GameSession";
 import { GameConf } from "./GameEngine";
@@ -8,12 +8,14 @@ import { UsersClient } from "../clients/UsersClient";
 import { StatsClient } from "../clients/StatsClient";
 import { userWsAuthMiddleware } from "../middleware/userWsAuth";
 import { FastifyRequest } from "fastify";
+import { ChatClient } from "../clients/ChatClient";
 
 let next_id = 1;
 
 export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
     private usersClient: UsersClient;
+    private chatClient: ChatClient;
 
     constructor(
         private session_repo: SessionRepository,
@@ -21,6 +23,7 @@ export class LiveSessionManager {
         private logger: FastifyBaseLogger) {
         this.game_sessions = new Map();
         this.usersClient = new UsersClient();
+        this.chatClient = new ChatClient();
     }
 
     public async createGameSession(data: GameCreationData): Promise<number> {
@@ -33,6 +36,18 @@ export class LiveSessionManager {
 
         const new_game = await GameSession.create(data, this.logger, this.usersClient);
         this.game_sessions.set(game_id, new_game);
+        if (data.invitation) {
+            try {
+                await this.chatClient.notifyGameCreationToChatService({
+                    ...data.invitation,
+                    gameId: game_id
+                });
+            } catch (error: any) {
+                this.game_sessions.delete(game_id); // Rollback session creation
+                this.logger.error({ error: error.message || String(error) }, "Failed to notify chat service of game creation, rolling back session");
+                throw error; // Rethrow to inform caller
+            }
+        }
 
         return game_id;
     }
@@ -132,19 +147,19 @@ export class LiveSessionManager {
         return this.game_sessions.get(gameId)?.playersMap;
     }
 
-    public connectToGameSession(id: number, connection: SocketStream, request: FastifyRequest): void {
+    public connectToGameSession(id: number, connection: WebSocket, request: FastifyRequest): void {
         const session = this.game_sessions.get(id);
         if (!session) {
-            connection.socket.close(4004, "Game not found");
+            connection.close(4004, "Game not found");
             return;
         }
-        connection.socket.once("message", async (raw: string) => {
+        connection.once("message", async (raw: string) => {
             let msg;
 
             try { 
                 msg = JSON.parse(raw); 
             } catch(err) { 
-                connection.socket.close(4002, "Invalid JSON"); 
+                connection.close(4002, "Invalid JSON"); 
                 return;
             }
 
@@ -159,7 +174,7 @@ export class LiveSessionManager {
                     
                     if (!isAuthenticated || !request.authUser?.sub) {
                         this.logger.warn("WebSocket authentication failed for invitation game");
-                        connection.socket.close(4001, "Invalid or expired access token");
+                        connection.close(4001, "Invalid or expired access token");
                         return;
                     }
                     
@@ -171,14 +186,14 @@ export class LiveSessionManager {
                 }
                 
                 if (!participant_id) { 
-                    connection.socket.close(4001, "Missing participant_id"); 
+                    connection.close(4001, "Missing participant_id"); 
                     return; 
                 }
                 try {
                     session.connectPlayer(participant_id, connection);
                 } catch (err) {
                     this.logger.warn({ error: err instanceof Error ? err.message : String(err) }, "Invalid participant id");
-                    connection.socket.close(4001, "Invalid participant id");
+                    connection.close(4001, "Invalid participant id");
                 }
             } 
         });

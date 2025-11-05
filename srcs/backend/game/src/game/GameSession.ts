@@ -1,4 +1,4 @@
-import { SocketStream } from '@fastify/websocket';
+import type { WebSocket } from 'ws';
 import { GameParticipant, GameMode, GameFormat, GameCreationData, GameInvitation } from '../schemas';
 import { Team, GameMessage, PlayerSlot } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
@@ -10,7 +10,7 @@ import { UsersClient } from '../clients/UsersClient';
 type Player = GameParticipant & {
     team: Team;
     slot: PlayerSlot;
-    socket?: SocketStream;
+    socket?: WebSocket;
 }
 
 export type PublicPlayer =  Omit<Player, "participant_id"| "socket">;
@@ -32,7 +32,7 @@ export class GameSession {
     private tournament_id: number | undefined;
     private game_mode: GameMode;
     private players: PlayerMap;
-    private viewers: Set<SocketStream>;
+    private viewers: Set<WebSocket>;
     private game_engine: GameEngine;
     private created_at: Date;
     private last_time: number | undefined;
@@ -56,7 +56,7 @@ export class GameSession {
         this.tournament_id = data.tournament_id;
         this.online = data.online;
         this.players = players; // Already initialized
-        this.viewers = new Set<SocketStream>();
+        this.viewers = new Set<WebSocket>();
         this.created_at = new Date();
         this.game_engine = new GameEngine(this.game_format, this.players);
         this.invitation = data.invitation;
@@ -66,13 +66,14 @@ export class GameSession {
     public static async create(
         data: GameCreationData,
         logger: FastifyBaseLogger,
-        usersClient: UsersClient
+        usersClient: UsersClient,
     ): Promise<GameSession> {
         // Fetch usernames asynchronously before construction
         const players = await GameSession.initPlayers_(data, usersClient);
         
         // Now construct the instance with pre-initialized players
-        return new GameSession(data, logger, usersClient, players);
+        const session = new GameSession(data, logger, usersClient, players);
+        return session;
     }
 
     private static async initPlayers_(
@@ -119,7 +120,14 @@ export class GameSession {
             error.message = `Invitations require online mode`;
             throw error;
         }
-
+        const gameCreatorIsBlocked  = await usersClient.isBlocked(data.invitation?.fromId!, data.invitation?.toId!);
+        if (gameCreatorIsBlocked) {
+            const error = new Error;
+            (error as any).status = 403;
+            (error as any).code = 'INVITATION_BLOCKED';
+            error.message = `Cannot create invitation: the invited user has blocked the game creator`;
+            throw error;
+        }
         const participants = data.participants;
 
         // Build players map (similar to 1v1)
@@ -303,43 +311,43 @@ export class GameSession {
         const payload = JSON.stringify(message);
 
         this.players.forEach(({ socket: connection }) => {
-            if (connection) connection.socket.send(payload);
+            if (connection) connection.send(payload);
         });
         this.viewers.forEach( connection => {
-            connection.socket.send(payload);
+            connection.send(payload);
         });
     }
     
-    public connectPlayer(participant_id: string, connection: SocketStream): void {
+    public connectPlayer(participant_id: string, connection: WebSocket): void {
         const player = this.players.get(participant_id);
 
         this.logger.info(`Player connecting with participant_id: ${participant_id}`);
         this.logger.info(`found player : ${player !== undefined}`);
 
         if (!player) {
-            connection.socket.close(4001, "Invalid participant_id");
+            connection.close(4001, "Invalid participant_id");
             return;
         }
 
         player.socket = connection;
 
-        connection.socket.on("message", (raw: string) => {
+        connection.on("message", (raw: string) => {
             const msg = JSON.parse(raw);
             if (msg.type === "input") {          
                 this.game_engine.applyMovement(player.slot, msg.move);
             } else {
-                connection.socket.close(4000, "Invalid message type");
+                connection.close(4000, "Invalid message type");
             }
         });
 
-        connection.socket.on("close", () => {
+        connection.on("close", () => {
             this.disconnectPlayer(participant_id);
         });
     }
 
-    public connectViewer(connection: SocketStream): void {
+    public connectViewer(connection: WebSocket): void {
         this.viewers.add(connection);
-        connection.socket.on("close", () => {
+        connection.on("close", () => {
             this.disconnectViewer(connection);
         });
     }
@@ -357,7 +365,7 @@ export class GameSession {
         this.logger.info(`Player disconnected: ${participant_id}, slot: ${player.slot}, team: ${player.team}`);
     }
    
-    public disconnectViewer(connection: SocketStream): void {
+    public disconnectViewer(connection: WebSocket): void {
         this.viewers.delete(connection);
     }
 
@@ -365,12 +373,12 @@ export class GameSession {
 
         this.players.forEach(({ socket: connection }, participant_id) => {
             if (connection) {
-                connection.socket.close(status, reason);
+                connection.close(status, reason);
                 this.disconnectPlayer(participant_id);
             }
         });
         this.viewers.forEach( connection => {
-            connection.socket.close(status, reason);
+            connection.close(status, reason);
             this.disconnectViewer(connection);
         });
     }

@@ -10,8 +10,8 @@
     "serve": "node dist/index.js"
   },
   "dependencies": {
-    "fastify": "^4.0.0",
-    "@fastify/websocket": "^8.0.0",
+    "fastify": "^5.0.0",
+    "@fastify/websocket": "^11.0.0",
     "better-sqlite3": "^11.0.0",
     "json-schema-to-ts": "^3.0.0",
     "jsonwebtoken": "^9.0.0",

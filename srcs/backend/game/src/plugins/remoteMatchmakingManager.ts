@@ -15,5 +15,5 @@ const matchmakingManagerPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(matchmakingManagerPlugin, {
   name: "matchmaking-manager-plugin",
-  fastify: "4.x"
+  fastify: "5.x"
 });

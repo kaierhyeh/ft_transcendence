@@ -22,5 +22,5 @@ const liveSessionManagerPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(liveSessionManagerPlugin, {
   name: "live-session-manager-plugin",
-  fastify: "4.x"
+  fastify: "5.x"
 });
