@@ -123,6 +123,8 @@ export async function initMenu(): Promise<void> {
 		return;
 	}
 
+	chatSocket?.close(1000, "Initialize social menu");
+
 	menuButton.addEventListener("click", openMenuWindow);
 	menuCloseButton.addEventListener("click", closeMenuWindow);
 	usersButton.addEventListener("click", openUsers);
