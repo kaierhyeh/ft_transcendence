@@ -1,0 +1,201 @@
+/* Browser Compatibility CSS - Support for Chrome, Safari, Edge, Firefox */
+
+/* Reset for cross-browser consistency */
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Smooth scrolling for all browsers */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape in iOS */
+  -ms-text-size-adjust: 100%; /* IE/Edge */
+}
+
+/* Button reset for all browsers */
+button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+/* Input reset for all browsers */
+input, select, textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-family: inherit;
+}
+
+/* Select dropdown fix for Safari */
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+/* Flexbox vendor prefixes */
+.flex-container {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+/* Transform vendor prefixes */
+.transform-element {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Transition vendor prefixes */
+.transition-element {
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+/* Border-radius for older browsers */
+.rounded-element {
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+}
+
+/* Box-shadow vendor prefixes */
+.shadow-element {
+  -webkit-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* User-select vendor prefixes */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Backdrop filter for Safari */
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* Grid support with fallback */
+@supports (display: grid) {
+  .grid-container {
+    display: grid;
+  }
+}
+
+/* Aspect ratio fallback for older browsers */
+@supports not (aspect-ratio: 1 / 1) {
+  .aspect-ratio-fallback {
+    position: relative;
+    padding-bottom: 100%; /* 1:1 aspect ratio */
+  }
+  
+  .aspect-ratio-fallback > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Font smoothing for better rendering */
+body, button, input, select, textarea {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix for Safari input zoom on focus */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select:focus,
+  textarea:focus,
+  input:focus {
+    font-size: 16px;
+  }
+}
+
+/* Edge specific fixes */
+@supports (-ms-ime-align: auto) {
+  button {
+    overflow: visible;
+  }
+}
+
+/* Chrome/Safari scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+}
+
+/* Fix for Chrome autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Prevent text selection on buttons in all browsers */
+button, .menu-button, .menu-open-button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix for position: fixed in iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .menu-open-button {
+    position: absolute;
+  }
+  
+  body {
+    position: relative;
+  }
+}
+
+/* Prevent double-tap zoom on buttons in iOS */
+button, a, .clickable {
+  touch-action: manipulation;
+}
