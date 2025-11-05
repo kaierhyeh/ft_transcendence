@@ -1,6 +1,7 @@
 // Simple header management
 import user from './user/User.js';
 import { i18n } from './i18n/index.js';
+import { chatSocket } from './menu/menu.ws.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
@@ -140,6 +141,7 @@ function setupHeaderEvents() {
                 // Navigate to the route
                 const path = (e.currentTarget as HTMLElement).dataset.route;
                 if (path && (window as any).navigateTo) {
+                    chatSocket?.close(1000, "User navigating away");
                     (window as any).navigateTo(path);
                 }
             });
@@ -151,6 +153,7 @@ function setupHeaderEvents() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+            chatSocket?.close(1000, "User logged out");
             try {
                 await fetch(`${API_AUTH_ENDPOINT}/logout`, {
                     method: 'POST',
@@ -173,6 +176,7 @@ function setupHeaderEvents() {
     authButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+            // chatSocket?.close(1000, "User going to auth page");
             const path = (e.currentTarget as HTMLElement).dataset.route;
             if (path && (window as any).navigateTo) {
                 (window as any).navigateTo(path);
