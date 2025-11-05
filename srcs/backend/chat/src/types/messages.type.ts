@@ -12,3 +12,7 @@ export interface NewMessage {
 	msg: string;
 }
 
+export interface NewGame {
+	chat_id: number;
+	game_id: number;
+}
