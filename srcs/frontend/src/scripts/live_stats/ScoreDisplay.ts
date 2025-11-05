@@ -1,5 +1,6 @@
 // pong/ScoreDisplay.ts
 import type { ScoreData } from './ScoreTracker.js';
+import { t } from '../i18n/i18n.js';    // t for translations
 
 export class ScoreDisplay {
     private breakdownElement: HTMLElement | null = null;
@@ -20,16 +21,16 @@ export class ScoreDisplay {
         // Update points breakdown
         if (this.breakdownElement) {
             this.breakdownElement.textContent = 
-                `Left: ${data.leftPoints}  ·  Right: ${data.rightPoints}`;
+                `${t('left')}: ${data.leftPoints}  ·  ${t('right')}: ${data.rightPoints}`;
         }
         
         // Update average rally length
         if (this.averageElement) {
             if (data.rallyHistory.length === 0) {
-                this.averageElement.textContent = 'Avg rebounds: —';
+                this.averageElement.textContent = `${t('avgRebounds')}: —`;
             } else {
                 this.averageElement.textContent = 
-                    `Avg rebounds: ${data.averageRallyLength.toFixed(2)}`;
+                    `${t('avgRebounds')}: ${data.averageRallyLength.toFixed(2)}`;
             }
         }
     }

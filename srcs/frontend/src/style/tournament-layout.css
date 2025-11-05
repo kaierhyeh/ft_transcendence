@@ -31,7 +31,7 @@ body.tournament-page {
     padding: 30px;
     border-radius: 15px;
     margin-bottom: 20px;
-    border: 2px solid #666;
+    border: 2px solid #444;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -91,7 +91,7 @@ body.tournament-page {
 
 .player-input-group input {
     padding: 12px 15px;
-    border: 2px solid #666;
+    border: 2px solid #444;
     border-radius: 8px;
     background: rgba(0, 0, 0, 0.3);
     color: #fff;
@@ -164,7 +164,7 @@ body.tournament-page {
 .tournament-btn-secondary {
     background-color: transparent;
     color: #666;
-    border: 2px solid #666;
+    border: 2px solid #444;
 }
 
 .tournament-btn-secondary:hover {

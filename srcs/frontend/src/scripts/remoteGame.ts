@@ -237,11 +237,11 @@ export default function initRemoteGame(): void {
             } else if (data.type === "error") {
                 if (btn1v1 !== null) {
                     btn1v1.disabled = false;
-                    btn1v1.textContent = t("twoPlayers");
+                    btn1v1.textContent = t("remote1v1");
                 }
                 if (btn2v2 !== null) {
                     btn2v2.disabled = false;
-                    btn2v2.textContent = t("fourPlayers");
+                    btn2v2.textContent = t("remote2v2");
                 }
             }
         } catch (error) {
@@ -353,7 +353,13 @@ export default function initRemoteGame(): void {
                         drawRemoteGame(msg.data);
 
                         if (msg.data.winner !== undefined && msg.data.winner !== null) {
-                            handleGameEnd(" 🏆 WINNER 🏆 : " + msg.data.winner, " Select an online format to retry");
+                            let winnerTeam = msg.data.winner as string;
+                            let resultMessage: string;
+                            if (myTeam !== null)
+                                resultMessage = (myTeam === winnerTeam) ? "You Win" : "You Lose";
+                            else
+                                resultMessage = "WINNER: " + winnerTeam;
+                            handleGameEnd(resultMessage, " Select an online format to retry");
                         }
                     }
                 } else if (msg.type === "player_disconnected") {
@@ -465,7 +471,7 @@ export default function initRemoteGame(): void {
         if (gameContext === null) {
             return;
         }
-        
+
         const ctx = gameContext;
         const canvas = gameCanvas;
 
@@ -479,6 +485,29 @@ export default function initRemoteGame(): void {
         ctx.strokeStyle = "white";
         ctx.stroke();
         ctx.setLineDash([]);
+
+        if (mySlot !== null) {
+            ctx.font = "20px Bit5x3, monospace";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            let positionText = "";
+            if (mySlot === "left") {
+                positionText = t("positionLeft");
+            } else if (mySlot === "right") {
+                positionText = t("positionRight");
+            } else if (mySlot === "top-left") {
+                positionText = t("positionTopLeft");
+            } else if (mySlot === "bottom-left") {
+                positionText = t("positionBottomLeft");
+            } else if (mySlot === "top-right") {
+                positionText = t("positionTopRight");
+            } else if (mySlot === "bottom-right") {
+                positionText = t("positionBottomRight");
+            }
+            if (positionText !== "") {
+                ctx.fillText(positionText, canvas.width / 2, 20);
+            }
+        }
 
         let is2v2layerFormat = false;
         if (state.players !== undefined && state.players !== null) {
@@ -512,7 +541,7 @@ export default function initRemoteGame(): void {
             ctx.fillRect(state.ball.x - 5, state.ball.y - 5, 10, 10);
         }
 
-        ctx.font = "40px Arial";
+        ctx.font = "64px Bit5x3, monospace";
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
 
@@ -536,8 +565,13 @@ export default function initRemoteGame(): void {
         ctx.fillText(rightScore.toString(), (3 * canvas.width) / 4, 50);
 
         if (state.winner !== undefined) {
-            ctx.font = "60px Arial";
-            ctx.fillText("WINNER: " + state.winner, canvas.width / 2, canvas.height / 2);
+            ctx.font = "32px Bit5x3, monospace";
+            let displayText = "";
+            if (myTeam !== null)
+                displayText = (myTeam === state.winner) ? "You Win" : "You Lose";
+            else
+                displayText = "WINNER: " + state.winner;
+            ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
         }
     }
 
@@ -558,11 +592,11 @@ export default function initRemoteGame(): void {
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
 
-        ctx.font = "48px Arial";
+        ctx.font = "32px Bit5x3, monospace";
         ctx.fillText(message, canvas.width / 2, canvas.height / 2 - 20);
 
         if (subtitle !== undefined) {
-            ctx.font = "32px Arial";
+            ctx.font = "24px Bit5x3, monospace";
             ctx.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 40);
         }
     }

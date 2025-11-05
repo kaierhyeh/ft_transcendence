@@ -19,7 +19,7 @@ export function initSignup() {
 
 	if (googleSignupBtn)
 		googleSignupBtn.addEventListener('click', handleGoogleSignup);
-
+	
 	// Add Enter key support for signup form
 	if (usernameInput && passwordInput) {
 		const handleEnterKey = (event: KeyboardEvent) => {
@@ -113,10 +113,12 @@ export function initSignup() {
 		const previousPage = sessionStorage.getItem('previousPage');
 		
 		if (previousPage && previousPage !== '/login' && previousPage !== '/signup') {
-			// Clear the stored page and redirect to it
+			// Clear the stored page and redirect to it using SPA navigation
 			sessionStorage.removeItem('previousPage');
-			window.location.href = previousPage;
-		} else		// Default redirect to homepage
-			window.location.href = '/';
+			(window as any).navigateTo(previousPage);
+		} else {
+			// Default redirect to homepage using SPA navigation
+			(window as any).navigateTo('/');
+		}
 	}
 }

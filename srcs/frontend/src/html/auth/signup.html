@@ -1,36 +1,41 @@
 <div class="profile-container clean-font">
+    
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<div id="languagesSwitcher"></div>
+    </div>
 
     <!-- Sign Up Form -->
     <div id="auth-form" class="auth-container">
-        <div class="profile-title">Sign Up</div>
+        <div class="profile-title" data-i18n="register">Sign Up</div>
 
         <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" placeholder="Enter username">
+            <label for="username" data-i18n="username">Username:</label>
+            <input type="text" id="username" data-i18n-placeholder="enterUsername" placeholder="Enter username">
         </div>
 
         <div class="form-group">
-            <label for="email">Email (optional):</label>
-            <input type="email" id="email" placeholder="Enter email">
+            <label for="email" data-i18n="email">Email (optional):</label>
+            <input type="email" id="email" data-i18n-placeholder="enterEmail" placeholder="Enter email">
         </div>
 
         <div class="form-group">
-            <label for="password">Password:</label>
-            <input type="password" id="password" placeholder="Enter password">
+            <label for="password" data-i18n="password">Password:</label>
+            <input type="password" id="password" data-i18n-placeholder="enterPassword" placeholder="Enter password">
         </div>
     
         <div class="button-group">
-            <button id="register-btn" class="auth-btn">Sign Up</button>
+            <button id="register-btn" class="auth-btn" data-i18n="register">Sign Up</button>
         </div>
 
-        <p>Or</p>
+        <p data-i18n="or">Or</p>
 
         <div class="button-group">
-            <button id="google-signup-btn" class="google-btn">Sign Up with Google</button>
+            <button id="google-signup-btn" class="google-btn" data-i18n="signUpWithGoogle">Sign Up with Google</button>
         </div>
         
         <div class="link-group">
-            <a href="/login" class="auth-link">Already have an account? Log In</a>
+            <a data-route="/login" class="auth-link" data-i18n="alreadyHaveAccount">Already have an account? Log In</a>
         </div>
     
     </div>

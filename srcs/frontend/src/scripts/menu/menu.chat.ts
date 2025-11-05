@@ -1,11 +1,11 @@
-import { clearEvents, hideElementById, setMenuTitle, showElementById } from "./menu.utils.js";
+import { clearEvents, hideElementById, setHeaderTitle, showElementById } from "./menu.utils.js";
 // import { i18n } from '../i18n/i18n.js';
 import { User } from "../user/User.js";
 import user from '../user/User.js';
 import { initUserInfoSectionFromChat, openUsersSection } from "./menu.users.js";
 import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
-import { presence, OnlineStatus } from "../presence.js";
+import { presence, OnlineStatus, Presence } from "../presence.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -73,18 +73,19 @@ function clearBeforeInitMessageSection(): void {
 }
 
 function resetChatSection(): void {
+	setHeaderTitle("chats");
+
 	[	"chatLowerPanel",
 		"chatMessages",
 		"menuBackButton",
 		"menuDropdown"
 	].forEach(hideElementById);
 
-	[	"menuControlPanel",
+	[	"menuHeaderTitle",
+		"menuControlPanel",
 		"usersSectionButton",
 		"chatsSectionButton"
 	].forEach(showElementById);
-
-	setMenuTitle("chats");
 }
 
 /* =================================== CHATS SECTION ======================================== */
@@ -98,7 +99,7 @@ function updateChatListStatus(updates: Map<number, OnlineStatus>): void {
             if (statusSpan) {
                 // Update class and text
                 statusSpan.className = `user-status-${status.toLowerCase()}`;
-                statusSpan.textContent = status;
+                statusSpan.textContent = Presence.display(status);
             }
         }
     });
@@ -124,9 +125,9 @@ function renderChatList(users: ChatUser[]): void {
 			? `${u.username} aka ${u.alias}`
 			: u.username;
 
-		const userStatus = presence.onlineStatus(u.user_id);
+		const userOnlineStatus = presence.onlineStatus(u.user_id);
 		const statusHtml = u.friendship_status === "accepted"
-			? `<span class="user-status-${userStatus.toLowerCase()}">${userStatus}</span>`
+			? `<span class="user-status-${userOnlineStatus.toLowerCase()}">${Presence.display(userOnlineStatus)}</span>`
 			: `<span class="user-status-unknown"></span>`;
 
 		return `
@@ -166,9 +167,9 @@ async function loadChats(): Promise<void> {
 		});
 		if (!res.ok) {
 			// if (res.status === 401) {
-			// 	// user.logout();
+			// 	user.logout();
 			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	// window.location.href = '/';
+			// 	window.location.href = '/';
 			// 	return;
 			// }
 			throw new Error("Failed to load chats");
@@ -245,6 +246,7 @@ async function openUserInfo(toUser: ChatUser): Promise<void> {
 
 	initUserInfoSectionFromChat(toUser.user_id);
 }
+
 
 async function goBackToChatsList(): Promise<void> {
 	chatMessages.innerHTML = ``;
@@ -324,9 +326,9 @@ async function sendMessage(toUser: ChatUser, msg: string) {
 		});
 		if (!res.ok) {
 			// if (res.status === 401) {
-			// 	// user.logout();
+			// 	user.logout();
 			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	// window.location.href = '/';
+			// 	window.location.href = '/';
 			// 	return;
 			// }
 			throw new Error("Failed to send message");
@@ -351,9 +353,9 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 			// Invite to game
 			chatInviteGameButton.addEventListener("click", () => inviteToGame(withUser));
 		}
-
+		
 		chatUserInfoButton.addEventListener("click", () => openUserInfo(withUser));
-
+		
 		switch (backTo) {
 			case 'users':
 				menuBackButton.addEventListener("click", () => {
@@ -369,7 +371,8 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 				break;
 		}
 
-		setMenuTitle(`${withUser.username}`);
+		setHeaderTitle(`${withUser.username}`);
+		["menuHeaderTitle"].forEach(showElementById);
 
 		const res = await fetch(`${API_CHAT_ENDPOINT}/${chatId}`, {
 			method: "GET",
@@ -379,9 +382,9 @@ export async function initMessageSection(chatId: number, withUser: ChatUser, fri
 		});
 		if (!res.ok) {
 			// if (res.status === 401) {
-			// 	// user.logout();
+			// 	user.logout();
 			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	// window.location.href = '/';
+			// 	window.location.href = '/';
 			// 	return;
 			// }
 			throw new Error("Failed to load messages");

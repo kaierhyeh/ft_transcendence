@@ -40,7 +40,7 @@ export function initPong() {
     // Global reset function for button
     (window as any).resetGameData = () => {
         scoreTracker.resetAll();
-    };
+    }
     
     // Show initial message
     renderer.showMessage(t("selectGameMode"));
@@ -49,8 +49,8 @@ export function initPong() {
     setTimeout(setupGameButtons, 100);
     
     // Handle restart
-    inputController.onKey(" ", () => {
-        if (currentSession?.isOver() && !isTransitioning) {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === ' ' && currentSession?.isOver() && !isTransitioning) {
             const mode = currentSession.mode;
             const format = currentSession.format;
             startNewGame(mode, format);

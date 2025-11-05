@@ -104,6 +104,7 @@
 	font-weight: 500;
 	transition: all 0.15s ease;
 	letter-spacing: 0.02em;
+	cursor: pointer;
 }
 
 .auth-link:hover {
@@ -152,13 +153,14 @@
 	align-items: center;
 	justify-content: center;
 	gap: 12px;
+	cursor: pointer;
 }
 
 .google-btn:hover {
-	background-color: #f8f9fa;
-	border-color: #dadce0;
-	color: #3c4043;
-	box-shadow: 0 1px 3px 1px rgba(0,0,0,.15);
+	background-color: #e8f0fe;
+	border-color: #d2e3fc;
+	color: #174ea6;
+	box-shadow: 0 1px 3px 1px rgba(66,133,244,.15);
 }
 
 .google-btn:active {

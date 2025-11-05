@@ -30,6 +30,14 @@ class PresenceController {
         });
         
         console.log('✅ WebSocket event handlers registered');
+        
+        // Send ready message to client so it knows it can start sending messages
+        try {
+            connection.socket.send(JSON.stringify({ type: "ready" }));
+            console.log('📤 Ready message sent to client');
+        } catch (error) {
+            console.error('❌ Failed to send ready message:', error);
+        }
     }
 
     private async checkin(raw: RawData, connection: SocketStream, userId: number) {

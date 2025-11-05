@@ -1,6 +1,7 @@
 import { TournamentBracket } from './types.js';
 import { TournamentBracketManager } from './bracket.js';
 import user from '../user/User.js';
+import { i18n } from '../i18n/index.js';
 
 export class TournamentUIManager {
     private bracketManager: TournamentBracketManager;
@@ -16,26 +17,28 @@ export class TournamentUIManager {
 
         if (playerSelection && playerNames && playerInputs) {
             playerSelection.style.display = 'none';
-            
+
             playerInputs.innerHTML = '';
             for (let i = 1; i <= playerCount; i++) {
                 const inputGroup = document.createElement('div');
                 inputGroup.className = 'player-input-group';
-                
+
                 const label = document.createElement('label');
                 label.textContent = `Player ${i}`;
                 label.setAttribute('for', `player-${i}`);
-                
+                label.setAttribute('data-i18n-prefix', 'player');
+
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.id = `player-${i}`;
                 input.name = `player-${i}`;
                 input.placeholder = `Enter name`;
+                input.setAttribute('data-i18n-placeholder', 'enterPlayerName');
                 input.maxLength = 14;
                 input.required = true;
                 if (i === 1 && user.isLoggedIn() && user.alias)
                     input.value = user.alias;
-                
+
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -49,9 +52,12 @@ export class TournamentUIManager {
                 inputGroup.appendChild(input);
                 playerInputs.appendChild(inputGroup);
             }
-            
+
+            // Translate the newly added elements
+            i18n.initializePage();
+
             playerNames.style.display = 'block';
-            
+
             const firstInput = document.getElementById('player-1') as HTMLInputElement;
             if (firstInput)
                 firstInput.focus();
@@ -254,7 +260,7 @@ export class TournamentUIManager {
                       document.getElementById("pong") as HTMLCanvasElement;
         if (canvas) {
             canvas.id = 'tournament-pong';
-            
+
             const ctx = canvas.getContext('2d');
             if (ctx)
                 ctx.clearRect(0, 0, canvas.width, canvas.height);

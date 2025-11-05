@@ -1,9 +1,8 @@
 import { openChatsSection, cleanupChatPresenceSubscription } from "./menu.chat.js";
 import { openUsersSection, cleanupUsersPresenceSubscription } from "./menu.users.js";
 import user from '../user/User.js';
-import { clearEvents, hideElementById, setElementActive, showElementById } from "./menu.utils.js";
+import { clearEvents, hideElementById, setElementActive, setHeaderTitle, showElementById } from "./menu.utils.js";
 import { chatSocket } from "./menu.ws.js";
-// import { initializeLanguageSwitcher } from "../i18n/index.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -31,8 +30,6 @@ function openMenuWindow(): void {
 	hideSectionsElements();
 	["menuButton"].forEach(hideElementById);
 	["menuWindow"].forEach(showElementById);
-	
-	// run users section as default
 	openUsers();
 }
 
@@ -93,6 +90,7 @@ function clearEventsInSections(): void {
 
 	document.getElementById("usersList")!.innerHTML = '';
 	document.getElementById("chatsList")!.innerHTML = '';
+	setHeaderTitle("allUsers");
 }
 
 // To hide elements that are not part of the menu

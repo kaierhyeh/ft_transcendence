@@ -4,8 +4,8 @@ import {initTournament} from "./tournament.js";
 import initRemoteGame, { cleanupRemoteGame } from "./remoteGame.js";
 import {initHistory} from "./history.js";
 import { i18n } from "./i18n/index.js";
-import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
-import { initDeviceDetection } from "./utils/deviceDetect.js";
+// import { addBrowserClass, logBrowserInfo } from "./utils/browserDetect.js";
+// import { initDeviceDetection } from "./utils/deviceDetect.js";
 import {loadHeader} from "./header.js";
 import { initSignup } from "./auth/signup.js";
 import { initLogin, handleOAuthCallback } from "./auth/login.js";
@@ -42,14 +42,20 @@ const initScripts: Record<string, () => void> = {
 	"/pong": () => {
 		if (typeof initPong === "function")
 			initPong();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/signup": () => {
 		if (typeof initSignup === "function")
 			initSignup();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/login": () => {
 		if (typeof initLogin === "function")
 			initLogin();
+		if (typeof initLanguages === "function")
+			initLanguages();
 	},
 	"/tournament": () => {
 		if (typeof initTournament === "function")
@@ -90,11 +96,16 @@ async function load404(push: boolean)
 
 function update_event()
 {
+	// Search app for data-route elements (header handles its own listeners)
 	app.querySelectorAll("[data-route]").forEach(btn => {
 		const element = btn as HTMLElement;
 		if (element.id === 'one-player-btn' || element.id === 'two-players-btn' || element.id == 'four-players-btn') return;
 		
-		btn.addEventListener("click", (e) => {
+		// Remove existing listener to prevent duplicates (if already attached)
+		const newBtn = btn.cloneNode(true) as HTMLElement;
+		btn.parentNode?.replaceChild(newBtn, btn);
+		
+		newBtn.addEventListener("click", (e) => {
 			e.preventDefault();
 			const path = (e.currentTarget as HTMLElement).dataset.route!;
 			navigate(path);
@@ -124,12 +135,14 @@ async function navigate(path: string, push: boolean = true)
 		}
 	}
 
-	const file = routes[path];
+	// Split path and query string
+	const [basePath, queryString] = path.split('?');
+	const file = routes[basePath];
 
 	if (file)
 	{
 		try {
-			if (path === '/login' && push) {
+			if (basePath === '/login' && push) {
 				const currentPath = window.location.pathname;
 				if (currentPath !== '/login' && currentPath !== '/signup') {
 					sessionStorage.setItem('previousPage', currentPath);
@@ -141,13 +154,13 @@ async function navigate(path: string, push: boolean = true)
 				throw new Error("File not found.");
 			app.innerHTML = await res.text();
 			if (push)
-				history.pushState({path}, "", path);
+				history.pushState({path}, "", path); // Push full path with query params
 			
 			await loadHeader();
 			update_event();
 			i18n.initializePage();
-			if (initScripts[path])
-				initScripts[path]();
+			if (initScripts[basePath])
+				initScripts[basePath]();
 		}
 		catch {
 			load404(push);
@@ -162,9 +175,12 @@ window.onpopstate = (e) => {
 	navigate(path, false);
 };
 
-addBrowserClass();
-logBrowserInfo();
+// Make navigate available globally for header and other components
+(window as any).navigateTo = navigate;
 
-initDeviceDetection();
+// addBrowserClass();																			// For Alexis
+// logBrowserInfo();
+
+// initDeviceDetection();																		// For Alexis
 
 navigate(location.pathname, false);

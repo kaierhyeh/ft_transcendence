@@ -1,26 +1,32 @@
 import { initMatchHistory } from './match_history.js';
 import { fetchLeaderboard } from './api.js';
 import user from './User.js';
+import { User } from './User.js';
 
 declare const Chart: any;
 
 export async function initProfile() {
-	interface User {
-		id: number;
+	interface UserPublicData {
+		user_id: number;
 		username: string;
+		alias: string | null;
+		email: string | null;
+		avatar_url: string;
+		avatar_updated_at: string;
 		created_at: string;
+		// + some LiteStats
 		wins: number;
 		losses: number;
 		curr_winstreak: number;
 		best_winstreak: number;
-		total_points_scored: number;
+		total_point_scored: number;
 	}
 
 	let playerChart: any = null;
 
 	let isOtherUser: boolean = false;
 
-	function displayUserProfile(userData: any) {
+	async function displayUserProfile(userData: UserPublicData) {
 		const joinDate = new Date(userData.created_at).toLocaleDateString('en-EN');
 
 		const profileAvatarElement = document.getElementById('profileAvatar') as HTMLElement;
@@ -56,18 +62,28 @@ export async function initProfile() {
 		if (bestStreakElement)
 			bestStreakElement.textContent = userData.best_winstreak?.toString() || '0';
 
-		if (profileSection)
+		const profileLoadingElement = document.getElementById('profileLoading');
+		if (profileSection) {
 			profileSection.style.display = 'block';
-
-		const gamesPlayed = (userData.wins || 0) + (userData.losses || 0);
-		if (matchHistorySection && isOtherUser) {
-			matchHistorySection.style.display = gamesPlayed > 0 ? 'block' : 'none';
+			profileSection.style.visibility = 'hidden';
+		}
+		if (profileLoadingElement) {
+			profileLoadingElement.style.display = 'flex';
 		}
 
-		setTimeout(function () {
+		try {
 			createPlayerChart(userData);
-			displayPlayerRanking(userData);
-		}, 50);
+			await displayPlayerRanking(userData);
+		} catch (e) {
+			console.error('Error while preparing profile stats:', e);
+		}
+
+		if (profileLoadingElement)
+			profileLoadingElement.style.display = 'none';
+		if (profileSection) {
+			profileSection.style.visibility = 'visible';
+			profileSection.style.display = 'block';
+		}
 	}
 
 	function createPlayerChart(user: any) {
@@ -252,7 +268,6 @@ export async function initProfile() {
 
 	const profileError = document.getElementById('profileError');
 	const profileSection = document.getElementById('profileSection');
-	const matchHistorySection = document.getElementById('matchHistorySection');
 
 	function getProfileIdFromUrl(): number | null {
 		const params = new URLSearchParams(window.location.search);
@@ -272,14 +287,14 @@ export async function initProfile() {
 			if (!resp.ok) {
 				throw new Error(`Failed to fetch public profile for id ${profileIdFromUrl}`);
 			}
-			const publicProfile = await resp.json();
+			const publicProfile = await resp.json() as UserPublicData;
+			publicProfile.avatar_url = User.getAvatarUrl(publicProfile.user_id, publicProfile.avatar_updated_at);
 			isOtherUser = true;
-			displayUserProfile(publicProfile);
+			await displayUserProfile(publicProfile);
 		} catch (err) {
 			console.error('Failed to load public profile:', err);
 			if (profileError) profileError.style.display = 'block';
 			if (profileSection) profileSection.style.display = 'none';
-			if (matchHistorySection) matchHistorySection.style.display = 'none';
 			return;
 		}
 	} else {
@@ -295,18 +310,19 @@ export async function initProfile() {
 		if (!isConnected) {
 			if (profileError) profileError.style.display = 'block';
 			if (profileSection) profileSection.style.display = 'none';
-			if (matchHistorySection) matchHistorySection.style.display = 'none';
 			return;
 		}
 
 		try {
 			await user.fetchAndUpdate();
-			displayUserProfile(user);
+			const userData = user.getData();
+			if (!userData)
+				throw new Error('No user data available after fetch');
+			await displayUserProfile(userData);
 		} catch (error) {
 			console.error('Failed to load user profile:', error);
 			if (profileError) profileError.style.display = 'block';
 			if (profileSection) profileSection.style.display = 'none';
-			if (matchHistorySection) matchHistorySection.style.display = 'none';
 			return;
 		}
 	}

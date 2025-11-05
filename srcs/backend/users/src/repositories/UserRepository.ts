@@ -174,6 +174,7 @@ export class UserRepository {
         const stmt = this.db.prepare(`
             UPDATE users 
             SET avatar_filename = ?,
+                avatar_updated_at = datetime('now'),
                 updated_at = datetime('now')
             WHERE user_id = ?
         `);

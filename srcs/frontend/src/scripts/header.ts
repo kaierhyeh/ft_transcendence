@@ -1,6 +1,6 @@
 // Simple header management
-import { presence } from './presence.js';
 import user from './user/User.js';
+import { i18n } from './i18n/index.js';
 
 const EXCLUDED_ROUTES = ['/login', '/signup'];
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
@@ -39,6 +39,10 @@ async function loadHeader() {
         
         // Replace header content (not outerHTML since we want to keep the <header> tag)
         headerElement.innerHTML = headerHtml;
+        
+        // Translate header after loading
+        i18n.initializePage();
+        
         setupHeaderEvents();
     } catch (error) {
         console.error('Header load failed:', error);
@@ -76,6 +80,12 @@ function setupHeaderEvents() {
         usernameSpan.textContent = user.getDisplayName() || 'User';
     }
 
+    // Setup username
+    const usernameDiv = document.querySelector('.user-name');
+    if (usernameDiv && user.isLoggedIn()) {
+        usernameDiv.textContent = user.getDisplayName() || 'User';
+    }
+
     // Setup avatar with user data
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;
     if (userAvatar && user.isLoggedIn()) {
@@ -102,13 +112,37 @@ function setupHeaderEvents() {
     const dropdown = document.querySelector('.dropdown');
     
     if (userBtn && dropdown) {
+        (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
+        (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
+
         userBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            dropdown.classList.toggle('show');
+            const isShown = dropdown.classList.toggle('show');
+            (userBtn as HTMLElement).setAttribute('aria-expanded', isShown ? 'true' : 'false');
+            (dropdown as HTMLElement).setAttribute('aria-hidden', isShown ? 'false' : 'true');
         });
         
+        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
             dropdown.classList.remove('show');
+            (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
+            (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
+        });
+        
+        // Add special handling for dropdown items: close dropdown before navigation
+        dropdown.querySelectorAll('[data-route]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Close dropdown first
+                dropdown.classList.remove('show');
+                (userBtn as HTMLElement).setAttribute('aria-expanded', 'false');
+                (dropdown as HTMLElement).setAttribute('aria-hidden', 'true');
+                // Navigate to the route
+                const path = (e.currentTarget as HTMLElement).dataset.route;
+                if (path && (window as any).navigateTo) {
+                    (window as any).navigateTo(path);
+                }
+            });
         });
     }
 
@@ -127,13 +161,32 @@ function setupHeaderEvents() {
                 user.logout();
                 
                 // Redirect to home
-                window.location.href = '/';
+                redirectAfterLogout();
             } catch (error) {
                 console.error('Logout failed:', error);
             }
         });
     }
+
+    // Handle auth buttons (Login/Signup) in unauthenticated header
+    const authButtons = document.querySelectorAll('.auth-buttons [data-route]');
+    authButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const path = (e.currentTarget as HTMLElement).dataset.route;
+            if (path && (window as any).navigateTo) {
+                (window as any).navigateTo(path);
+            }
+        });
+    });
+
+    function redirectAfterLogout() {
+        (window as any).navigateTo("/");
+
+    }
 }
+
+
 
 function updateHeaderAvatar() {
     const userAvatar = document.querySelector('.user-avatar') as HTMLImageElement;

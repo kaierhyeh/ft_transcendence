@@ -22,7 +22,7 @@
 	justify-content: center;
 	background: #1a1a1a;
 	border: 2px solid #444;
-	border-radius: 50%;
+	border-radius: 12px;
 	color: #fff;
 	cursor: pointer;
 	transition: all 0.3s ease;
@@ -50,11 +50,11 @@
 
 /* Menu Window */
 .menu-window {
-	position: fixed;
+	position: absolute;
 	bottom: 20px;
 	right: 40px;
 	width: 400px;
-	height: 750px;
+	height: 600px;
 	background: #1a1a1a;
 	border: 2px solid #444;
 	color: white;
@@ -70,25 +70,26 @@
 /* Style for FRIENDS, USERS, CHATS bodies */
 .menu-section {
 	flex: 1;
-	/* display: flex; */
-	/* flex-direction: column; */
 }
 /* Menu Header */
 .menu-header {
 	display: flex;
+	gap: 5px;
+	position: relative;
 	justify-content: space-between;
 	align-items: center;
 	padding: 1rem;
+	padding-left: 8px;
 	border-bottom: 2px solid #444;
 }
 .menu-header-title {
 	font-size: 1.5rem;
 	align-items: center;
-	padding: 0.5rem;
+	padding: 8px 16px;
 	font-weight: bold;
 	font-size: 24px;
-	/* cursor: pointer; */
 	color: #4ade80;
+	border: 2px solid transparent;
 	text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 	letter-spacing: 0.05em;
 	transition: color 0.3s, text-shadow 0.3s;
@@ -116,28 +117,23 @@
 .menu-list-users-chats {
 	flex: 1;
 	overflow-y: auto;
-	padding: 8px;
+	padding: 0px 0px;
 	font-size: 16px;
 }
 .menu-list-element {
 	display: flex;
 	align-items: center;
 	border: 2px solid transparent;
-	border-radius: 10px;
 	gap: 1rem;
 	text-align: left;
-	padding: 0.5rem 0;
-	padding-left: 8px;
-	padding-right: 8px;
+	padding: 10px 24px;
 	width: 100%;
 	justify-content: space-between;
 }
 .menu-list-element:hover {
 	color: #4ade80;
 	cursor: pointer;
-	border-color: #4ade80;
 	background-color: #333;
-	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
 
 /* Menu Buttons Styles */
@@ -145,14 +141,10 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 40px;
 	height: 40px;
-	min-width: 40px;
 	min-height: 40px;
 	aspect-ratio: 1/1;
-	padding: 0 !important;
-	margin: 0;
-	border-radius: 8px;
+	border-radius: 12px;
 	color: #aaa;
 	background: transparent;
 	border: 2px solid transparent;
@@ -160,8 +152,6 @@
 	cursor: pointer;
 	box-sizing: border-box;
 	line-height: 0 !important;
-	font-size: 0;
-	flex-shrink: 0;
 }
 
 .menu-button svg {
@@ -199,7 +189,6 @@
 	border: 2px solid transparent;
 	transition: all 0.3s ease;
 	cursor: pointer;
-	/* width: 30%; */
 	height: 40px;
 	gap : 5px;
 }
@@ -213,14 +202,9 @@
 	padding-top: 5px;
 	border-radius: 8px;
 	color: #4ade80;
-	/* border-color: #4ade80; */
-	/* box-shadow: inset 0 0 10px rgba(74, 222, 128, 0.5); */
-	/* background-color: #333; */
 	background: transparent;
 	border: 2px solid transparent;
-	/* transition: all 0.3s ease; */
-	cursor: pointer;
-	/* width: 30%; */
+	/* cursor: pointer; */
 	height: 40px;
 	gap : 5px;
 }
@@ -230,4 +214,3 @@
 	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 	background-color: #333;
 }
-

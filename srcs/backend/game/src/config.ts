@@ -25,7 +25,7 @@ const clientCredentials = loadClientCredentials();
 export const CONFIG = {
   // Game settings
   GAME: {
-    TICK_PERIOD: 1000 / 30, // <=> 30 FPS
+    TICK_PERIOD: 1000 / 30,
     MAX_SESSIONS: 100,
   },
   
