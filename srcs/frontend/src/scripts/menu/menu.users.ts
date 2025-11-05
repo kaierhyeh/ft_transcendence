@@ -5,6 +5,7 @@ import { initMessageSection } from "./menu.chat.js";
 import { UserInfo, UserListRow, ChatUser } from "./menu.types.js";
 import { chatSocket } from "./menu.ws.js";
 import { presence, OnlineStatus, Presence } from "../presence.js";
+import { fetchWithAuth } from "../utils/fetch.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -154,11 +155,8 @@ function resetUserinfoButtons(): void {
 async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Sending friend request to user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
-			method: 'POST',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
+			method: 'POST'
 		});
 	} catch (err) {
 		console.error("USERS: sendFriendRequest failed", err);
@@ -169,11 +167,8 @@ async function sendFriendRequest(userInfo: UserInfo): Promise<void> {
 async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Cancelling friend request to user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
-			method: 'DELETE',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_FRIENDS}/request/${userInfo.user_id}`, {
+			method: 'DELETE'
 		});
 	} catch (err) {
 		console.error("USERS: cancelFriendRequest failed", err);
@@ -184,11 +179,8 @@ async function cancelFriendRequest(userInfo: UserInfo): Promise<void> {
 async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Accepting friend request from user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/accept/${userInfo.user_id}`, {
-			method: 'POST',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_FRIENDS}/accept/${userInfo.user_id}`, {
+			method: 'POST'
 		});
 	} catch (err) {
 		console.error("USERS: acceptFriendRequest failed", err);
@@ -199,11 +191,8 @@ async function acceptFriendRequest(userInfo: UserInfo): Promise<void> {
 async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Declining friend request from user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/decline/${userInfo.user_id}`, {
-			method: 'DELETE',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_FRIENDS}/decline/${userInfo.user_id}`, {
+			method: 'DELETE'
 		});
 	} catch (err) {
 		console.error("USERS: declineFriendRequest failed", err);
@@ -214,11 +203,8 @@ async function declineFriendRequest(userInfo: UserInfo): Promise<void> {
 async function removeFriend(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Removing friend user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_FRIENDS}/${userInfo.user_id}`, {
-			method: 'DELETE',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_FRIENDS}/${userInfo.user_id}`, {
+			method: 'DELETE'
 		});
 	} catch (err) {
 		console.error("USERS: removeFriend failed", err);
@@ -230,19 +216,16 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Opening chat with user id: ${userInfo.user_id}`);
 		// chatId: number, withUser: ChatUser, friendshipStatus: string | null
-		const res = await fetch(`${API_CHAT_ENDPOINT}/open/${userInfo.user_id}`, {
-			method: "GET",
-			headers: {
-				credentials: "include"
-			}
+		const res = await fetchWithAuth(`${API_CHAT_ENDPOINT}/open/${userInfo.user_id}`, {
+			method: "GET"
 		});
 		if (!res.ok) {
-			// if (res.status === 401) {
-			// 	// user.logout();
-			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	// window.location.href = '/';
-			// 	return;
-			// }
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unauthorized user");
+				(window as any).navigateTo('/login');
+				return;
+			}
 			throw new Error(`Failed to get raw chat info with user: ${userInfo.user_id}`);
 		}
 		// console.log("[DEBUG CHAT] - res:", res);
@@ -268,11 +251,8 @@ async function openChatWithUser(userInfo: UserInfo): Promise<void> {
 async function blockUser(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Blocking user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
-			method: 'POST',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
+			method: 'POST'
 		});
 	} catch (err) {
 		console.error("USERS: blockUser failed", err);
@@ -283,11 +263,8 @@ async function blockUser(userInfo: UserInfo): Promise<void> {
 async function unblockUser(userInfo: UserInfo): Promise<void> {
 	try {
 		// console.log(`USERS: Unblocking user id: ${userInfo.user_id}`);
-		await fetch(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
-			method: 'DELETE',
-			headers: {
-				credentials: 'include'
-			}
+		await fetchWithAuth(`${API_USERS_BLOCKS}/${userInfo.user_id}`, {
+			method: 'DELETE'
 		});
 	} catch (err) {
 		console.error("USERS: unblockUser failed", err);
@@ -508,14 +485,16 @@ function renderUserInfo(userInfo: UserInfo): void {
 async function initUserInfoSection(targetUserId: number): Promise<void> {
 	try {
 		// console.log(`USER INFO: loading user info for target user id: ${targetUserId}`);
-		const res = await fetch(`${API_USERS_FRIENDS}/${targetUserId}`);
+		const res = await fetchWithAuth(`${API_USERS_FRIENDS}/${targetUserId}`, {
+			method: 'GET'
+		});
 		if (!res.ok) {
-			// if (res.status === 401) {
-			// 	// user.logout();
-			// 	chatSocket?.close(1000, "Close socket: unautorized user");
-			// 	// window.location.href = '/';
-			// 	return;
-			// }
+			if (res.status === 401) {
+				user.logout();
+				chatSocket?.close(1000, "Close socket: unauthorized user");
+				(window as any).navigateTo('/login');
+				return;
+			}
 			throw new Error(`Failed to fetch user info for user id: ${targetUserId}`);
 		}
 		const userInfo: UserInfo = await res.json();
@@ -636,58 +615,48 @@ async function loadUsers(): Promise<void>{
 		switch (currentFilter) {
 			case 'friends':
 				// console.log("USERS: Loading FRIENDS only");
-				res = await fetch(`${API_USERS_FRIENDS}`, {
-					method: 'GET',
-					headers: {
-						credentials: 'include'
-					}
+				res = await fetchWithAuth(`${API_USERS_FRIENDS}`, {
+					method: 'GET'
 				});
 				setFilterForUsersList("friends");
 				break;
 			case 'requests_in':
 				// console.log("USERS: Loading REQUESTS IN only");
-				res = await fetch(`${API_USERS_FRIENDS}/incoming`, {
-					method: 'GET',
-					headers: {
-						credentials: 'include'
-					}
+				res = await fetchWithAuth(`${API_USERS_FRIENDS}/incoming`, {
+					method: 'GET'
 				});
 				setFilterForUsersList("requestsIn");
 				break;
 			case 'requests_out':
 				// console.log("USERS: Loading REQUESTS OUT only");
-				res = await fetch(`${API_USERS_FRIENDS}/outgoing`, {
-					method: 'GET',
-					headers: {
-						credentials: 'include'
-					}
+				res = await fetchWithAuth(`${API_USERS_FRIENDS}/outgoing`, {
+					method: 'GET'
 				});
 				setFilterForUsersList("requestsOut");
 				break;
 			case 'blocked':
 				// console.log("USERS: Loading BLOCKED users only");
-				res = await fetch(`${API_USERS_BLOCKS}`, {
-					method: 'GET',
-					headers: {
-						credentials: 'include'
-					}
+				res = await fetchWithAuth(`${API_USERS_BLOCKS}`, {
+					method: 'GET'
 				});
 				setFilterForUsersList("blocked");
 				break;
 			// works for 'all' and an invalid filter
 			default:
 				// console.log("USERS: Loading ALL users");
-				res = await fetch(`${API_USERS_FRIENDS}/allusers`);
+				res = await fetchWithAuth(`${API_USERS_FRIENDS}/allusers`, {
+					method: 'GET'
+				});
 				setFilterForUsersList("allUsers");
 				setHeaderTitle("allUsers");
 				break;
 		}
-		if (res === null || !res.ok) {
-			// if (res !== null && res.status === 401) {
-			// 	user.logout();
-			// 	window.location.href = '/';
-			// 	return;
-			// }
+		if (!res.ok) {
+			if (res.status === 401) {
+				user.logout();
+				(window as any).navigateTo('/login');
+				return;
+			}
 			throw new Error(`Failed to fetch users for menu`);
 		}
 		const users: UserListRow[] = await res.json();

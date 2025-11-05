@@ -7,6 +7,7 @@ import { LoginCredentials } from '../schemas/auth';
 import redis from '../clients/RedisClient';
 import jwtService from './jwt.service';
 import usersClient from '../clients/UsersClient';
+import authUtils from '../utils/auth.utils';
 
 export interface TokenValidationResult {
 	valid: boolean;
@@ -267,26 +268,25 @@ export class AuthService {
 				{ 
 					sub: user_id.toString(),  // JWT standard: sub as string
 					type: JWTType.USER_SESSION,  // Proper JWT type
-					token_type: 'access',  // Distinguish access vs refresh
-					iss: CONFIG.JWT.USER.ISSUER
-				},
-				CONFIG.JWT.USER.PRIVATE_KEY,
-				{ 
+						token_type: 'access',  // Distinguish access vs refresh
+						iss: CONFIG.JWT.USER.ISSUER
+					},
+					CONFIG.JWT.USER.PRIVATE_KEY,
+					{ 
 					algorithm: CONFIG.JWT.USER.ALGORITHM,
 					expiresIn: CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY,
 					keyid: keyId
 				} as SignOptions
 			);
 
-			// Store the new token
-			const expiryInSeconds = CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY === '15m' ? 15 * 60 : parseInt(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
+			// Store the new token using centralized duration parser
+			const expiryInSeconds = authUtils.parseDurationToSeconds(CONFIG.JWT.USER.ACCESS_TOKEN_EXPIRY);
 			await redis.setex(`access_${user_id}`, expiryInSeconds, newAccessToken);
-
-				return {
-					success: true,
-					userId: user_id,
-					newAccessToken
-				};
+			return {
+						success: true,
+						userId: user_id,
+						newAccessToken
+			};
 		} catch (error) {
 			console.error('❌ Fail to verify refresh token.', error);
 			return { success: false, reason: 'Fail to verify refresh token.' };
