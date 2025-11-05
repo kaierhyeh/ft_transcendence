@@ -97,7 +97,7 @@ export function wsConnectChat() {
 						
 						console.log("WS Appending game invite to chatMessages:", newGame);
 						const child = `
-							<div class="chat-msg-invite-to-game-link">
+							<div id=arenaBlock class="chat-msg-invite-to-game-link">
 								<span> Server: </span>
 								<a data-route="/arena?game_id=${newGame.game_id}" class="auth-link" data-i18n="startGameInChat">Start Game</a>
 							</div>
@@ -107,6 +107,20 @@ export function wsConnectChat() {
 						chatMessages.insertAdjacentHTML('beforeend', child);
 						chatMessages.scrollTop = chatMessages.scrollHeight;
 						console.log("WS Inserting game invite into chatMessages: FINISHED");
+
+						const gameLink = document.getElementById("arenaBlock");
+
+						if (gameLink) {
+							 gameLink.querySelectorAll('[data-route]').forEach(link => {
+								link.addEventListener('click', (e) => {
+									e.preventDefault();
+									const path = (e.currentTarget as HTMLElement).dataset.route;
+									if (path && (window as any).navigateTo) {
+										(window as any).navigateTo(path);
+									}
+								});
+							});
+						}
 
 					} catch (err) {}
 					lastPongTime = Date.now();

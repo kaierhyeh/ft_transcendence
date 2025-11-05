@@ -69,6 +69,7 @@ export function sendMessageToClientWebSocket(toId: number, content: NewMessage |
 				console.log("WS send msg newGame=", content);	
 				clientSocket.send(JSON.stringify({ type: "game_created", newGame: content }));
 				console.log("WS send msg: DONE");
+				return true;
 
 			case "invite_failed":
 				console.log("WS send msg inviteFailed=", content);

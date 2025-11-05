@@ -18,10 +18,10 @@ export default async function messagesRoutes(fastify: FastifyInstance) {
     );
 
 	// Create chat on game created [Internal use only]
-	fastify.post<{ Params: GameInfoParams }>(
+	fastify.post<{ Body: GameInfoParams }>(
 		"/gamecreated",
 		{
-			schema: { params: gameInfoSchema },
+			schema: { body: gameInfoSchema },
 			preHandler: internalAuthMiddleware
 		},
 		messageController.notifyAboutGame.bind(messageController)

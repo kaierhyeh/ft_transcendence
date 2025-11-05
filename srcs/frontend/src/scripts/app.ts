@@ -12,6 +12,7 @@ import { initLogin, handleOAuthCallback } from "./auth/login.js";
 import { initSettings } from "./user/settings.js";
 import { initPong } from "./pong.js";
 import { initProfile } from "./user/profile.js";
+import { initArena } from "./arena.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -30,6 +31,7 @@ const routes: Record<string, string> = {
 	"/signup": "./html/auth/signup.html",
 	"/login": "./html/auth/login.html",
 	"/auth/google/callback": "./html/auth/login.html", // Temporary page while processing OAuth
+	"/arena": "./html/arena.html",
 };
 
 const initScripts: Record<string, () => void> = {
@@ -80,8 +82,12 @@ const initScripts: Record<string, () => void> = {
 	"/auth/google/callback": () => {
 		if (typeof handleOAuthCallback === "function")
 			handleOAuthCallback();
+	},
+	"/arena": () => {
+		if (typeof initArena === "function")
+			initArena();
 	}
-}
+};
 
 async function load404(push: boolean)
 {

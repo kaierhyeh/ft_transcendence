@@ -6,6 +6,7 @@ import { FastifyBaseLogger } from 'fastify';
 import { DbPlayerSession, DbSession } from '../repositories/SessionRepository';
 import { toSqlDate } from '../utils/db';
 import { UsersClient } from '../clients/UsersClient';
+import { CONFIG } from '../config';
 
 type Player = GameParticipant & {
     team: Team;
@@ -257,6 +258,14 @@ export class GameSession {
 
     public get started(): boolean {
         return this.started_at !== undefined;
+    }
+
+    public get timeout(): boolean {
+        if (!this.started && this.created_at) {
+            const elapsed = Date.now() - this.created_at.getTime();
+            return elapsed > CONFIG.GAME.TIMEOUT;
+        }
+        return false;
     }
 
     public get over(): boolean {

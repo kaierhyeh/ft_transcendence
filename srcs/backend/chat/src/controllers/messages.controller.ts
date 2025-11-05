@@ -41,9 +41,9 @@ export class MessageController {
 		}
 	}
 
-	public async notifyAboutGame(request: FastifyRequest<{ Params: GameInfoParams }>, reply: FastifyReply) {
+	public async notifyAboutGame(request: FastifyRequest<{ Body: GameInfoParams }>, reply: FastifyReply) {
 		try {
-			const { fromId, toId, gameId } = request.params;
+			const { fromId, toId, gameId } = request.body;
 			await this.messageService.notifyAboutGame(fromId, toId, gameId);
 			reply.status(200).send({ message: "Users was noticed" });
 		} catch (error) {

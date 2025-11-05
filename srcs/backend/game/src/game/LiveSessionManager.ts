@@ -121,7 +121,7 @@ export class LiveSessionManager {
             throw error;
         }
         if (session.isUserGameCreator(userId)) {
-            if (!session.over) {
+            if (session.started && !session.over) {
                 const error = new Error;
                 (error as any).status = 403;
                 (error as any).code = 'CANNOT_DELETE_ACTIVE_GAME';
@@ -262,6 +262,10 @@ export class LiveSessionManager {
 
             if (!game.started) {
                 game.checkAndStart();
+                if (game.timeout) {
+                    console.log(`[LiveSessionManager] Game ${id} timed out before starting. Terminating session.`);
+                    this.game_sessions.delete(id);   
+                }
                 continue;
             }
 

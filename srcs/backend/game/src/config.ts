@@ -1,3 +1,4 @@
+import { TIMEOUT } from 'dns';
 import dotenv from 'dotenv';
 import fs from 'fs';
 
@@ -27,6 +28,7 @@ export const CONFIG = {
   GAME: {
     TICK_PERIOD: 1000 / 30,
     MAX_SESSIONS: 100,
+    TIMEOUT: 600_000, // ms <=> 10min
   },
   
   // Database settings
