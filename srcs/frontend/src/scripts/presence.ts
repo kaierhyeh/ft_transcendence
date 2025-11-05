@@ -196,3 +196,4 @@ export class Presence {
 }
 
 export const presence = new Presence();
+//# sourceMappingURL=presence.js.map
