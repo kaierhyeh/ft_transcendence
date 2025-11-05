@@ -6,20 +6,17 @@ import { chatSocket } from "./menu.ws.js";
 
 /* ============================================ GLOBALS ===================================== */
 
+// let menuWindow: HTMLElement;
 let menuCloseButton: HTMLElement;
 let menuButton: HTMLElement;
 let usersButton: HTMLElement;
 let chatsButton: HTMLElement;
-let menuWindow: HTMLElement;
-
-const MENU_MIN_HEIGHT = 420;
 
 function initializeGlobals(): boolean {
 	menuCloseButton = document.getElementById("menuCloseButton")!;
 	menuButton = document.getElementById("menuButton")!;
 	usersButton = document.getElementById("usersSectionButton")!;
 	chatsButton = document.getElementById("chatsSectionButton")!;
-	menuWindow = document.getElementById("menuWindow")!;
 	if (!menuCloseButton || !menuButton || !usersButton || !chatsButton) {
 		return false;
 	}
@@ -130,20 +127,5 @@ export async function initMenu(): Promise<void> {
 	menuCloseButton.addEventListener("click", closeMenuWindow);
 	usersButton.addEventListener("click", openUsers);
 	chatsButton.addEventListener("click", openChats);
-
-	const handleResize = () => {
-		try {
-			if (window.innerHeight < MENU_MIN_HEIGHT) {
-				if (menuWindow && !menuWindow.classList.contains('hidden')) {
-					closeMenuWindow();
-				}
-			}
-		} catch (err) {
-			console.error('menu resize handler error', err);
-		}
-	};
-
-	handleResize();
-	window.addEventListener('resize', handleResize);
 
 }
