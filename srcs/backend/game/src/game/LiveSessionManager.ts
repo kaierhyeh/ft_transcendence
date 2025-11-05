@@ -6,6 +6,8 @@ import { FastifyBaseLogger } from "fastify";
 import { SessionRepository } from "../repositories/SessionRepository"
 import { UsersClient } from "../clients/UsersClient";
 import { StatsClient } from "../clients/StatsClient";
+import { userWsAuthMiddleware } from "../middleware/userWsAuth";
+import { FastifyRequest } from "fastify";
 
 let next_id = 1;
 
@@ -22,12 +24,104 @@ export class LiveSessionManager {
     }
 
     public async createGameSession(data: GameCreationData): Promise<number> {
+        // Validate invitation-specific constraints before creating the session
+        if (data.invitation) {
+            this.validateInvitationData(data);
+        }
+
         const game_id = next_id++;
 
         const new_game = await GameSession.create(data, this.logger, this.usersClient);
         this.game_sessions.set(game_id, new_game);
 
         return game_id;
+    }
+
+    private validateInvitationData(data: GameCreationData): void {
+        const participants = data.participants;
+
+        // Check exactly 2 participants
+        if (participants.length !== 2) {
+            const error = new Error;
+            (error as any).status = 400;
+            (error as any).code = 'INVALID_INVITATION_PARTICIPANTS';
+            error.message = `Invitation games require exactly 2 participants, got ${participants.length}`;
+            throw error;
+        }
+
+        // Validate each participant
+        for (let idx = 0; idx < participants.length; idx++) {
+            const p = participants[idx];
+
+            // Check that participant has a user_id (must be registered)
+            if (!p.user_id) {
+                const error = new Error;
+                (error as any).status = 400;
+                (error as any).code = 'MISSING_USER_ID';
+                error.message = `Invitation participant at index ${idx} must have a user_id`;
+                throw error;
+            }
+
+            // Check that participant_id matches user_id (as string)
+            if (p.participant_id !== String(p.user_id)) {
+                const error = new Error;
+                (error as any).status = 400;
+                (error as any).code = 'PARTICIPANT_ID_MISMATCH';
+                error.message = `participant_id must equal user_id for invitations. Expected "${p.user_id}", got "${p.participant_id}"`;
+                throw error;
+            }
+        }
+
+        // Check for duplicate user_ids (same user against itself)
+        if (participants[0].user_id === participants[1].user_id) {
+            const error = new Error;
+            (error as any).status = 400;
+            (error as any).code = 'DUPLICATE_USER';
+            error.message = `Cannot invite yourself. Both participants have user_id ${participants[0].user_id}`;
+            throw error;
+        }
+
+        // Check if a game with this exact pair already exists
+        const participantId1 = participants[0].participant_id;
+        const participantId2 = participants[1].participant_id;
+
+        for (const [gameId, session] of this.game_sessions.entries()) {
+            if (session.isInvitation && session.hasParticipantPair(participantId1, participantId2)) {
+                const error = new Error;
+                (error as any).status = 409; // Conflict
+                (error as any).code = 'DUPLICATE_INVITATION_GAME';
+                error.message = `A game with these participants already exists (game_id: ${gameId})`;
+                throw error;
+            }
+        }
+    }
+
+    public deleteGameSession(gameId: number, userId: number) {
+        const session = this.game_sessions.get(gameId);
+        if (!session) {
+            const error = new Error;
+            (error as any).status = 404;
+            (error as any).code = 'GAME_NOT_FOUND';
+            error.message = `Game session with id ${gameId} not found`;
+            throw error;
+        }
+        if (session.isUserGameCreator(userId)) {
+            if (!session.over) {
+                const error = new Error;
+                (error as any).status = 403;
+                (error as any).code = 'CANNOT_DELETE_ACTIVE_GAME';
+                error.message = `Cannot delete an active game session`;
+                throw error;
+            }
+            this.game_sessions.delete(gameId);
+        } else {
+            const error = new Error;
+            (error as any).status = 403;
+            (error as any).code = 'NOT_GAME_CREATOR';
+            error.message = `Only the game creator can delete this session`;
+            throw error;
+        }
+
     }
 
     public getGameSessionConf(id: number): GameConf | undefined {
@@ -38,7 +132,7 @@ export class LiveSessionManager {
         return this.game_sessions.get(gameId)?.playersMap;
     }
 
-    public connectToGameSession(id: number, connection: SocketStream): void {
+    public connectToGameSession(id: number, connection: SocketStream, request: FastifyRequest): void {
         const session = this.game_sessions.get(id);
         if (!session) {
             connection.socket.close(4004, "Game not found");
@@ -57,7 +151,25 @@ export class LiveSessionManager {
             if (msg.type === "view") {
                 session.connectViewer(connection);
             } else if (msg.type === "join") {
-                const participant_id = msg.participant_id as string | undefined;
+                let participant_id: string | undefined;
+                
+                if (session.isInvitation) {
+                    // Authenticate and get user_id from JWT
+                    const isAuthenticated = await userWsAuthMiddleware(request);
+                    
+                    if (!isAuthenticated || !request.authUser?.sub) {
+                        this.logger.warn("WebSocket authentication failed for invitation game");
+                        connection.socket.close(4001, "Invalid or expired access token");
+                        return;
+                    }
+                    
+                    const userId = parseInt(request.authUser.sub);
+                    participant_id = String(userId);
+                    this.logger.info(`WebSocket authenticated for invitation game: user ${userId}`);
+                } else {
+                    participant_id = msg.participant_id;
+                }
+                
                 if (!participant_id) { 
                     connection.socket.close(4001, "Missing participant_id"); 
                     return; 

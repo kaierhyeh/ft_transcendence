@@ -1,5 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { createGameSchema, GameCreationData, GameIdParams,gameIdSchema } from "../schemas";
+import { userAuthMiddleware } from "../middleware/userAuth";
+import { toInteger } from "../utils/type-converters";
 // import { internalAuthMiddleware } from "../middleware/internalAuth";
 
 export default async function gameRoutes(fastify: FastifyInstance) {
@@ -8,20 +10,69 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     "/create",
     { 
       schema: { body: createGameSchema },
-      // preHandler: internalAuthMiddleware  // ← Simple protection!
     },
     async (request, reply) => {
       const data = request.body;
       try {
-
         const game_id = await fastify.live_sessions.createGameSession(data);
         reply.status(201).send({game_id: game_id});
       } catch(error: any) {
-        if (error.code === 'INVALID_PARTICIPANTS_NUMBER')
-          reply.status(400).send(error.message);
-        reply.status(500).send("Internal server error");
+        // Handle known validation errors with appropriate status codes
+        const status = error.status || 500;
+        const code = error.code;
+        
+        if (code === 'INVALID_PARTICIPANTS_NUMBER' ||
+            code === 'INVALID_INVITATION_FORMAT' ||
+            code === 'INVALID_INVITATION_MODE' ||
+            code === 'INVALID_INVITATION_ONLINE' ||
+            code === 'INVALID_INVITATION_PARTICIPANTS' ||
+            code === 'MISSING_USER_ID' ||
+            code === 'PARTICIPANT_ID_MISMATCH' ||
+            code === 'DUPLICATE_USER' ||
+            code === 'DUPLICATE_INVITATION_GAME') {
+          return reply.status(status).send({ error: error.message, code });
+        }
+        
+        // Log unexpected errors
+        fastify.log.error(error);
+        reply.status(500).send({ error: "Internal server error" });
       }
   });
+
+  fastify.delete<{ Params: GameIdParams }>(
+    "/:id",
+    {
+      preHandler: userAuthMiddleware,
+      schema: { params: gameIdSchema },
+    }, async (request, reply) => {
+      const { id } = request.params;
+      const sub = request.authUser?.sub; // `sub` is the user ID in the JWT payload
+      
+      if (!sub) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+
+      try {
+        const userId = toInteger(sub);
+        fastify.live_sessions.deleteGameSession(id, userId);
+        reply.status(204).send();
+      } catch(error: any) {
+        // Handle known validation errors with appropriate status codes
+        const status = error.status || 500;
+        const code = error.code;
+        
+        if (code === 'GAME_NOT_FOUND' ||
+            code === 'CANNOT_DELETE_ACTIVE_GAME' ||
+            code === 'NOT_GAME_CREATOR') {
+          return reply.status(status).send({ error: error.message, code });
+        }
+        
+        // Log unexpected errors
+        fastify.log.error(error);
+        reply.status(500).send({ error: "Internal server error" });
+      }
+    }
+  );
 
   // GET /:id/conf - Get game session configuration
   fastify.get<{ Params: GameIdParams }>(
@@ -40,7 +91,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     { schema: { params: gameIdSchema }, websocket: true },
     (connection, request) => {
       const { id } = request.params;
-      fastify.live_sessions.connectToGameSession(id, connection);
+      fastify.live_sessions.connectToGameSession(id, connection, request);
     }
   );
 }

@@ -1,5 +1,5 @@
 import { SocketStream } from '@fastify/websocket';
-import { GameParticipant, GameMode, GameFormat, GameCreationData } from '../schemas';
+import { GameParticipant, GameMode, GameFormat, GameCreationData, GameInvitation } from '../schemas';
 import { Team, GameMessage, PlayerSlot } from '../types'
 import { GameConf, GameEngine, GameState } from './GameEngine';
 import { FastifyBaseLogger } from 'fastify';
@@ -42,6 +42,7 @@ export class GameSession {
     private disconnected_player_info?: Player;
     private forfeit: boolean = false;
     private online: boolean;
+    private invitation: GameInvitation | undefined;
 
     // Private constructor - cannot be called directly
     private constructor(
@@ -58,6 +59,7 @@ export class GameSession {
         this.viewers = new Set<SocketStream>();
         this.created_at = new Date();
         this.game_engine = new GameEngine(this.game_format, this.players);
+        this.invitation = data.invitation;
     }
 
     // Static async factory method
@@ -77,61 +79,132 @@ export class GameSession {
         data: GameCreationData,
         usersClient: UsersClient
     ): Promise<PlayerMap> {
+        if (data.invitation) {
+            return await GameSession.initInvitationPlayers_(data, usersClient);
+        }
+        else if (data.format === '1v1') {
+            return await GameSession.init1v1Players_(data, usersClient);
+        }
+        else {
+            return await GameSession.initMultiPlayers_(data, usersClient);
+        }
+    }
+
+    private static async initInvitationPlayers_(
+        data: GameCreationData,
+        usersClient: UsersClient
+    ): Promise<PlayerMap> {
+        // Validation is done in LiveSessionManager.validateInvitationData()
+        // This function just sets up the players for invitation mode
+        
+        // Validate invitation constraints (format, mode, online)
+        if (data.format !== '1v1') {
+            const error = new Error;
+            (error as any).status = 400;
+            (error as any).code = 'INVALID_INVITATION_FORMAT';
+            error.message = `Invitations are only valid for 1v1 games`;
+            throw error;
+        }
+        if (data.mode !== 'pvp') {
+            const error = new Error;
+            (error as any).status = 400;
+            (error as any).code = 'INVALID_INVITATION_MODE';
+            error.message = `Invitations can only be used in pvp mode`;
+            throw error;
+        }
+        if (!data.online) {
+            const error = new Error;
+            (error as any).status = 400;
+            (error as any).code = 'INVALID_INVITATION_ONLINE';
+            error.message = `Invitations require online mode`;
+            throw error;
+        }
+
+        const participants = data.participants;
+
+        // Build players map (similar to 1v1)
+        const players: PlayerMap = new Map();
+        for (let idx = 0; idx < participants.length; idx++) {
+            const p = participants[idx];
+            const username = (await usersClient.getUserName(p.user_id!)).username;
+
+            players.set(p.participant_id, {
+                participant_id: p.participant_id,
+                type: p.type,
+                team: idx % 2 === 0 ? 'left' : 'right',
+                slot: idx % 2 === 0 ? 'left' : 'right',
+                user_id: p.user_id,
+                username: username,
+                socket: undefined,
+            });
+        }
+
+        return players;
+    }
+
+    private static async init1v1Players_(
+        data: GameCreationData,
+        usersClient: UsersClient
+    ): Promise<PlayerMap> {
         const participants = data.participants;
         const players: PlayerMap = new Map();
 
-        if (data.format === '1v1') {
+        for (let idx = 0; idx < participants.length; idx++) {
+            const p = participants[idx];
+            const username = p.user_id 
+                ? (await usersClient.getUserName(p.user_id)).username 
+                : undefined;
 
-            for (let idx = 0; idx < participants.length; idx++) {
-                const p = participants[idx];
-                const username = p.user_id 
-                    ? (await usersClient.getUserName(p.user_id)).username 
-                    : undefined;
-
-                players.set(p.participant_id, {
-                    participant_id: p.participant_id,
-                    type: p.type,
-                    team: idx % 2 === 0 ? 'left' : 'right',
-                    slot: idx % 2 === 0 ? 'left' : 'right',
-                    user_id: p.user_id,
-                    username: username,
-                    socket: undefined,
-                });
-            }
+            players.set(p.participant_id, {
+                participant_id: p.participant_id,
+                type: p.type,
+                team: idx % 2 === 0 ? 'left' : 'right',
+                slot: idx % 2 === 0 ? 'left' : 'right',
+                user_id: p.user_id,
+                username: username,
+                socket: undefined,
+            });
         }
-        else {
-             if (participants.length !== 4) {
-                const error = new Error;
-                (error as any).status = 400;
-                (error as any).code = 'INVALID_PARTICIPANTS_NUMBER';
-                error.message = `Multi-player games require exactly 4 participants, got ${participants.length}`;
-                throw error;
 
-            }
+        return players;
+    }
 
+    private static async initMultiPlayers_(
+        data: GameCreationData,
+        usersClient: UsersClient
+    ): Promise<PlayerMap> {
+        const participants = data.participants;
+
+        if (participants.length !== 4) {
+            const error = new Error;
+            (error as any).status = 400;
+            (error as any).code = 'INVALID_PARTICIPANTS_NUMBER';
+            error.message = `Multi-player games require exactly 4 participants, got ${participants.length}`;
+            throw error;
+        }
+
+        const players: PlayerMap = new Map();
+        for (let idx = 0; idx < participants.length; idx++) {
+            const p = participants[idx];
+            // Team assignment: first 2 players = "left", last 2 players = "right"
+            const team: Team = idx < 2 ? "left" : "right";
             
-            for (let idx = 0; idx < participants.length; idx++) {
-                const p = participants[idx];
-                // Team assignment: first 2 players = "left", last 2 players = "right"
-                const team: Team = idx < 2 ? "left" : "right";
-                
-                // Slot assignment based on array order
-                const slot: PlayerSlot = GameSession.getMultiPlayerSlot_(idx);
+            // Slot assignment based on array order
+            const slot: PlayerSlot = GameSession.getMultiPlayerSlot_(idx);
 
-                const username = p.user_id 
-                    ? (await usersClient.getUserName(p.user_id)).username 
-                    : undefined;
+            const username = p.user_id 
+                ? (await usersClient.getUserName(p.user_id)).username 
+                : undefined;
 
-                players.set(p.participant_id, {
-                    participant_id: p.participant_id,
-                    type: p.type,
-                    team,
-                    slot,
-                    user_id: p.user_id,
-                    username: username,
-                    socket: undefined,
-                });
-            }
+            players.set(p.participant_id, {
+                participant_id: p.participant_id,
+                type: p.type,
+                team,
+                slot,
+                user_id: p.user_id,
+                username: username,
+                socket: undefined,
+            });
         }
 
         return players;
@@ -156,6 +229,22 @@ export class GameSession {
 
     public get playersMap(): PlayerMap {
         return this.players;
+    }
+
+    public get isInvitation(): boolean {
+        return this.invitation ? true : false;
+    }
+
+    public hasParticipantPair(participant_id_1: string, participant_id_2: string): boolean {
+        const playerIds = Array.from(this.players.keys());
+        if (playerIds.length !== 2) return false;
+        
+        return (playerIds[0] === participant_id_1 && playerIds[1] === participant_id_2) ||
+               (playerIds[0] === participant_id_2 && playerIds[1] === participant_id_1);
+    }
+
+    public isUserGameCreator (user_id: number): boolean {
+        return this.invitation !== undefined && this.invitation.fromId === user_id;
     }
 
     public get started(): boolean {

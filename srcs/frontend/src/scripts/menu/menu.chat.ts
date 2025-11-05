@@ -229,6 +229,9 @@ async function sentMessageByEnter(event: KeyboardEvent): Promise<void> {
 }
 
 async function inviteToGame(toUser: ChatUser): Promise<void> {
+	const toId = toUser.user_id;
+	const fromId = user.user_id;
+	
 	console.log(`CHAT: Invite pressed: invite [${toUser.username}] to a game (not implemented)`);
 }
 
