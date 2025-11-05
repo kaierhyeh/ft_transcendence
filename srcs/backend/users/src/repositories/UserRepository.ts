@@ -147,6 +147,10 @@ export class UserRepository {
             return;
         }
 
+        if (avatar_filename.includes('..')) {
+            console.warn(`Invalid avatar filename`);
+            return ;
+        }
         const avatarPath = path.join(CONFIG.AVATAR.BASE_URL, avatar_filename);
         try {
             if (fs.existsSync(avatarPath)) {
