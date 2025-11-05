@@ -328,11 +328,11 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 
 
 	chatMessages.innerHTML = messages.map(msg => `
-		<div class="chat-msg chat_id=${msg.chat_id} ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
+		<div class="chat-msg chat_id=${msg.chat_id} ${msg.from_id === withUser.user_id ? 'from-user' : 'from-them'}">
 		${msg.from_id !== withUser.user_id
 			? `<span class="green-text">You: </span>`
-			: `<span class="blue-text">${withUser.username}: </span>`}
-			${msg.msg}
+			: `<span class="blue-text">${escapeHtml(withUser.username)}: </span>`}
+			${escapeHtml(msg.msg)}
 			</div>`).join("");
 
 	chatMessages.scrollTop = chatMessages.scrollHeight;
