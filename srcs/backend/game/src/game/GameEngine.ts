@@ -238,17 +238,15 @@ export class GameEngine {
         }
 
         if (!collision && !continuousCollision) {
-            const crossedTop = (prevBallY + BALL_SIZE <= player.paddle.y) && (this.ball.y + BALL_SIZE >= player.paddle.y);
-            const crossedBottom = (prevBallY >= player.paddle.y + PADDLE_HEIGHT) && (this.ball.y <= player.paddle.y + PADDLE_HEIGHT);
+            const crossedTop = (prevBallY + BALL_SIZE <= player.paddle.y) && (this.ball.y + BALL_SIZE >= player.paddle.y) && (this.ball.dy > 0);
+            const crossedBottom = (prevBallY >= player.paddle.y + PADDLE_HEIGHT) && (this.ball.y <= player.paddle.y + PADDLE_HEIGHT) && (this.ball.dy < 0);
 
-            const ballCenterX = this.ball.x + BALL_SIZE / 2;
-            const horizNear = ballCenterX >= (player.paddle.x - VERTICAL_EDGE_X_TOLERANCE) && ballCenterX <= (player.paddle.x + PADDLE_WIDTH + VERTICAL_EDGE_X_TOLERANCE);
+            const ballLeft = this.ball.x;
+            const ballRight = this.ball.x + BALL_SIZE;
+            const horizNear = (ballRight >= (player.paddle.x - VERTICAL_EDGE_X_TOLERANCE)) && (ballLeft <= (player.paddle.x + PADDLE_WIDTH + VERTICAL_EDGE_X_TOLERANCE));
 
-            if ((crossedTop || crossedBottom) && horizNear) {
+            if ((crossedTop || crossedBottom) && horizNear)
                 this.ball.dy = -this.ball.dy;
-                if (this.ball.y < 0) this.ball.y = 0;
-                else if (this.ball.y + BALL_SIZE > HEIGHT) this.ball.y = HEIGHT - BALL_SIZE;
-            }
 
             return;
         }
