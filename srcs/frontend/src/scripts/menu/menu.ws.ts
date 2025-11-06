@@ -5,6 +5,33 @@ let chatSocket: WebSocket | null = null;
 let pingInterval: number | null = null;
 let lastPongTime = 0;
 
+function createGameLink(gameId: number): HTMLDivElement {
+	const container = document.createElement('div');
+	container.className = 'chat-msg-invite-to-game-link';
+	
+	const serverLabel = document.createElement('span');
+	serverLabel.textContent = ' Server: ';
+	
+	const link = document.createElement('a');
+	link.dataset.route = `/arena?game_id=${gameId}`;
+	link.className = 'auth-link';
+	link.dataset.i18n = 'startGameInChat';
+	link.textContent = 'Start Game';
+	
+	link.addEventListener('click', (e) => {
+		e.preventDefault();
+		const path = link.dataset.route;
+		if (path && (window as any).navigateTo) {
+			(window as any).navigateTo(path);
+		}
+	});
+	
+	container.appendChild(serverLabel);
+	container.appendChild(link);
+	
+	return container;
+}
+
 function cleanupAndReconnect() {
 	if (pingInterval) {
 		clearInterval(pingInterval);
@@ -96,31 +123,12 @@ export function wsConnectChat() {
 						}
 						
 						console.log("WS Appending game invite to chatMessages:", newGame);
-						const child = `
-							<div id=arenaBlock class="chat-msg-invite-to-game-link">
-								<span> Server: </span>
-								<a data-route="/arena?game_id=${newGame.game_id}" class="auth-link" data-i18n="startGameInChat">Start Game</a>
-							</div>
-						`;
-
-						console.log("WS Inserting game invite into chatMessages:", child);
-						chatMessages.insertAdjacentHTML('beforeend', child);
+						const gameLink = createGameLink(newGame.game_id);
+						
+						console.log("WS Inserting game invite into chatMessages");
+						chatMessages.appendChild(gameLink);
 						chatMessages.scrollTop = chatMessages.scrollHeight;
 						console.log("WS Inserting game invite into chatMessages: FINISHED");
-
-						const gameLink = document.getElementById("arenaBlock");
-
-						if (gameLink) {
-							 gameLink.querySelectorAll('[data-route]').forEach(link => {
-								link.addEventListener('click', (e) => {
-									e.preventDefault();
-									const path = (e.currentTarget as HTMLElement).dataset.route;
-									if (path && (window as any).navigateTo) {
-										(window as any).navigateTo(path);
-									}
-								});
-							});
-						}
 
 					} catch (err) {}
 					lastPongTime = Date.now();

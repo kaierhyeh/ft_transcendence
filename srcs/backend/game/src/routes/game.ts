@@ -29,8 +29,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
             code === 'INVITATION_BLOCKED' ||
             code === 'MISSING_USER_ID' ||
             code === 'PARTICIPANT_ID_MISMATCH' ||
-            code === 'DUPLICATE_USER' ||
-            code === 'DUPLICATE_INVITATION_GAME') {
+            code === 'DUPLICATE_USER') {
           return reply.status(status).send({ error: error.message, code });
         }
         

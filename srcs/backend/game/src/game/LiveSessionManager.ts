@@ -16,6 +16,7 @@ export class LiveSessionManager {
     private game_sessions: Map<number, GameSession>;
     private usersClient: UsersClient;
     private chatClient: ChatClient;
+    
 
     constructor(
         private session_repo: SessionRepository,
@@ -27,28 +28,68 @@ export class LiveSessionManager {
     }
 
     public async createGameSession(data: GameCreationData): Promise<number> {
-        // Validate invitation-specific constraints before creating the session
         if (data.invitation) {
-            this.validateInvitationData(data);
+            return await this.handleInvitationGameCreation(data);
         }
-
+        
         const game_id = next_id++;
-
         const new_game = await GameSession.create(data, this.logger, this.usersClient);
         this.game_sessions.set(game_id, new_game);
-        if (data.invitation) {
-            try {
-                await this.chatClient.notifyGameCreationToChatService({
-                    ...data.invitation,
-                    gameId: game_id
-                });
-            } catch (error: any) {
-                this.game_sessions.delete(game_id); // Rollback session creation
-                this.logger.error({ error: error.message || String(error) }, "Failed to notify chat service of game creation, rolling back session");
-                throw error; // Rethrow to inform caller
+        
+        return game_id;
+    }
+
+    private findDuplicateInvitationGame(data: GameCreationData): number | undefined {
+        if (!data.invitation) return undefined;
+        
+        const participantId1 = data.participants[0].participant_id;
+        const participantId2 = data.participants[1].participant_id;
+        
+        for (const [gameId, session] of this.game_sessions.entries()) {
+            if (session.isInvitation && session.hasParticipantPair(participantId1, participantId2)) {
+                return gameId;
             }
         }
+        
+        return undefined;
+    }
 
+    private async handleInvitationGameCreation(data: GameCreationData): Promise<number> {
+        // Check if invitation game already exists
+        const existingGameId = this.findDuplicateInvitationGame(data);
+        
+        if (existingGameId) {
+            // Game already exists, just notify chat again
+            try {
+                await this.chatClient.notifyGameCreationToChatService({
+                    ...data.invitation!,
+                    gameId: existingGameId
+                });
+            } catch (error: any) {
+                this.logger.error({ error: error.message || String(error) }, "Failed to notify chat service");
+                throw error;
+            }
+            return existingGameId;
+        }
+        
+        // No duplicate, validate and create new game
+        this.validateInvitationData(data);
+        
+        const game_id = next_id++;
+        const new_game = await GameSession.create(data, this.logger, this.usersClient);
+        this.game_sessions.set(game_id, new_game);
+        
+        try {
+            await this.chatClient.notifyGameCreationToChatService({
+                ...data.invitation!,
+                gameId: game_id
+            });
+        } catch (error: any) {
+            this.game_sessions.delete(game_id); // Rollback
+            this.logger.error({ error: error.message || String(error) }, "Failed to notify chat service, rolling back session");
+            throw error;
+        }
+        
         return game_id;
     }
 
@@ -94,20 +135,6 @@ export class LiveSessionManager {
             (error as any).code = 'DUPLICATE_USER';
             error.message = `Cannot invite yourself. Both participants have user_id ${participants[0].user_id}`;
             throw error;
-        }
-
-        // Check if a game with this exact pair already exists
-        const participantId1 = participants[0].participant_id;
-        const participantId2 = participants[1].participant_id;
-
-        for (const [gameId, session] of this.game_sessions.entries()) {
-            if (session.isInvitation && session.hasParticipantPair(participantId1, participantId2)) {
-                const error = new Error;
-                (error as any).status = 409; // Conflict
-                (error as any).code = 'DUPLICATE_INVITATION_GAME';
-                error.message = `A game with these participants already exists (game_id: ${gameId})`;
-                throw error;
-            }
         }
     }
 
