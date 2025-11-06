@@ -1,5 +1,6 @@
 // user/components/MatchCard.ts
 import type { GameSession, PlayerData } from '../types.js';
+import { t } from '../../i18n/i18n.js';
 
 interface MatchCardData {
     session: GameSession;
@@ -340,9 +341,9 @@ export function createEmptyState(): string {
     return `
         <div class="empty-state">
             <div class="empty-icon">🎮</div>
-            <h3>No matches yet</h3>
-            <p>Your match history will appear here after you play some games!</p>
-            <a data-route="/pong" class="match-history-btn">Play Now</a>
+            <h3 data-i18n="noMatchesYet">${t("noMatchesYet")}</h3>
+            <p data-i18n="noMatchesExplanation">${t("noMatchesExplanation")}</p>
+            <a data-route="/pong" class="match-history-btn" data-i18n="playNow">${t("playNow")}</a>
         </div>
     `;
 }

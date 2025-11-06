@@ -71,6 +71,8 @@ export const translations = {
     "enterEmail": "Enter email",
     "password": "Password:",
     "changePassword": "Change Password",
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
     "enterPassword": "Enter password",
     "register": "Sign Up",
     "loginWithGoogle": "Log In with Google",
@@ -109,6 +111,11 @@ export const translations = {
     "scoredPointsRanking": "Scored points ranking",
     "notEnoughData": "Not Enough Data",
     "memberSince": "Member since",
+    "matchHistory": "Match History",
+    "noMatchesYet": "No matches yet",
+    "noMatchesExplanation": "Your match history will appear here after you play some games!",
+    "playNow": "Play Now",
+    "notConnected": "You are not connected...",
 
     // Chat
     "typeMessage": "Type a message...",
@@ -228,6 +235,8 @@ export const translations = {
     "enterEmail": "輸入電子信箱",
     "password": "密碼：",
     "changePassword": "Change Password",
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
     "enterPassword": "輸入密碼",
     "register": "註冊",
     "loginWithGoogle": "使用 Google 登入",
@@ -266,6 +275,11 @@ export const translations = {
     "scoredPointsRanking": "得分排名",
     "notEnoughData": "Not Enough Data",
     "memberSince": "Member since",
+    "matchHistory": "Match History",
+    "noMatchesYet": "No matches yet",
+    "noMatchesExplanation": "Your match history will appear here after you play some games!",
+    "playNow": "Play Now",
+    "notConnected": "You are not connected...",
 
     // Chat
     "typeMessage": "輸入訊息...",
@@ -384,6 +398,8 @@ export const translations = {
     "enterEmail": "Entrez l'email",
     "password": "Mot de passe :",
     "changePassword": "Change Password",
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
     "enterPassword": "Entrez le mot de passe",
     "register": "S'inscrire",
     "loginWithGoogle": "Se connecter avec Google",
@@ -422,6 +438,11 @@ export const translations = {
     "scoredPointsRanking": "Classement des points marqués",
     "notEnoughData": "Not Enough Data",
     "memberSince": "Member since",
+    "matchHistory": "Match History",
+    "noMatchesYet": "No matches yet",
+    "noMatchesExplanation": "Your match history will appear here after you play some games!",
+    "playNow": "Play Now",
+    "notConnected": "You are not connected...",
 
     // Chat
     "typeMessage": "Tapez un message...",
@@ -538,8 +559,10 @@ export const translations = {
     "enterUsernameOrEmail": "введите имя пользователя или электронную почту", // alt "Ведите пользователя или почта" / "Ведите пользователя или Email"
     "enterUsername": "введите имя пользователя", // alt "Имя пользователя"
     "enterEmail": "введите элетроннцю почту", // "Введите email"
-    "password": "ПАРОЛЬ:",
+    "password": "ПАРОЛЬ",
     "changePassword": "СМЕНИТЬ ПАРОЛЬ",
+    "oldPassword": "старый пароль",
+    "newPassword": "новый пароль",
     "enterPassword": "введите пароль",
     "register": "РЕГИСТРАЦИЯ",
     "loginWithGoogle": "Войти с GOOGLE",
@@ -547,7 +570,7 @@ export const translations = {
     "login": "ВХОД",
     "or": "ИЛИ",
     "alreadyHaveAccount": "Есть аккаунт? Вход",
-    "dontHaveAccount": "Нет аккаунта? Регисттрация",
+    "dontHaveAccount": "Нет аккаунта? Регистрация",
     "myProfileTitle": "МОЙ ПРОФИЛЬ",
     "profileAvatar": "АВАТАР ПРОФИЛЯ",
     "changeAvatar": "ИЗМЕНИТЬ АВАТАР",
@@ -557,14 +580,14 @@ export const translations = {
     "enable2FA": "ВКЛЮЧИТЬ 2FA", // more correct but long: "Включить двухфакторную аутентификацию" 
     "logout": "ВЫЙТИ", // also possible "Выход" = "Exit"
     "2faConfiguration": "НАСТРОЙКИ 2FA", // = "Settings of 2FA"
-    "scanQRCode": "ОТСКАНИРУЙТЕ ЭТОТ QR-КОД ВАШИМ ПРИЛОЖЕНИЕМ ДЛЯ ВХОДА:",
-    "orUseSecretCode": "ИЛИ ВВЕДИТЕ СЕКРЕТНЫЙ КОД ВРУЧНУЮ:",
+    "scanQRCode": "Отсканируйте QR-код приложением для входа:",
+    "orUseSecretCode": "или введите секретный код вручную:",
     "qrCode": "QR-КОД",
-    "enterSixDigitCode": "ВВЕДИТЕ КОД ИЗ 6 ЦИФЕР:",
+    "enterSixDigitCode": "введите код из 6 цифер:",
     "activate2FA": "ВКЛЮЧИТЬ 2FA",
     "cancel": "ОТМЕНА",
     "2faVerification": "2FA ПРОВЕРКА", // or "2FA Подтверждение" 
-    "enterVerificationCode": "ПОЖАЛУЙСТА, ВВЕДИТЕ КОД ПРОВЕРКИ ИЗ ВАШЕГО ПРИЛОЖЕНИЯ ДЛЯ ВХОДА:",
+    "enterVerificationCode": "Пожалуйста, введите код проверки из вашего приложения для входа:",
     "verify": "ПОДТВЕРДИТЬ",
     "username": "ИМЯ ПОЛЬЗОВАТЕЛЯ",
     "alias": "ПСЕВДОНИМ",
@@ -578,6 +601,11 @@ export const translations = {
     "scoredPointsRanking": "РЕЙТИНГ ПО ОЧКАМ",
     "notEnoughData": "недостаточно данных",
     "memberSince": "на сайте с",
+    "matchHistory": "ИСТОРИЯ МАТЧЕЙ",
+    "noMatchesYet": "ОЙ, НИЧЕГО НЕТ",
+    "noMatchesExplanation": "История матчей будет доступна после первой игры!",
+    "playNow": "К ИГРАМ",
+    "notConnected": "Вы не подключены...",
 
     // Chat
     "typeMessage": "текст сообщения...",
@@ -585,10 +613,10 @@ export const translations = {
     "blockedStatus": "ЗАБЛОКИРОВАН",				// to translate
 
     // Social-Menu Btns
-    "addFriend": "ПОДРУЖИТЬСЯ",
+    "addFriend": "В ДРУЗЬЯ",
     "cancelRequest": "ОТМЕНИТЬ ЗАПРОС",
-    "acceptRequest": "ПРИНЯТЬ ДРУЖБУ",
-    "declineRequest": "ОТКАЗАТЬ В ДРУЖБЕ",
+    "acceptRequest": "СТАТЬ ДРУГОМ",
+    "declineRequest": "ОТКАЗАТЬ",
     "deleteFriend": "УДАЛИТЬ ИЗ ДРУЗЕЙ",
     "unblockUser": "РАЗБЛОКИРОВАТЬ",
     "openChat": "ЧАТ",

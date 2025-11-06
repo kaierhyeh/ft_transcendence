@@ -3,6 +3,7 @@ import user from './User.js';
 import { fetchMatchHistory } from './api.js';
 import { createMatchCard, createSkeletonCard, createEmptyState, createErrorState, attachMatchCardListeners } from './components/MatchCard.js';
 import type { MatchHistoryResponse } from './types.js';
+import { t } from '../i18n/i18n.js';
 
 const API_AUTH_ENDPOINT = `${window.location.origin}/api/auth`;
 
@@ -205,7 +206,7 @@ async function loadMatchHistory(): Promise<void> {
         // Inject the match history structure
         matchHistorySection.innerHTML = `
             <div class="match-history-header">
-                <h1>⚔️ Match History ⚔️</h1>
+                <h1 data-i18n="matchHistory">⚔️ ${t("matchHistory")} ⚔️</h1>
             </div>
             <div class="match-history-container"></div>
         `;                                                                                          // TO_TRANSLATE
