@@ -5,12 +5,14 @@ import { ScoreTracker } from "./live_stats/ScoreTracker.js";
 import { ScoreChart } from "./live_stats/ScoreChart.js";
 import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
 import user from "./user/User.js";
-import { GameParticipant } from "./game/types.js";
+import { GameParticipant, Team } from "./game/types.js";
 import { t } from "./i18n/i18n.js";
+
+let myTeam: Team | null;
 
 export function initArena() {
     let currentSession: GameSession | null = null;
-    // let isTransitioning = false;
+    let isJoining = false;
     
     // Core game components
     const renderer = new GameRenderer("pong");
@@ -49,7 +51,7 @@ export function initArena() {
         document.getElementById('join-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
             (e.target as HTMLElement).blur(); // ✅ Remove focus from button
-            // if (isTransitioning) return;
+            if (isJoining) return;
             joinGame();
         });
     }
@@ -63,8 +65,8 @@ export function initArena() {
 	}
     
     async function joinGame(): Promise<void> {
-        // if (isTransitioning) return;
-        // isTransitioning = true;
+        if (isJoining) return;
+        isJoining = true;
         
         try {
             // Cleanup previous game
@@ -124,10 +126,9 @@ export function initArena() {
         } catch (error) {
             console.error("Failed to start game:", error);
             renderer.showMessage(t("failedToStartGame"));
+        } finally {
+            isJoining = false;
         }
-        // finally {
-        //     isTransitioning = false;
-        // }
     }
 
     function cleanupPong(): void {

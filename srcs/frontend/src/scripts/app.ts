@@ -141,6 +141,13 @@ async function navigate(path: string, push: boolean = true)
 		}
 	}
 
+	//clean up arena game
+	if (currentPath === "/arena" && path !== "/arena") {
+		if ((window as any).cleanupPong) {
+			(window as any).cleanupPong();
+		}
+	}
+
 	// Split path and query string
 	const [basePath, queryString] = path.split('?');
 	const file = routes[basePath];
