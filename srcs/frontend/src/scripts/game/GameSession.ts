@@ -9,6 +9,7 @@ export interface GameSession {
     readonly mode: GameMode;
     readonly format: GameFormat;
     readonly config: GameConfig;
+    readonly online: boolean;
     
     // State accessors
     getState(): GameState | GameState2v2 | null;
@@ -27,19 +28,23 @@ export interface GameSession {
 export async function createGameSession(
     mode: GameMode,
     format: GameFormat,
-    participants: GameParticipant[]
+    participants: GameParticipant[],
+    online: boolean = false,
+    game_id: number | null = null
 ): Promise<GameSession> {
-    // 1. Create match
-    const { game_id } = await createMatch(mode, format, participants);
-    
-    console.log(`Game session ${game_id} created (${mode}, ${format})`);
+    if (!game_id) {
+        // 1. Create match
+        const result = await createMatch(mode, format, participants);
+        console.log(`Game session ${game_id} created (${mode}, ${format})`);
+        game_id = result.game_id;
+    }
     
     // 2. Get config
     const config = await getGameConfig(game_id);
     
     // 3. Setup WebSockets
     const websockets: WebSocket[] = [];
-    const numPlayers = format === '1v1' ? 2 : 4;
+    const numPlayers = format === '1v1' ? (online ? 1 : 2) : 4;
     
     let currentState: GameState | GameState2v2 | null = null;
     let winner: Team | null = null;
@@ -96,6 +101,7 @@ export async function createGameSession(
         mode,
         format,
         config,
+        online,
         
         getState() {
             return currentState;
