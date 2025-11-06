@@ -1,5 +1,6 @@
 import { createGameSession, GameSession, PlayerAssignment, GameEndedInfo } from "./game/GameSession.js";
 import { GameRenderer } from "./game/GameRenderer.js";
+import { GameMessenger } from "./game/GameMessenger.js";
 import { InputController } from "./game/InputController.js";
 import { ScoreTracker } from "./live_stats/ScoreTracker.js";
 import { ScoreChart } from "./live_stats/ScoreChart.js";
@@ -13,41 +14,14 @@ export function initArena() {
     let isJoining = false;
     let myTeam: Team | null = null;
     
-    // Core game components (disable restart hint for arena)
-    const renderer = new GameRenderer("pong", false);
+    // Core game components
+    const renderer = new GameRenderer("pong", false); // Disable restart hint for arena
+    const messenger = new GameMessenger("game-message");
     const inputController = new InputController();
     
     const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
     const scoreChart = new ScoreChart();
     const scoreDisplay = new ScoreDisplay();
-    
-    // Get message element for persistent display
-    const messageElement = document.getElementById('game-message');
-    
-    // Helper to show persistent message
-    function showMessage(text: string, clickable: boolean = false, onClick?: () => void): void {
-        if (!messageElement) return;
-        messageElement.textContent = text;
-        messageElement.style.display = 'block';
-        
-        if (clickable) {
-            messageElement.classList.add('clickable');
-            if (onClick) {
-                messageElement.onclick = onClick;
-            }
-        } else {
-            messageElement.classList.remove('clickable');
-            messageElement.onclick = null;
-        }
-    }
-    
-    function hideMessage(): void {
-        if (messageElement) {
-            messageElement.style.display = 'none';
-            messageElement.classList.remove('clickable');
-            messageElement.onclick = null;
-        }
-    }
     
     // Initialize score display if elements exist
     if (document.getElementById('pong-score-chart')) {
@@ -67,8 +41,8 @@ export function initArena() {
         scoreTracker.resetAll();
     }
     
-    // Show initial clickable message instead of button
-    showMessage("Join the game", true, () => {
+    // Show initial clickable join prompt
+    messenger.showJoinPrompt(() => {
         if (!isJoining) {
             joinGame();
         }
@@ -76,12 +50,87 @@ export function initArena() {
     
 
     function getGameIdFromUrl(): number | null {
-		const params = new URLSearchParams(window.location.search);
-		const id = params.get('game_id');
-		if (!id) return null;
-		const n = parseInt(id, 10);
-		return isNaN(n) ? null : n;
-	}
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('game_id');
+        if (!id) return null;
+        const n = parseInt(id, 10);
+        return isNaN(n) ? null : n;
+    }
+
+    // Helper: Setup team indicator display
+    function setupTeamIndicator(team: Team): void {
+        const teamIndicator = document.getElementById('team-indicator');
+        const teamLeftSpan = teamIndicator?.querySelector('.team-left');
+        const teamRightSpan = teamIndicator?.querySelector('.team-right');
+        
+        if (!teamIndicator || !teamLeftSpan || !teamRightSpan) return;
+
+        if (team === 'left') {
+            // You are LEFT (green), opponent is RIGHT (white)
+            teamLeftSpan.innerHTML = `<span class="my-team">Left: You</span>`;
+            teamRightSpan.innerHTML = `<span class="opponent-team">Right: <span id="opponent-name">Waiting...</span></span>`;
+        } else {
+            // You are RIGHT (green), opponent is LEFT (white)
+            teamLeftSpan.innerHTML = `<span class="opponent-team">Left: <span id="opponent-name">Waiting...</span></span>`;
+            teamRightSpan.innerHTML = `<span class="my-team">Right: You</span>`;
+        }
+        
+        teamIndicator.style.display = 'block';
+    }
+
+    // Helper: Handle player assignment
+    function handlePlayerAssignment(assignment: PlayerAssignment): void {
+        myTeam = assignment.team;
+        console.log(`Assigned to team: ${myTeam}, slot: ${assignment.slot}, username: ${assignment.username}`);
+        setupTeamIndicator(myTeam);
+    }
+
+    // Helper: Handle game started
+    function handleGameStarted(): void {
+        console.log("Game started - both players connected");
+        messenger.hide();
+        
+        // Update opponent name if available
+        const opponentNameSpan = document.getElementById('opponent-name');
+        if (opponentNameSpan) {
+            opponentNameSpan.textContent = 'Opponent';
+        }
+    }
+
+    // Helper: Handle game ended (disconnection)
+    function handleGameEnded(info: GameEndedInfo): void {
+        if (info.reason === "player_disconnected") {
+            const opponentTeam = myTeam === 'left' ? 'right' : 'left';
+            if (info.disconnected_player?.team === opponentTeam) {
+                messenger.showOpponentDisconnected();
+            } else {
+                messenger.showConnectionLost();
+            }
+        }
+    }
+
+    // Helper: Handle game over
+    function handleGameOver(winner: Team, playerTeam: Team | null): void {
+        console.log("Game over! Winner:", winner);
+        messenger.showGameOver(playerTeam === winner);
+    }
+
+    // Helper: Attach all game session handlers
+    function attachGameHandlers(session: GameSession): void {
+        session.onPlayerAssigned(handlePlayerAssignment);
+        session.onGameStarted(handleGameStarted);
+        session.onGameEnded(handleGameEnded);
+        session.onGameOver(handleGameOver);
+        
+        // Subscribe to game state updates for score tracking
+        session.onStateUpdate((state: any) => {
+            const leftScore = state.score?.left ?? 0;
+            const rightScore = state.score?.right ?? 0;
+            const ballDx = state.ball?.dx ?? 0;
+            scoreTracker.update(leftScore, rightScore, ballDx);
+        });
+    }
+    
     
     async function joinGame(): Promise<void> {
         if (isJoining) return;
@@ -98,112 +147,43 @@ export function initArena() {
             
             // Reset per-game scores
             scoreTracker.resetGame();
-            
             await new Promise(resolve => setTimeout(resolve, 100));
 
             // Retrieve game id
             const gameId = getGameIdFromUrl();
             if (!gameId) throw new Error("No game_id in URL");
             
-            // Verify authentication before creating participant
+            // Verify authentication
             const isAuthenticated = await user.ensureAuthenticated();
             const user_id = user.user_id ?? undefined;
-            if (!isAuthenticated || !user_id)
+            if (!isAuthenticated || !user_id) {
                 throw new Error("User not authenticated");
-            // Create participants
-            const participants: GameParticipant[] = [
-                {
-                    type: "registered",
-                    user_id,
-                    participant_id: user_id.toString()  
-                },
-            ];
+            }
+            
+            // Create participant
+            const participants: GameParticipant[] = [{
+                type: "registered",
+                user_id,
+                participant_id: user_id.toString()  
+            }];
+            
+            // Show waiting message
+            messenger.showWaiting();
             
             // Create new session
-            showMessage("Waiting for opponent...", false); // Non-clickable while waiting
-            const teamIndicator = document.getElementById('team-indicator');
-            const teamLeftSpan = teamIndicator?.querySelector('.team-left');
-            const teamRightSpan = teamIndicator?.querySelector('.team-right');
-            
             currentSession = await createGameSession("pvp", "1v1", participants, true, gameId);
             
-            // Handle player assignment
-            currentSession.onPlayerAssigned((assignment: PlayerAssignment) => {
-                myTeam = assignment.team;
-                console.log(`Assigned to team: ${myTeam}, slot: ${assignment.slot}, username: ${assignment.username}`);
-                
-                // Display team indicator with proper styling
-                if (teamIndicator && teamLeftSpan && teamRightSpan) {
-                    if (myTeam === 'left') {
-                        // You are LEFT (green), opponent is RIGHT (white)
-                        teamLeftSpan.innerHTML = `<span class="my-team">Left: You</span>`;
-                        teamRightSpan.innerHTML = `<span class="opponent-team">Right: <span id="opponent-name">Waiting...</span></span>`;
-                    } else {
-                        // You are RIGHT (green), opponent is LEFT (white)
-                        teamLeftSpan.innerHTML = `<span class="opponent-team">Left: <span id="opponent-name">Waiting...</span></span>`;
-                        teamRightSpan.innerHTML = `<span class="my-team">Right: You</span>`;
-                    }
-                    teamIndicator.style.display = 'block';
-                }
-            });
-            
-            // Handle game started (update opponent name when they join)
-            currentSession.onGameStarted(() => {
-                console.log("Game started - both players connected");
-                hideMessage(); // Hide overlay when game starts
-                
-                // Update opponent name if available
-                const opponentNameSpan = document.getElementById('opponent-name');
-                if (opponentNameSpan) {
-                    // Get opponent username from game state
-                    const state = currentSession?.getState();
-                    if (state && 'players' in state) {
-                        const opponentTeam = myTeam === 'left' ? 'right' : 'left';
-                        // For now just show "Opponent" - username comes from player_assigned
-                        opponentNameSpan.textContent = 'Opponent';
-                    }
-                }
-            });
+            // Attach all handlers
+            attachGameHandlers(currentSession);
             
             // Attach controllers
             renderer.attachToSession(currentSession);
             inputController.attachToSession(currentSession);
             
-            // Subscribe to game state updates for score tracking
-            currentSession.onStateUpdate((state: any) => {
-                const leftScore = state.score?.left ?? 0;
-                const rightScore = state.score?.right ?? 0;
-                const ballDx = state.ball?.dx ?? 0;
-                
-                scoreTracker.update(leftScore, rightScore, ballDx);
-            });
-            
-            // Handle game ended (disconnection)
-            currentSession.onGameEnded((info: GameEndedInfo) => {
-                if (info.reason === "player_disconnected") {
-                    const opponentTeam = myTeam === 'left' ? 'right' : 'left';
-                    if (info.disconnected_player?.team === opponentTeam) {
-                        showMessage("Your opponent left the game. You win by forfeit!");
-                    } else {
-                        showMessage("Connection lost");
-                    }
-                }
-            });
-            
-            // Setup game over handler
-            currentSession.onGameOver((winner: Team, playerTeam: Team | null) => {
-                console.log("Game over! Winner:", winner);
-                if (playerTeam === winner) {
-                    showMessage("You won!");
-                } else {
-                    showMessage("You lost!");
-                }
-            });
-            
             console.log(`Game started: pvp 1v1 online`);
         } catch (error) {
             console.error("Failed to start game:", error);
-            showMessage(t("failedToStartGame"));
+            messenger.showError(t("failedToStartGame"));
         } finally {
             isJoining = false;
         }
