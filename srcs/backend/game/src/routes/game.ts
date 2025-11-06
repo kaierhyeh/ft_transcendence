@@ -86,6 +86,41 @@ export default async function gameRoutes(fastify: FastifyInstance) {
       reply.send(conf);
   });
 
+  // GET /:id/access-status - Check if user can access an invitation game
+  fastify.get<{ Params: GameIdParams }>(
+    "/:id/access-status",
+    {
+      preHandler: userAuthMiddleware,
+      schema: { params: gameIdSchema }
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const sub = request.authUser?.sub;
+      
+      if (!sub) {
+        return reply.status(401).send({ error: "Unauthorized: No user context" });
+      }
+
+      try {
+        const userId = toInteger(sub);
+        fastify.live_sessions.checkGameAccess(id, userId);
+        reply.status(204).send();
+      } catch (error: any) {
+        const status = error.status || 500;
+        const code = error.code;
+        
+        if (code === 'GAME_NOT_FOUND' ||
+            code === 'NOT_INVITATION_GAME' ||
+            code === 'UNAUTHORIZED_ACCESS') {
+          return reply.status(status).send({ error: error.message, code });
+        }
+        
+        fastify.log.error(error);
+        reply.status(500).send({ error: "Internal server error" });
+      }
+    }
+  );
+
   // GET /:id/ws - WebSocket endpoint for real-time game updates
   fastify.get<{ Params: GameIdParams }>(
     "/:id/ws",

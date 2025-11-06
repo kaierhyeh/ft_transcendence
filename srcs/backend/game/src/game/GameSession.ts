@@ -256,6 +256,11 @@ export class GameSession {
         return this.invitation !== undefined && this.invitation.fromId === user_id;
     }
 
+    public canUserAccessInvitation(user_id: number): boolean {
+        if (!this.invitation) return false;
+        return this.invitation.fromId === user_id || this.invitation.toId === user_id;
+    }
+
     public get started(): boolean {
         return this.started_at !== undefined;
     }

@@ -143,6 +143,35 @@ export class LiveSessionManager {
         return this.game_sessions.get(id)?.config;
     }
 
+    /**
+     * Check if a user can access an invitation game
+     * @throws Error with status and code properties
+     */
+    public checkGameAccess(gameId: number, userId: number): void {
+        const session = this.game_sessions.get(gameId);
+        
+        if (!session) {
+            const error = new Error("Game not found");
+            (error as any).status = 404;
+            (error as any).code = 'GAME_NOT_FOUND';
+            throw error;
+        }
+
+        if (!session.isInvitation) {
+            const error = new Error("This game is not an invitation game");
+            (error as any).status = 403;
+            (error as any).code = 'NOT_INVITATION_GAME';
+            throw error;
+        }
+
+        if (!session.canUserAccessInvitation(userId)) {
+            const error = new Error("You are not authorized to access this game");
+            (error as any).status = 403;
+            (error as any).code = 'UNAUTHORIZED_ACCESS';
+            throw error;
+        }
+    }
+
     public getPlayers(gameId: number): PlayerMap | undefined {
         return this.game_sessions.get(gameId)?.playersMap;
     }

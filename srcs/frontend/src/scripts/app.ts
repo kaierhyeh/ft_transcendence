@@ -12,7 +12,7 @@ import { initLogin, handleOAuthCallback } from "./auth/login.js";
 import { initSettings } from "./user/settings.js";
 import { initPong } from "./pong.js";
 import { initProfile } from "./user/profile.js";
-import { initArena } from "./arena.js";
+import { initArena, cleanupArena } from "./arena.js";
 
 const app = document.getElementById("app") as HTMLElement;
 
@@ -31,7 +31,7 @@ const routes: Record<string, string> = {
 	"/signup": "./html/auth/signup.html",
 	"/login": "./html/auth/login.html",
 	"/auth/google/callback": "./html/auth/login.html", // Temporary page while processing OAuth
-	"/arena": "./html/arena.html",
+	"/arena": "./html/arena/arena.html",
 };
 
 const initScripts: Record<string, () => void> = {
@@ -143,9 +143,7 @@ async function navigate(path: string, push: boolean = true)
 
 	//clean up arena game
 	if (currentPath === "/arena" && path !== "/arena") {
-		if ((window as any).cleanupPong) {
-			(window as any).cleanupPong();
-		}
+		cleanupArena();
 	}
 
 	// Split path and query string

@@ -8,8 +8,102 @@ import { ScoreDisplay } from "./live_stats/ScoreDisplay.js";
 import user from "./user/User.js";
 import { GameParticipant, Team } from "./game/types.js";
 import { t } from "./i18n/i18n.js";
+import { i18n } from "./i18n/index.js";
+import { checkGameAccess } from "./game/api.js";
 
-export function initArena() {
+// Module-level cleanup reference
+let gameCleanup: (() => void) | null = null;
+
+export async function initArena() {
+    const arenaContainer = document.querySelector('.arena');
+    if (!arenaContainer) return;
+    
+    // Check access and load appropriate template
+    const canAccess = await checkAccess();
+    
+    if (canAccess) {
+        await loadGameView(arenaContainer);
+    } else {
+        await loadErrorView(arenaContainer);
+    }
+}
+
+export function cleanupArena(): void {
+    if (gameCleanup) {
+        gameCleanup();
+        gameCleanup = null;
+    }
+}
+
+async function loadGameView(container: Element): Promise<void> {
+    try {
+        const response = await fetch('/html/arena/game.html');
+        const html = await response.text();
+        container.innerHTML = html;
+        
+        // Translate the page
+        i18n.initializePage();
+        
+        // Setup navigation for buttons with data-route
+        const routeButtons = container.querySelectorAll('[data-route]');
+        routeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const path = (e.currentTarget as HTMLElement).dataset.route;
+                if (path && (window as any).navigateTo) {
+                    (window as any).navigateTo(path);
+                }
+            });
+        });
+        
+        // Initialize game after template is loaded
+        initGame();
+    } catch (error) {
+        console.error('Failed to load game view:', error);
+    }
+}
+
+async function loadErrorView(container: Element): Promise<void> {
+    try {
+        const response = await fetch('/html/arena/error.html');
+        const html = await response.text();
+        container.innerHTML = html;
+        
+        // Translate the page
+        i18n.initializePage();
+        
+        // Setup navigation for back button
+        const backBtn = container.querySelector('[data-route]');
+        if (backBtn) {
+            backBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const path = (e.currentTarget as HTMLElement).dataset.route;
+                if (path && (window as any).navigateTo) {
+                    (window as any).navigateTo(path);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load error view:', error);
+    }
+}
+
+async function checkAccess(): Promise<boolean> {
+    const gameId = getGameIdFromUrl();
+    if (!gameId) return false;
+    
+    return await checkGameAccess(gameId);
+}
+
+function getGameIdFromUrl(): number | null {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('game_id');
+    if (!id) return null;
+    const n = parseInt(id, 10);
+    return isNaN(n) ? null : n;
+}
+
+function initGame(): void {
     let currentSession: GameSession | null = null;
     let isJoining = false;
     let myTeam: Team | null = null;
@@ -41,21 +135,12 @@ export function initArena() {
         scoreTracker.resetAll();
     }
     
-    // Show initial clickable join prompt
+    // Show join prompt
     messenger.showJoinPrompt(() => {
         if (!isJoining) {
             joinGame();
         }
     });
-    
-
-    function getGameIdFromUrl(): number | null {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('game_id');
-        if (!id) return null;
-        const n = parseInt(id, 10);
-        return isNaN(n) ? null : n;
-    }
 
     // Helper: Setup team indicator display
     function setupTeamIndicator(team: Team): void {
@@ -198,5 +283,6 @@ export function initArena() {
         }
     }
 
-    (window as any).cleanupPong = cleanupPong;
+    // Assign to module-level cleanup reference
+    gameCleanup = cleanupPong;
 }

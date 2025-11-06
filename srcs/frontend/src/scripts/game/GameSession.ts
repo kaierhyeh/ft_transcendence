@@ -88,7 +88,7 @@ export async function createGameSession(
             try {
                 const message = JSON.parse(event.data);
                 
-                console.log(`[WS ${i}] Received message:`, message.type, message);
+                // console.log(`[WS ${i}] Received message:`, message.type, message);
                 
                 if (message.type === "player_assigned") {
                     myTeam = message.team;

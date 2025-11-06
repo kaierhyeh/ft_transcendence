@@ -64,3 +64,16 @@ export async function getGameConfig(gameId: number): Promise<GameConfig> {
         throw new Error('Game session validation failed');
     }
 }
+
+export async function checkGameAccess(gameId: number): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_GAME_ENDPOINT}/${gameId}/access-status`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        return response.status === 204;
+    } catch (error) {
+        console.error('Failed to check game access:', error);
+        return false;
+    }
+}
