@@ -101,11 +101,11 @@ function getTeamLabel(teamPlayers: PlayerData[], profileUserId: number | null, c
     const hasProfileOwner = teamPlayers.some(p => p.user_id === profileUserId);
     
     if (!hasProfileOwner) {
-        return 'Opponent';
+        return 'Opponent';                                      // TO_TRANSLATE
     }
     
     if (isOwnProfile(currentUserId, profileUserId)) {
-        return 'Your Team';
+        return 'Your Team';                                     // TO_TRANSLATE
     }
     
     // Find the profile owner's username
@@ -217,7 +217,7 @@ export function createMatchCard(data: MatchCardData): string {
     const forfeitFlag = session.forfeit === 1 ? ' <span class="forfeit-flag" title="Match ended due to forfeit">🏳️</span>' : '';
     
     if (profileOwnerWon) {
-        outcomeHTML = `<span class="winner-indicator">Victory!${forfeitFlag}</span>`;
+        outcomeHTML = `<span class="winner-indicator">Victory!${forfeitFlag}</span>`;               // TO_TRANSLATE
     } else {
         outcomeHTML = `<span class="loser-indicator">Defeat${forfeitFlag}</span>`;
     }
@@ -308,7 +308,7 @@ export function createMatchCard(data: MatchCardData): string {
                 <span class="match-duration">${duration}</span>
             </div>
         </div>
-    `;
+    `;                                                                                              // TO_TRANSLATE <span class="mode-label">${modeBadge.label}</span>
 }
 
 /**

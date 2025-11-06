@@ -82,7 +82,7 @@ export function initHistory(): void {
         const list = document.getElementById('list-container');
         if (!list) return;
         if (!tournaments || tournaments.length === 0) {
-            list.innerHTML = "<div class='tournament-empty'>Aucun tournoi trouvé.</div>";
+            list.innerHTML = "<div class='tournament-empty'>Aucun tournoi trouvé.</div>";                           // TO_TRANSLATE
             return;
         }
         list.innerHTML = tournaments.map((t) => `
@@ -92,7 +92,7 @@ export function initHistory(): void {
                 <div class="tournament-players">${t.playersCount}p.</div>
                 <div class="tournament-winner">Winner: <span class="winner-name">${t.winnerName}</span></div>
             </div>
-        `).join('');
+        `).join('');                                                                                                // TO_TRANSLATE
     }
 
     async function loadTournaments() {

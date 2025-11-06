@@ -96,11 +96,11 @@ export class GameRenderer {
         if (isOver && state.winner) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(`${state.winner.toUpperCase()} player wins!`, config.canvas_width / 2, config.canvas_height / 2);
+            this.ctx.fillText(`${state.winner.toUpperCase()} player wins!`, config.canvas_width / 2, config.canvas_height / 2); // TO_TRANSLATE
 
             if (this.showRestartHint) {
                 this.ctx.font = "24px Bit5x3, monospace";
-                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);            // TO_TRANSLATE
             }
 
             this.ctx.textAlign = "left";
@@ -137,18 +137,18 @@ export class GameRenderer {
 
         // Controls hint
         this.ctx.font = "16px Bit5x3, monospace";
-        this.ctx.fillText("Left: W/S (top) A/Z (btm)", 20, config.canvas_height - 60);
-        this.ctx.fillText("Right: ↑/↓ (top) O/L (btm)", 20, config.canvas_height - 40);
+        this.ctx.fillText("Left: W/S (top) A/Z (btm)", 20, config.canvas_height - 60);                      // TO_TRANSLATE
+        this.ctx.fillText("Right: ↑/↓ (top) O/L (btm)", 20, config.canvas_height - 40);                     // TO_TRANSLATE
 
         // Winner
         if (isOver && state.winner) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(`${state.winner.toUpperCase()} team wins!`, config.canvas_width / 2, config.canvas_height / 2);
+            this.ctx.fillText(`${state.winner.toUpperCase()} team wins!`, config.canvas_width / 2, config.canvas_height / 2);   // TO_TRANSLATE
 
             if (this.showRestartHint) {
                 this.ctx.font = "24px Bit5x3, monospace";
-                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);            // TO_TRANSLATE
             }
 
             this.ctx.textAlign = "left";

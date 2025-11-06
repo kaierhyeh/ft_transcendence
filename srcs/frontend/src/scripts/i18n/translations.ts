@@ -8,6 +8,8 @@ export const translations = {
     "chats": "Chats",
     "noUsers": "No users",
     "noFriends": "No friends",
+    "noRequests": "No requests",
+    "noBlocked": "No blocked",
     "noChats": "No chats",
     "backToHome": "Back to Home",
     "filter": "Filter",
@@ -58,8 +60,8 @@ export const translations = {
     "newTournament": "Start New Tournament",
 
     // Profile & Auth
-    "loading": "Loading...",
-    "error": "Error",
+    "loadingProfile": "Loading profile...",
+    "errorLoadingProfile": "Error while loading profile",
     "loginRegister": "Login / Register",
     "signupButton": "SIGNUP",
     "loginButton": "LOGIN",
@@ -68,6 +70,7 @@ export const translations = {
     "enterUsername": "Enter username",
     "enterEmail": "Enter email",
     "password": "Password:",
+    "changePassword": "Change Password",
     "enterPassword": "Enter password",
     "register": "Sign Up",
     "loginWithGoogle": "Log In with Google",
@@ -78,6 +81,9 @@ export const translations = {
     "dontHaveAccount": "Don't have an account? Sign Up",
     "myProfileTitle": "My Profile",
     "profileAvatar": "Profile Avatar",
+    "changeAvatar": "Change Avatar",
+    "removeAvatar": "Remove",
+    "update": "Update",
     "settings": "Settings",
     "enable2FA": "Enable 2FA",
     "logout": "Logout",
@@ -92,6 +98,7 @@ export const translations = {
     "enterVerificationCode": "Please enter the verification code from your authenticator app:",
     "verify": "Verify",
     "username": "Username",
+    "alias": "Alias",
     "email": "Email (optional):",
     "joinDate": "Join Date",
 
@@ -100,11 +107,24 @@ export const translations = {
     "bestWinStreak": "Best Winstreak",
     "winsLosses": "Wins / Losses",
     "scoredPointsRanking": "Scored points ranking",
+    "notEnoughData": "Not Enough Data",
+    "memberSince": "Member since",
 
     // Chat
     "typeMessage": "Type a message...",
     "inviteToGame": "Invite to game",
-	"blockedStatus": "BLOCKED",
+	  "blockedStatus": "BLOCKED",
+
+    // Social-Menu Btns
+    "addFriend": "Add Friend",
+    "cancelRequest": "Cancel Request",
+    "acceptRequest": "Accept Request",
+    "declineRequest": "Decline Request",
+    "deleteFriend": "Delete Friend",
+    "unblockUser": "Unblock",
+    "openChat": "Chat",
+    "blockUser": "Block",
+    "userDetails": "View profile",
 
     // Game Status
     "waiting": "Waiting...",
@@ -146,6 +166,8 @@ export const translations = {
     "chats": "聊天",
     "noUsers": "沒有使用者",
     "noFriends": "沒有好友",
+    "noRequests": "No requests",
+    "noBlocked": "No blocked",
     "noChats": "沒有聊天",
     "backToHome": "返回首頁",
     "filter": "篩選",
@@ -195,8 +217,8 @@ export const translations = {
     "newTournament": "重新開始",
 
     // Profile & Auth
-    "loading": "載入中...",
-    "error": "錯誤",
+    "loadingProfile": "載入中...",
+    "errorLoadingProfile": "錯誤",
     "loginRegister": "登入 / 註冊",
     "signupButton": "註冊",
     "loginButton": "登入",
@@ -205,6 +227,7 @@ export const translations = {
     "enterUsername": "輸入使用者名稱",
     "enterEmail": "輸入電子信箱",
     "password": "密碼：",
+    "changePassword": "Change Password",
     "enterPassword": "輸入密碼",
     "register": "註冊",
     "loginWithGoogle": "使用 Google 登入",
@@ -215,6 +238,9 @@ export const translations = {
     "dontHaveAccount": "還沒有帳號？立即註冊",
     "myProfileTitle": "我的個人資料",
     "profileAvatar": "個人頭像",
+    "changeAvatar": "Change Avatar",
+    "removeAvatar": "Remove",
+    "update": "Update",
     "settings": "設定",
     "enable2FA": "啟用雙重認證",
     "logout": "登出",
@@ -229,6 +255,7 @@ export const translations = {
     "enterVerificationCode": "請輸入來自驗證器應用程式的驗證碼：",
     "verify": "驗證",
     "username": "使用者名稱",
+    "alias": "Alias",
     "email": "電子信箱",
     "joinDate": "加入日期",
 
@@ -237,11 +264,24 @@ export const translations = {
     "bestWinStreak": "最佳連勝",
     "winsLosses": "勝/負",
     "scoredPointsRanking": "得分排名",
+    "notEnoughData": "Not Enough Data",
+    "memberSince": "Member since",
 
     // Chat
     "typeMessage": "輸入訊息...",
     "inviteToGame": "邀請遊戲",
-	"blockedStatus": "BLOCKED",				// to translate
+	  "blockedStatus": "BLOCKED",				// to translate
+
+    // Social-Menu Btns
+    "addFriend": "添加好友",
+    "cancelRequest": "取消请求",
+    "acceptRequest": "接受请求",
+    "declineRequest": "拒绝请求",
+    "deleteFriend": "删除好友",
+    "unblockUser": "取消屏蔽",
+    "openChat": "聊天",
+    "blockUser": "屏蔽",
+    "userDetails": "View profile",
 
     // Game Status
     "waiting": "等待中...",
@@ -282,6 +322,8 @@ export const translations = {
     "chats": "Chats",
     "noUsers": "Aucun utilisateur",
     "noFriends": "Aucun ami",
+    "noRequests": "No requests",
+    "noBlocked": "No blocked",
     "noChats": "Aucun chat",
     "backToHome": "Retour à l'accueil",
     "filter": "Filtrer",
@@ -331,8 +373,8 @@ export const translations = {
     "newTournament": "Commencer un nouveau tournoi",
 
     // Profile & Auth
-    "loading": "Chargement...",
-    "error": "Erreur",
+    "loadingProfile": "Chargement...",
+    "errorLoadingProfile": "Erreur",
     "loginRegister": "Connexion / Inscription",
     "signupButton": "INSCRIPTION",
     "loginButton": "CONNEXION",
@@ -341,6 +383,7 @@ export const translations = {
     "enterUsername": "Entrez le nom d'utilisateur",
     "enterEmail": "Entrez l'email",
     "password": "Mot de passe :",
+    "changePassword": "Change Password",
     "enterPassword": "Entrez le mot de passe",
     "register": "S'inscrire",
     "loginWithGoogle": "Se connecter avec Google",
@@ -351,6 +394,9 @@ export const translations = {
     "dontHaveAccount": "Vous n'avez pas de compte ? Inscrivez-vous",
     "myProfileTitle": "Mon Profil",
     "profileAvatar": "Avatar du profil",
+    "changeAvatar": "Change Avatar",
+    "removeAvatar": "Remove",
+    "update": "Update",
     "settings": "Paramètres",
     "enable2FA": "Activer 2FA",
     "logout": "Se déconnecter",
@@ -365,6 +411,7 @@ export const translations = {
     "enterVerificationCode": "Veuillez entrer le code de vérification de votre application d'authentification :",
     "verify": "Vérifier",
     "username": "Nom d'utilisateur",
+    "alias": "Alias",
     "email": "Email",
     "joinDate": "Date d'inscription",
 
@@ -373,11 +420,24 @@ export const translations = {
     "bestWinStreak": "Meilleure série",
     "winsLosses": "Victoires / Défaites",
     "scoredPointsRanking": "Classement des points marqués",
+    "notEnoughData": "Not Enough Data",
+    "memberSince": "Member since",
 
     // Chat
     "typeMessage": "Tapez un message...",
     "inviteToGame": "Inviter à jouer",
-	"blockedStatus": "BLOCKED",				// to translate
+	  "blockedStatus": "Bloqué",				// to translate
+
+    // Social-Menu Btns
+    "addFriend": "Ajouter un ami",
+    "cancelRequest": "Annuler la demande",
+    "acceptRequest": "Accepter la demande",
+    "declineRequest": "Refuser la demande",
+    "deleteFriend": "Supprimer l’ami",
+    "unblockUser": "Débloquer",
+    "openChat": "Chat",
+    "blockUser": "Bloquer",
+    "userDetails": "View profile",
 
     // Game Status
     "waiting": "En attente...",
@@ -412,130 +472,150 @@ export const translations = {
   ru: {
     // Navigation & Menu
     "menu": "МЕНЮ",
-    "users": "Пользователи",
-    "userInfo": "О пользователе",
-    "friends": "Друзья",
-    "chats": "Чаты",
-    "noUsers": "Нет пользователей",
-    "noFriends": "Нет друзей",
-    "noChats": "Нет чатов",
-    "backToHome": "На главную", // alt Вернуться на главную
-    "filter": "Фильтр",
-    "all": "Все",
-    "allUsers": "Все пользователи",
-    "requestsIn": "Входящие запросы",
-    "requestsOut": "Исходящие запросы",
-    "blocked": "Заблокированные",
+    "users": "ИГРОКИ", // = players
+    "userInfo": "ПРОФИЛЬ",
+    "friends": "ДРУЗЬЯ",
+    "chats": "ЧАТЫ",
+    "noUsers": "других игроков нет",
+    "noFriends": "пока нет друзей",
+    "noRequests": "нет запросов в друзья",
+    "noBlocked": "никто не заблокирован",
+    "noChats": "пока нет чатов",
+    "backToHome": "НА ГЛАВНУЮ", // = to home
+    "filter": "ФИЛЬТР",
+    "all": "ВСЕ",
+    "allUsers": "ВСЕ ИГРОКИ",
+    "requestsIn": "ЗАПРОСЫ ДРУЖБЫ",
+    "requestsOut": "ВАШИ ЗАПРОСЫ ДРУЖБЫ",
+    "blocked": "ЗАБЛОКИРОВАННЫЕ",
 
     // Home Page
-    "pongTitle": "Pong 1972",
-    "playPong": "Играть в Pong",
-    "launchTournament": "Запустить турнир",
-    "myProfile": "Мой профиль",
-    "seeStats": "Посмотреть статистику",  // alt: Статистика
+    "pongTitle": "ПОНГ 1972",
+    "playPong": "ИГРАТЬ В ПОНГ",
+    "launchTournament": "СОЗДАТЬ ТУРНИР",
+    "myProfile": "МОЙ ПРОФИЛЬ",
+    "seeStats": "СТАТИСТИКА",
 
     // Pong Game
-    "onePlayer": "Один игрок",
-    "twoPlayers": "Два игрока",
-    "fourPlayers": "Четыре игрока",
-    "playOnline": "Играть онлайн",    // alt: Игра по сети 11:21
-    "remote1v1": "- 2 игрока -",
-    "remote2v2": "- 4 игрока -",
-    "points": "Очки",
-    "avgRebounds": "Avg rebounds",
-    "reset": "Reset",
-    "failedToStartGame": "Не удалось начать игру",
+    "onePlayer": "ОДИН ИГРОК",
+    "twoPlayers": "ДВА ИГРОКА",
+    "fourPlayers": "ЧЕТЫРЕ ИГРОКА",
+    "playOnline": "ИГРАТЬ ОНЛАЙН",
+    "remote1v1": "ДВА ИГРОКА ОНЛАЙН",
+    "remote2v2": "ЧЕТЫРЕ ИГРОКА ОНЛАЙН",
+    "points": "ОЧКИ",
+    "avgRebounds": "СРЕДНЕЕ ЧИСЛО УДАРОВ",
+    "reset": "СБРОСИТЬ",
+    "failedToStartGame": "НЕ УДАЛОСЬ НАЧАТЬ ИГРУ",
 
     // Tournament
-    "tournament": "Турнир",
-    "choosePlayers": "Выберите число игроков",
-    "players4": "4 Игрока",
-    "players8": "8 Игрока",
-    "enterPlayerNames": "Введите имена игроков",  // is it alias?
-    "enterPlayerName": "Введите имя",             // is it alias? 
-    "player": "Игрок",
-    "startTournament": "Начать турнир",
-    "back": "Назад",
-    "tournamentBracket": "Tournament Bracket",
-    "nextMatch": "Следующий матч",
-    "vs": "ПРОТИВ",  // alt: "VS" - also possible 
-    "startMatch": "Начать матч",
-    "tournamentComplete": "Турнир завершен!",
-    "champion": "Чемпион",
-    "goHome": "Вернуться назад", // alt: "Назад" (Back)
-    "seeHistory": "Посмотреть историю турнира", // alt: "История турнира" or if tournamentS "история турниров"
-    "newTournament": "Начать Новый Турнир",
+    "tournament": "ТУРНИР",
+    "choosePlayers": "ВЫБЕРИТЕ ЧИСЛО ИГРОКОВ",
+    "players4": "4 ИГРОКА",
+    "players8": "8 ИГРОКОВ",
+    "enterPlayerNames": "ДАННЫЕ УЧАСТНИКОВ ТУРНИРА",
+    "enterPlayerName": "никнейм",
+    "player": "игрок",
+    "startTournament": "НАЧАТЬ ТУРНИР",
+    "back": "НАЗАД",
+    "tournamentBracket": "ТУРНИРНАЯ СЕТКА",
+    "nextMatch": "СЛЕДУЮЩИЙ МАТЧ МЕЖДУ",
+    "vs": "И",  // alt: "VS" - also possible 
+    "startMatch": "НАЧАТЬ МАТЧ",
+    "tournamentComplete": "ТУРНИР ЗАВЕРШЕН",
+    "champion": "ЧЕМПИОН",
+    "goHome": "НА ГЛАВНУЮ", // alt: "Назад" (Back)
+    "seeHistory": "ИСТОРИЯ ТУРНИРА", // alt: "ИСТОРИЯ ТУРНИРА" or if tournamentS "ИСТОРИЯ ТУРНИРОВ"
+    "newTournament": "НОВЫЙ ТУРНИР",
 
     // Profile & Auth
-    "loading": "Загрузка...",
-    "error": "Ошибка",
-    "loginRegister": "Login / Register",
-    "signupButton": "ЗАРЕГИСТРИРОВАТЬСЯ", // alt "РЕГИСТРАЦИЯ"
-    "loginButton": "ВОЙТИ",               // alt "ВХОД"
-    "usernameOrEmail": "Имя пользователя или электронная почта:", // alt "Имя пользователя или почта" / "Имя пользователя или Email"
-    "enterUsernameOrEmail": "Введите имя пользователя или электронную почту", // alt "Ведите пользователя или почта" / "Ведите пользователя или Email"
-    "enterUsername": "Введите имя пользователя", // alt "Имя пользователя"
-    "enterEmail": "Введите элетроннцую почту", // "Введите email"
-    "password": "Пароль:", 
-    "enterPassword": "Введите пароль",
-    "register": "Зарегестрироваться",
-    "loginWithGoogle": "Войти с помощью Google",
-    "signUpWithGoogle": "Зарегестрироваться с помощью Google",
-    "login": "Вход",
-    "or": "Или",
-    "alreadyHaveAccount": "Уже есть аккаунт? Войдите",
-    "dontHaveAccount": "Нет аккаунта? Зарегестрируйтесь",
-    "myProfileTitle": "Мой профиль",
-    "profileAvatar": "Аватар профиля",
-    "settings": "Настройки",
-    "enable2FA": "Включить 2FA", // more correct but long: "Включить двухфакторную аутентификацию" 
-    "logout": "Выйти", // also possible "Выход" = "Exit"
-    "2faConfiguration": "Настройки 2FA", // = "Settings of 2FA"
-    "scanQRCode": "Scan this QR code with your authenticator app:",
-    "orUseSecretCode": "Or use this secret code manually:",
-    "qrCode": "QR-код",
-    "enterSixDigitCode": "Введите код из 6 цифер:",
-    "activate2FA": "Включить 2FA",
-    "cancel": "Отмена",
-    "2faVerification": "2FA Проверка", // or "2FA Подтверждение" 
-    "enterVerificationCode": "Please enter the verification code from your authenticator app:",
-    "verify": "Подтвердить",
-    "username": "Имя пользователя",
-    "email": "Элетронная почта", // alt "Email"
-    "joinDate": "Join Date",
+    "loadingProfile": "ЗАГРУЗКА ПРОФИЛЯ...",
+    "errorLoadingProfile": "ОШИБКА ПРИ ЗАГРУЗКЕ ПРОФИЛЯ",
+    "loginRegister": "ВХОД / РЕГИСТРАЦИЯ",
+    "signupButton": "РЕГИСТРАЦИЯ",
+    "loginButton": "ВОЙТИ",
+    "usernameOrEmail": "ИМЯ ПОЛЬЗОВАТЕЛЯ ИЛИ ЭЛЕКТРОННАЯ ПОЧТА:", // alt "Имя пользователя или почта" / "Имя пользователя или Email"
+    "enterUsernameOrEmail": "введите имя пользователя или электронную почту", // alt "Ведите пользователя или почта" / "Ведите пользователя или Email"
+    "enterUsername": "введите имя пользователя", // alt "Имя пользователя"
+    "enterEmail": "введите элетроннцю почту", // "Введите email"
+    "password": "ПАРОЛЬ:",
+    "changePassword": "СМЕНИТЬ ПАРОЛЬ",
+    "enterPassword": "введите пароль",
+    "register": "РЕГИСТРАЦИЯ",
+    "loginWithGoogle": "Войти с GOOGLE",
+    "signUpWithGoogle": "Регистрация с GOOGLE",
+    "login": "ВХОД",
+    "or": "ИЛИ",
+    "alreadyHaveAccount": "Есть аккаунт? Вход",
+    "dontHaveAccount": "Нет аккаунта? Регисттрация",
+    "myProfileTitle": "МОЙ ПРОФИЛЬ",
+    "profileAvatar": "АВАТАР ПРОФИЛЯ",
+    "changeAvatar": "ИЗМЕНИТЬ АВАТАР",
+    "removeAvatar": "УБРАТЬ АВАТАР",
+    "update": "ОБНОВИТЬ",
+    "settings": "НАСТРОЙКИ",
+    "enable2FA": "ВКЛЮЧИТЬ 2FA", // more correct but long: "Включить двухфакторную аутентификацию" 
+    "logout": "ВЫЙТИ", // also possible "Выход" = "Exit"
+    "2faConfiguration": "НАСТРОЙКИ 2FA", // = "Settings of 2FA"
+    "scanQRCode": "ОТСКАНИРУЙТЕ ЭТОТ QR-КОД ВАШИМ ПРИЛОЖЕНИЕМ ДЛЯ ВХОДА:",
+    "orUseSecretCode": "ИЛИ ВВЕДИТЕ СЕКРЕТНЫЙ КОД ВРУЧНУЮ:",
+    "qrCode": "QR-КОД",
+    "enterSixDigitCode": "ВВЕДИТЕ КОД ИЗ 6 ЦИФЕР:",
+    "activate2FA": "ВКЛЮЧИТЬ 2FA",
+    "cancel": "ОТМЕНА",
+    "2faVerification": "2FA ПРОВЕРКА", // or "2FA Подтверждение" 
+    "enterVerificationCode": "ПОЖАЛУЙСТА, ВВЕДИТЕ КОД ПРОВЕРКИ ИЗ ВАШЕГО ПРИЛОЖЕНИЯ ДЛЯ ВХОДА:",
+    "verify": "ПОДТВЕРДИТЬ",
+    "username": "ИМЯ ПОЛЬЗОВАТЕЛЯ",
+    "alias": "ПСЕВДОНИМ",
+    "email": "ЭЛЕКТРОННАЯ ПОЧТА", // alt "Email"
+    "joinDate": "ДАТА ПРИСОЕДИНЕНИЯ",
 
     // Stats
-    "currentWinStreak": "Current Winstreak",
-    "bestWinStreak": "Best Winstreak",
-    "winsLosses": "Wins / Losses",
-    "scoredPointsRanking": "Scored points ranking",
+    "currentWinStreak": "ТЕКУЩАЯ СЕРИЯ ПОБЕД",
+    "bestWinStreak": "ЛУШАЯ СЕРИЯ ПОБЕД",
+    "winsLosses": "ПОБЕДЫ / ПРОИГРЫШИ",
+    "scoredPointsRanking": "РЕЙТИНГ ПО ОЧКАМ",
+    "notEnoughData": "недостаточно данных",
+    "memberSince": "на сайте с",
 
     // Chat
-    "typeMessage": "Напишите сообщение...",
-    "inviteToGame": "Пригласить играть",
-	"blockedStatus": "BLOCKED",				// to translate
+    "typeMessage": "текст сообщения...",
+    "inviteToGame": "СЫГРАТЬ",
+    "blockedStatus": "ЗАБЛОКИРОВАН",				// to translate
+
+    // Social-Menu Btns
+    "addFriend": "ПОДРУЖИТЬСЯ",
+    "cancelRequest": "ОТМЕНИТЬ ЗАПРОС",
+    "acceptRequest": "ПРИНЯТЬ ДРУЖБУ",
+    "declineRequest": "ОТКАЗАТЬ В ДРУЖБЕ",
+    "deleteFriend": "УДАЛИТЬ ИЗ ДРУЗЕЙ",
+    "unblockUser": "РАЗБЛОКИРОВАТЬ",
+    "openChat": "ЧАТ",
+    "blockUser": "ЗАБЛОКИРОВАТЬ",
+    "userDetails": "ПОДРОБНЕЕ",
 
     // Game Status
-    "waiting": "Ожидание...",
-    "joining": "Joining...",
-    "creatingGame": "Создание игры...",
-    "connecting": "Соединение...",
-    "matchFound": "Матч найтен!",
-    "left": "Left",
-    "right": "Right",
-    "selectGameMode": "Выберите режим игры",
+    "waiting": "ОЖИДАНИЕ...",
+    "joining": "ПРИСОЕДИНЕНИЕ...",
+    "creatingGame": "СОЗДАНИЕ ИГРЫ...",
+    "connecting": "СОЕДИНЕНИЕ...",
+    "matchFound": "МАТЧ НАЙДЕН!",
+    "left": "ЛЕВЫЙ",
+    "right": "ПРАВЫЙ",
+    "selectGameMode": "ВЫБЕРИТЕ РЕЖИМ ИГРЫ",
 
 	// Player Position
-    "positionLeft": "Your position: Left",
-    "positionRight": "Your position: Right",
-    "positionTopLeft": "Your position: Top Left",
-    "positionBottomLeft": "Your position: Bottom Left",
-    "positionTopRight": "Your position: Top Right",
-    "positionBottomRight": "Your position: Bottom Right",
+    "positionLeft": "ВЫ СЛЕВА",
+    "positionRight": "ВЫ С ПРАВА",
+    "positionTopLeft": "ВЫ СВЕРХУ СЛЕВА",
+    "positionBottomLeft": "ВЫ СНИЗУ СЛЕВА",
+    "positionTopRight": "ВЫ СВЕРХУ СПРАВА",
+    "positionBottomRight": "ВЫ СНИЗУ СПРАВА",
 
     // Tooltips
-    "viewStats": "Показать статистику", // "Статистика" = "Statistics"
-    "viewProfile": "Показать профиль",  // "Профиль" = "Profile"
+    "viewStats": "СТАТИСТИКА", // "Статистика" = "Statistics"
+    "viewProfile": "ПРОФИЛЬ",  // "Профиль" = "Profile"
 
     // Language
     "language": "Язык",
@@ -548,3 +628,12 @@ export const translations = {
 
 export type Language = keyof typeof translations;
 export type TranslationKey = keyof typeof translations.en;
+
+
+// tournament-history:
+// : "Tournaments results"
+// : "Aucun tournoi trouvé."
+
+// btns-container:
+// : "Go home" - btn
+// : "Start New Tournament" - btn

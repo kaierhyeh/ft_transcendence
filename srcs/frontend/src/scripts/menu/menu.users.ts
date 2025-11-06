@@ -7,6 +7,7 @@ import { openChats } from "./menu.js";
 import { presence, OnlineStatus, Presence } from "../presence.js";
 import { fetchWithAuth } from "../utils/fetch.js";
 import { chatSocket } from "./menu.ws.js";
+import { t } from "../i18n/i18n.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -442,7 +443,7 @@ function renderUserInfo(userInfo: UserInfo): void {
 		${userInfo_userAlias}
 		${statusHtml}
 		<div id="userInfo_boxSatatsBtn" class="user-info-stats-btn-box">
-			<button id="viewProfileButton" class="user-info-profile-btn">View profile</button>
+			<button id="viewProfileButton" class="user-info-profile-btn" data-i18n="userDetails">${t("userDetails")}</button>
 		</div>
 	`;
 	
@@ -541,7 +542,23 @@ function renderUserList(users: UserListRow[]): void {
 	["usersList"].forEach(showElementById);
 
 	if (users.length === 0) {
-		usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text">No users</h1>`;
+		switch(currentFilter) {
+			case 'friends':
+				usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text" data-i18n="noFriends">${t("noFriends")}</h1>`;
+				break;
+			case 'requests_in':
+				usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text" data-i18n="noRequests">${t("noRequests")}</h1>`;
+				break;
+			case 'requests_out':
+				usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text" data-i18n="noRequests">${t("noRequests")}</h1>`;
+				break;
+			case 'blocked':
+				usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text" data-i18n="noBlocked">${t("noBlocked")}</h1>`;
+				break;
+			default:
+				usersList.innerHTML = `<h1 id="noUsers" class="menu-empty-list-text" data-i18n="noUsers">${t("noUsers")}</h1>`;
+				break;
+		}
 		return;
 	}
 
@@ -691,13 +708,13 @@ function addMenuDropdown(): boolean {
 	}
 
 	menuDropdown.innerHTML = `
-		<button id="menuDropdownButton" class="menu-dropbtn menu-header-title" data-i18n="allUsers">All Users</button>
+		<button id="menuDropdownButton" class="menu-dropbtn menu-header-title" data-i18n="allUsers">${t("allUsers")}</button>
 		<div class="menu-dropdown-content">
-			<a id="menuDropdownAll" data-i18n="allUsers">All Users</a>
-			<a id="menuDropdownFriends" data-i18n="friends">Friends</a>
-			<a id="menuDropdownRequestsIn" data-i18n="requestsIn">Req. In</a>
-			<a id="menuDropdownRequestsOut" data-i18n="requestsOut">Req. Out</a>
-			<a id="menuDropdownBlocked" data-i18n="blocked">Blocked</a>
+			<a id="menuDropdownAll" data-i18n="allUsers">${t("allUsers")}</a>
+			<a id="menuDropdownFriends" data-i18n="friends">${t("friends")}</a>
+			<a id="menuDropdownRequestsIn" data-i18n="requestsIn">${t("requestsIn")}</a>
+			<a id="menuDropdownRequestsOut" data-i18n="requestsOut">${t("requestsOut")}</a>
+			<a id="menuDropdownBlocked" data-i18n="blocked">${t("blocked")}</a>
 		</div>
 	`;
 	

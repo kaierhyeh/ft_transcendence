@@ -2,6 +2,7 @@ import { initMatchHistory } from './match_history.js';
 import { fetchLeaderboard } from './api.js';
 import user from './User.js';
 import { User } from './User.js';
+import { t } from '../i18n/i18n.js';
 
 declare const Chart: any;
 
@@ -56,7 +57,7 @@ export async function initProfile() {
 			}
 		}
 		if (joinDateElement)
-			joinDateElement.textContent = 'Member since ' + joinDate;
+			joinDateElement.textContent = t("memberSince") + ' ' + joinDate;							// TO_TRANSLATE
 		if (currentStreakElement)
 			currentStreakElement.textContent = userData.curr_winstreak?.toString() || '0';
 		if (bestStreakElement)

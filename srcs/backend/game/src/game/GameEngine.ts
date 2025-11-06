@@ -13,7 +13,7 @@ const HEIGHT: number = 750;
 
 const VERTICAL_EDGE_X_TOLERANCE: number = 8;
 
-const WIN_POINT: number = 70;
+const WIN_POINT: number = 11;
 const BALL_SIZE: number = 10;
 const MAX_BALL_SPEED: number = PADDLE_SPEED * 2; // pixel/s
 
