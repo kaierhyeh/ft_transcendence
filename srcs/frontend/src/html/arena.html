@@ -1,5 +1,4 @@
 <div class="pong-container">
-
 	<div class="top-left-btns">
 		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
 		<!-- <div id="languagesSwitcher"></div> -->
@@ -21,12 +20,12 @@
 	</div>
 	
 	<div class="pong-game-wrapper">
+		<div id="team-indicator" style="display: none;">
+			<span class="team-left"></span>
+			<span class="separator">-</span>
+			<span class="team-right"></span>
+		</div>
+		<div id="game-message" style="display: none;"></div>
 		<canvas id="pong" width="800" height="750" class="pong-canvas"></canvas>
-	</div>
-
-	<div class="pong-footer">
-		<button class="pong-btn local-game-btn" id="join-btn" >
-			Join
-		</button>
 	</div>
 </div>

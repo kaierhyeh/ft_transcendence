@@ -1,8 +1,23 @@
 // GameSession.ts
-import type { GameConfig, GameState, GameState2v2, GameParticipant, GameMode, GameFormat, Team } from "./types.js";
+import type { GameConfig, GameState, GameState2v2, GameParticipant, GameMode, GameFormat, Team, PlayerSlot } from "./types.js";
 import { createMatch, getGameConfig } from "./api.js";
 
 const API_GAME_ENDPOINT = `${window.location.origin}/api/game`;
+
+export interface PlayerAssignment {
+    team: Team;
+    slot: PlayerSlot;
+    username?: string;
+}
+
+export interface GameEndedInfo {
+    reason: "player_disconnected" | "game_over";
+    disconnected_player?: {
+        team: Team;
+        slot: PlayerSlot;
+        username?: string;
+    };
+}
 
 export interface GameSession {
     readonly gameId: number;
@@ -15,11 +30,16 @@ export interface GameSession {
     getState(): GameState | GameState2v2 | null;
     isOver(): boolean;
     getWinner(): Team | null;
+    getMyTeam(): Team | null;
+    getMySlot(): PlayerSlot | null;
     
     // Control
     sendInput(playerIndex: number, move: 'up' | 'down' | 'stop'): void;
     onStateUpdate(callback: (state: GameState | GameState2v2) => void): void;
-    onGameOver(callback: (winner: Team) => void): void;
+    onGameOver(callback: (winner: Team, myTeam: Team | null) => void): void;
+    onPlayerAssigned(callback: (assignment: PlayerAssignment) => void): void;
+    onGameEnded(callback: (info: GameEndedInfo) => void): void;
+    onGameStarted(callback: () => void): void;
     
     // Cleanup
     cleanup(): Promise<void>;
@@ -48,43 +68,81 @@ export async function createGameSession(
     
     let currentState: GameState | GameState2v2 | null = null;
     let winner: Team | null = null;
+    let myTeam: Team | null = null;
+    let mySlot: PlayerSlot | null = null;
+    let gameStarted: boolean = false;
     
     const stateUpdateCallbacks: Array<(state: GameState | GameState2v2) => void> = [];
-    const gameOverCallbacks: Array<(winner: Team) => void> = [];
+    const gameOverCallbacks: Array<(winner: Team, myTeam: Team | null) => void> = [];
+    const playerAssignedCallbacks: Array<(assignment: PlayerAssignment) => void> = [];
+    const gameEndedCallbacks: Array<(info: GameEndedInfo) => void> = [];
+    const gameStartedCallbacks: Array<() => void> = [];
     
     // Create WebSocket connections
     for (let i = 0; i < numPlayers; i++) {
         const ws = new WebSocket(`${API_GAME_ENDPOINT}/${game_id}/ws`);
         websockets.push(ws);
         
-        await new Promise<void>((resolve, reject) => {
-            ws.onopen = () => {
-                ws.send(JSON.stringify({ type: "join", participant_id: participants[i].participant_id }));
-                resolve();
-            };
-            ws.onerror = (error) => reject(error);
-            setTimeout(() => reject(new Error(`WebSocket ${i} timeout`)), 5000);
-        });
-        
+        // Set up message handler BEFORE opening to catch early messages
         ws.onmessage = (event: MessageEvent) => {
             try {
                 const message = JSON.parse(event.data);
                 
-                if (message.type === "game_state") {
+                console.log(`[WS ${i}] Received message:`, message.type, message);
+                
+                if (message.type === "player_assigned") {
+                    myTeam = message.team;
+                    mySlot = message.slot;
+                    const assignment: PlayerAssignment = {
+                        team: message.team,
+                        slot: message.slot,
+                        username: message.username
+                    };
+                    console.log(`[WS ${i}] Player assigned:`, assignment);
+                    playerAssignedCallbacks.forEach(cb => cb(assignment));
+                }
+                else if (message.type === "game_state") {
                     currentState = message.data;
+                    
+                    // Trigger game started on first state
+                    if (!gameStarted) {
+                        gameStarted = true;
+                        console.log(`[WS ${i}] Game started!`);
+                        gameStartedCallbacks.forEach(cb => cb());
+                    }
+                    
                     stateUpdateCallbacks.forEach(cb => cb(currentState!));
                     
                     // Check for winner (backend sends 'left' or 'right')
                     const newWinner = currentState?.winner;
                     if (newWinner && !winner) {
                         winner = newWinner;
-                        gameOverCallbacks.forEach(cb => cb(winner!));
+                        console.log(`[WS ${i}] Game over! Winner:`, winner);
+                        gameOverCallbacks.forEach(cb => cb(winner!, myTeam));
                     }
+                }
+                else if (message.type === "game_ended") {
+                    const info: GameEndedInfo = {
+                        reason: message.data.reason,
+                        disconnected_player: message.data.disconnected_player
+                    };
+                    console.log(`[WS ${i}] Game ended:`, info);
+                    gameEndedCallbacks.forEach(cb => cb(info));
                 }
             } catch (error) {
                 console.error(`Failed to parse message from WS ${i}:`, error);
             }
         };
+        
+        await new Promise<void>((resolve, reject) => {
+            ws.onopen = () => {
+                console.log(`[WS ${i}] Connected, sending join message`);
+                ws.send(JSON.stringify({ type: "join", participant_id: participants[i].participant_id }));
+                resolve();
+            };
+            ws.onerror = (error) => reject(error);
+            setTimeout(() => reject(new Error(`WebSocket ${i} timeout`)), 5000);
+        });
         
         ws.onclose = (event) => {
             console.log(`WebSocket ${i} closed:`, event.code, event.reason);
@@ -115,6 +173,14 @@ export async function createGameSession(
             return winner;
         },
         
+        getMyTeam() {
+            return myTeam;
+        },
+        
+        getMySlot() {
+            return mySlot;
+        },
+        
         sendInput(playerIndex: number, move: 'up' | 'down' | 'stop') {
             if (playerIndex < 0 || playerIndex >= websockets.length) {
                 console.warn(`Invalid player index: ${playerIndex}`);
@@ -135,7 +201,27 @@ export async function createGameSession(
             gameOverCallbacks.push(callback);
             // If game already over, call immediately
             if (winner) {
-                callback(winner);
+                callback(winner, myTeam);
+            }
+        },
+        
+        onPlayerAssigned(callback) {
+            playerAssignedCallbacks.push(callback);
+            // If already assigned, call immediately
+            if (myTeam && mySlot) {
+                callback({ team: myTeam, slot: mySlot });
+            }
+        },
+        
+        onGameEnded(callback) {
+            gameEndedCallbacks.push(callback);
+        },
+        
+        onGameStarted(callback) {
+            gameStartedCallbacks.push(callback);
+            // If game already started, call immediately
+            if (gameStarted) {
+                callback();
             }
         },
         

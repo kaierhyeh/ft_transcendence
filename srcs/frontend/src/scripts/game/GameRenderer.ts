@@ -69,7 +69,10 @@ export class GameRenderer {
 
     private draw1v1(state: GameState | null, config: GameConfig, isOver: boolean): void {
         if (!state) {
-            this.showMessage(t('connecting'));
+            // Only show "connecting" message for local/remote games, not for arena invitations
+            if (this.showRestartHint) {
+                this.showMessage(t('connecting'));
+            }
             return;
         }
 
@@ -92,24 +95,23 @@ export class GameRenderer {
         this.ctx.fillText(state.score.left.toString(), config.canvas_width / 4, 50);
         this.ctx.fillText(state.score.right.toString(), 3 * config.canvas_width / 4, 50);
 
-        // Winner overlay
-        if (isOver && state.winner) {
+        // Winner overlay (skip if showRestartHint is false - arena mode handles it separately)
+        if (isOver && state.winner && this.showRestartHint) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
             this.ctx.fillText(`${state.winner.toUpperCase()} player wins!`, config.canvas_width / 2, config.canvas_height / 2);
-
-            if (this.showRestartHint) {
-                this.ctx.font = "24px Bit5x3, monospace";
-                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
-            }
-
+            this.ctx.font = "24px Bit5x3, monospace";
+            this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
             this.ctx.textAlign = "left";
         }
     }
 
     private draw2v2(state: GameState2v2 | null, config: GameConfig, isOver: boolean): void {
         if (!state) {
-            this.showMessage(t('connecting'));
+            // Only show "connecting" message for local/remote games, not for arena invitations
+            if (this.showRestartHint) {
+                this.showMessage(t('connecting'));
+            }
             return;
         }
 
@@ -141,16 +143,13 @@ export class GameRenderer {
         this.ctx.fillText("Right: ↑/↓ (top) O/L (btm)", 20, config.canvas_height - 40);
 
         // Winner
-        if (isOver && state.winner) {
+        // Winner (skip if showRestartHint is false - arena mode handles it separately)
+        if (isOver && state.winner && this.showRestartHint) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
             this.ctx.fillText(`${state.winner.toUpperCase()} team wins!`, config.canvas_width / 2, config.canvas_height / 2);
-
-            if (this.showRestartHint) {
-                this.ctx.font = "24px Bit5x3, monospace";
-                this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
-            }
-
+            this.ctx.font = "24px Bit5x3, monospace";
+            this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
             this.ctx.textAlign = "left";
         }
     }

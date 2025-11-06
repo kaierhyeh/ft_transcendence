@@ -79,6 +79,7 @@ export interface GameState2v2 {
 export type GameMode = 'solo' | 'pvp' | 'tournament';
 export type GameFormat = '1v1' | '2v2';
 export type Team = 'left' | 'right';
+export type PlayerSlot = 'left' | 'right' | 'top-left' | 'bottom-left' | 'top-right' | 'bottom-right';
 export type PlayerType = "registered" | "guest" | "ai";
 
 export interface GameParticipant {

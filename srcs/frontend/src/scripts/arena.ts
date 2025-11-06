@@ -1,4 +1,4 @@
-import { createGameSession, GameSession } from "./game/GameSession.js";
+import { createGameSession, GameSession, PlayerAssignment, GameEndedInfo } from "./game/GameSession.js";
 import { GameRenderer } from "./game/GameRenderer.js";
 import { InputController } from "./game/InputController.js";
 import { ScoreTracker } from "./live_stats/ScoreTracker.js";
@@ -8,19 +8,46 @@ import user from "./user/User.js";
 import { GameParticipant, Team } from "./game/types.js";
 import { t } from "./i18n/i18n.js";
 
-let myTeam: Team | null;
-
 export function initArena() {
     let currentSession: GameSession | null = null;
     let isJoining = false;
+    let myTeam: Team | null = null;
     
-    // Core game components
-    const renderer = new GameRenderer("pong");
+    // Core game components (disable restart hint for arena)
+    const renderer = new GameRenderer("pong", false);
     const inputController = new InputController();
     
     const scoreTracker = new ScoreTracker(); // Follows the Observer Pattern (also known as Pub/Sub Pattern)
     const scoreChart = new ScoreChart();
     const scoreDisplay = new ScoreDisplay();
+    
+    // Get message element for persistent display
+    const messageElement = document.getElementById('game-message');
+    
+    // Helper to show persistent message
+    function showMessage(text: string, clickable: boolean = false, onClick?: () => void): void {
+        if (!messageElement) return;
+        messageElement.textContent = text;
+        messageElement.style.display = 'block';
+        
+        if (clickable) {
+            messageElement.classList.add('clickable');
+            if (onClick) {
+                messageElement.onclick = onClick;
+            }
+        } else {
+            messageElement.classList.remove('clickable');
+            messageElement.onclick = null;
+        }
+    }
+    
+    function hideMessage(): void {
+        if (messageElement) {
+            messageElement.style.display = 'none';
+            messageElement.classList.remove('clickable');
+            messageElement.onclick = null;
+        }
+    }
     
     // Initialize score display if elements exist
     if (document.getElementById('pong-score-chart')) {
@@ -40,21 +67,13 @@ export function initArena() {
         scoreTracker.resetAll();
     }
     
-    // Show initial message 
-    // TODO - add translation
-    renderer.showMessage("Join the game");
-    
-    // Setup buttons
-    setTimeout(setupGameButtons, 100);
-    
-    function setupGameButtons(): void {
-        document.getElementById('join-btn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            (e.target as HTMLElement).blur(); // ✅ Remove focus from button
-            if (isJoining) return;
+    // Show initial clickable message instead of button
+    showMessage("Join the game", true, () => {
+        if (!isJoining) {
             joinGame();
-        });
-    }
+        }
+    });
+    
 
     function getGameIdFromUrl(): number | null {
 		const params = new URLSearchParams(window.location.search);
@@ -101,8 +120,50 @@ export function initArena() {
             ];
             
             // Create new session
-            renderer.showMessage(t("creatingGame"));
+            showMessage("Waiting for opponent...", false); // Non-clickable while waiting
+            const teamIndicator = document.getElementById('team-indicator');
+            const teamLeftSpan = teamIndicator?.querySelector('.team-left');
+            const teamRightSpan = teamIndicator?.querySelector('.team-right');
+            
             currentSession = await createGameSession("pvp", "1v1", participants, true, gameId);
+            
+            // Handle player assignment
+            currentSession.onPlayerAssigned((assignment: PlayerAssignment) => {
+                myTeam = assignment.team;
+                console.log(`Assigned to team: ${myTeam}, slot: ${assignment.slot}, username: ${assignment.username}`);
+                
+                // Display team indicator with proper styling
+                if (teamIndicator && teamLeftSpan && teamRightSpan) {
+                    if (myTeam === 'left') {
+                        // You are LEFT (green), opponent is RIGHT (white)
+                        teamLeftSpan.innerHTML = `<span class="my-team">Left: You</span>`;
+                        teamRightSpan.innerHTML = `<span class="opponent-team">Right: <span id="opponent-name">Waiting...</span></span>`;
+                    } else {
+                        // You are RIGHT (green), opponent is LEFT (white)
+                        teamLeftSpan.innerHTML = `<span class="opponent-team">Left: <span id="opponent-name">Waiting...</span></span>`;
+                        teamRightSpan.innerHTML = `<span class="my-team">Right: You</span>`;
+                    }
+                    teamIndicator.style.display = 'block';
+                }
+            });
+            
+            // Handle game started (update opponent name when they join)
+            currentSession.onGameStarted(() => {
+                console.log("Game started - both players connected");
+                hideMessage(); // Hide overlay when game starts
+                
+                // Update opponent name if available
+                const opponentNameSpan = document.getElementById('opponent-name');
+                if (opponentNameSpan) {
+                    // Get opponent username from game state
+                    const state = currentSession?.getState();
+                    if (state && 'players' in state) {
+                        const opponentTeam = myTeam === 'left' ? 'right' : 'left';
+                        // For now just show "Opponent" - username comes from player_assigned
+                        opponentNameSpan.textContent = 'Opponent';
+                    }
+                }
+            });
             
             // Attach controllers
             renderer.attachToSession(currentSession);
@@ -117,15 +178,32 @@ export function initArena() {
                 scoreTracker.update(leftScore, rightScore, ballDx);
             });
             
+            // Handle game ended (disconnection)
+            currentSession.onGameEnded((info: GameEndedInfo) => {
+                if (info.reason === "player_disconnected") {
+                    const opponentTeam = myTeam === 'left' ? 'right' : 'left';
+                    if (info.disconnected_player?.team === opponentTeam) {
+                        showMessage("Your opponent left the game. You win by forfeit!");
+                    } else {
+                        showMessage("Connection lost");
+                    }
+                }
+            });
+            
             // Setup game over handler
-            currentSession.onGameOver((winner) => {
+            currentSession.onGameOver((winner: Team, playerTeam: Team | null) => {
                 console.log("Game over! Winner:", winner);
+                if (playerTeam === winner) {
+                    showMessage("You won!");
+                } else {
+                    showMessage("You lost!");
+                }
             });
             
             console.log(`Game started: pvp 1v1 online`);
         } catch (error) {
             console.error("Failed to start game:", error);
-            renderer.showMessage(t("failedToStartGame"));
+            showMessage(t("failedToStartGame"));
         } finally {
             isJoining = false;
         }

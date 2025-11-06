@@ -340,6 +340,15 @@ export class GameSession {
 
         player.socket = connection;
 
+        // Send player assignment info
+        const assignmentMessage = {
+            type: "player_assigned",
+            team: player.team,
+            slot: player.slot,
+            username: player.username
+        };
+        connection.send(JSON.stringify(assignmentMessage));
+
         connection.on("message", (raw: string) => {
             const msg = JSON.parse(raw);
             if (msg.type === "input") {          
