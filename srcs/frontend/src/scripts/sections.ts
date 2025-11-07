@@ -352,7 +352,7 @@ export function show2FAVerificationModal(tempToken: string, context: string) {
 				if (response.ok && data.success) {
 					closeModal();
 					// Redirect to home page after successful verification
-					window.location.href = '/';
+					(window as any).navigateTo("/");
 				} else {
 					if (errorMsg) errorMsg.textContent = data.error || 'Invalid verification code';
 				}

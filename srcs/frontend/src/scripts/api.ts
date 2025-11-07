@@ -736,7 +736,7 @@ export async function processGoogleOAuth(code: string): Promise<void> {
 			// Small delay to ensure cookies are set before redirecting
 			await new Promise(resolve => setTimeout(resolve, 100));
 			// Redirect to home page after successful login
-			window.location.href = '/';
+			(window as any).navigateTo("/");
 		} else
 			showError("Failed to process Google OAuth.");
 
@@ -767,7 +767,7 @@ async function completeGoogleRegistration(username: string, tempToken: string): 
 			update_user(new User(data.username, data.id, data.email, data.avatar));
 			showSuccess(`Welcome, ${data.username}!`);
 			// Redirect to home page after successful registration
-			window.location.href = '/';
+			(window as any).navigateTo("/");
 		} else {
 			showError("Failed to complete Google registration.");
 		}
