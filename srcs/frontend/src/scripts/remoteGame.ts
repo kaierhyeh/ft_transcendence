@@ -617,6 +617,27 @@ export default function initRemoteGame(): void {
         }
     }
 
+    function adjustCanvasToViewport(): void {
+        const canvas = document.getElementById('pong') as HTMLCanvasElement | null;
+        const wrapper = document.querySelector('.pong-game-wrapper') as HTMLElement | null;
+        if (!canvas || !wrapper) return;
+
+        const top = wrapper.getBoundingClientRect().top;
+        const availableHeight = Math.max(160, window.innerHeight - top - 64);
+
+        canvas.style.maxHeight = availableHeight + 'px';
+        canvas.style.height = 'auto';
+        canvas.style.width = 'auto';
+    }
+
+    function debounce(fn: () => void, ms: number) {
+        let t: number | undefined;
+        return () => {
+            if (t) window.clearTimeout(t);
+            t = window.setTimeout(fn, ms) as unknown as number;
+        };
+    }
+
     function handleGameEnd(message: string, subtitle?: string): void {
         gameDisconnected = true;
         drawEndGameMessage(message, subtitle);
@@ -648,4 +669,12 @@ export default function initRemoteGame(): void {
     }
 
     createRemoteInterface();
+
+    const debouncedCanvasUpdate = debounce(() => {
+        adjustCanvasToViewport();
+    }, 120);
+    window.addEventListener('resize', debouncedCanvasUpdate);
+    setTimeout(() => {
+        adjustCanvasToViewport();
+    }, 200);
 }

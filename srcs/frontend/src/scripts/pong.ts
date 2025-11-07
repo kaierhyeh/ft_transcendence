@@ -136,7 +136,7 @@ export function initPong() {
         if (!canvas || !wrapper) return;
 
         const top = wrapper.getBoundingClientRect().top;
-        const availableHeight = Math.max(160, window.innerHeight - top - 32);
+        const availableHeight = Math.max(160, window.innerHeight - top - 64);
 
         canvas.style.maxHeight = availableHeight + 'px';
         canvas.style.height = 'auto';
