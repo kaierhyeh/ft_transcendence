@@ -226,16 +226,40 @@ async function initChatSection(): Promise<void> {
 function appendMessageToChat(msg: string): void {
 	const msgElement = document.createElement("div");
 	msgElement.className = "chat-msg from-them";
-	msgElement.innerHTML = `<span class="green-text">You: </span>${msg}`;
+	msgElement.innerHTML = `<span class="green-text">You: </span>${escapeHtml(msg)}`;
 	chatMessages.appendChild(msgElement);
 	chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(str: string): string {
+	return String(str).replace(/[&<>"']/g, (c) => {
+		switch (c) {
+			case '&': return '&amp;';
+			case '<': return '&lt;';
+			case '>': return '&gt;';
+			case '"': return '&quot;';
+			case "'": return '&#39;';
+			default: return c;
+		}
+	});
+}
+
+function is_sanitized(msg: string): boolean {
+	if (!msg || typeof msg !== 'string') return false;
+	const trimmed = msg.trim();
+	if (trimmed.length === 0) return false;
+	if (trimmed.length > 1000) return false;
+	if (/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(trimmed)) return false;
+	if (/<\/?[a-z][\s\S]*>/i.test(trimmed)) return false;
+	if (/javascript\s*:/i.test(trimmed)) return false;
+	return true;
 }
 
 async function sendMessageByButton(toUser: ChatUser): Promise<void> {
 	if (chatInput) {
 		const message = chatInput.value.trim();
 		chatInput.value = "";
-		if (message) {
+		if (message && is_sanitized(message)) {
 			await sendMessage(toUser, message);
 			// appendMessageToChat(message);
 		}
@@ -349,11 +373,11 @@ function renderMessages(messages: Message[], withUser: ChatUser, friendshipStatu
 
 
 	chatMessages.innerHTML = messages.map(msg => `
-		<div class="chat-msg chat_id=${msg.chat_id} ${msg.from_id === withUser.user_id ? withUser.username : "from-them"}">
+		<div class="chat-msg chat_id=${msg.chat_id} ${msg.from_id === withUser.user_id ? 'from-user' : 'from-them'}">
 		${msg.from_id !== withUser.user_id
 			? `<span class="green-text">You: </span>`
-			: `<span class="blue-text">${withUser.username}: </span>`}
-			${msg.msg}
+			: `<span class="blue-text">${escapeHtml(withUser.username)}: </span>`}
+			${escapeHtml(msg.msg)}
 			</div>`).join("");
 
 	chatMessages.scrollTop = chatMessages.scrollHeight;

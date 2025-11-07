@@ -11,6 +11,8 @@ let PADDLE_SPEED: number = 350; // pixel / s
 const WIDTH: number = 800;
 const HEIGHT: number = 750;
 
+const VERTICAL_EDGE_X_TOLERANCE: number = 8;
+
 const WIN_POINT: number = 7;
 const BALL_SIZE: number = 10;
 const MAX_BALL_SPEED: number = PADDLE_SPEED * 2; // pixel/s
@@ -191,21 +193,25 @@ export class GameEngine {
     }
 
     private checkPaddleCollision(player: Player): void {
-        const isMovingTowardsPaddle =
+        const isBallMovingTowardsPaddle =
             (player.team === "left" && this.ball.dx < 0) ||
             (player.team === "right" && this.ball.dx > 0);
 
-        if (!isMovingTowardsPaddle) return;
+        if (!isBallMovingTowardsPaddle) return;
 
         const deltaSeconds = this.lastDelta / 1000;
         const prevBallX = this.ball.x - this.ball.dx * deltaSeconds;
         const prevBallY = this.ball.y - this.ball.dy * deltaSeconds;
 
+        const ballEdge = {
+            x: player.team === "left" ? this.ball.x + BALL_SIZE : this.ball.x,
+            y: this.ball.y
+        };
         const collision =
-            this.ball.x + BALL_SIZE >= player.paddle.x &&
-            this.ball.x <= player.paddle.x + PADDLE_WIDTH &&
-            this.ball.y + BALL_SIZE >= player.paddle.y &&
-            this.ball.y <= player.paddle.y + PADDLE_HEIGHT;
+            ballEdge.x >= player.paddle.x &&
+            ballEdge.x <= player.paddle.x + PADDLE_WIDTH &&
+            ballEdge.y + BALL_SIZE >= player.paddle.y &&
+            ballEdge.y <= player.paddle.y + PADDLE_HEIGHT;
 
         let continuousCollision = false;
         if (!collision) {
@@ -238,7 +244,19 @@ export class GameEngine {
             }
         }
 
-        if (!collision && !continuousCollision) return;
+        if (!collision && !continuousCollision) {
+            const crossedTop = (prevBallY + BALL_SIZE <= player.paddle.y) && (this.ball.y + BALL_SIZE >= player.paddle.y) && (this.ball.dy > 0);
+            const crossedBottom = (prevBallY >= player.paddle.y + PADDLE_HEIGHT) && (this.ball.y <= player.paddle.y + PADDLE_HEIGHT) && (this.ball.dy < 0);
+
+            const ballLeft = this.ball.x;
+            const ballRight = this.ball.x + BALL_SIZE;
+            const horizNear = (ballRight >= (player.paddle.x - VERTICAL_EDGE_X_TOLERANCE)) && (ballLeft <= (player.paddle.x + PADDLE_WIDTH + VERTICAL_EDGE_X_TOLERANCE));
+
+            if ((crossedTop || crossedBottom) && horizNear)
+                this.ball.dy = -this.ball.dy;
+
+            return;
+        }
 
         const paddleCenter = player.paddle.y + PADDLE_HEIGHT / 2;
         const ballCenter = this.ball.y + BALL_SIZE / 2;

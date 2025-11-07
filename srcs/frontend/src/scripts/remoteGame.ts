@@ -37,6 +37,8 @@ let keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
 let gameDisconnected: boolean = false;
 let myTeam: Team | null;
 let mySlot: PlayerSlot | null;
+let currentMovement: "up" | "down" | "stop" = "stop";
+let inputInterval: number | null = null;
 
 export function cleanupRemoteGame(): void {
     if (keyDownHandler !== null) {
@@ -47,6 +49,12 @@ export function cleanupRemoteGame(): void {
         document.removeEventListener('keyup', keyUpHandler);
         keyUpHandler = null;
     }
+
+    if (inputInterval !== null) {
+        clearInterval(inputInterval);
+        inputInterval = null;
+    }
+    currentMovement = "stop";
 
     if (gameWebSocket !== null) {
         gameWebSocket.close(1000, "Page navigation");
@@ -342,6 +350,18 @@ export default function initRemoteGame(): void {
 
             document.addEventListener('keydown', keyDownHandler);
             document.addEventListener('keyup', keyUpHandler);
+
+            // Start input interval (50ms like local InputController)
+            currentMovement = "stop";
+            inputInterval = window.setInterval(() => {
+                if (gameWebSocket !== null && gameWebSocket.readyState === WebSocket.OPEN) {
+                    const message = JSON.stringify({
+                        type: "input",
+                        move: currentMovement
+                    });
+                    gameWebSocket.send(message);
+                }
+            }, 50);
         };
 
         gameWebSocket.onmessage = function(event) {
@@ -387,6 +407,12 @@ export default function initRemoteGame(): void {
                 keyUpHandler = null;
             }
 
+            if (inputInterval !== null) {
+                clearInterval(inputInterval);
+                inputInterval = null;
+            }
+            currentMovement = "stop";
+
             if (event.code !== 1000 && event.code !== 1001) {
                 showError("Game ended unexpectedly.");
             }
@@ -411,7 +437,7 @@ export default function initRemoteGame(): void {
             return;
         }
 
-        let movement = "";
+        let movement: "up" | "down" | "" = "";
         if (event.key === 'w') {
             movement = "up";
         }
@@ -421,12 +447,7 @@ export default function initRemoteGame(): void {
 
         if (movement !== "") {
             event.preventDefault();
-
-            const message = JSON.stringify({
-                type: "input",
-                move: movement
-            });
-            gameWebSocket.send(message);
+            currentMovement = movement;
         }
     }
 
@@ -447,12 +468,7 @@ export default function initRemoteGame(): void {
         }
 
         if (shouldStop === true) {
-            const message = JSON.stringify({
-                type: "input",
-                move: "stop"
-            });
-
-            gameWebSocket.send(message);
+            currentMovement = "stop";
         }
     }
 
@@ -601,6 +617,27 @@ export default function initRemoteGame(): void {
         }
     }
 
+    function adjustCanvasToViewport(): void {
+        const canvas = document.getElementById('pong') as HTMLCanvasElement | null;
+        const wrapper = document.querySelector('.pong-game-wrapper') as HTMLElement | null;
+        if (!canvas || !wrapper) return;
+
+        const top = wrapper.getBoundingClientRect().top;
+        const availableHeight = Math.max(160, window.innerHeight - top - 64);
+
+        canvas.style.maxHeight = availableHeight + 'px';
+        canvas.style.height = 'auto';
+        canvas.style.width = 'auto';
+    }
+
+    function debounce(fn: () => void, ms: number) {
+        let t: number | undefined;
+        return () => {
+            if (t) window.clearTimeout(t);
+            t = window.setTimeout(fn, ms) as unknown as number;
+        };
+    }
+
     function handleGameEnd(message: string, subtitle?: string): void {
         gameDisconnected = true;
         drawEndGameMessage(message, subtitle);
@@ -632,4 +669,12 @@ export default function initRemoteGame(): void {
     }
 
     createRemoteInterface();
+
+    const debouncedCanvasUpdate = debounce(() => {
+        adjustCanvasToViewport();
+    }, 120);
+    window.addEventListener('resize', debouncedCanvasUpdate);
+    setTimeout(() => {
+        adjustCanvasToViewport();
+    }, 200);
 }

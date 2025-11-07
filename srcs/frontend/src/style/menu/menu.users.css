@@ -23,10 +23,10 @@
 .user-info-box {
 	display: flex;
 	align-items: center;
-    flex-direction: column;
-	flex: 1;
+	flex-direction: column;
+	flex: 1 1 auto;
 	text-align: center;
-	/* margin-bottom: auto; */
+	min-height: 0;
 	height: 100%;
 	width: 100%;
 	overflow: hidden;
@@ -37,14 +37,21 @@
 }
 .user-info-avatar-box {
     display: flex;
-	height: 60%;
-	padding-top: 10%;
-	padding-bottom: 3%;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	flex: 1 1 auto;
+	min-height: 48px;
+	max-height: clamp(120px, 40vh, 320px);
+	aspect-ratio: 1 / 1;
+	width: auto;
+	overflow: hidden;
+	padding-top: 2%;
 }
 .user-info-avatar {
-	/* width: auto; */
-	/* height: auto; */
-	aspect-ratio: 1 / 1;
+	display: block;
+	width: 95%;
+	height: 95%;
 	border-radius: 10px;
 	border: 2px solid #4ade80;
 	object-fit: cover;
@@ -53,8 +60,10 @@
 .user-info-alias,
 .user-info-online-status,
 .user-info-stats-btn-box {
-	height: 9%;
+	height: auto;
+	flex: 0 0 auto;
 	align-content: center;
+	box-sizing: border-box;
 	/* margin: auto; */
 	padding: 1%;
 	/* font-size: auto; */
@@ -63,18 +72,19 @@
 .user-info-alias,
 .user-info-online-status {
 	min-height: 20px;
-	height: 5%;
+	height: auto;
 }
 .user-info-username {
 	min-height: 30px;
+	height: auto;
 	font-size: 20px;
 	font-weight: bold;
 	color: #4ade80;
 	text-shadow: 0 0 16px #4ade80;
 }
 .user-info-stats-btn-box {
-	height: 21%;
-    padding-bottom: 2%;
+	height: auto;
+	padding-bottom: 2%;
 	min-height: 40px;
 }
 .user-info-profile-btn {

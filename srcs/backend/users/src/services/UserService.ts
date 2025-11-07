@@ -75,7 +75,7 @@ export class UserService {
   }
 
   public async getUser(identifier: string): Promise<UserRow> {
-    const user = await this.userRepository.find(identifier);
+    const user = await this.userRepository.find(String(identifier));
     if (!user) {
       const error = new Error('User not found');
       (error as any).code = 'USER_NOT_FOUND';

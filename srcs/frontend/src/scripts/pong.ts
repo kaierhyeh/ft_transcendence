@@ -49,6 +49,16 @@ export function initPong() {
     
     // Setup buttons
     setTimeout(setupGameButtons, 100);
+
+    const debouncedUIUpdate = debounce(() => {
+        fitPongButtons();
+        adjustCanvasToViewport();
+    }, 120);
+    window.addEventListener('resize', debouncedUIUpdate);
+    setTimeout(() => {
+        fitPongButtons();
+        adjustCanvasToViewport();
+    }, 200);
     
     // Handle restart
     document.addEventListener('keydown', (e) => {
@@ -80,6 +90,67 @@ export function initPong() {
             if (isTransitioning) return;
             startNewGame('pvp', '2v2');
         });
+    }
+
+    function fitPongButtons(): void {
+        const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.pong-btn'));
+        buttons.forEach((btn) => {
+            btn.style.fontSize = '';
+
+            const computed = window.getComputedStyle(btn);
+            const paddingLeft = parseFloat(computed.paddingLeft || '0');
+            const paddingRight = parseFloat(computed.paddingRight || '0');
+            const avail = btn.clientWidth - (paddingLeft + paddingRight) - 4;
+            if (avail <= 0) return;
+
+            const span = document.createElement('span');
+            span.style.whiteSpace = 'nowrap';
+            span.style.visibility = 'hidden';
+            span.style.position = 'absolute';
+            span.style.left = '-9999px';
+            span.textContent = btn.textContent || '';
+            document.body.appendChild(span);
+
+            let fontPx = parseFloat(computed.fontSize || '14');
+            span.style.fontSize = fontPx + 'px';
+
+            const minFont = 10;
+            while (span.scrollWidth > avail && fontPx > minFont) {
+                fontPx -= 0.5;
+                span.style.fontSize = fontPx + 'px';
+                if (fontPx <= minFont) break;
+            }
+
+            const baseFont = parseFloat((computed.fontSize || '14'));
+            if (fontPx < baseFont) {
+                btn.style.fontSize = fontPx + 'px';
+            } else {
+                btn.style.fontSize = '';
+            }
+
+            document.body.removeChild(span);
+        });
+    }
+
+    function adjustCanvasToViewport(): void {
+        const canvas = document.getElementById('pong') as HTMLCanvasElement | null;
+        const wrapper = document.querySelector('.pong-game-wrapper') as HTMLElement | null;
+        if (!canvas || !wrapper) return;
+
+        const top = wrapper.getBoundingClientRect().top;
+        const availableHeight = Math.max(160, window.innerHeight - top - 64);
+
+        canvas.style.maxHeight = availableHeight + 'px';
+        canvas.style.height = 'auto';
+        canvas.style.width = 'auto';
+    }
+
+    function debounce(fn: () => void, ms: number) {
+        let t: number | undefined;
+        return () => {
+            if (t) window.clearTimeout(t);
+            t = window.setTimeout(fn, ms);
+        };
     }
     
     async function startNewGame(mode: GameMode, format: GameFormat): Promise<void> {
