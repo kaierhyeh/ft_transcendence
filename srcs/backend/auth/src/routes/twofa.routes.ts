@@ -129,7 +129,8 @@ export default async function twofaRoutes(fastify: FastifyInstance, options: any
 			if (!payload.valid || !payload.payload)
 				return reply.code(400).send({ success: false, error: 'Invalid or expired temp token.' });
 
-			const userId = (payload.payload as any).userId;
+			// Support both userId (normal login) and user_id (OAuth) formats
+			const userId = (payload.payload as any).userId || (payload.payload as any).user_id;
 			
 			console.log('👤 Extracted userId from temp token:', userId);
 			

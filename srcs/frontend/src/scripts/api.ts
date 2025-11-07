@@ -600,13 +600,18 @@ export async function update(
 
 export async function verify2fa(token: string, temp_token: string): Promise<boolean> {
 	try {
-		const response = await fetch('/api/2fa/verify', {
+		console.log('🔐 verify2fa called with:', { token: token.substring(0, 3) + '***', temp_token: temp_token.substring(0, 20) + '...' });
+		
+		const response = await fetch('/api/auth/2fa/verify', {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ token, temp_token })
 		});
+		
+		console.log('🔐 verify2fa response status:', response.status);
 		const data = await response.json();
+		console.log('🔐 verify2fa response data:', data);
 
 		if (!response.ok || !data.success) {
 			const errorMessage = data?.error || "2FA verification failed.";
@@ -615,14 +620,16 @@ export async function verify2fa(token: string, temp_token: string): Promise<bool
 			return false;
 		}
 
+		// Don't update user state here - let the router/header handle it after navigation
+		// This ensures cookies are fully set before checking authentication
 		if (data.success) {
-			update_user(new User(data.username, data.id));
 			showSuccess(`Welcome back, ${data.username}!`);
 		}
 
+		console.log('🔐 verify2fa returning:', data.success);
 		return data.success;
 	} catch (error) {
-		// console.error('/api/2fa/verify error:', error);
+		console.error('🔐 verify2fa error:', error);
 		showError("Sorry, 2FA verification failed.");
 		return false;
 	}
@@ -746,7 +753,8 @@ export async function processGoogleOAuth(code: string): Promise<void> {
 			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
 			if (hideOverlay)
 				hideOverlay();
-			update_user(new User(data.username));
+			// Don't set user state here - let loadHeader() handle it after navigation
+			// This ensures proper authentication flow with fully set cookies
 			showSuccess(`Welcome back, ${data.username}!`);
 			// Small delay to ensure cookies are set before redirecting
 			await new Promise(resolve => setTimeout(resolve, 100));
@@ -793,7 +801,7 @@ async function completeGoogleRegistration(username: string, tempToken: string): 
 			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
 			if (hideOverlay)
 				hideOverlay();
-			update_user(new User(data.username, data.id, data.email, data.avatar));
+			// Don't set user state here - let loadHeader() handle it after navigation
 			showSuccess(`Welcome, ${data.username}!`);
 			// Redirect to home page after successful registration (SPA navigation)
 			(window as any).navigateTo("/");
