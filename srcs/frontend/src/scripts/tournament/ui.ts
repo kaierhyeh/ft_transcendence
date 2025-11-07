@@ -5,6 +5,8 @@ import { i18n } from '../i18n/index.js';
 
 export class TournamentUIManager {
     private bracketManager: TournamentBracketManager;
+    private tournamentResizeHandler: (() => void) | null = null;
+    private resizeHandlerInstalled: boolean = false;
 
     constructor(bracketManager: TournamentBracketManager) {
         this.bracketManager = bracketManager;
@@ -170,16 +172,6 @@ export class TournamentUIManager {
         if (gameHeader) gameHeader.style.display = 'flex';
     }
 
-    hideGameInterface(): void {
-        const tournamentGame = document.getElementById('tournament-game');
-        const gameWrapper = document.querySelector('.pong-game-wrapper') as HTMLElement;
-        const gameHeader = document.querySelector('.game-header') as HTMLElement;
-        if (tournamentGame) tournamentGame.style.display = 'none';
-        if (gameWrapper) gameWrapper.style.display = 'none';
-        if (gameHeader) gameHeader.style.display = 'none';
-    }
-
-
     showNextMatch(): void {
         const bracketDiv = document.getElementById('tournament-bracket');
         const currentMatch = document.getElementById('current-match');
@@ -264,10 +256,52 @@ export class TournamentUIManager {
             const ctx = canvas.getContext('2d');
             if (ctx)
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const wrapper = document.querySelector('.pong-game-wrapper') as HTMLElement | null;
+            function applyCanvasMaxHeight(): void {
+                if (!wrapper) return;
+                const top = wrapper.getBoundingClientRect().top;
+                const availableHeight = Math.max(160, window.innerHeight - top - 32);
+                canvas.style.maxHeight = availableHeight + 'px';
+                canvas.style.height = 'auto';
+                canvas.style.width = 'auto';
+            }
+
+            applyCanvasMaxHeight();
+
+            if (!this.resizeHandlerInstalled) {
+                const debounced = (() => {
+                    let t: number | undefined;
+                    return () => {
+                        if (t) window.clearTimeout(t);
+                        t = window.setTimeout(() => {
+                            applyCanvasMaxHeight();
+                        }, 120);
+                    };
+                })();
+                this.tournamentResizeHandler = debounced;
+                window.addEventListener('resize', this.tournamentResizeHandler);
+                this.resizeHandlerInstalled = true;
+            }
+
             return canvas;
         } else {
             console.error('Tournament canvas not found!');
             return null;
+        }
+    }
+
+    hideGameInterface(): void {
+        const tournamentGame = document.getElementById('tournament-game');
+        const gameWrapper = document.querySelector('.pong-game-wrapper') as HTMLElement;
+        const gameHeader = document.querySelector('.game-header') as HTMLElement;
+        if (tournamentGame) tournamentGame.style.display = 'none';
+        if (gameWrapper) gameWrapper.style.display = 'none';
+        if (gameHeader) gameHeader.style.display = 'none';
+
+        if (this.resizeHandlerInstalled && this.tournamentResizeHandler) {
+            window.removeEventListener('resize', this.tournamentResizeHandler);
+            this.resizeHandlerInstalled = false;
+            this.tournamentResizeHandler = null;
         }
     }
 }
