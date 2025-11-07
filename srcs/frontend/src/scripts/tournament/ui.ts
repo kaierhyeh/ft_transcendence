@@ -167,8 +167,8 @@ export class TournamentUIManager {
         
         if (bracketDiv) bracketDiv.style.display = 'none';
         if (currentMatch) currentMatch.style.display = 'none';
-        if (tournamentGame) tournamentGame.style.display = 'block';
-        if (gameWrapper) gameWrapper.style.display = 'block';
+        if (tournamentGame) tournamentGame.style.display = 'flex';
+        if (gameWrapper) gameWrapper.style.display = 'flex';
         if (gameHeader) gameHeader.style.display = 'flex';
     }
 
@@ -260,7 +260,7 @@ export class TournamentUIManager {
             function applyCanvasMaxHeight(): void {
                 if (!wrapper) return;
                 const top = wrapper.getBoundingClientRect().top;
-                const availableHeight = Math.max(160, window.innerHeight - top - 32);
+                const availableHeight = Math.max(160, window.innerHeight - top - 64);
                 canvas.style.maxHeight = availableHeight + 'px';
                 canvas.style.height = 'auto';
                 canvas.style.width = 'auto';

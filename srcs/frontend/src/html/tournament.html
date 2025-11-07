@@ -7,6 +7,16 @@
 
     <div class="tournament-title" data-i18n="tournament">Tournament</div>
 
+    <div class="game-header" style="display: none;">
+        <div class="game-player left">
+            <span id="tournament-player1" class="game-player-name">Player 1</span>
+        </div>
+        <div class="game-vs" aria-hidden="true">VS</div>
+        <div class="game-player right">
+            <span id="tournament-player2" class="game-player-name">Player 2</span>
+        </div>
+    </div>
+
     <div id="player-selection" class="tournament-phase">
         <h3 data-i18n="choosePlayers">Chose the numbers of players</h3>
         <div class="player-count-buttons">
@@ -45,16 +55,7 @@
         </div>
     </div>
 
-    <div id="tournament-game" class="tournament-phase" style="display: none;">
-        <div class="game-header" style="display: none;">
-            <div class="game-player left">
-                <span id="tournament-player1" class="game-player-name">Player 1</span>
-            </div>
-            <div class="game-vs" aria-hidden="true">VS</div>
-            <div class="game-player right">
-                <span id="tournament-player2" class="game-player-name">Player 2</span>
-            </div>
-        </div>
+    <div id="tournament-game" style="display: none;">
         <div class="pong-game-wrapper" style="display: none;">
             <div id="game-message" style="display: none;"></div>
             <canvas id="tournament-pong" width="800" height="750" class="pong-canvas"></canvas>
