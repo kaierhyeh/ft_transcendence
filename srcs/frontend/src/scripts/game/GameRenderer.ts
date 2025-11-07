@@ -2,6 +2,7 @@
 // Handles pure game rendering on canvas - no UI message display
 import type { GameSession } from "./GameSession.js";
 import type { GameConfig, GameState, GameState2v2 } from "./types.js";
+import { t } from "../i18n/i18n.js";
 
 export class GameRenderer {
     private canvas: HTMLCanvasElement;
@@ -88,9 +89,12 @@ export class GameRenderer {
         if (isOver && state.winner && this.showRestartHint) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(`${state.winner.toUpperCase()} player wins!`, config.canvas_width / 2, config.canvas_height / 2);
+
+			const winnerTranslated = state.winner === 'left' ? t("left") : t("right");
+            this.ctx.fillText(`${winnerTranslated.toUpperCase()} ${t("playerWins")}`, config.canvas_width / 2, config.canvas_height / 2);
             this.ctx.font = "24px Bit5x3, monospace";
-            this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+            this.ctx.fillText(t("pressSpaceToRestart"), config.canvas_width / 2, config.canvas_height / 2 + 50);
+
             this.ctx.textAlign = "left";
         }
     }
@@ -126,17 +130,18 @@ export class GameRenderer {
 
         // Controls hint
         this.ctx.font = "16px Bit5x3, monospace";
-        this.ctx.fillText("Left: W/S (top) A/Z (btm)", 20, config.canvas_height - 60);
-        this.ctx.fillText("Right: ↑/↓ (top) O/L (btm)", 20, config.canvas_height - 40);
+        this.ctx.fillText(t("controlLeft2"), 20, config.canvas_height - 60);
+        this.ctx.fillText(t("controlRight2"), 20, config.canvas_height - 40);
 
         // Winner
         // Winner (skip if showRestartHint is false - arena mode handles it separately)
         if (isOver && state.winner && this.showRestartHint) {
             this.ctx.font = "32px Bit5x3, monospace";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(`${state.winner.toUpperCase()} team wins!`, config.canvas_width / 2, config.canvas_height / 2);
+			const winnerTranslated = state.winner === 'left' ? t("leftTeam") : t("rightTeam");
+            this.ctx.fillText(`${winnerTranslated.toUpperCase()} ${t("teamWins")}`, config.canvas_width / 2, config.canvas_height / 2);
             this.ctx.font = "24px Bit5x3, monospace";
-            this.ctx.fillText("Press SPACE to restart", config.canvas_width / 2, config.canvas_height / 2 + 50);
+            this.ctx.fillText(t("pressSpaceToRestart"), config.canvas_width / 2, config.canvas_height / 2 + 50);
             this.ctx.textAlign = "left";
         }
     }

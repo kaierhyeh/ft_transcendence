@@ -8,6 +8,8 @@ export const translations = {
     "chats": "Chats",
     "noUsers": "No users",
     "noFriends": "No friends",
+    "noRequests": "No requests",
+    "noBlocked": "No blocked",
     "noChats": "No chats",
     "backToHome": "Back to Home",
     "filter": "Filter",
@@ -29,13 +31,22 @@ export const translations = {
     "twoPlayers": "Two players",
     "fourPlayers": "Four players",
     "playOnline": "Play online",
-    "remote1v1": "2 players online",
-    "remote2v2": "4 players online",
+    "remote1v1": "2 players",
+    "remote2v2": "4 players",
     "points": "Points",
     "avgRebounds": "Avg rebounds",
     "reset": "Reset",
     "failedToStartGame": "Failed to start game",
-
+	"playerWins": "player wins!",
+	"teamWins": "team wins!",
+	"youWin": "You Win",
+	"youLose": "You Lose",
+	"winner": "WINNER: ",
+	"teammateLeft": "Your teammate left the game!",
+	"opponentLeft": "Your opponent left the game!",
+	"selectAnOnlineGame": " Select an online format to retry",
+	"selectNewParty": "Please select a new party",
+	"pressSpaceToRestart": "Press SPACE to restart",
 
     // Tournament
     "tournament": "Tournament",
@@ -56,10 +67,53 @@ export const translations = {
     "goHome": "Go Home",
     "seeHistory": "See Tournament history",
     "newTournament": "Start New Tournament",
+	"tournamentResults": "Tournaments results",
+
+
+
+	// Render tournament
+	"tournamentEmpty": "No tournaments found",
+	"tournId": "Tournament #",
+	"tournamentPlayers": "p.", // p. = players
+	"tournamentWinner": "Winner: ", // with space at the end!
+
+	//Match History
+	"loading": "Loading...",
+	"loadMore": "Load More",
+	"failedToLoad": "Failed to load. Try again?",
+	// next 4 lines help to build this phrase:
+	// Showing ${displayedMatches} of ${pagination.total_records} ${pagination.total_records !== 1 ? 'matches' : 'match'}
+	"showing": "Showing",
+	"of": "of",
+	"match": "match",
+	"matches": "matches",
+
+	// Match Card
+	"opponent": "Opponent",
+	"yourTeam": "Your Team",
+	"beforeOwner": "",			// to build: `{profileOwner.username}'s Team`
+	"afterOwner": "'s Team", 	// to build: `{profileOwner.username}'s Team`
+	"team": "Team",
+	"formatUnknown": "Unknown",
+	"formatAiBot": "AI Bot",
+	"formatGuest": "Guest",
+	"formatYou": "You",
+	"formatPlayer": "Player",
+	"matchCardOnline": "Online",
+	"victory": "Victory!",
+	"defeat": "Defeat!",
+	// labels just for russian translation
+	"labelAI": "Solo",
+	"labelTournament": "Tournament",
+	"justNow": "Just now",
+	"yesterday": "Yesterday",
+	"minutesAgo": "m ago",
+	"hoursAgo": "h ago",
+	"daysAgo": "days ago",
 
     // Profile & Auth
-    "loading": "Loading...",
-    "error": "Error",
+    "loadingProfile": "Loading profile...",
+    "errorLoadingProfile": "Error while loading profile",
     "loginRegister": "Login / Register",
     "signupButton": "SIGNUP",
     "loginButton": "LOGIN",
@@ -68,6 +122,9 @@ export const translations = {
     "enterUsername": "Enter username",
     "enterEmail": "Enter email",
     "password": "Password:",
+    "changePassword": "Change Password",
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
     "enterPassword": "Enter password",
     "register": "Sign Up",
     "loginWithGoogle": "Log In with Google",
@@ -78,6 +135,9 @@ export const translations = {
     "dontHaveAccount": "Don't have an account? Sign Up",
     "myProfileTitle": "My Profile",
     "profileAvatar": "Profile Avatar",
+    "changeAvatar": "Change Avatar",
+    "removeAvatar": "Remove",
+    "update": "Update",
     "settings": "Settings",
     "enable2FA": "Enable 2FA",
     "logout": "Logout",
@@ -92,6 +152,7 @@ export const translations = {
     "enterVerificationCode": "Please enter the verification code from your authenticator app:",
     "verify": "Verify",
     "username": "Username",
+    "alias": "Alias",
     "email": "Email (optional):",
     "joinDate": "Join Date",
 
@@ -100,12 +161,30 @@ export const translations = {
     "bestWinStreak": "Best Winstreak",
     "winsLosses": "Wins / Losses",
     "scoredPointsRanking": "Scored points ranking",
+    "notEnoughData": "Not Enough Data",
+    "memberSince": "Member since",
+    "matchHistory": "Match History",
+    "noMatchesYet": "No matches yet",
+    "noMatchesExplanation": "Your match history will appear here after you play some games!",
+    "playNow": "Play Now",
+    "notConnected": "You are not connected...",
 
     // Chat
     "typeMessage": "Type a message...",
     "inviteToGame": "Invite to game",
-	"startGameInChat": "Start Game",
+	"startGameInChat": "Start Game",	  
 	"blockedStatus": "BLOCKED",
+
+    // Social-Menu Btns
+    "addFriend": "Add Friend",
+    "cancelRequest": "Cancel Request",
+    "acceptRequest": "Accept Request",
+    "declineRequest": "Decline Request",
+    "deleteFriend": "Delete Friend",
+    "unblockUser": "Unblock",
+    "openChat": "Chat",
+    "blockUser": "Block",
+    "userDetails": "View profile",
 
     // Game Status
     "waiting": "Waiting...",
@@ -115,7 +194,11 @@ export const translations = {
     "matchFound": "Match found!",
     "left": "Left",
     "right": "Right",
+	"leftTeam": "Left",
+    "rightTeam": "Right",
     "selectGameMode": "Select a game mode",
+	"controlLeft2": "Left: W/S (top) A/Z (btm)",
+	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
 
     // Player Position
@@ -147,6 +230,8 @@ export const translations = {
     "chats": "聊天",
     "noUsers": "沒有使用者",
     "noFriends": "沒有好友",
+    "noRequests": "沒有請求",
+    "noBlocked": "沒有封鎖",
     "noChats": "沒有聊天",
     "backToHome": "返回首頁",
     "filter": "篩選",
@@ -174,6 +259,16 @@ export const translations = {
     "avgRebounds": "平均反彈",
     "reset": "重設",
     "failedToStartGame": "無法開始遊戲",
+	"playerWins": "玩家獲勝！",
+	"teamWins": "隊伍獲勝！",
+	"youWin": "你贏了",
+	"youLose": "你輸了",
+	"winner": "贏家：",
+	"teammateLeft": "你的隊友離開了遊戲！",
+	"opponentLeft": "你的對手離開了遊戲！",
+	"selectAnOnlineGame": "選擇線上模式重試",
+	"selectNewParty": "請選擇新的遊戲",
+	"pressSpaceToRestart": "按空白鍵重新開始",
 
     // Tournament
     "tournament": "比賽",
@@ -194,10 +289,51 @@ export const translations = {
     "goHome": "回到首頁",
     "seeHistory": "查看歷史",
     "newTournament": "重新開始",
+	"tournamentResults": "比賽結果",
+
+	// Render tournament
+	"tournamentEmpty": "沒有找到比賽",
+	"tournId": "比賽 #",
+	"tournamentPlayers": "位", // p. = players
+	"tournamentWinner": "贏家：", // with space at the end!
+
+	//Match History
+	"loading": "載入中...",
+	"loadMore": "載入更多",
+	"failedToLoad": "載入失敗，再試一次？",
+	// next 4 lines help to build this phrase:
+	// Showing ${displayedMatches} of ${pagination.total_records} ${pagination.total_records !== 1 ? 'matches' : 'match'}
+	"showing": "顯示",
+	"of": "共",
+	"match": "場比賽",
+	"matches": "場比賽",
+
+	// Match Card
+	"opponent": "對手",
+	"yourTeam": "你的隊伍",
+	"beforeOwner": "",			// to build: `{profileOwner.username}'s Team`
+	"afterOwner": "的隊伍", 	// to build: `{profileOwner.username}'s Team`
+	"team": "隊伍",
+	"formatUnknown": "未知",
+	"formatAiBot": "電腦",
+	"formatGuest": "訪客",
+	"formatYou": "你",
+	"formatPlayer": "玩家",
+	"matchCardOnline": "線上",
+	"victory": "勝利！",
+	"defeat": "失敗！",
+	// labels just for russian translation
+	"labelAI": "Solo",
+	"labelTournament": "Tournament",
+	"justNow": "剛剛",
+	"yesterday": "昨天",
+	"minutesAgo": "分鐘前",
+	"hoursAgo": "小時前",
+	"daysAgo": "天前",
 
     // Profile & Auth
-    "loading": "載入中...",
-    "error": "錯誤",
+    "loadingProfile": "載入中...",
+    "errorLoadingProfile": "錯誤",
     "loginRegister": "登入 / 註冊",
     "signupButton": "註冊",
     "loginButton": "登入",
@@ -206,6 +342,9 @@ export const translations = {
     "enterUsername": "輸入使用者名稱",
     "enterEmail": "輸入電子信箱",
     "password": "密碼：",
+    "changePassword": "更改密碼",
+    "oldPassword": "舊密碼",
+    "newPassword": "新密碼",
     "enterPassword": "輸入密碼",
     "register": "註冊",
     "loginWithGoogle": "使用 Google 登入",
@@ -216,6 +355,9 @@ export const translations = {
     "dontHaveAccount": "還沒有帳號？立即註冊",
     "myProfileTitle": "我的個人資料",
     "profileAvatar": "個人頭像",
+    "changeAvatar": "更換頭像",
+    "removeAvatar": "移除",
+    "update": "更新",
     "settings": "設定",
     "enable2FA": "啟用雙重認證",
     "logout": "登出",
@@ -230,6 +372,7 @@ export const translations = {
     "enterVerificationCode": "請輸入來自驗證器應用程式的驗證碼：",
     "verify": "驗證",
     "username": "使用者名稱",
+    "alias": "別名",
     "email": "電子信箱",
     "joinDate": "加入日期",
 
@@ -238,12 +381,31 @@ export const translations = {
     "bestWinStreak": "最佳連勝",
     "winsLosses": "勝/負",
     "scoredPointsRanking": "得分排名",
+    "notEnoughData": "資料不足",
+    "memberSince": "會員自",
+    "matchHistory": "比賽歷史",
+    "noMatchesYet": "尚未比賽",
+    "noMatchesExplanation": "您的比賽歷史將在遊戲後顯示於此！",
+    "playNow": "立即遊玩",
+    "notConnected": "您未連接...",
 
     // Chat
     "typeMessage": "輸入訊息...",
     "inviteToGame": "邀請遊戲",
 	"startGameInChat": "開始遊戲",
-	"blockedStatus": "BLOCKED",				// to translate
+	"blockedStatus": "已封鎖",
+
+    // Social-Menu Btns
+    "addFriend": "添加好友",
+    "cancelRequest": "取消请求",
+    "acceptRequest": "接受请求",
+    "declineRequest": "拒绝请求",
+    "deleteFriend": "删除好友",
+    "unblockUser": "取消屏蔽",
+    "openChat": "聊天",
+    "blockUser": "屏蔽",
+    "userDetails": "查看個人資料",
+
 
     // Game Status
     "waiting": "等待中...",
@@ -253,7 +415,11 @@ export const translations = {
     "matchFound": "配對成功！",
     "left": "左方",
     "right": "右方",
-    "selectGameMode": "選擇遊戲模式",
+    "leftTeam": "Left",
+    "rightTeam": "Right",
+    "selectGameMode": "Select a game mode",
+	"controlLeft2": "Left: W/S (top) A/Z (btm)",
+	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
     // Player Position
     "positionLeft": "你的位置：左",
@@ -284,6 +450,8 @@ export const translations = {
     "chats": "Chats",
     "noUsers": "Aucun utilisateur",
     "noFriends": "Aucun ami",
+    "noRequests": "Aucune demande",
+    "noBlocked": "Aucun bloqué",
     "noChats": "Aucun chat",
     "backToHome": "Retour à l'accueil",
     "filter": "Filtrer",
@@ -305,12 +473,22 @@ export const translations = {
     "twoPlayers": "Deux joueurs",
     "fourPlayers": "Quatre joueurs",
     "playOnline": "Jouer en ligne",
-    "remote1v1": "2 joueurs en ligne",
-    "remote2v2": "4 joueurs en ligne",
+    "remote1v1": "2 joueurs",
+    "remote2v2": "4 joueurs",
     "points": "Points",
     "avgRebounds": "Rebonds moy.",
     "reset": "Réinitialiser",
     "failedToStartGame": "Échec du démarrage du jeu",
+	"playerWins": "le joueur gagne !",
+	"teamWins": "l'équipe gagne !",
+	"youWin": "Vous avez gagné",
+	"youLose": "Vous avez perdu",
+	"winner": "GAGNANT : ",
+	"teammateLeft": "Votre coéquipier a quitté la partie !",
+	"opponentLeft": "Votre adversaire a quitté la partie !",
+	"selectAnOnlineGame": "Sélectionnez un format en ligne pour réessayer",
+	"selectNewParty": "Veuillez sélectionner une nouvelle partie",
+	"pressSpaceToRestart": "Appuyez sur ESPACE pour recommencer",
 
     // Tournament
     "tournament": "Tournoi",
@@ -331,10 +509,51 @@ export const translations = {
     "goHome": "Retour à l'accueil",
     "seeHistory": "Voir l'historique des tournois",
     "newTournament": "Commencer un nouveau tournoi",
+	"tournamentResults": "Résultats des tournois",
+
+	// Render tournament
+	"tournamentEmpty": "Aucun tournoi trouvé",
+	"tournId": "Tournoi #",
+	"tournamentPlayers": "j.", // p. = players
+	"tournamentWinner": "Gagnant : ", // with space at the end!
+
+	//Match History
+	"loading": "Chargement...",
+	"loadMore": "Charger plus",
+	"failedToLoad": "Échec du chargement. Réessayer ?",
+	// next 4 lines help to build this phrase:
+	// Showing ${displayedMatches} of ${pagination.total_records} ${pagination.total_records !== 1 ? 'matches' : 'match'}
+	"showing": "Affichage de",
+	"of": "sur",
+	"match": "match",
+	"matches": "matchs",
+
+	// Match Card
+	"opponent": "Adversaire",
+	"yourTeam": "Votre Équipe",
+	"beforeOwner": "Équipe de ",			// to build: `{profileOwner.username}'s Team`
+	"afterOwner": "", 	// to build: `{profileOwner.username}'s Team`
+	"team": "Équipe",
+	"formatUnknown": "Inconnu",
+	"formatAiBot": "IA",
+	"formatGuest": "Invité",
+	"formatYou": "Vous",
+	"formatPlayer": "Joueur",
+	"matchCardOnline": "En ligne",
+	"victory": "Victoire !",
+	"defeat": "Défaite !",
+	// labels just for russian translation
+	"labelAI": "Solo",
+	"labelTournament": "Tournament",
+	"justNow": "À l'instant",
+	"yesterday": "Hier",
+	"minutesAgo": "min",
+	"hoursAgo": "h",
+	"daysAgo": "j",
 
     // Profile & Auth
-    "loading": "Chargement...",
-    "error": "Erreur",
+    "loadingProfile": "Chargement...",
+    "errorLoadingProfile": "Erreur",
     "loginRegister": "Connexion / Inscription",
     "signupButton": "INSCRIPTION",
     "loginButton": "CONNEXION",
@@ -343,6 +562,9 @@ export const translations = {
     "enterUsername": "Entrez le nom d'utilisateur",
     "enterEmail": "Entrez l'email",
     "password": "Mot de passe :",
+    "changePassword": "Changer le mot de passe",
+    "oldPassword": "Ancien mot de passe",
+    "newPassword": "Nouveau mot de passe",
     "enterPassword": "Entrez le mot de passe",
     "register": "S'inscrire",
     "loginWithGoogle": "Se connecter avec Google",
@@ -353,6 +575,9 @@ export const translations = {
     "dontHaveAccount": "Vous n'avez pas de compte ? Inscrivez-vous",
     "myProfileTitle": "Mon Profil",
     "profileAvatar": "Avatar du profil",
+    "changeAvatar": "Changer l'avatar",
+    "removeAvatar": "Supprimer",
+    "update": "Mettre à jour",
     "settings": "Paramètres",
     "enable2FA": "Activer 2FA",
     "logout": "Se déconnecter",
@@ -367,6 +592,7 @@ export const translations = {
     "enterVerificationCode": "Veuillez entrer le code de vérification de votre application d'authentification :",
     "verify": "Vérifier",
     "username": "Nom d'utilisateur",
+    "alias": "Alias",
     "email": "Email",
     "joinDate": "Date d'inscription",
 
@@ -375,12 +601,31 @@ export const translations = {
     "bestWinStreak": "Meilleure série",
     "winsLosses": "Victoires / Défaites",
     "scoredPointsRanking": "Classement des points marqués",
+    "notEnoughData": "Données insuffisantes",
+    "memberSince": "Membre depuis",
+    "matchHistory": "Historique des matchs",
+    "noMatchesYet": "Aucun match pour le moment",
+    "noMatchesExplanation": "Votre historique de matchs apparaîtra ici après avoir joué quelques parties !",
+    "playNow": "Jouer maintenant",
+    "notConnected": "Vous n'êtes pas connecté...",
 
     // Chat
     "typeMessage": "Tapez un message...",
     "inviteToGame": "Inviter à jouer",
 	"startGameInChat": "Démarrer le jeu",
-	"blockedStatus": "BLOCKED",				// to translate
+	"blockedStatus": "BLOQUÉ",
+
+    // Social-Menu Btns
+    "addFriend": "Ajouter un ami",
+    "cancelRequest": "Annuler la demande",
+    "acceptRequest": "Accepter la demande",
+    "declineRequest": "Refuser la demande",
+    "deleteFriend": "Supprimer l’ami",
+    "unblockUser": "Débloquer",
+    "openChat": "Chat",
+    "blockUser": "Bloquer",
+    "userDetails": "Voir le profil",
+
 
     // Game Status
     "waiting": "En attente...",
@@ -390,7 +635,11 @@ export const translations = {
     "matchFound": "Match trouvé !",
     "left": "Gauche",
     "right": "Droite",
-    "selectGameMode": "Sélectionnez un mode de jeu",
+    "leftTeam": "Left",
+    "rightTeam": "Right",
+    "selectGameMode": "Select a game mode",
+	"controlLeft2": "Left: W/S (top) A/Z (btm)",
+	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
     // Player Position
     "positionLeft": "Votre position : Gauche",
@@ -415,131 +664,213 @@ export const translations = {
   ru: {
     // Navigation & Menu
     "menu": "МЕНЮ",
-    "users": "Пользователи",
-    "userInfo": "О пользователе",
-    "friends": "Друзья",
-    "chats": "Чаты",
-    "noUsers": "Нет пользователей",
-    "noFriends": "Нет друзей",
-    "noChats": "Нет чатов",
-    "backToHome": "На главную", // alt Вернуться на главную
-    "filter": "Фильтр",
-    "all": "Все",
-    "allUsers": "Все пользователи",
-    "requestsIn": "Входящие запросы",
-    "requestsOut": "Исходящие запросы",
-    "blocked": "Заблокированные",
+    "users": "ИГРОКИ", // = players
+    "userInfo": "ПРОФИЛЬ",
+    "friends": "ДРУЗЬЯ",
+    "chats": "ЧАТЫ",
+    "noUsers": "других игроков нет",
+    "noFriends": "пока нет друзей",
+    "noRequests": "нет запросов в друзья",
+    "noBlocked": "никто не заблокирован",
+    "noChats": "пока нет чатов",
+    "backToHome": "НА ГЛАВНУЮ", // = to home
+    "filter": "ФИЛЬТР",
+    "all": "ВСЕ",
+    "allUsers": "ВСЕ ИГРОКИ",
+    "requestsIn": "ЗАПРОСЫ ДРУЖБЫ",
+    "requestsOut": "ВАШИ ЗАПРОСЫ ДРУЖБЫ",
+    "blocked": "ЗАБЛОКИРОВАННЫЕ",
 
     // Home Page
-    "pongTitle": "Pong 1972",
-    "playPong": "Играть в Pong",
-    "launchTournament": "Запустить турнир",
-    "myProfile": "Мой профиль",
-    "seeStats": "Посмотреть статистику",  // alt: Статистика
+    "pongTitle": "ПОНГ 1972",
+    "playPong": "ИГРАТЬ В ПОНГ",
+    "launchTournament": "СОЗДАТЬ ТУРНИР",
+    "myProfile": "МОЙ ПРОФИЛЬ",
+    "seeStats": "СТАТИСТИКА",
 
     // Pong Game
-    "onePlayer": "Один игрок",
-    "twoPlayers": "Два игрока",
-    "fourPlayers": "Четыре игрока",
-    "playOnline": "Играть онлайн",    // alt: Игра по сети 11:21
-    "remote1v1": "- 2 игрока -",
-    "remote2v2": "- 4 игрока -",
-    "points": "Очки",
-    "avgRebounds": "Avg rebounds",
-    "reset": "Reset",
-    "failedToStartGame": "Не удалось начать игру",
+    "onePlayer": "ОДИН ИГРОК",
+    "twoPlayers": "ДВА ИГРОКА",
+    "fourPlayers": "ЧЕТЫРЕ ИГРОКА",
+    "playOnline": "ИГРАТЬ ОНЛАЙН",
+    "remote1v1": "ДВА ИГРОКА",
+    "remote2v2": "ЧЕТЫРЕ ИГРОКА",
+    "points": "ОЧКИ",
+    "avgRebounds": "СРЕДНЕЕ ЧИСЛО ОТСКОКОВ",
+    "reset": "СБРОСИТЬ",
+    "failedToStartGame": "НЕ УДАЛОСЬ НАЧАТЬ ИГРУ",
+	"playerWins": "игрок выигрывает!",
+	"teamWins": "команда выигрывает!",
+	"youWin": "Вы победили",
+	"youLose": "Вы проиграли",
+	"winner": "ПОБЕДИТЕЛЬ: ",
+	"teammateLeft": "Ваш напарник покинул игру!",
+	"opponentLeft": "Ваш противник покинул игру!",
+	"selectAnOnlineGame": "Начните новую онлайн-игру",
+	"selectNewParty": "Начните новую онлайн-игру",
+	"pressSpaceToRestart": "Нажмите ПРОБЕЛ, чтобы перезапустить",
 
     // Tournament
-    "tournament": "Турнир",
-    "choosePlayers": "Выберите число игроков",
-    "players4": "4 Игрока",
-    "players8": "8 Игрока",
-    "enterPlayerNames": "Введите имена игроков",  // is it alias?
-    "enterPlayerName": "Введите имя",             // is it alias? 
-    "player": "Игрок",
-    "startTournament": "Начать турнир",
-    "back": "Назад",
-    "tournamentBracket": "Tournament Bracket",
-    "nextMatch": "Следующий матч",
-    "vs": "ПРОТИВ",  // alt: "VS" - also possible 
-    "startMatch": "Начать матч",
-    "tournamentComplete": "Турнир завершен!",
-    "champion": "Чемпион",
-    "goHome": "Вернуться назад", // alt: "Назад" (Back)
-    "seeHistory": "Посмотреть историю турнира", // alt: "История турнира" or if tournamentS "история турниров"
-    "newTournament": "Начать Новый Турнир",
+    "tournament": "ТУРНИР",
+    "choosePlayers": "ВЫБЕРИТЕ ЧИСЛО ИГРОКОВ",
+    "players4": "4 ИГРОКА",
+    "players8": "8 ИГРОКОВ",
+    "enterPlayerNames": "ДАННЫЕ УЧАСТНИКОВ ТУРНИРА",
+    "enterPlayerName": "никнейм",
+    "player": "игрок",
+    "startTournament": "НАЧАТЬ ТУРНИР",
+    "back": "НАЗАД",
+    "tournamentBracket": "ТУРНИРНАЯ СЕТКА",
+    "nextMatch": "СЛЕДУЮЩИЙ МАТЧ МЕЖДУ",
+    "vs": "И",
+    "startMatch": "НАЧАТЬ МАТЧ",
+    "tournamentComplete": "ТУРНИР ОКОНЧЕН",
+    "champion": "ЧЕМПИОН",
+    "goHome": "НА ГЛАВНУЮ",
+    "seeHistory": "ИСТОРИЯ ТУРНИРА",
+    "newTournament": "НОВЫЙ ТУРНИР",
+	"tournamentResults": "Результаты турниров",
+
+	// Render tournament
+	"tournamentEmpty": "Турниры не найдены",
+	"tournId": "Турнир #",
+	"tournamentPlayers": "и.",
+	"tournamentWinner": "Победитель: ",
+
+	//Match History
+	"loading": "Загрузка...",
+	"loadMore": "Загрузить еще",
+	"failedToLoad": "Не удалось загрузить. Попробуйте еще раз?",
+	// next 4 lines help to build this phrase:
+	// Showing ${displayedMatches} of ${pagination.total_records} ${pagination.total_records !== 1 ? 'matches' : 'match'}
+	"showing": "Показано",
+	"of": "из",
+	"match": "матчей",
+	"matches": "матчей",
+
+	// Match Card
+	"opponent": "Противник",
+	"yourTeam": "Ваша Команда",
+	"beforeOwner": "Команда ",			// to build: `{profileOwner.username}'s Team`
+	"afterOwner": "", 					// to build: `{profileOwner.username}'s Team`
+	"team": "Команда",
+	"formatUnknown": "Неизвестно",
+	"formatAiBot": "ИИ Бот",
+	"formatGuest": "Гость",
+	"formatYou": "Вы",
+	"formatPlayer": "Игрок",
+	"matchCardOnline": "Онлайн",
+	"victory": "Победа!",
+	"defeat": "Поражение!",
+	// labels just for russian translation
+	"labelAI": "Против ИИ",
+	"labelTournament": "Турнир",
+	"justNow": "Только что",
+	"yesterday": "Вчера",
+	"minutesAgo": "м. назад",
+	"hoursAgo": "ч. назад",
+	"daysAgo": "д. назад",
 
     // Profile & Auth
-    "loading": "Загрузка...",
-    "error": "Ошибка",
-    "loginRegister": "Login / Register",
-    "signupButton": "ЗАРЕГИСТРИРОВАТЬСЯ", // alt "РЕГИСТРАЦИЯ"
-    "loginButton": "ВОЙТИ",               // alt "ВХОД"
-    "usernameOrEmail": "Имя пользователя или электронная почта:", // alt "Имя пользователя или почта" / "Имя пользователя или Email"
-    "enterUsernameOrEmail": "Введите имя пользователя или электронную почту", // alt "Ведите пользователя или почта" / "Ведите пользователя или Email"
-    "enterUsername": "Введите имя пользователя", // alt "Имя пользователя"
-    "enterEmail": "Введите элетроннцую почту", // "Введите email"
-    "password": "Пароль:", 
-    "enterPassword": "Введите пароль",
-    "register": "Зарегестрироваться",
-    "loginWithGoogle": "Войти с помощью Google",
-    "signUpWithGoogle": "Зарегестрироваться с помощью Google",
-    "login": "Вход",
-    "or": "Или",
-    "alreadyHaveAccount": "Уже есть аккаунт? Войдите",
-    "dontHaveAccount": "Нет аккаунта? Зарегестрируйтесь",
-    "myProfileTitle": "Мой профиль",
-    "profileAvatar": "Аватар профиля",
-    "settings": "Настройки",
-    "enable2FA": "Включить 2FA", // more correct but long: "Включить двухфакторную аутентификацию" 
-    "logout": "Выйти", // also possible "Выход" = "Exit"
-    "2faConfiguration": "Настройки 2FA", // = "Settings of 2FA"
-    "scanQRCode": "Scan this QR code with your authenticator app:",
-    "orUseSecretCode": "Or use this secret code manually:",
-    "qrCode": "QR-код",
-    "enterSixDigitCode": "Введите код из 6 цифер:",
-    "activate2FA": "Включить 2FA",
-    "cancel": "Отмена",
-    "2faVerification": "2FA Проверка", // or "2FA Подтверждение" 
-    "enterVerificationCode": "Please enter the verification code from your authenticator app:",
-    "verify": "Подтвердить",
-    "username": "Имя пользователя",
-    "email": "Элетронная почта", // alt "Email"
-    "joinDate": "Join Date",
+    "loadingProfile": "ЗАГРУЗКА ПРОФИЛЯ...",
+    "errorLoadingProfile": "ОШИБКА ПРИ ЗАГРУЗКЕ ПРОФИЛЯ",
+    "loginRegister": "ВХОД / РЕГИСТРАЦИЯ",
+    "signupButton": "РЕГИСТРАЦИЯ",
+    "loginButton": "ВОЙТИ",
+    "usernameOrEmail": "ИМЯ ПОЛЬЗОВАТЕЛЯ ИЛИ ЭЛЕКТРОННАЯ ПОЧТА:",
+    "enterUsernameOrEmail": "введите имя пользователя или электронную почту",
+    "enterUsername": "введите имя пользователя",
+    "enterEmail": "введите электронную почту",
+    "password": "ПАРОЛЬ",
+    "changePassword": "СМЕНИТЬ ПАРОЛЬ",
+    "oldPassword": "старый пароль",
+    "newPassword": "новый пароль",
+    "enterPassword": "введите пароль",
+    "register": "РЕГИСТРАЦИЯ",
+    "loginWithGoogle": "Войти с Google",
+    "signUpWithGoogle": "Регистрация с Google",
+    "login": "ВХОД",
+    "or": "ИЛИ",
+    "alreadyHaveAccount": "Есть аккаунт? Вход",
+    "dontHaveAccount": "Нет аккаунта? Регистрация",
+    "myProfileTitle": "МОЙ ПРОФИЛЬ",
+    "profileAvatar": "АВАТАР ПРОФИЛЯ",
+    "changeAvatar": "ИЗМЕНИТЬ АВАТАР",
+    "removeAvatar": "УБРАТЬ АВАТАР",
+    "update": "ОБНОВИТЬ",
+    "settings": "НАСТРОЙКИ",
+    "enable2FA": "ВКЛЮЧИТЬ 2FA",
+    "logout": "ВЫЙТИ",
+    "2faConfiguration": "НАСТРОЙКИ 2FA",
+    "scanQRCode": "Отсканируйте QR-код приложением для входа:",
+    "orUseSecretCode": "или введите секретный код вручную:",
+    "qrCode": "QR-КОД",
+    "enterSixDigitCode": "введите код из 6 цифер:",
+    "activate2FA": "ВКЛЮЧИТЬ 2FA",
+    "cancel": "ОТМЕНА",
+    "2faVerification": "2FA ПРОВЕРКА",
+    "enterVerificationCode": "Пожалуйста, введите код проверки из вашего приложения для входа:",
+    "verify": "ПОДТВЕРДИТЬ",
+    "username": "ИМЯ ПОЛЬЗОВАТЕЛЯ",
+    "alias": "ПСЕВДОНИМ",
+    "email": "ЭЛЕКТРОННАЯ ПОЧТА",
+    "joinDate": "ДАТА ПРИСОЕДИНЕНИЯ",
 
     // Stats
-    "currentWinStreak": "Current Winstreak",
-    "bestWinStreak": "Best Winstreak",
-    "winsLosses": "Wins / Losses",
-    "scoredPointsRanking": "Scored points ranking",
+    "currentWinStreak": "ТЕКУЩАЯ СЕРИЯ ПОБЕД",
+    "bestWinStreak": "ЛУЧШАЯ СЕРИЯ ПОБЕД",
+    "winsLosses": "ПОБЕДЫ / ПРОИГРЫШИ",
+    "scoredPointsRanking": "РЕЙТИНГ ПО ОЧКАМ",
+    "notEnoughData": "недостаточно данных",
+    "memberSince": "на сайте с",
+    "matchHistory": "ИСТОРИЯ МАТЧЕЙ",
+    "noMatchesYet": "ПОКА НЕТ ИСТОРИИ",
+    "noMatchesExplanation": "История матчей будет доступна после первой игры!",
+    "playNow": "К ИГРАМ",
+    "notConnected": "Вы не подключены...",
 
     // Chat
-    "typeMessage": "Напишите сообщение...",
-    "inviteToGame": "Пригласить играть",
+    "typeMessage": "текст сообщения...",
+    "inviteToGame": "СЫГРАТЬ",
 	"startGameInChat": "Начать игру",
-	"blockedStatus": "BLOCKED",				// to translate
+    "blockedStatus": "ЗАБЛОКИРОВАН",
+
+    // Social-Menu Btns
+    "addFriend": "В ДРУЗЬЯ",
+    "cancelRequest": "ОТМЕНИТЬ ЗАПРОС",
+    "acceptRequest": "СТАТЬ ДРУГОМ",
+    "declineRequest": "ОТКАЗАТЬ",
+    "deleteFriend": "УДАЛИТЬ ИЗ ДРУЗЕЙ",
+    "unblockUser": "РАЗБЛОКИРОВАТЬ",
+    "openChat": "ЧАТ",
+    "blockUser": "ЗАБЛОКИРОВАТЬ",
+    "userDetails": "ПОДРОБНЕЕ",
 
     // Game Status
-    "waiting": "Ожидание...",
-    "joining": "Joining...",
-    "creatingGame": "Создание игры...",
-    "connecting": "Соединение...",
-    "matchFound": "Матч найтен!",
-    "left": "Left",
-    "right": "Right",
-    "selectGameMode": "Выберите режим игры",
+    "waiting": "ОЖИДАНИЕ...",
+    "joining": "ПРИСОЕДИНЕНИЕ...",
+    "creatingGame": "СОЗДАНИЕ ИГРЫ...",
+    "connecting": "СОЕДИНЕНИЕ...",
+    "matchFound": "МАТЧ НАЙДЕН!",
+    "left": "ЛЕВЫЙ",
+    "right": "ПРАВЫЙ",
+    "leftTeam": "ЛЕВАЯ",
+    "rightTeam": "ПРАВАЯ",
+    "selectGameMode": "ВЫБЕРИТЕ РЕЖИМ ИГРЫ",
+	"controlLeft2": "Левый: W/S (сверху) A/Z (снизу)",
+	"controlRight2": "Правый: ↑/↓ (сверху) O/L (снизу)",
 
 	// Player Position
-    "positionLeft": "Your position: Left",
-    "positionRight": "Your position: Right",
-    "positionTopLeft": "Your position: Top Left",
-    "positionBottomLeft": "Your position: Bottom Left",
-    "positionTopRight": "Your position: Top Right",
-    "positionBottomRight": "Your position: Bottom Right",
+    "positionLeft": "ВЫ СЛЕВА",
+    "positionRight": "ВЫ С ПРАВА",
+    "positionTopLeft": "ВЫ СВЕРХУ СЛЕВА",
+    "positionBottomLeft": "ВЫ СНИЗУ СЛЕВА",
+    "positionTopRight": "ВЫ СВЕРХУ СПРАВА",
+    "positionBottomRight": "ВЫ СНИЗУ СПРАВА",
 
     // Tooltips
-    "viewStats": "Показать статистику", // "Статистика" = "Statistics"
-    "viewProfile": "Показать профиль",  // "Профиль" = "Profile"
+    "viewStats": "СТАТИСТИКА",
+    "viewProfile": "ПРОФИЛЬ",
 
     // Language
     "language": "Язык",

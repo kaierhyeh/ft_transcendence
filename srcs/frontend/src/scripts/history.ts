@@ -1,3 +1,5 @@
+import { t } from "./i18n/i18n.js";
+
 export function initHistory(): void {
     //--- Avalanche & Remix structures ---
     // @ts-ignore
@@ -82,15 +84,15 @@ export function initHistory(): void {
         const list = document.getElementById('list-container');
         if (!list) return;
         if (!tournaments || tournaments.length === 0) {
-            list.innerHTML = "<div class='tournament-empty'>Aucun tournoi trouvé.</div>";
+            list.innerHTML = `<div class="tournament-empty" data-i18n="tournamentEmpty">${t("tournamentEmpty")}</div>`;
             return;
         }
-        list.innerHTML = tournaments.map((t) => `
+        list.innerHTML = tournaments.map((tourn) => `
             <div class="tournament-item">
-                <div class="tournament-id">Tournament #${t.tournamentId}</div>
-                <div class="tournament-date">${formatDateUS(t.date)}</div>
-                <div class="tournament-players">${t.playersCount}p.</div>
-                <div class="tournament-winner">Winner: <span class="winner-name">${t.winnerName}</span></div>
+                <div class="tournament-id" data-i18n="tournId">${t("tournId")}${tourn.tournamentId}</div>
+                <div class="tournament-date">${formatDateUS(tourn.date)}</div>
+                <div class="tournament-players" data-i18n="tournamentPlayers">${tourn.playersCount}${t("tournamentPlayers")}</div>
+                <div class="tournament-winner" data-i18n="tournamentWinner">${t("tournamentWinner")}<span class="winner-name">${tourn.winnerName}</span></div>
             </div>
         `).join('');
     }

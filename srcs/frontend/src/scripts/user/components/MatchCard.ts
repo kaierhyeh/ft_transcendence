@@ -1,5 +1,6 @@
 // user/components/MatchCard.ts
 import type { GameSession, PlayerData } from '../types.js';
+import { t } from '../../i18n/i18n.js';
 
 interface MatchCardData {
     session: GameSession;
@@ -19,12 +20,12 @@ function formatRelativeDate(dateString: string): string {
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffSeconds < 60) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    
+    if (diffSeconds < 60) return `${t("justNow")}`;
+    if (diffMinutes < 60) return `${diffMinutes} ${t("minutesAgo")}`;
+    if (diffHours < 24) return `${diffHours} ${t("hoursAgo")}`;
+    if (diffDays === 1) return `${t("yesterday")}`;
+    if (diffDays < 7) return `${diffDays} ${t("daysAgo")}`;
+
     // Format as "Oct 14, 2024"
     return date.toLocaleDateString('en-US', { 
         month: 'short', 
@@ -67,7 +68,7 @@ function getModeBadge(mode: GameSession['mode'], format: GameSession['format']):
     switch (mode) {
         case 'solo':
             emoji = '🤖';
-            label = 'Solo';
+            label = t('labelAI');
             break;
         case 'pvp':
             emoji = '⚔️';
@@ -75,7 +76,7 @@ function getModeBadge(mode: GameSession['mode'], format: GameSession['format']):
             break;
         case 'tournament':
             emoji = '🏆';
-            label = 'Tournament';
+            label = t('labelTournament');
             break;
     }
     
@@ -101,20 +102,20 @@ function getTeamLabel(teamPlayers: PlayerData[], profileUserId: number | null, c
     const hasProfileOwner = teamPlayers.some(p => p.user_id === profileUserId);
     
     if (!hasProfileOwner) {
-        return 'Opponent';
+        return t("opponent");
     }
     
     if (isOwnProfile(currentUserId, profileUserId)) {
-        return 'Your Team';
+        return t("yourTeam");
     }
     
     // Find the profile owner's username
     const profileOwner = teamPlayers.find(p => p.user_id === profileUserId);
     if (profileOwner && profileOwner.username) {
-        return `{profileOwner.username}'s Team`;
+        return `${t("beforeOwner")}${profileOwner.username}${t("afterOwner")}`;
     }
     
-    return 'Team';
+    return t("team");
 }
 
 /**
@@ -147,28 +148,28 @@ function getPlayerInfo(session: GameSession, currentUserId: number | null) {
  * Formats player name with appropriate styling
  */
 function formatPlayerName(player: PlayerData | undefined, profileUserId: number | null, currentUserId: number | null): string {
-    if (!player) return 'Unknown';
+    if (!player) return t("formatUnknown");
     
     if (player.type === 'ai') {
-        return '<span class="ai-player">AI Bot</span>';
+        return `<span class="ai-player">${t("formatAiBot")}</span>`;
     }
     
     if (player.type === 'guest') {
-        return '<span class="guest-player">Guest</span>';
+        return `<span class="guest-player">${t("formatGuest")}</span>`;
     }
     
     // Registered user
     if (player.username) {
         // If viewing own profile and this is the profile owner, show "You"
         if (player.user_id === profileUserId && isOwnProfile(currentUserId, profileUserId)) {
-            return '<span class="you-player">You</span>';
+            return `<span class="you-player">${t("formatYou")}</span>`;
         }
         
         // Otherwise show username with link
         return `<a data-route="/user/profile?id=${player.user_id}" class="player-link">${player.username}</a>`;
     }
     
-    return 'Player';
+    return t("formatPlayer");
 }
 
 /**
@@ -205,7 +206,7 @@ export function createMatchCard(data: MatchCardData): string {
     // Create metadata badges
     const badges = [];
     if (session.online === 1) {
-        badges.push(`<span class="match-badge online-badge" title="Online match">🌐 Online</span>`);
+        badges.push(`<span class="match-badge online-badge" title="Online match">🌐 ${t("matchCardOnline")}</span>`);
     }
     if (session.tournament_id !== null) {
         badges.push(`<span class="match-badge tournament-badge" title="Tournament match">🏆</span>`);
@@ -217,9 +218,9 @@ export function createMatchCard(data: MatchCardData): string {
     const forfeitFlag = session.forfeit === 1 ? ' <span class="forfeit-flag" title="Match ended due to forfeit">🏳️</span>' : '';
     
     if (profileOwnerWon) {
-        outcomeHTML = `<span class="winner-indicator">Victory!${forfeitFlag}</span>`;
+        outcomeHTML = `<span class="winner-indicator">${t("victory")}${forfeitFlag}</span>`;
     } else {
-        outcomeHTML = `<span class="loser-indicator">Defeat${forfeitFlag}</span>`;
+        outcomeHTML = `<span class="loser-indicator">${t("defeat")}${forfeitFlag}</span>`;
     }
     
     // Build match score HTML based on format
@@ -340,9 +341,9 @@ export function createEmptyState(): string {
     return `
         <div class="empty-state">
             <div class="empty-icon">🎮</div>
-            <h3>No matches yet</h3>
-            <p>Your match history will appear here after you play some games!</p>
-            <a data-route="/pong" class="match-history-btn">Play Now</a>
+            <h3 data-i18n="noMatchesYet">${t("noMatchesYet")}</h3>
+            <p data-i18n="noMatchesExplanation">${t("noMatchesExplanation")}</p>
+            <a data-route="/pong" class="match-history-btn" data-i18n="playNow">${t("playNow")}</a>
         </div>
     `;
 }

@@ -376,10 +376,10 @@ export default function initRemoteGame(): void {
                             let winnerTeam = msg.data.winner as string;
                             let resultMessage: string;
                             if (myTeam !== null)
-                                resultMessage = (myTeam === winnerTeam) ? "You Win" : "You Lose";
+                                resultMessage = (myTeam === winnerTeam) ? t("youWin") : t("youLose");
                             else
-                                resultMessage = "WINNER: " + winnerTeam;
-                            handleGameEnd(resultMessage, " Select an online format to retry");
+                                resultMessage = t("winner") + winnerTeam;		// TO_TRANSLATE ???
+                            handleGameEnd(resultMessage, " " + t("selectAnOnlineGame"));
                         }
                     }
                 } else if (msg.type === "player_disconnected") {
@@ -388,8 +388,8 @@ export default function initRemoteGame(): void {
                         console.log(msg);
                         console.log("Disconnected player:", msg.data.disconnected_player, " - My team:", myTeam);
                         const disconnectingTeam = msg.data.disconnected_player.team;
-                        const whoLeft = disconnectingTeam === myTeam ? "Your teammate left the game!" : "Your opponent left the game!";
-                        handleGameEnd(whoLeft, "Please select a new party");
+                        const whoLeft = disconnectingTeam === myTeam ? t("teammateLeft") : t("opponentLeft");
+                        handleGameEnd(whoLeft, " " + t("selectNewParty"));
                     }
                 }
             } catch (error) {
@@ -584,9 +584,9 @@ export default function initRemoteGame(): void {
             ctx.font = "32px Bit5x3, monospace";
             let displayText = "";
             if (myTeam !== null)
-                displayText = (myTeam === state.winner) ? "You Win" : "You Lose";
+                displayText = (myTeam === state.winner) ? t("youWin") : t("youLose");
             else
-                displayText = "WINNER: " + state.winner;
+                displayText = t("winner") + state.winner;
             ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
         }
     }
