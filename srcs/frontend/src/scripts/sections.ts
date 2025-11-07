@@ -337,24 +337,15 @@ export function show2FAVerificationModal(tempToken: string, context: string) {
 			}
 
 			try {
-				const response = await fetch('/api/auth/2fa/verify', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					credentials: 'include',
-					body: JSON.stringify({
-						token,
-						temp_token: tempToken
-					})
-				});
-
-				const data = await response.json();
-
-				if (response.ok && data.success) {
+				const success = await verify2fa(token, tempToken);
+				
+				if (success) {
 					closeModal();
-					// Redirect to home page after successful verification
+					// Redirect to home page after successful verification (SPA navigation)
 					(window as any).navigateTo("/");
 				} else {
-					if (errorMsg) errorMsg.textContent = data.error || 'Invalid verification code';
+					// Error message is already shown by verify2fa function
+					if (errorMsg) errorMsg.textContent = 'Invalid verification code';
 				}
 			} catch (error) {
 				console.error('2FA verification error:', error);
