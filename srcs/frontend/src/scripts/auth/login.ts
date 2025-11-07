@@ -229,4 +229,5 @@ function hideOAuthLoadingOverlay() {
 }
 
 // Export to window so it can be called from other modules
+(window as any).showOAuthLoadingOverlay = showOAuthLoadingOverlay;
 (window as any).hideOAuthLoadingOverlay = hideOAuthLoadingOverlay;

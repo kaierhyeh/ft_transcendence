@@ -714,13 +714,23 @@ export async function processGoogleOAuth(code: string): Promise<void> {
 		const data = await response.json();
 
 		if (response.status === 202 && data.step === "choose_username") {
+			// Hide overlay to show prompt
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
 			const username = prompt("Please choose a username:.");
 			if (username) {
 				if (username.length > 50) {
 					showError("Username too long.");
 					return;
 				}
+				// Show overlay again while submitting username
+				const showOverlay = (window as any).showOAuthLoadingOverlay;
+				if (showOverlay)
+					showOverlay();
 				await completeGoogleRegistration(username, data.temp_token);
+			} else {
+				showError("Username is required.");
 			}
 			return;
 		} else if (response.ok && data.requires_2fa) {
@@ -731,17 +741,29 @@ export async function processGoogleOAuth(code: string): Promise<void> {
 			show2FAVerificationModal(data.temp_token, "your Google account");
 			return;
 		} else if (response.ok && data.success) {
+			// IMPORTANT: When using SPA navigation (navigateTo), we must manually hide the overlay
+			// because the page doesn't reload (unlike window.location.href which reloads everything)
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
 			update_user(new User(data.username));
 			showSuccess(`Welcome back, ${data.username}!`);
 			// Small delay to ensure cookies are set before redirecting
 			await new Promise(resolve => setTimeout(resolve, 100));
-			// Redirect to home page after successful login
+			// Redirect to home page after successful login (SPA navigation)
 			(window as any).navigateTo("/");
-		} else
+		} else {
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
 			showError("Failed to process Google OAuth.");
+		}
 
 	} catch (error) {
 		// console.error("api/auth/google error:", error);
+		const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+		if (hideOverlay)
+			hideOverlay();
 		showError("Failed to process Google OAuth.");
 	}
 }
@@ -761,19 +783,32 @@ async function completeGoogleRegistration(username: string, tempToken: string): 
 		const data = await response.json();
 
 		if (response.status === 202 && data.step === "2fa_required") {
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
 			show2FAVerificationModal(data.temp_token, username);
 			return;
 		} else if (response.ok && data.success) {
+			// IMPORTANT: Hide overlay before SPA navigation
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
 			update_user(new User(data.username, data.id, data.email, data.avatar));
 			showSuccess(`Welcome, ${data.username}!`);
-			// Redirect to home page after successful registration
+			// Redirect to home page after successful registration (SPA navigation)
 			(window as any).navigateTo("/");
 		} else {
+			const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+			if (hideOverlay)
+				hideOverlay();
 			showError("Failed to complete Google registration.");
 		}
 
 	} catch (error) {
 		// console.error("api/auth/google/username error:", error);
+		const hideOverlay = (window as any).hideOAuthLoadingOverlay;
+		if (hideOverlay)
+			hideOverlay();
 		showError("Failed to complete Google registration.");
 	}
 }
