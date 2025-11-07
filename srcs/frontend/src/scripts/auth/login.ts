@@ -146,7 +146,7 @@ export async function handleOAuthCallback() {
 	if (error) {
 		hideOAuthLoadingOverlay();
 		alert('OAuth error: ' + error);
-		window.location.href = '/profile';
+		(window as any).navigateTo("/profile");
 		return;
 	}
 
@@ -158,11 +158,11 @@ export async function handleOAuthCallback() {
 			hideOAuthLoadingOverlay();
 			console.error('OAuth callback error:', error);
 			alert('OAuth authentication failed.');
-			window.location.href = '/profile';
+			(window as any).navigateTo("/profile");
 		}
 	} else {
 		hideOAuthLoadingOverlay();
-		window.location.href = '/profile';
+		(window as any).navigateTo("/profile");
 	}
 }
 
