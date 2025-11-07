@@ -83,8 +83,8 @@ export class InputController {
                 else if (this.keys['s']) p0Move = 'down';
                 this.session.sendInput(0, p0Move);
                 
-                // Player 1 - Arrow keys (unless AI)
-                if (this.session.mode !== 'solo') {
+                // Player 1 - Arrow keys (unless AI or online pvp)
+                if (this.session.mode !== 'solo' && !this.session.online) {
                     let p1Move: 'up' | 'down' | 'stop' = 'stop';
                     if (this.keys['ArrowUp']) p1Move = 'up';
                     else if (this.keys['ArrowDown']) p1Move = 'down';

@@ -24,6 +24,16 @@ export const gameIdSchema = {
     additionalProperties: false,
 } as const;
 
+export const invitationSchema = {
+  type: "object",
+  required: [ "fromId", "toId" ],
+  properties: {
+    fromId: { type: "number", minimum: 1 },
+    toId: { type: "number", minimum: 1 },
+  },
+  additionalProperties: false,
+} as const;
+
 export const createGameSchema = {
   type: "object",
   required: ["format", "mode", "participants"],
@@ -47,6 +57,7 @@ export const createGameSchema = {
       maxItems: 4,
       items: playerSchema,
     },
+    invitation: invitationSchema
   },
   additionalProperties: false,
 } as const;
@@ -58,6 +69,8 @@ export type GameIdParams = FromSchema<typeof gameIdSchema>;
 export type GameCreationData = FromSchema<typeof createGameSchema>;
 export type GameMode = GameCreationData["mode"];
 export type GameFormat = GameCreationData["format"];
+export type GameInvitation = FromSchema<typeof invitationSchema>;
+
 //REMOTE_PLAYER_ADD
 export const matchmakingRequestSchema = {
  type: "object",

@@ -55,13 +55,17 @@
 .game-header {
     width: 100%;
     max-width: 900px;
-    display: none; /* toggled from JS */
+    display: none;
     align-items: center;
     justify-content: center;
     gap: 10px;
     padding: 8px 12px;
     margin-bottom: 8px;
     box-sizing: border-box;
+}
+
+.tournament-container .game-header {
+    display: none;
 }
 
 .game-player {
@@ -97,10 +101,4 @@
     font-size: 16px;
     opacity: 0.9;
     padding: 6px 10px;
-}
-
-@media (max-width: 600px) {
-    .game-player-name { font-size: 15px; padding: 6px 12px; min-width: 80px; }
-    .game-vs { font-size: 14px; padding: 4px 8px; }
-    .game-header { gap: 8px; padding: 8px; }
 }

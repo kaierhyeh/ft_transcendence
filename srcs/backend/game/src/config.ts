@@ -1,3 +1,4 @@
+import { TIMEOUT } from 'dns';
 import dotenv from 'dotenv';
 import fs from 'fs';
 
@@ -27,6 +28,7 @@ export const CONFIG = {
   GAME: {
     TICK_PERIOD: 1000 / 30,
     MAX_SESSIONS: 100,
+    TIMEOUT: 600_000, // ms <=> 10min
   },
   
   // Database settings
@@ -52,6 +54,10 @@ export const CONFIG = {
   
   USERS_SERVICE: {
     BASE_URL: process.env.GAME_SERVICE_URL || "http://backend-users:3000"
+  },
+
+  CHAT_SERVICE: {
+    BASE_URL: process.env.CHAT_SERVICE_URL || "http://backend-chat:3000"
   },
 
   // Internal auth credentials

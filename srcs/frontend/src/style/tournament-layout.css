@@ -211,6 +211,15 @@ body.tournament-page {
     }
 }
 
+@media (max-width: 600px) {
+    .tournament-title {
+        display: none !important;
+    }
+    .game-header {
+        padding-top: 70px;
+    }
+}
+
 @media (max-width: 480px) {
     .player-inputs-grid {
         grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));

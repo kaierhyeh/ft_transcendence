@@ -172,7 +172,8 @@ export const translations = {
     // Chat
     "typeMessage": "Type a message...",
     "inviteToGame": "Invite to game",
-	  "blockedStatus": "BLOCKED",
+	"startGameInChat": "Start Game",	  
+	"blockedStatus": "BLOCKED",
 
     // Social-Menu Btns
     "addFriend": "Add Friend",
@@ -193,7 +194,11 @@ export const translations = {
     "matchFound": "Match found!",
     "left": "Left",
     "right": "Right",
+	"leftTeam": "Left",
+    "rightTeam": "Right",
     "selectGameMode": "Select a game mode",
+	"controlLeft2": "Left: W/S (top) A/Z (btm)",
+	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
 
     // Player Position
@@ -387,7 +392,8 @@ export const translations = {
     // Chat
     "typeMessage": "輸入訊息...",
     "inviteToGame": "邀請遊戲",
-	  "blockedStatus": "已封鎖",
+	"startGameInChat": "開始遊戲",
+	"blockedStatus": "已封鎖",
 
     // Social-Menu Btns
     "addFriend": "添加好友",
@@ -400,6 +406,7 @@ export const translations = {
     "blockUser": "屏蔽",
     "userDetails": "查看個人資料",
 
+
     // Game Status
     "waiting": "等待中...",
     "joining": "加入中...",
@@ -408,7 +415,11 @@ export const translations = {
     "matchFound": "配對成功！",
     "left": "左方",
     "right": "右方",
-    "selectGameMode": "選擇遊戲模式",
+    "leftTeam": "Left",
+    "rightTeam": "Right",
+    "selectGameMode": "Select a game mode",
+	"controlLeft2": "Left: W/S (top) A/Z (btm)",
+	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
     // Player Position
     "positionLeft": "你的位置：左",
@@ -601,7 +612,8 @@ export const translations = {
     // Chat
     "typeMessage": "Tapez un message...",
     "inviteToGame": "Inviter à jouer",
-	  "blockedStatus": "BLOQUÉ",
+	"startGameInChat": "Démarrer le jeu",
+	"blockedStatus": "BLOQUÉ",
 
     // Social-Menu Btns
     "addFriend": "Ajouter un ami",
@@ -614,6 +626,7 @@ export const translations = {
     "blockUser": "Bloquer",
     "userDetails": "Voir le profil",
 
+
     // Game Status
     "waiting": "En attente...",
     "joining": "Connexion...",
@@ -622,7 +635,11 @@ export const translations = {
     "matchFound": "Match trouvé !",
     "left": "Gauche",
     "right": "Droite",
-    "selectGameMode": "Sélectionnez un mode de jeu",
+    "leftTeam": "Left",
+    "rightTeam": "Right",
+    "selectGameMode": "Select a game mode",
+	"controlLeft2": "Left: W/S (top) A/Z (btm)",
+	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
     // Player Position
     "positionLeft": "Votre position : Gauche",
@@ -815,6 +832,7 @@ export const translations = {
     // Chat
     "typeMessage": "текст сообщения...",
     "inviteToGame": "СЫГРАТЬ",
+	"startGameInChat": "Начать игру",
     "blockedStatus": "ЗАБЛОКИРОВАН",
 
     // Social-Menu Btns
@@ -836,7 +854,11 @@ export const translations = {
     "matchFound": "МАТЧ НАЙДЕН!",
     "left": "ЛЕВЫЙ",
     "right": "ПРАВЫЙ",
+    "leftTeam": "ЛЕВАЯ",
+    "rightTeam": "ПРАВАЯ",
     "selectGameMode": "ВЫБЕРИТЕ РЕЖИМ ИГРЫ",
+	"controlLeft2": "Левый: W/S (сверху) A/Z (снизу)",
+	"controlRight2": "Правый: ↑/↓ (сверху) O/L (снизу)",
 
 	// Player Position
     "positionLeft": "ВЫ СЛЕВА",

@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { MessageService } from "../services/messages.service";
 import { toInteger } from "../utils/toInteger";
-import { NewMessageBody } from "../schemas/messages.schema";
+import { GameInfoParams, NewMessageBody } from "../schemas/messages.schema";
 
 export class MessageController {
 
@@ -36,6 +36,16 @@ export class MessageController {
 				message: "Message was sent"
 			});
 
+		} catch (error) {
+			this.handleError(error, reply);
+		}
+	}
+
+	public async notifyAboutGame(request: FastifyRequest<{ Body: GameInfoParams }>, reply: FastifyReply) {
+		try {
+			const { fromId, toId, gameId } = request.body;
+			await this.messageService.notifyAboutGame(fromId, toId, gameId);
+			reply.status(200).send({ message: "Users was noticed" });
 		} catch (error) {
 			this.handleError(error, reply);
 		}

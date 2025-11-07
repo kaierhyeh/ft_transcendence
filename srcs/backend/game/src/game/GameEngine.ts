@@ -83,8 +83,9 @@ export class GameEngine {
     private players: Map<PlayerSlot, Player>;
     private winner_: Team | undefined;
     private score: Score;
-    private paused: boolean;
     private lastDelta: number = 16.67;
+    private started: boolean = false;
+    private paused_: boolean = true;
 
     constructor(game_mode: GameFormat, session_players: SessionPlayerMap) {
         this.game_format = game_mode;
@@ -124,11 +125,17 @@ export class GameEngine {
         this.score = new Map();
         this.score.set("left", 0);
         this.score.set("right", 0);
-        this.paused = true;
         
-        setTimeout(() => {
-            this.paused = false;
-        }, 1000);
+    }
+    
+    private get paused(): boolean {
+        if (!this.started) {
+            this.started = true;
+            setTimeout(() => {
+                this.paused_ = false;
+            }, 1000);
+        }
+        return this.paused_;
     }
 
     public update(delta: number): void {
@@ -347,9 +354,9 @@ export class GameEngine {
             this.ball.dx = Math.abs(Math.cos(angle) * INITIAL_BALL_SPEED);
         }
         this.ball.dy = Math.sin(angle) * INITIAL_BALL_SPEED;
-        this.paused = true;
+        this.paused_ = true;
         setTimeout(() => {
-            this.paused = false;
+            this.paused_ = false;
         }, 1000);
     }
 

@@ -1,0 +1,149 @@
+/* Arena-specific styles */
+
+/* Make wrapper relative for absolute positioning of overlays */
+.pong-container .pong-game-wrapper {
+    position: relative;
+}
+
+/* Canvas wrapper to contain the canvas and overlays together */
+.pong-game-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Team indicator styles */
+#team-indicator {
+    font-family: 'Bit5x3', monospace;
+    font-size: 1.5rem; /* Use rem for scalability */
+    text-align: center;
+    white-space: nowrap;
+}
+
+#team-indicator .my-team {
+    color: #00ff88; /* Theme green */
+    font-weight: bold;
+}
+
+#team-indicator .opponent-team {
+    color: #ffffff;
+}
+
+#team-indicator .separator {
+    color: #888;
+    margin: 0 10px;
+}
+
+/* Responsive team indicator */
+@media (max-width: 900px) {
+    #team-indicator {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    #team-indicator {
+        font-size: 1rem;
+    }
+}
+
+/* Arena error page - Similar to 404 page */
+.arena-error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    padding: 2rem;
+}
+
+.arena-error-content {
+    text-align: center;
+    max-width: 600px;
+}
+
+.arena-error-title {
+    font-size: 3rem;
+    color: #4ade80;
+    text-shadow: 0 0 30px rgba(74, 222, 128, 0.8);
+    margin-bottom: 2rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    animation: glitch 2s infinite;
+}
+
+.arena-error-reasons {
+    text-align: left;
+    margin: 2rem auto 3rem;
+    max-width: 400px;
+    color: #fff;
+    opacity: 0.9;
+}
+
+.arena-error-reasons p {
+    color: #cccccc;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.arena-error-reasons ul {
+    list-style-type: none;
+    padding-left: 0;
+    color: #999999;
+}
+
+.arena-error-reasons li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    font-size: 1rem;
+}
+
+.arena-error-reasons li::before {
+    content: "•";
+    color: #4ade80;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.arena-error-btn {
+    background: #1a1a1a;
+    border: 2px solid #4ade80;
+    border-radius: 10px;
+    padding: 1rem 2rem;
+    color: #4ade80;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.arena-error-btn:hover {
+    background: #4ade80;
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.5);
+}
+
+.arena-error-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(74, 222, 128, 0.3);
+}
+
+/* Responsive error page */
+@media (max-width: 768px) {
+    .arena-error-title {
+        font-size: 2rem;
+    }
+    
+    .arena-error-reasons p {
+        font-size: 1rem;
+    }
+    
+    .arena-error-reasons li {
+        font-size: 0.9rem;
+    }
+}
+
