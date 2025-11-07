@@ -152,12 +152,12 @@ function initGame(): void {
 
         if (team === 'left') {
             // You are LEFT (green), opponent is RIGHT (white)
-            teamLeftSpan.innerHTML = `<span class="my-team">Left: You</span>`;
-            teamRightSpan.innerHTML = `<span class="opponent-team">Right: <span id="opponent-name">Waiting...</span></span>`;
+            teamLeftSpan.innerHTML = `<span class="my-team" data-i18n="leftIsYou">${t('leftIsYou')}</span>`;
+            teamRightSpan.innerHTML = `<span class="opponent-team" data-i18n="rightIsOpponent">${t('rightIsOpponent')}<span id="opponent-name">${t('waiting')}</span></span>`;
         } else {
             // You are RIGHT (green), opponent is LEFT (white)
-            teamLeftSpan.innerHTML = `<span class="opponent-team">Left: <span id="opponent-name">Waiting...</span></span>`;
-            teamRightSpan.innerHTML = `<span class="my-team">Right: You</span>`;
+            teamLeftSpan.innerHTML = `<span class="opponent-team" data-i18n="leftIsOpponent">${t('leftIsOpponent')}<span id="opponent-name">${t('waiting')}</span></span>`;
+            teamRightSpan.innerHTML = `<span class="my-team" data-i18n="rightIsYou">${t('rightIsYou')}</span>`;
         }
         
         teamIndicator.style.display = 'block';
@@ -178,7 +178,7 @@ function initGame(): void {
         // Update opponent name if available
         const opponentNameSpan = document.getElementById('opponent-name');
         if (opponentNameSpan) {
-            opponentNameSpan.textContent = 'Opponent';
+            opponentNameSpan.textContent = t('opponent');
         }
     }
 
