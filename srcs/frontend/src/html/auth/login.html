@@ -1,0 +1,83 @@
+<div class="auth-profile-container">
+
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+    </div>
+    
+    <!-- Login Form -->
+    <div id="auth-form" class="auth-container">
+        <div class="profile-title" data-i18n="login">Log In</div>
+
+        <div class="form-group">
+            <label for="username" data-i18n="username">Username:</label>
+            <input type="text" id="username" data-i18n-placeholder="enterUsername" placeholder="Enter username">
+        </div>
+        
+        <div class="form-group">
+            <label for="password" data-i18n="password">Password:</label>
+            <input type="password" id="password" data-i18n-placeholder="enterPassword" placeholder="Enter password">
+        </div>
+        
+        <div class="button-group">
+            <button id="login-btn" class="auth-btn" data-i18n="login">Log In</button>
+        </div>
+
+		<p data-i18n="or">Or</p>
+
+		<div class="button-group">
+			<button id="google-login-btn" class="google-btn" data-i18n="loginWithGoogle">Log In with Google</button>
+		</div>
+
+		<div class="link-group">
+			<a data-route="/signup" class="auth-link" data-i18n="dontHaveAccount">Don't have an account? Sign Up</a>
+		</div>
+    </div>
+
+	<!-- 2FA Setup Modal -->
+	<div id="2fa-modal" class="modal-overlay" style="display: none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 data-i18n="2faConfiguration">2FA Configuration</h2>
+				<span class="close-modal" id="close-2fa-modal">&times;</span>
+			</div>
+			<div class="modal-body">
+				<p data-i18n="scanQRCode">Scan this QR code with your authenticator app:</p>
+				<div id="qrcode-container">
+					<img id="qrcode-img" src="" data-i18n-title="qrCode" alt="QR Code">
+				</div>
+				<p data-i18n="orUseSecretCode">Or use this secret code manually:</p>
+				<div id="secret-key" class="secret-key"></div>
+				<div class="token-input">
+					<label for="2fa-token" data-i18n="enterSixDigitCode">Enter the 6-digit code:</label>
+					<input type="text" id="2fa-token" maxlength="6" pattern="\d{6}" placeholder="000000">
+				</div>
+				<div class="error-message" id="2fa-error"></div>
+			</div>
+			<div class="modal-footer">
+				<button id="activate-2fa-btn" data-i18n="activate2FA">Activate 2FA</button>
+				<button id="cancel-2fa-btn" data-i18n="cancel">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 2FA Verification Modal -->
+	<div id="2fa-verification-modal" class="modal-overlay" style="display: none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 data-i18n="2faVerification">2FA Verification</h2>
+				<span class="close-modal" id="close-2fa-verification-modal">&times;</span>
+			</div>
+			<div class="modal-body">
+				<p data-i18n="enterVerificationCode">Please enter the verification code from your authenticator app:</p>
+				<div class="token-input">
+					<input type="text" id="2fa-verification-token" maxlength="6" pattern="\d{6}" placeholder="000000">
+				</div>
+				<div class="error-message" id="2fa-verification-error"></div>
+			</div>
+			<div class="modal-footer">
+				<button id="cancel-2fa-verification-btn" class="cancel-btn" data-i18n="cancel">Cancel</button>
+				<button id="verify-2fa-btn" class="primary-btn" data-i18n="verify">Verify</button>
+			</div>
+		</div>
+	</div>
+</div>

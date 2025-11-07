@@ -1,0 +1,54 @@
+<div class="profile-container">
+
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<!-- <div id="languagesSwitcher"></div> -->
+	</div>
+
+	<div class="stats-section">
+		<div id="profileLoading" class="profile-loading" style="display: flex;" data-i18n="loadingProfile">Loading profile...</div>
+		<div class="profile-section" id="profileSection">
+			<div class="profile-header">
+				<div class="avatar" id="profileAvatar"></div>
+				<div class="username" id="profileUsername"></div>
+				<div class="email" id="profileEmail"></div>
+				<div class="join-date" id="profileJoinDate"></div>
+			</div>
+
+			<div class="stats-grid">
+				<div class="stat-card current-streak">
+					<div class="stat-title" data-i18n="currentWinStreak">Current Winstreak</div>
+					<div class="stat-value" id="statsCurrentStreak">0</div>
+				</div>
+
+				<div class="stat-card best-streak">
+					<div class="stat-title" data-i18n="bestWinStreak">Best Winstreak</div>
+					<div class="stat-value" id="statsBestStreak">0</div>
+				</div>
+			</div>
+
+			<div class="player-charts">
+				<div class="charts-grid">
+					<div class="chart-container">
+						<div class="chart-title" data-i18n="winsLosses">Wins / Losses</div>
+						<canvas id="playerChart" width="300" height="300"></canvas>
+						<div id="noDataChart" class="no-data-message" style="display: none;" data-i18n="notEnoughData">Not Enough Data</div>
+					</div>
+					<div class="chart-container">
+						<div class="chart-title" data-i18n="scoredPointsRanking">Scored points ranking</div>
+						<div class="ranking-container" id="playerRanking">
+						</div>
+						<div id="noDataRanking" class="no-data-message" style="display: none;" data-i18n="notEnoughData">Not Enough Data</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="profileError" class="error-state" style="display: none;">
+			<h3 data-i18n="notConnected">You are not connected...</h3>
+		</div>
+
+		<!-- Match history section - content managed by match_history.ts -->
+		<div class="match-history-section" id="matchHistorySection" style="display: none;"></div>
+	</div>
+</div>

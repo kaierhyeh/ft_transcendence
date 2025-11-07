@@ -1,0 +1,78 @@
+<div class="tournament-container">
+
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<!-- <div id="languagesSwitcher"></div> -->
+    </div>
+
+    <div class="tournament-title" data-i18n="tournament">Tournament</div>
+
+    <div class="game-header" style="display: none;">
+        <div class="game-player left">
+            <span id="tournament-player1" class="game-player-name">Player 1</span>
+        </div>
+        <div class="game-vs" aria-hidden="true">VS</div>
+        <div class="game-player right">
+            <span id="tournament-player2" class="game-player-name">Player 2</span>
+        </div>
+    </div>
+
+    <div id="player-selection" class="tournament-phase">
+        <h3 data-i18n="choosePlayers">Chose the numbers of players</h3>
+        <div class="player-count-buttons">
+            <button id="players-4" class="tournament-btn tournament-btn-primary" data-i18n="players4">4 Players</button>
+            <button id="players-8" class="tournament-btn tournament-btn-primary" data-i18n="players8">8 Players</button>
+        </div>
+    </div>
+
+    <div id="player-names" class="tournament-phase" style="display: none;">
+        <h3 data-i18n="enterPlayerNames">Enter Player Names</h3>
+        <div id="player-inputs" class="player-inputs-grid">
+        </div>
+        <div class="tournament-actions">
+            <button id="start-tournament" class="tournament-btn tournament-btn-success" data-i18n="startTournament">Start Tournament</button>
+            <button id="back-to-selection" class="tournament-btn tournament-btn-secondary" data-i18n="back">Back</button>
+        </div>
+    </div>
+
+    <div id="tournament-bracket" class="tournament-phase" style="display: none;">
+        <h3 data-i18n="tournamentBracket">Tournament Bracket</h3>
+        <div id="bracket-container" class="jquery-bracket-container">
+        </div>
+    </div>
+
+    <div id="current-match" class="tournament-phase" style="display: none;">
+        <h3 data-i18n="nextMatch">Next Match</h3>
+        <div class="match-display">
+            <div class="player-vs">
+                <span id="player1-name" class="player-name">Player 1</span>
+                <span class="vs-text" data-i18n="vs">VS</span>
+                <span id="player2-name" class="player-name">Player 2</span>
+            </div>
+        </div>
+        <div class="match-controls">
+            <button id="start-match" class="tournament-btn tournament-btn-success" data-i18n="startMatch">Start Match</button>
+        </div>
+    </div>
+
+    <div id="tournament-game" style="display: none;">
+        <div class="pong-game-wrapper" style="display: none;">
+            <div id="game-message" style="display: none;"></div>
+            <canvas id="tournament-pong" width="800" height="750" class="pong-canvas"></canvas>
+        </div>
+    </div>
+
+    <div id="tournament-complete" class="tournament-phase" style="display: none;">
+        <div class="champion-announcement">
+            <h2>🏆 <span data-i18n="tournamentComplete">Tournament Complete!</span> 🏆</h2>
+            <div id="champion-display" class="champion-name">
+                <span data-i18n="champion">Champion</span>: <span id="champion-name">Player Name</span>
+            </div>
+        </div>
+        <div class="tournament-end-actions">
+            <button id="go-home" class="tournament-btn tournament-btn-primary" data-i18n="goHome">Go Home</button>
+            <button id="new-tournament" class="tournament-btn tournament-btn-success" data-i18n="newTournament">Start New Tournament</button>
+            <button id="see-history" class="tournament-btn tournament-btn-secondary" data-i18n="seeHistory">See Tournament history</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "description": "Authentication microservice handling login, logout, JWT tokens, OAuth 2.0 (Google), 2FA, and password management for the Pong game",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node --watch src/index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/oauth2": "^7.0.0",
+    "fastify": "^5.0.0",
+    "json-schema-to-ts": "^3.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "qrcode": "^1.5.3",
+    "speakeasy": "^2.0.0",
+    "googleapis": "^118.0.0",
+    "dotenv": "^16.0.3",
+    "pino-pretty": "^10.2.0",
+    "ioredis": "^5.3.2",
+    "ajv-errors": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "@types/qrcode": "^1.5.0",
+    "@types/speakeasy": "^2.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+

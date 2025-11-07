@@ -1,0 +1,117 @@
+.menu-dropdown {
+	position: relative;
+	display: flex;
+	line-height: 0px;
+	height: 40px;
+	width: 90px;
+	padding: 0px;
+	background-color: #1a1a1a;
+	border-radius: 12px;
+}
+
+/* When dropdown is used as menu title */
+.menu-dropdown:has(.menu-header-title) {
+	flex: 1;
+	height: auto;
+	width: auto;
+	background-color: transparent;
+	border-radius: 0;
+	line-height: normal;
+}
+/* style of the button that opens the box with options */
+.menu-dropbtn {
+	flex: 1;
+	text-align: left;
+	height: 40px;
+	width: auto;
+	width: 90px;
+	padding: 0px;
+	color: #aaa;
+	background-color: #1a1a1a;	
+	font-size: 16px;
+	border: 2px solid transparent;
+	border-radius: 12px;
+}
+
+/* When dropdown button is used as menu title */
+.menu-dropbtn.menu-header-title {
+	flex: 1;
+	height: auto;
+	width: auto;
+	min-width: fit-content;
+	white-space: nowrap;
+	font-size: 24px;
+	font-weight: bold;
+	color: #4ade80;
+	background-color: transparent;
+	border: 2px solid transparent;
+	border-radius: 12px;
+	padding: 0.39rem;
+	padding-left: 16px;
+	text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	letter-spacing: 0.05em;
+	transition: color 0.3s, text-shadow 0.3s;
+	cursor: pointer;
+}
+
+.menu-dropbtn.menu-header-title:hover {
+	color: #fff;
+	text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+	background-color: transparent;
+	border-color: #4ade80;
+	box-shadow: none;
+}
+/* style of the box with options */
+.menu-dropdown-content {
+	overflow: hidden;
+	display: none;
+	position: absolute;
+	width: -moz-available;
+	min-width: fit-content;
+	white-space: nowrap;
+	background-color: #1a1a1a;
+	border: 2px solid #4ade80;
+	border-radius: 12px;
+	z-index: 1;
+}
+.menu-dropdown-content.show {
+	display: block;
+}	
+/* style of each option */
+.menu-dropdown-content a {
+	display: block;
+	width: auto;
+	min-width: fit-content;
+	white-space: nowrap;
+	font-size: 24px;
+	font-weight: bold;
+	letter-spacing: 0.05em;
+	color: #aaa;
+	padding: 8px 16px;
+	text-decoration: none;
+	display: block;
+}
+
+/* 'action' styles */
+.menu-dropdown-content a:hover {
+	color: #4ade80;
+	text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	background-color: #333;
+}
+.menu-dropbtn.show {
+	display: block;
+	background-color: transparent;
+	color: #4ade80;
+	border-color: #4ade80;
+	border-radius: 12px;
+	background-color: #333;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+.menu-dropdown:hover .menu-dropbtn {
+	background-color: transparent;
+	color: #4ade80;
+	border-color: #4ade80;
+	border-radius: 12px;
+	background-color: #333;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}

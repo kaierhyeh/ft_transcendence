@@ -1,0 +1,51 @@
+<div class="pong-container">
+
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<!-- <div id="languagesSwitcher"></div> -->
+    </div>
+
+	<div class="pong-icons">
+		<div class="pong-game-info">
+			<div class="game-info-label" data-i18n="points">Points</div>
+			<div class="game-info-chart">
+				<canvas id="pong-score-chart" width="160" height="40"></canvas>
+			</div>
+			<div class="game-info-details">
+				<div id="pong-points-display">—</div>
+				<div style="color:#777">|</div>
+				<div id="pong-rally-info"><span data-i18n="avgRebounds">Avg rebounds</span>: —</div>
+			</div>
+			<button class="game-info-reset-btn" onclick="resetGameData()" data-i18n="reset">Reset</button>
+		</div>
+	</div>
+	
+	<div class="pong-header">
+		<button class="pong-btn local-game-btn" id="one-player-btn" data-route="/pong" data-i18n="onePlayer">
+			One player
+		</button>
+		<button class="pong-btn local-game-btn" id="two-players-btn" data-route="/pong" data-i18n="twoPlayers">
+			Two players
+		</button>
+		<button class="pong-btn local-game-btn" id="four-players-btn" data-route="/pong" data-i18n="fourPlayers">
+			Four players
+		</button>
+		<button class="pong-btn local-game-btn" data-route="/online" data-i18n="playOnline">
+			Play online
+		</button>
+		<button class="pong-btn remote-game-btn" id="remote-1v1-btn" data-i18n="remote1v1">
+			2 players online
+		</button>
+		<button class="pong-btn remote-game-btn" id="remote-2v2-btn" data-i18n="remote2v2">
+			4 players online
+		</button>
+		<button class="pong-btn remote-game-btn" id="remote-cancel-btn" data-i18n="cancel">
+			Cancel
+		</button>
+	</div>
+	
+	<div class="pong-game-wrapper">
+		<div id="game-message" style="display: none;"></div>
+		<canvas id="pong" width="800" height="750" class="pong-canvas"></canvas>
+	</div>
+</div>

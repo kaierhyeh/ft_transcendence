@@ -1,0 +1,18 @@
+{
+  "name": "transcendence",
+  "version": "1.0.0",
+  "description": "Pong game with stats",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@fastify/static": "^7.0.4",
+    "fastify": "^4.28.1",
+    "pino-pretty": "^11.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

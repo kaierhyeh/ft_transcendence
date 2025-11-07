@@ -1,0 +1,210 @@
+/* General Styles */
+.menu-icon {
+	width: 1.5rem;
+	height: 1.5rem;
+	flex-shrink: 0;
+}
+
+/* Floating Open Menu Button */
+.menu-open-button {
+	position: fixed;
+	right: 1rem;
+	bottom: 1rem;
+	width: clamp(44px, 9vw, 56px);
+	height: clamp(44px, 9vw, 56px);
+	min-width: 44px;
+	min-height: 44px;
+	aspect-ratio: 1/1;
+	padding: 0 !important;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #1a1a1a;
+	border: 2px solid #444;
+	border-radius: 12px;
+	color: #fff;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+	box-sizing: border-box;
+	line-height: 0 !important;
+	font-size: 0;
+}
+
+.menu-open-button svg {
+	width: 1.6rem;
+	height: 1.6rem;
+	display: block;
+	line-height: 1;
+}
+
+.menu-open-button:hover {
+	background: #333;
+	border-color: #4ade80;
+	color: #4ade80;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+	background-color: #333;
+}
+
+/* Menu Window */
+.menu-window {
+	position: fixed;
+	bottom: 1.25rem;
+	right: 1rem;
+	width: calc(100% - 2rem);
+	max-width: 400px;
+	height: 72vh;
+	object-fit: cover;
+	background: #1a1a1a;
+	border: 2px solid #444;
+	color: white;
+	line-height: 1.2vh;
+	border-radius: 12px;
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+	display: flex;
+	flex-direction: column;
+	transition: all 0.3s ease;
+	z-index: 400;
+	font-size: 0.9rem;
+	overflow: hidden;
+}
+/* Style for FRIENDS, USERS, CHATS bodies */
+.menu-section {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+/* Menu Header */
+.menu-header {
+	display: flex;
+	gap: 0.5rem;
+	position: relative;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 0.75rem;
+	border-bottom: 2px solid #444;
+}
+.menu-header-title {
+	font-size: 1.5rem;
+	align-items: center;
+	padding: 6px 12px;
+	font-weight: bold;
+	font-size: clamp(1rem, 3.6vw, 1.5rem);
+	color: #4ade80;
+	border: 2px solid transparent;
+	text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	letter-spacing: 0.05em;
+	transition: color 0.3s, text-shadow 0.3s;
+}
+/* .menu-header-title:hover {
+	color: #fff;
+	text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+} */
+
+.menu-header-buttons {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.menu-empty-list-text {
+	padding-top: 36px;
+	padding-bottom: 36px;
+	text-align: center;
+	color: #777;
+	padding: 1rem 0;
+	font-style: italic;
+}
+
+/* List of users or chats and its elements */
+.menu-list-users-chats {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	padding: 0px 0px;
+	font-size: 16px;
+}
+.menu-list-element {
+	display: flex;
+	align-items: center;
+	border: 2px solid transparent;
+	gap: 0.75rem;
+	text-align: left;
+	padding: 0.6rem 1rem;
+	width: 100%;
+	justify-content: space-between;
+}
+.menu-list-element:hover {
+	color: #4ade80;
+	cursor: pointer;
+	background-color: #333;
+}
+
+/* Menu Buttons Styles */
+.menu-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: clamp(36px, 6.5vw, 40px);
+	min-height: 36px;
+	aspect-ratio: 1/1;
+	border-radius: 12px;
+	color: #aaa;
+	background: transparent;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	box-sizing: border-box;
+	line-height: 0 !important;
+}
+
+.menu-button svg {
+	line-height: 1;
+}
+
+.menu-button:hover {
+	color: #4ade80;
+	border-color: #4ade80;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	background-color: #333;
+}
+
+/* Menu Control Panel Styles*/
+.menu-control-panel {
+	border-top: 2px solid #444;
+	padding: 0.5rem 0.5rem;
+	display: flex;
+	gap: 0.5rem;
+}
+.menu-control-panel-button {
+	justify-content: center;
+	flex: 1 1 auto;
+	display: inline-flex;
+	align-items: center;
+	padding: 0.4rem 0.6rem;
+	color: #aaa;
+	background: transparent;
+	border-radius: 8px;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	height: clamp(36px, 6.5vw, 40px);
+	gap : 0.5rem;
+}
+.menu-control-panel-button-pressed {
+	justify-content: center;
+	flex: 1 1 auto;
+	display: inline-flex;
+	align-items: center;
+	padding: 0.4rem 0.6rem;
+	color: #4ade80;
+	background: transparent;
+	border: 2px solid transparent;
+	height: clamp(36px, 6.5vw, 40px);
+	gap : 0.5rem;
+}
+.menu-control-panel-button:hover {
+	color: #4ade80;
+	border-color: #4ade80;
+	box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+	background-color: #333;
+}

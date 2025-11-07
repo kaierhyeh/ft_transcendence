@@ -1,0 +1,91 @@
+<div class="settings-container">
+
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<!-- <div id="languagesSwitcher"></div> -->
+	</div>
+
+	<div id="loading" class="settings-loading" data-i18n="loadingProfile">
+		Loading profile...
+	</div>
+
+	<div id="error" class="settings-error" style="display: none;" data-i18n="errorLoadingProfile">
+		Error while loading profile
+	</div>
+
+	<div id="content" style="display: none;">
+		<div class="profile-section">
+			<h1 class="settings-title" data-i18n="settings">SETTINGS</h1>
+			<div class="profile-header">
+				<div class="avatar-section">
+					<div class="settings-avatar-container">
+						<div id="profileAvatar" class="settings-profile-avatar"></div>
+						<div class="settings-avatar-overlay">
+							<label for="avatarInput" class="settings-change-avatar-btn" data-i18n="changeAvatar">Change Avatar</label>
+						</div>
+						<input type="file" id="avatarInput" accept="image/*" style="display: none;">
+					</div>
+						<button id="removeAvatarBtn" class="avatar-remove-btn" title="Remove avatar" data-i18n="removeAvatar">Remove</button>
+				</div>
+				<div class="info-section">
+					<div class="username" id="profileUsername"></div>
+					<div class="email" id="profileEmail"></div>
+					<div class="alias" id="profileAlias"></div>
+				</div>
+			</div>
+
+			<div class="settings-form">
+				<div class="form-group">
+					<label for="aliasInput" data-i18n="alias">ALIAS</label>
+					<div class="input-group">
+						<input type="text" id="aliasInput" class="form-input">
+						<button id="updateAliasBtn" class="update-btn" data-i18n="update">Update</button>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label data-i18n="changePassword">Change Password</label>
+					<div id="passwordFields" class="password-fields" style="display: none;">
+						<input type="password" id="oldPassword" data-i18n-placeholder="oldPassword" placeholder="Old Password" class="form-input">
+						<div class="input-group">
+							<input type="password" id="newPassword" data-i18n-placeholder="newPassword" placeholder="New Password" class="form-input">
+							<button id="updatePasswordBtn" class="update-btn" data-i18n="update">Update</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="bottom-actions">
+				<button id="changePasswordBtn" class="action-btn" data-i18n="changePassword">Change Password</button>
+				<button id="twoFABtn" class="action-btn" data-i18n="enable2FA">Enable 2FA</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 2FA Setup Modal -->
+	<div id="2fa-modal" class="modal-overlay" style="display: none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 data-i18n="2faConfiguration">2FA Configuration</h2>
+				<span class="close-modal" id="close-2fa-modal">&times;</span>
+			</div>
+			<div class="modal-body">
+				<p data-i18n="scanQRCode">Scan this QR code with your authenticator app:</p>
+				<div id="qrcode-container">
+					<img id="qrcode-img" src="" alt="QR Code">
+				</div>
+				<p data-i18n="orUseSecretCode">Or use this secret code manually:</p>
+				<div id="secret-key" class="secret-key"></div>
+				<div class="token-input">
+					<label for="2fa-token" data-i18n="enterSixDigitCode">Enter the 6-digit code:</label>
+					<input type="text" id="2fa-token" maxlength="6" pattern="\d{6}" placeholder="000000">
+				</div>
+				<div class="error-message" id="2fa-error"></div>
+			</div>
+			<div class="modal-footer">
+				<button id="cancel-2fa-btn" class="cancel-btn" data-i18n="cancel">Cancel</button>
+				<button id="activate-2fa-btn" class="primary-btn" data-i18n="activate2FA">Activate</button>
+			</div>
+		</div>
+	</div>
+</div>

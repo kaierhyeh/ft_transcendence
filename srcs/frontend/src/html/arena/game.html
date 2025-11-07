@@ -1,0 +1,31 @@
+<div class="pong-container">
+	<div class="top-left-btns">
+		<button class="back-to-home-btn" data-route="/" data-i18n="backToHome">Back to Home</button>
+		<!-- <div id="languagesSwitcher"></div> -->
+    </div>
+
+	<div class="pong-icons">
+		<div class="pong-game-info">
+			<div class="game-info-label" data-i18n="points">Points</div>
+			<div class="game-info-chart">
+				<canvas id="pong-score-chart" width="160" height="40"></canvas>
+			</div>
+			<div class="game-info-details">
+				<div id="pong-points-display">—</div>
+				<div style="color:#777">|</div>
+				<div id="pong-rally-info"><span data-i18n="avgRebounds">Avg rebounds</span>: —</div>
+			</div>
+			<button class="game-info-reset-btn" onclick="resetGameData()" data-i18n="reset">Reset</button>
+		</div>
+	</div>
+	
+	<div class="pong-game-wrapper">
+		<div id="team-indicator" style="display: none;">
+			<span class="team-left"></span>
+			<span class="separator">-</span>
+			<span class="team-right"></span>
+		</div>
+		<div id="game-message" style="display: none;"></div>
+		<canvas id="pong" width="800" height="750" class="pong-canvas"></canvas>
+	</div>
+</div>

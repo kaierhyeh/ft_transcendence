@@ -1,0 +1,30 @@
+{
+	"name": "my-fastify-app",
+	"version": "1.0.0",
+	"main": "index.ts",
+	"scripts": {
+		"start": "ts-node src/index.ts",
+		"dev": "ts-node --watch index.ts",
+		"build": "tsc",
+		"serve": "node ./dist/index.js"
+	},
+	"dependencies": {
+		"@fastify/cookie": "^11.0.2",
+		"@fastify/websocket": "^11.2.0",
+		"better-sqlite3": "^11.0.0",
+		"dotenv": "^16.0.0",
+		"fastify": "^5.6.0",
+		"fastify-plugin": "^5.0.1",
+		"json-schema-to-ts": "^3.1.1",
+		"jsonwebtoken": "^9.0.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.2",
+		"ws": "^8.18.3"
+	},
+	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/jsonwebtoken": "^9.0.0",
+		"@types/node": "^24.3.1",
+		"@types/ws": "^8.18.1"
+	}
+}

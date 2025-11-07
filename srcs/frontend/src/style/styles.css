@@ -1,0 +1,109 @@
+
+@import "settings.css";
+@import "homepage.css";
+@import "error404.css";
+@import "pong.css";
+@import "auth.css";
+@import "tournament-game.css";
+@import "tournament-layout.css";
+@import "header.css";
+@import "i18n.css";
+@import "history.css";
+@import "profile.css";
+@import "GameMessenger.css";
+@import "arena.css";
+/* @import "browser-compat.css";
+@import "browser-warning.css";
+@import "multi-device.css"; */
+@import "./menu/menu.css";
+@import "./menu/menu.chats.css";
+/* @import "./menu/menu.friends.css"; */
+@import "./menu/menu.users.css";
+@import "./menu/menu.dropdown.css";
+
+/* Import Google Fonts for specific pages */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@font-face {
+	font-family: 'Bit5x3';
+
+	/* Basic for english */
+	/* src: url('../fonts/bit5x3.otf') format('opentype'); */
+
+	/* Better for Chinese; include en, fr, ru. But bold not so bold :( */
+	src: url('../fonts/Unifontexmono-lxY45.ttf') format('truetype');
+}
+
+/* Default pixelated font for all elements */
+html, body, div, p, h1, h2, h3, h4, h5, h6,
+button, input, select, textarea, main {
+  font-family: 'Bit5x3', monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Clean font class for specific pages */
+.clean-font, .clean-font * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+	margin: 0;
+	background-color: #000;
+	color: #fff;
+	height: 100vh;
+}
+
+/* Wrap for Back to Home Btn and Language switcher */
+.top-left-btns {
+    position: absolute;
+    height: auto;
+    width: auto;
+	display: flex;
+	left: 0;
+	top: 0;
+	padding: 16px;
+	gap: 8px;
+    flex-direction: column;
+	z-index: 1000;
+}
+
+/* SPA Navigation Links */
+a[data-route],
+button[data-route] {
+	cursor: pointer;
+}
+
+/* Back to Home Button - Universal Style */
+.back-to-home-btn {
+	flex: 1;
+	padding: 0.5rem 1rem;
+	background-color: #333;
+	color: #fff;
+	border: 2px solid #444;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: bold;
+	font-family: 'Bit5x3', monospace;
+	transition: all 0.2s;
+	text-transform: uppercase;
+	border-radius: 4px;
+}
+
+.back-to-home-btn:hover {
+	background-color: #555;
+	border-color: #4ade80;
+	color: #4ade80;
+}
+
+.back-to-home-btn:active {
+	background-color: #222;
+	transform: scale(0.98);
+}
