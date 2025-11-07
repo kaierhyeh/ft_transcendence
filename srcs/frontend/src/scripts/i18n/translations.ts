@@ -193,11 +193,8 @@ export const translations = {
     "matchFound": "Match found!",
     "left": "Left",
     "right": "Right",
-    "leftTeam": "Left",
-    "rightTeam": "Right",
     "selectGameMode": "Select a game mode",
-	"controlLeft2": "Left: W/S (top) A/Z (btm)",
-	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
+
 
     // Player Position
     "positionLeft": "Your position: Left",
@@ -228,8 +225,8 @@ export const translations = {
     "chats": "聊天",
     "noUsers": "沒有使用者",
     "noFriends": "沒有好友",
-    "noRequests": "No requests",
-    "noBlocked": "No blocked",
+    "noRequests": "沒有請求",
+    "noBlocked": "沒有封鎖",
     "noChats": "沒有聊天",
     "backToHome": "返回首頁",
     "filter": "篩選",
@@ -340,9 +337,9 @@ export const translations = {
     "enterUsername": "輸入使用者名稱",
     "enterEmail": "輸入電子信箱",
     "password": "密碼：",
-    "changePassword": "Change Password",
-    "oldPassword": "Old Password",
-    "newPassword": "New Password",
+    "changePassword": "更改密碼",
+    "oldPassword": "舊密碼",
+    "newPassword": "新密碼",
     "enterPassword": "輸入密碼",
     "register": "註冊",
     "loginWithGoogle": "使用 Google 登入",
@@ -353,9 +350,9 @@ export const translations = {
     "dontHaveAccount": "還沒有帳號？立即註冊",
     "myProfileTitle": "我的個人資料",
     "profileAvatar": "個人頭像",
-    "changeAvatar": "Change Avatar",
-    "removeAvatar": "Remove",
-    "update": "Update",
+    "changeAvatar": "更換頭像",
+    "removeAvatar": "移除",
+    "update": "更新",
     "settings": "設定",
     "enable2FA": "啟用雙重認證",
     "logout": "登出",
@@ -370,7 +367,7 @@ export const translations = {
     "enterVerificationCode": "請輸入來自驗證器應用程式的驗證碼：",
     "verify": "驗證",
     "username": "使用者名稱",
-    "alias": "Alias",
+    "alias": "別名",
     "email": "電子信箱",
     "joinDate": "加入日期",
 
@@ -379,18 +376,18 @@ export const translations = {
     "bestWinStreak": "最佳連勝",
     "winsLosses": "勝/負",
     "scoredPointsRanking": "得分排名",
-    "notEnoughData": "Not Enough Data",
-    "memberSince": "Member since",
-    "matchHistory": "Match History",
-    "noMatchesYet": "No matches yet",
-    "noMatchesExplanation": "Your match history will appear here after you play some games!",
-    "playNow": "Play Now",
-    "notConnected": "You are not connected...",
+    "notEnoughData": "資料不足",
+    "memberSince": "會員自",
+    "matchHistory": "比賽歷史",
+    "noMatchesYet": "尚未比賽",
+    "noMatchesExplanation": "您的比賽歷史將在遊戲後顯示於此！",
+    "playNow": "立即遊玩",
+    "notConnected": "您未連接...",
 
     // Chat
     "typeMessage": "輸入訊息...",
     "inviteToGame": "邀請遊戲",
-	  "blockedStatus": "BLOCKED",				// to translate
+	  "blockedStatus": "已封鎖",
 
     // Social-Menu Btns
     "addFriend": "添加好友",
@@ -401,7 +398,7 @@ export const translations = {
     "unblockUser": "取消屏蔽",
     "openChat": "聊天",
     "blockUser": "屏蔽",
-    "userDetails": "View profile",
+    "userDetails": "查看個人資料",
 
     // Game Status
     "waiting": "等待中...",
@@ -411,11 +408,7 @@ export const translations = {
     "matchFound": "配對成功！",
     "left": "左方",
     "right": "右方",
-	"leftTeam": "Left", // about "Left team", but without "team" word
-    "rightTeam": "Right", // about "Right team", but without "team" word
     "selectGameMode": "選擇遊戲模式",
-	"controlLeft2": "Left: W/S (top) A/Z (btm)",
-	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
     // Player Position
     "positionLeft": "你的位置：左",
@@ -446,8 +439,8 @@ export const translations = {
     "chats": "Chats",
     "noUsers": "Aucun utilisateur",
     "noFriends": "Aucun ami",
-    "noRequests": "No requests",
-    "noBlocked": "No blocked",
+    "noRequests": "Aucune demande",
+    "noBlocked": "Aucun bloqué",
     "noChats": "Aucun chat",
     "backToHome": "Retour à l'accueil",
     "filter": "Filtrer",
@@ -558,9 +551,9 @@ export const translations = {
     "enterUsername": "Entrez le nom d'utilisateur",
     "enterEmail": "Entrez l'email",
     "password": "Mot de passe :",
-    "changePassword": "Change Password",
-    "oldPassword": "Old Password",
-    "newPassword": "New Password",
+    "changePassword": "Changer le mot de passe",
+    "oldPassword": "Ancien mot de passe",
+    "newPassword": "Nouveau mot de passe",
     "enterPassword": "Entrez le mot de passe",
     "register": "S'inscrire",
     "loginWithGoogle": "Se connecter avec Google",
@@ -571,9 +564,9 @@ export const translations = {
     "dontHaveAccount": "Vous n'avez pas de compte ? Inscrivez-vous",
     "myProfileTitle": "Mon Profil",
     "profileAvatar": "Avatar du profil",
-    "changeAvatar": "Change Avatar",
-    "removeAvatar": "Remove",
-    "update": "Update",
+    "changeAvatar": "Changer l'avatar",
+    "removeAvatar": "Supprimer",
+    "update": "Mettre à jour",
     "settings": "Paramètres",
     "enable2FA": "Activer 2FA",
     "logout": "Se déconnecter",
@@ -597,18 +590,18 @@ export const translations = {
     "bestWinStreak": "Meilleure série",
     "winsLosses": "Victoires / Défaites",
     "scoredPointsRanking": "Classement des points marqués",
-    "notEnoughData": "Not Enough Data",
-    "memberSince": "Member since",
-    "matchHistory": "Match History",
-    "noMatchesYet": "No matches yet",
-    "noMatchesExplanation": "Your match history will appear here after you play some games!",
-    "playNow": "Play Now",
-    "notConnected": "You are not connected...",
+    "notEnoughData": "Données insuffisantes",
+    "memberSince": "Membre depuis",
+    "matchHistory": "Historique des matchs",
+    "noMatchesYet": "Aucun match pour le moment",
+    "noMatchesExplanation": "Votre historique de matchs apparaîtra ici après avoir joué quelques parties !",
+    "playNow": "Jouer maintenant",
+    "notConnected": "Vous n'êtes pas connecté...",
 
     // Chat
     "typeMessage": "Tapez un message...",
     "inviteToGame": "Inviter à jouer",
-	  "blockedStatus": "Bloqué",				// to translate
+	  "blockedStatus": "BLOQUÉ",
 
     // Social-Menu Btns
     "addFriend": "Ajouter un ami",
@@ -619,7 +612,7 @@ export const translations = {
     "unblockUser": "Débloquer",
     "openChat": "Chat",
     "blockUser": "Bloquer",
-    "userDetails": "View profile",
+    "userDetails": "Voir le profil",
 
     // Game Status
     "waiting": "En attente...",
@@ -629,11 +622,7 @@ export const translations = {
     "matchFound": "Match trouvé !",
     "left": "Gauche",
     "right": "Droite",
-	"leftTeam": "Left", // about "Left team", but without "team" word
-    "rightTeam": "Right", // about "Right team", but without "team" word
     "selectGameMode": "Sélectionnez un mode de jeu",
-	"controlLeft2": "Left: W/S (top) A/Z (btm)",
-	"controlRight2": "Right: ↑/↓ (top) O/L (btm)",
 
     // Player Position
     "positionLeft": "Votre position : Gauche",
@@ -847,11 +836,7 @@ export const translations = {
     "matchFound": "МАТЧ НАЙДЕН!",
     "left": "ЛЕВЫЙ",
     "right": "ПРАВЫЙ",
-	"leftTeam": "ЛЕВАЯ", // about "Left team", but without "team" word
-    "rightTeam": "ПРАВАЯ", // about "Right team", but without "team" word
     "selectGameMode": "ВЫБЕРИТЕ РЕЖИМ ИГРЫ",
-	"controlLeft2": "Левый: W/S (сверху) A/Z (снизу)",
-	"controlRight2": "Правый: ↑/↓ (сверху) O/L (снизу)",
 
 	// Player Position
     "positionLeft": "ВЫ СЛЕВА",
