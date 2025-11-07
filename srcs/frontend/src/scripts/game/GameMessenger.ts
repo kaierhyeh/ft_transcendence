@@ -2,6 +2,8 @@
 // Handles all game notification messages displayed over the game canvas
 // Decouples message display logic from game rendering
 
+import { t } from "../i18n/i18n.js";
+
 export class GameMessenger {
     private messageElement: HTMLElement | null;
 
@@ -51,42 +53,42 @@ export class GameMessenger {
      * Show a clickable "Join" message
      */
     showJoinPrompt(onJoin: () => void): void {
-        this.show("Join the game", true, onJoin);
+        this.show(t("joinTheGame"), true, onJoin);
     }
 
     /**
      * Show a non-clickable "Waiting for opponent" message
      */
     showWaiting(): void {
-        this.show("Waiting for opponent...", false);
+        this.show(t("waitingForOpponent"), false);
     }
 
     /**
      * Show a non-clickable "Connecting" message
      */
     showConnecting(): void {
-        this.show("Connecting...", false);
+        this.show(t("connecting"), false);
     }
 
     /**
      * Show game over message
      */
     showGameOver(won: boolean): void {
-        this.show(won ? "You won!" : "You lost!", false);
+        this.show(won ? `${t("youWin")}!` : `${t("youLose")}!`, false);
     }
 
     /**
      * Show opponent disconnected message
      */
     showOpponentDisconnected(): void {
-        this.show("Your opponent left the game. You win by forfeit!", false);
+        this.show(t("opponentLeftArena"), false);
     }
 
     /**
      * Show connection lost message
      */
     showConnectionLost(): void {
-        this.show("Connection lost", false);
+        this.show(t("connectionLost"), false);
     }
 
     /**

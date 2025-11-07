@@ -1,5 +1,6 @@
 import user from "../user/User.js";
 import { NewGame, NewMessage } from "./menu.types.js";
+import { t } from "../i18n/i18n.js";
 
 let chatSocket: WebSocket | null = null;
 let pingInterval: number | null = null;
@@ -15,8 +16,8 @@ function createGameLink(gameId: number): HTMLDivElement {
 	const link = document.createElement('a');
 	link.dataset.route = `/arena?game_id=${gameId}`;
 	link.className = 'auth-link';
-	link.dataset.i18n = 'startGameInChat';
-	link.textContent = 'Start Game';
+	link.dataset.i18n = 'startGameLink';
+	link.textContent = t("startGameLink");
 	
 	link.addEventListener('click', (e) => {
 		e.preventDefault();

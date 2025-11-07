@@ -28,10 +28,10 @@
 	font-family: 'Bit5x3';
 
 	/* Basic for english */
-	src: url('../fonts/bit5x3.otf') format('opentype');
+	/* src: url('../fonts/bit5x3.otf') format('opentype'); */
 
 	/* Better for Chinese; include en, fr, ru. But bold not so bold :( */
-	/* src: url('../fonts/Unifontexmono-lxY45.ttf') format('truetype'); */
+	src: url('../fonts/Unifontexmono-lxY45.ttf') format('truetype');
 }
 
 /* Default pixelated font for all elements */

@@ -69,7 +69,16 @@ export const translations = {
     "newTournament": "Start New Tournament",
 	"tournamentResults": "Tournaments results",
 
-
+	// Arena
+	"leftIsYou": "Left: You",
+	"rightIsYou": "Right: You",
+	"leftIsOpponent": "Left: ",
+	"rightIsOpponent": "Right: ",
+	"joinTheGame": "Join the game",
+	"waitingForOpponent": "Waiting for opponent...",
+	"opponentLeftArena": "Your opponent left the game. You win by forfeit!",
+	"connectionLost": "Connection lost",
+	"startGameLink": "Start Game",
 
 	// Render tournament
 	"tournamentEmpty": "No tournaments found",
@@ -291,6 +300,18 @@ export const translations = {
     "newTournament": "重新開始",
 	"tournamentResults": "比賽結果",
 
+	// Arena
+	"leftIsYou": "左方: 你",
+	"rightIsYou": "右方: 你",
+	"leftIsOpponent": "左方: ",
+	"rightIsOpponent": "右方: ",
+	"joinTheGame": "加入遊戲",
+	"waitingForOpponent": "等待對手...",
+	"connecting": "連接中...",
+	"opponentLeftArena": "你的對手已離開遊戲。你贏得了比賽！",
+	"connectionLost": "連線中斷",
+	"startGameLink": "開始遊戲",
+
 	// Render tournament
 	"tournamentEmpty": "沒有找到比賽",
 	"tournId": "比賽 #",
@@ -411,7 +432,6 @@ export const translations = {
     "waiting": "等待中...",
     "joining": "加入中...",
     "creatingGame": "建立遊戲中...",
-    "connecting": "連線中...",
     "matchFound": "配對成功！",
     "left": "左方",
     "right": "右方",
@@ -510,6 +530,18 @@ export const translations = {
     "seeHistory": "Voir l'historique des tournois",
     "newTournament": "Commencer un nouveau tournoi",
 	"tournamentResults": "Résultats des tournois",
+
+	// Arena
+	"leftIsYou": "Gauche: Vous",
+	"rightIsYou": "Droite: Vous",
+	"leftIsOpponent": "Gauche: ",
+	"rightIsOpponent": "Droite: ",
+	"joinTheGame": "Rejoindre le jeu",
+	"waitingForOpponent": "En attente de l'adversaire...",
+	"connecting": "Connexion...",
+	"opponentLeftArena": "Votre adversaire a quitté la partie. Vous gagnez par forfait !",
+	"connectionLost": "Connexion perdue",
+	"startGameLink": "Commencer le jeu",
 
 	// Render tournament
 	"tournamentEmpty": "Aucun tournoi trouvé",
@@ -631,7 +663,6 @@ export const translations = {
     "waiting": "En attente...",
     "joining": "Connexion...",
     "creatingGame": "Création de la partie...",
-    "connecting": "Connexion...",
     "matchFound": "Match trouvé !",
     "left": "Gauche",
     "right": "Droite",
@@ -730,6 +761,17 @@ export const translations = {
     "seeHistory": "ИСТОРИЯ ТУРНИРА",
     "newTournament": "НОВЫЙ ТУРНИР",
 	"tournamentResults": "Результаты турниров",
+
+	// Arena
+	"leftIsYou": "Вы слева",
+	"rightIsYou": "Вы справа",
+	"leftIsOpponent": "Слева: ",
+	"rightIsOpponent": "Справа: ",
+	"joinTheGame": "Присоединиться к игре",
+	"waitingForOpponent": "Ожидание противника...",
+	"opponentLeftArena": "Ваш противник покинул игру. Вы выиграли по умолчанию!",
+	"connectionLost": "Соединение потеряно",
+	"startGameLink": "Начать игру",
 
 	// Render tournament
 	"tournamentEmpty": "Турниры не найдены",
