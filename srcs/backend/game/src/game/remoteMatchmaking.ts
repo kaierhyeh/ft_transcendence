@@ -1,6 +1,6 @@
 import { GameParticipant, MatchmakingFormat, MatchmakingResponse } from '../schemas/index.js';
 import { LiveSessionManager } from './LiveSessionManager.js';
-import { SocketStream } from "@fastify/websocket";
+import type { WebSocket } from "ws";
 
 interface QueueEntry {
   participant: GameParticipant;
@@ -9,7 +9,7 @@ interface QueueEntry {
 export class MatchmakingManager {
   queues: Map<MatchmakingFormat, QueueEntry[]>;
   sessionManager: LiveSessionManager;
-  waitingConnections: Map<string, SocketStream>;
+  waitingConnections: Map<string, WebSocket>;
 
   constructor(sessionManager: LiveSessionManager) {
     this.queues = new Map();
@@ -116,7 +116,7 @@ export class MatchmakingManager {
           slot: player.slot
         };
         const jsonMessage = JSON.stringify(message);
-        ws.socket.send(jsonMessage);
+        ws.send(jsonMessage);
         this.waitingConnections.delete(participantId);
       }
     }
@@ -164,7 +164,7 @@ export class MatchmakingManager {
     };
   }
   
-  saveWebSocket(participantId: string, ws: SocketStream): void {
+  saveWebSocket(participantId: string, ws: WebSocket): void {
     this.waitingConnections.set(participantId, ws);
   }
   

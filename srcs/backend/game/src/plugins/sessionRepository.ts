@@ -42,5 +42,5 @@ const sessionRepositoryPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(sessionRepositoryPlugin, {
   name: "session-repository-plugin",        // Helps with debugging and plugin dependencies
-  fastify: "4.x"           // Ensures compatibility
+  fastify: "5.x"           // Ensures compatibility
 });

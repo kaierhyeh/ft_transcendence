@@ -104,6 +104,7 @@ export const translations = {
     // Chat
     "typeMessage": "Type a message...",
     "inviteToGame": "Invite to game",
+	"startGameInChat": "Start Game",
 	"blockedStatus": "BLOCKED",
 
     // Game Status
@@ -241,6 +242,7 @@ export const translations = {
     // Chat
     "typeMessage": "輸入訊息...",
     "inviteToGame": "邀請遊戲",
+	"startGameInChat": "開始遊戲",
 	"blockedStatus": "BLOCKED",				// to translate
 
     // Game Status
@@ -377,6 +379,7 @@ export const translations = {
     // Chat
     "typeMessage": "Tapez un message...",
     "inviteToGame": "Inviter à jouer",
+	"startGameInChat": "Démarrer le jeu",
 	"blockedStatus": "BLOCKED",				// to translate
 
     // Game Status
@@ -513,6 +516,7 @@ export const translations = {
     // Chat
     "typeMessage": "Напишите сообщение...",
     "inviteToGame": "Пригласить играть",
+	"startGameInChat": "Начать игру",
 	"blockedStatus": "BLOCKED",				// to translate
 
     // Game Status

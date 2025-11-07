@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { WebSocket } from "ws";
-import { NewMessage } from "../types/messages.type";
+import { NewGame, NewMessage } from "../types/messages.type";
 
 export const chatClientsWebSocket = new Map<number, WebSocket>();
 
@@ -50,14 +50,38 @@ function registerWebSocketConnection(socket: WebSocket, request: any): void {
 	});
 }
 
-export function sendMessageToClientWebSocket(toId: number, newMessage: NewMessage): boolean {
+export function sendMessageToClientWebSocket(toId: number, content: NewMessage | NewGame, type: "chat_message" | "game_created" | "invite_failed"): boolean {
 	const clientSocket = chatClientsWebSocket.get(toId);
 	console.log("WS send msg toId=", toId, " socket=", clientSocket !== undefined ? "FOUND" : "NOT FOUND");
+
 	if (clientSocket && clientSocket.readyState === WebSocket.OPEN) {
-		console.log("WS send msg newMessage=", newMessage);
-		clientSocket.send(JSON.stringify({ type: "chat_message", newMessage: newMessage }));
-		console.log("WS send msg: DONE");
-		return true;
+		console.log("WS send msg type=", type);
+
+		switch (type) {
+
+			case "chat_message":
+				console.log("WS send msg newMessage=", content);
+				clientSocket.send(JSON.stringify({ type: "chat_message", newMessage: content }));
+				console.log("WS send msg: DONE");
+				return true;
+
+			case "game_created":
+				console.log("WS send msg newGame=", content);	
+				clientSocket.send(JSON.stringify({ type: "game_created", newGame: content }));
+				console.log("WS send msg: DONE");
+				return true;
+
+			case "invite_failed":
+				console.log("WS send msg inviteFailed=", content);
+				clientSocket.send(JSON.stringify({ type: "invite_failed", newGame: content }));
+				console.log("WS send msg: DONE");
+				return true;
+
+			default:
+				console.log("WS send msg type=UNKNOWN");
+				return false;
+		}
+
 	}
 	console.log("WS send msg: FAILED");
 	// clientSocket?.close();

@@ -7,6 +7,8 @@ import { ChatUser, Message, NewMessageRequest } from "./menu.types.js";
 import { chatSocket, wsConnectChat } from "./menu.ws.js";
 import { presence, OnlineStatus, Presence } from "../presence.js";
 import { fetchWithAuth } from "../utils/fetch.js";
+import { GameParticipant } from "../game/types.js";
+import { createMatch, GameInvitation } from "../game/api.js";
 
 /* ============================================ GLOBALS ===================================== */
 
@@ -44,6 +46,25 @@ function initializeGlobals(): boolean {
 }
 
 /* ====================================== UTILS ============================================= */
+
+/**
+ * Create participants for invitation game
+ * Both players must be registered users with their user_id as participant_id
+ */
+function createInvitationParticipants(fromUserId: number, toUserId: number): GameParticipant[] {
+	return [
+		{
+			type: "registered",
+			user_id: fromUserId,
+			participant_id: String(fromUserId) // participant_id must match user_id for invitations
+		},
+		{
+			type: "registered",
+			user_id: toUserId,
+			participant_id: String(toUserId) // participant_id must match user_id for invitations
+		}
+	];
+}
 
 function clearBeforeOpenChatsSection(): void {
 	[	"#chatsList",
@@ -253,7 +274,38 @@ async function sentMessageByEnter(event: KeyboardEvent): Promise<void> {
 }
 
 async function inviteToGame(toUser: ChatUser): Promise<void> {
-	console.log(`CHAT: Invite pressed: invite [${toUser.username}] to a game (not implemented)`);
+	const toId = toUser.user_id;
+	const fromId = user.user_id;
+	
+	if (!fromId) {
+		console.error('CHAT: Cannot invite to game - user not authenticated');
+		return;
+	}
+
+	console.log(`CHAT: Inviting [${toUser.username}] (id: ${toId}) to a game`);
+
+	try {
+		// Create participants for invitation game
+		const participants = createInvitationParticipants(fromId, toId);
+		
+		// Create invitation object
+		const invitation: GameInvitation = {
+			fromId: fromId,
+			toId: toId
+		};
+		
+		// Create invitation game (1v1, pvp, online=true, with invitation data)
+		const { game_id } = await createMatch('pvp', '1v1', participants, true, invitation);
+		
+		console.log(`CHAT: Invitation game created with game_id: ${game_id}`);
+		
+	} catch (error) {
+		console.error('CHAT: Failed to create invitation game:', error);
+		
+		// Show user-friendly error message
+		const errorMessage = error instanceof Error ? error.message : 'Failed to create game';
+		alert(`Could not create game invitation: ${errorMessage}`);
+	}
 }
 
 async function openUserInfo(toUser: ChatUser): Promise<void> {

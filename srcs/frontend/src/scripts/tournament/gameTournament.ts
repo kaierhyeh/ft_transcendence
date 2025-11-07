@@ -2,6 +2,7 @@ import { TournamentMatch, GameParticipant } from './types.js';
 import user from '../user/User.js';
 import { createGameSession, GameSession } from '../game/GameSession.js';
 import { GameRenderer } from '../game/GameRenderer.js';
+import { GameMessenger } from '../game/GameMessenger.js';
 import { InputController } from '../game/InputController.js';
 import { generateParticipantId } from '../game/utils.js';
 
@@ -12,6 +13,7 @@ export class TournamentGameManager {
     
     // Component references
     private renderer: GameRenderer | null = null;
+    private messenger: GameMessenger | null = null;
     private inputController: InputController | null = null;
     private session: GameSession | null = null;
 
@@ -41,14 +43,25 @@ export class TournamentGameManager {
             
             canvas.id = 'pong';
             this.renderer = new GameRenderer('pong', false);
+            this.messenger = new GameMessenger('game-message');
             
             this.inputController = new InputController();
+            
+            // Show connecting message
+            this.messenger.showConnecting();
             
             const session = await createGameSession('tournament', '1v1', participants);
             
             console.log('Tournament session created:', session.gameId);
             
             this.session = session;
+            
+            // Hide connecting message when game starts
+            session.onGameStarted(() => {
+                if (this.messenger) {
+                    this.messenger.hide();
+                }
+            });
             
             this.renderer.attachToSession(session);
             this.inputController.attachToSession(session);
@@ -82,6 +95,11 @@ export class TournamentGameManager {
         if (this.renderer) {
             this.renderer.detach();
             this.renderer = null;
+        }
+        
+        if (this.messenger) {
+            this.messenger.hide();
+            this.messenger = null;
         }
         
         if (this.session) {

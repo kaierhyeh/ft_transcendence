@@ -47,6 +47,11 @@ export interface NewMessageResponse {
 	msg: string;
 }
 
+export interface NewGame {
+	chat_id: number;
+	game_id: number;
+}
+
 export interface ChatUser {
 	chat_id: number;
 	user_id: number;

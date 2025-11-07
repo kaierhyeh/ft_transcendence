@@ -1,0 +1,57 @@
+/* GameMessenger.css */
+/* Styles for game notification messages displayed over the game canvas */
+
+#game-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    font-family: 'Bit5x3', monospace;
+    font-size: 2rem; /* Use rem for scalability */
+    color: white;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+    text-align: center;
+    max-width: 80%;
+    white-space: pre-wrap;
+    transition: all 0.3s ease;
+}
+
+/* Clickable message state */
+#game-message.clickable {
+    pointer-events: auto;
+    cursor: pointer;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #00ff88;
+    border-radius: 10px;
+}
+
+#game-message.clickable:hover {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: #00ff88;
+    transform: translate(-50%, -50%) scale(1.05);
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+#game-message.clickable:active {
+    transform: translate(-50%, -50%) scale(0.98);
+}
+
+/* Non-clickable messages (waiting, game over, etc.) */
+#game-message:not(.clickable) {
+    pointer-events: none;
+}
+
+/* Responsive font sizes */
+@media (max-width: 900px) {
+    #game-message {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    #game-message {
+        font-size: 1.2rem;
+    }
+}

@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cookie from "@fastify/cookie";
 import websocketPlugin from '@fastify/websocket';
 import liveSessionManagerPlugin from "./plugins/liveSessionManager";
 import remoteMatchmakingManagerPlugin from "./plugins/remoteMatchmakingManager";
@@ -10,6 +11,7 @@ const fastify = Fastify({ logger: true });
 
 async function run() {
   
+    await fastify.register(cookie);
   await fastify.register(websocketPlugin);
   await fastify.register(sessionRepositoryPlugin);
   await fastify.register(liveSessionManagerPlugin);
