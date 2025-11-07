@@ -254,16 +254,16 @@ export const translations = {
     "avgRebounds": "平均反彈",
     "reset": "重設",
     "failedToStartGame": "無法開始遊戲",
-	"playerWins": "player wins!",
-	"teamWins": "team wins!",
-	"youWin": "You Win",
-	"youLose": "You Lose",
-	"winner": "WINNER: ",
-	"teammateLeft": "Your teammate left the game!",
-	"opponentLeft": "Your opponent left the game!",
-	"selectAnOnlineGame": " Select an online format to retry",
-	"selectNewParty": "Please select a new party",
-	"pressSpaceToRestart": "Press SPACE to restart",
+	"playerWins": "玩家獲勝！",
+	"teamWins": "隊伍獲勝！",
+	"youWin": "你贏了",
+	"youLose": "你輸了",
+	"winner": "贏家：",
+	"teammateLeft": "你的隊友離開了遊戲！",
+	"opponentLeft": "你的對手離開了遊戲！",
+	"selectAnOnlineGame": "選擇線上模式重試",
+	"selectNewParty": "請選擇新的遊戲",
+	"pressSpaceToRestart": "按空白鍵重新開始",
 
     // Tournament
     "tournament": "比賽",
@@ -284,47 +284,47 @@ export const translations = {
     "goHome": "回到首頁",
     "seeHistory": "查看歷史",
     "newTournament": "重新開始",
-	"tournamentResults": "Tournaments results",
+	"tournamentResults": "比賽結果",
 
 	// Render tournament
-	"tournamentEmpty": "No tournaments found",
-	"tournId": "Tournament #",
-	"tournamentPlayers": "p.", // p. = players
-	"tournamentWinner": "Winner: ", // with space at the end!
+	"tournamentEmpty": "沒有找到比賽",
+	"tournId": "比賽 #",
+	"tournamentPlayers": "位", // p. = players
+	"tournamentWinner": "贏家：", // with space at the end!
 
 	//Match History
-	"loading": "Loading...",
-	"loadMore": "Load More",
-	"failedToLoad": "Failed to load. Try again?",
+	"loading": "載入中...",
+	"loadMore": "載入更多",
+	"failedToLoad": "載入失敗，再試一次？",
 	// next 4 lines help to build this phrase:
 	// Showing ${displayedMatches} of ${pagination.total_records} ${pagination.total_records !== 1 ? 'matches' : 'match'}
-	"showing": "Showing",
-	"of": "of",
-	"match": "match",
-	"matches": "matches",
+	"showing": "顯示",
+	"of": "共",
+	"match": "場比賽",
+	"matches": "場比賽",
 
 	// Match Card
-	"opponent": "Opponent",
-	"yourTeam": "Your Team",
+	"opponent": "對手",
+	"yourTeam": "你的隊伍",
 	"beforeOwner": "",			// to build: `{profileOwner.username}'s Team`
-	"afterOwner": "'s Team", 	// to build: `{profileOwner.username}'s Team`
-	"team": "Team",
-	"formatUnknown": "Unknown",
-	"formatAiBot": "AI Bot",
-	"formatGuest": "Guest",
-	"formatYou": "You",
-	"formatPlayer": "Player",
-	"matchCardOnline": "Online",
-	"victory": "Victory!",
-	"defeat": "Defeat!",
+	"afterOwner": "的隊伍", 	// to build: `{profileOwner.username}'s Team`
+	"team": "隊伍",
+	"formatUnknown": "未知",
+	"formatAiBot": "電腦",
+	"formatGuest": "訪客",
+	"formatYou": "你",
+	"formatPlayer": "玩家",
+	"matchCardOnline": "線上",
+	"victory": "勝利！",
+	"defeat": "失敗！",
 	// labels just for russian translation
 	"labelAI": "Solo",
 	"labelTournament": "Tournament",
-	"justNow": "Just now",
-	"yesterday": "Yesterday",
-	"minutesAgo": "m ago",
-	"hoursAgo": "h ago",
-	"daysAgo": "days ago",
+	"justNow": "剛剛",
+	"yesterday": "昨天",
+	"minutesAgo": "分鐘前",
+	"hoursAgo": "小時前",
+	"daysAgo": "天前",
 
     // Profile & Auth
     "loadingProfile": "載入中...",
@@ -468,16 +468,16 @@ export const translations = {
     "avgRebounds": "Rebonds moy.",
     "reset": "Réinitialiser",
     "failedToStartGame": "Échec du démarrage du jeu",
-	"playerWins": "player wins!",
-	"teamWins": "team wins!",
-	"youWin": "You Win",
-	"youLose": "You Lose",
-	"winner": "WINNER: ",
-	"teammateLeft": "Your teammate left the game!",
-	"opponentLeft": "Your opponent left the game!",
-	"selectAnOnlineGame": " Select an online format to retry",
-	"selectNewParty": "Please select a new party",
-	"pressSpaceToRestart": "Press SPACE to restart",
+	"playerWins": "le joueur gagne !",
+	"teamWins": "l'équipe gagne !",
+	"youWin": "Vous avez gagné",
+	"youLose": "Vous avez perdu",
+	"winner": "GAGNANT : ",
+	"teammateLeft": "Votre coéquipier a quitté la partie !",
+	"opponentLeft": "Votre adversaire a quitté la partie !",
+	"selectAnOnlineGame": "Sélectionnez un format en ligne pour réessayer",
+	"selectNewParty": "Veuillez sélectionner une nouvelle partie",
+	"pressSpaceToRestart": "Appuyez sur ESPACE pour recommencer",
 
     // Tournament
     "tournament": "Tournoi",
@@ -498,47 +498,47 @@ export const translations = {
     "goHome": "Retour à l'accueil",
     "seeHistory": "Voir l'historique des tournois",
     "newTournament": "Commencer un nouveau tournoi",
-	"tournamentResults": "Tournaments results",
+	"tournamentResults": "Résultats des tournois",
 
 	// Render tournament
 	"tournamentEmpty": "Aucun tournoi trouvé",
-	"tournId": "Tournament #",
-	"tournamentPlayers": "p.", // p. = players
-	"tournamentWinner": "Winner: ", // with space at the end!
+	"tournId": "Tournoi #",
+	"tournamentPlayers": "j.", // p. = players
+	"tournamentWinner": "Gagnant : ", // with space at the end!
 
 	//Match History
-	"loading": "Loading...",
-	"loadMore": "Load More",
-	"failedToLoad": "Failed to load. Try again?",
+	"loading": "Chargement...",
+	"loadMore": "Charger plus",
+	"failedToLoad": "Échec du chargement. Réessayer ?",
 	// next 4 lines help to build this phrase:
 	// Showing ${displayedMatches} of ${pagination.total_records} ${pagination.total_records !== 1 ? 'matches' : 'match'}
-	"showing": "Showing",
-	"of": "of",
+	"showing": "Affichage de",
+	"of": "sur",
 	"match": "match",
-	"matches": "matches",
+	"matches": "matchs",
 
 	// Match Card
-	"opponent": "Opponent",
-	"yourTeam": "Your Team",
-	"beforeOwner": "",			// to build: `{profileOwner.username}'s Team`
-	"afterOwner": "'s Team", 	// to build: `{profileOwner.username}'s Team`
-	"team": "Team",
-	"formatUnknown": "Unknown",
-	"formatAiBot": "AI Bot",
-	"formatGuest": "Guest",
-	"formatYou": "You",
-	"formatPlayer": "Player",
-	"matchCardOnline": "Online",
-	"victory": "Victory!",
-	"defeat": "Defeat!",
+	"opponent": "Adversaire",
+	"yourTeam": "Votre Équipe",
+	"beforeOwner": "Équipe de ",			// to build: `{profileOwner.username}'s Team`
+	"afterOwner": "", 	// to build: `{profileOwner.username}'s Team`
+	"team": "Équipe",
+	"formatUnknown": "Inconnu",
+	"formatAiBot": "IA",
+	"formatGuest": "Invité",
+	"formatYou": "Vous",
+	"formatPlayer": "Joueur",
+	"matchCardOnline": "En ligne",
+	"victory": "Victoire !",
+	"defeat": "Défaite !",
 	// labels just for russian translation
 	"labelAI": "Solo",
 	"labelTournament": "Tournament",
-	"justNow": "Just now",
-	"yesterday": "Yesterday",
-	"minutesAgo": "m ago",
-	"hoursAgo": "h ago",
-	"daysAgo": "days ago",
+	"justNow": "À l'instant",
+	"yesterday": "Hier",
+	"minutesAgo": "min",
+	"hoursAgo": "h",
+	"daysAgo": "j",
 
     // Profile & Auth
     "loadingProfile": "Chargement...",
