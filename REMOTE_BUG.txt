@@ -1,2 +1,0 @@
-return to menu do not work from remote player. 
-can not retry the match
