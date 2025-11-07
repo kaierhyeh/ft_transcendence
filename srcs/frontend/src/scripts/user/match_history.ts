@@ -105,9 +105,9 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
             </div>
             ${hasMorePages ? '<button class="load-more-btn">Load More</button>' : ''}
             <div class="pagination-info">
-                Showing ${displayedMatches} of ${pagination.total_records} match${pagination.total_records !== 1 ? 'es' : ''}
+                ${t("showing")} ${displayedMatches} ${t("of")} ${pagination.total_records} ${pagination.total_records !== 1 ? t("matches") : t("match")}
             </div>
-        `;                                                                                                                             // TO_TRANSLATE
+        `;
     }
     
     // Add load more button if there are more pages
@@ -123,7 +123,7 @@ function renderMatches(container: Element, response: MatchHistoryResponse, appen
 
     const paginationInfo = container.querySelector('.pagination-info');
     if (paginationInfo)
-        paginationInfo.textContent = `Showing ${displayedMatches} of ${pagination.total_records} match${pagination.total_records !== 1 ? 'es' : ''}`;   // TO_TRANSLATE
+        paginationInfo.textContent = `${t("showing")} ${displayedMatches} ${t("of")} ${pagination.total_records} ${pagination.total_records !== 1 ? t("matches") : t("match")}`;
     
     // Attach event listeners to player links in match cards
     attachMatchCardListeners();
@@ -141,7 +141,7 @@ function setupLoadMoreButton(container: Element): void {
 
         try {
             isLoading = true;
-            loadMoreBtn.textContent = 'Loading...';                     // TO_TRANSLATE
+            loadMoreBtn.textContent = t('loading');
             loadMoreBtn.setAttribute('disabled', 'true');
 
             currentPage++;
@@ -153,11 +153,11 @@ function setupLoadMoreButton(container: Element): void {
             renderMatches(container, response, true);
 
             if (hasMorePages)
-                loadMoreBtn.textContent = 'Load More';                     // TO_TRANSLATE
+                loadMoreBtn.textContent = t('loadMore');
 
         } catch (error) {
             console.error('Failed to load more matches:', error);
-            loadMoreBtn.textContent = 'Failed to load. Try again?';                     // TO_TRANSLATE
+            loadMoreBtn.textContent = t('failedToLoad');
         } finally {
             isLoading = false;
             loadMoreBtn.removeAttribute('disabled');
@@ -209,7 +209,7 @@ async function loadMatchHistory(): Promise<void> {
                 <h1 data-i18n="matchHistory">⚔️ ${t("matchHistory")} ⚔️</h1>
             </div>
             <div class="match-history-container"></div>
-        `;                                                                                          // TO_TRANSLATE
+        `;
         
         // Show the section
         matchHistorySection.style.display = 'block';
