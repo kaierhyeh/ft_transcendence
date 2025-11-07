@@ -57,7 +57,7 @@ export async function initProfile() {
 			}
 		}
 		if (joinDateElement)
-			joinDateElement.textContent = t("memberSince") + ' ' + joinDate;							// TO_TRANSLATE
+			joinDateElement.textContent = t("memberSince") + ' ' + joinDate;
 		if (currentStreakElement)
 			currentStreakElement.textContent = userData.curr_winstreak?.toString() || '0';
 		if (bestStreakElement)
