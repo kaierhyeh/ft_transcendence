@@ -130,18 +130,15 @@
 	flex: 1;
 	display: inline-flex;
 	align-items: center;
-	padding: 4%;
-	padding-bottom: 5px;
-	padding-top: 5px;
+	padding: 0.4rem 0.6rem;
 	border-radius: 8px;
 	color: #aaa;
 	background: transparent;
 	border: 2px solid transparent;
 	transition: all 0.3s ease;
 	cursor: pointer;
-	/* width: 30%; */
-	height: 40px;
-	gap : 5px;
+	height: clamp(36px, 6.5vw, 40px);
+	gap : 0.5rem;
 }
 .user-action-button:hover {
 	color: #4ade80;

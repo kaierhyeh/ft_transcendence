@@ -183,6 +183,7 @@
 	padding: 0.4rem 0.6rem;
 	color: #aaa;
 	background: transparent;
+	border-radius: 8px;
 	border: 2px solid transparent;
 	transition: all 0.3s ease;
 	cursor: pointer;
@@ -191,19 +192,15 @@
 }
 .menu-control-panel-button-pressed {
 	justify-content: center;
-	flex: 1;
+	flex: 1 1 auto;
 	display: inline-flex;
 	align-items: center;
-	padding: 4%;
-	padding-bottom: 5px;
-	padding-top: 5px;
-	border-radius: 8px;
+	padding: 0.4rem 0.6rem;
 	color: #4ade80;
 	background: transparent;
 	border: 2px solid transparent;
-	/* cursor: pointer; */
-	height: 40px;
-	gap : 5px;
+	height: clamp(36px, 6.5vw, 40px);
+	gap : 0.5rem;
 }
 .menu-control-panel-button:hover {
 	color: #4ade80;
