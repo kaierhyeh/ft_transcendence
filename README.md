@@ -45,7 +45,7 @@ make help
 <br><br>
 ## 📊 Module Status Overview
 **TOTAL SCORE**: 11 Major (110 points) + 5 Minor (25 points) = 135/100 points <br>
-(Evaluation sheet: 7 Major + 4 Major (2 points each) + 5 Minor (1 point each) = 🌟 Outstanding! > 125/100 points.
+([Evaluation sheet](https://github.com/kaierhyeh/ft_transcendence/blob/main/documents/Evaluation%20sheet.pdf): 7 Major + 4 Major (2 points each) + 5 Minor (1 point each) = 🌟 Outstanding! > 125/100 points.
 ### Major Modules (10 points each)
 | Module | Status | Points | Verification |
 |--------|--------|--------|-------------|
