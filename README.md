@@ -38,14 +38,14 @@ make up_separately
 # Rebuild.
 make re
 # Stop and clean up everything.
-make fclean
+make clean
 # Other options
 make help
 ```
 <br><br>
 ## 📊 Module Status Overview
 **TOTAL SCORE**: 11 Major (110 points) + 5 Minor (25 points) = 135/100 points <br>
-([Evaluation sheet](https://github.com/kaierhyeh/ft_transcendence/blob/main/documents/Evaluation%20sheet.pdf): 7 Major + 4 Major (2 points each) + 5 Minor (1 point each) = 🌟 Outstanding! > 125/100 points.
+(Evaluation sheet: 7 Major + 4 Major (2 points each) + 5 Minor (1 point each) = 🌟 Outstanding! > 125/100 points.)
 ### Major Modules (10 points each)
 | Module | Status | Points | Verification |
 |--------|--------|--------|-------------|
@@ -55,7 +55,6 @@ make help
 | **Remote Authentication** | ✅ Complete | 10 | Google OAuth integration |
 | **Remote Players** | ✅ Complete | 10 | WebSocket real-time multiplayer |
 | **Multiplayer (>2 players)** | ✅ Complete | 10 | 4-player Pong support |
-| **Additional Game + History** | ✅ Complete | 10 | Tournament system with matchmaking |
 | **Live Chat** | ✅ Complete | 10 | Real-time chat with WebSocket |
 | **AI Opponent** | ✅ Complete | 10 | AIController.ts implementation |
 | **Two-Factor Authentication + JWT** | ✅ Complete | 10 | TOTP 2FA + JWT implementation |
