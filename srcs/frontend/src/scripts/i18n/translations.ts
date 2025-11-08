@@ -342,7 +342,7 @@ export const translations = {
 	"formatPlayer": "玩家",
 	"matchCardOnline": "線上",
 	"victory": "勝利！",
-	"defeat": "失敗！",
+	"defeat": "敗北！",
 	// labels just for russian translation
 	"labelAI": "Solo",
 	"labelTournament": "Tournament",
@@ -405,10 +405,10 @@ export const translations = {
     "notEnoughData": "資料不足",
     "memberSince": "會員自",
     "matchHistory": "比賽歷史",
-    "noMatchesYet": "尚未比賽",
-    "noMatchesExplanation": "您的比賽歷史將在遊戲後顯示於此！",
+    "noMatchesYet": "尚未參加比賽",
+    "noMatchesExplanation": "您的賽史將顯示於此！",
     "playNow": "立即遊玩",
-    "notConnected": "您未連接...",
+    "notConnected": "尚未登入...",
 
     // Chat
     "typeMessage": "輸入訊息...",
@@ -418,13 +418,13 @@ export const translations = {
 
     // Social-Menu Btns
     "addFriend": "添加好友",
-    "cancelRequest": "取消请求",
-    "acceptRequest": "接受请求",
-    "declineRequest": "拒绝请求",
-    "deleteFriend": "删除好友",
-    "unblockUser": "取消屏蔽",
+    "cancelRequest": "取消請求",
+    "acceptRequest": "接受請求",
+    "declineRequest": "拒絕請求",
+    "deleteFriend": "刪除好友",
+    "unblockUser": "取消封鎖",
     "openChat": "聊天",
-    "blockUser": "屏蔽",
+    "blockUser": "封鎖",
     "userDetails": "查看個人資料",
 
 
