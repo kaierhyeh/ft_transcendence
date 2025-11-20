@@ -7,14 +7,19 @@ Develop a web game Pong including the following features:
 5. Automated health test at launch time.
 
 ## Quick Start 
-
-1. Clone the repository to your local machine.
+<details>
+  <summary>
+1. Clone the repository to your local machine.</summary>
+  
 ```bash
 git clone <repository-url>
 cd ft_transcendence
 ```
-
-2. Setup necessary credentials and launch
+</details>
+<details>
+  <summary>
+2. Setup necessary credentials and launch</summary>
+  
 - 1) Generate **secret/google-oauth.env** under root folder: 
 ```
 GOOGLE_CLIENT_ID=.apps.googleusercontent.com
@@ -32,8 +37,12 @@ make up-d
 make up_separately
 # Builds services one-by-one (to avoid memory issues), then starts everything in detached mode.
 ```
-🚀 **Access**: [https://localhost:4443](https://localhost:4443) <br><br>
-3. Other commands
+🚀 **Access**: [https://localhost:4443](https://localhost:4443)
+</details>
+<details>
+  <summary>
+3. Other commands</summary>
+
 ```bash
 # Rebuild.
 make re
@@ -42,7 +51,11 @@ make clean
 # Other options
 make help
 ```
-4. Controls
+</details>
+<details>
+  <summary>
+4. Controls</summary>
+
 ```
 1v1:
 Player 1 (left):  W, S
@@ -54,9 +67,14 @@ Player 2: A, Z
 Player 3: ↑, ↓
 Player 4: O, L
 ```
-5. Tournament result saving and history<br>
+</details>
+<details>
+  <summary>
+5. Tournament result saving and match history</summary>
+
 You'll need to set up a [`blockchain`](https://github.com/kaierhyeh/ft_transcendence/blob/main/tools/MetaMask.md) in order to save tournament results and browse match history.
-<br><br>
+</details>
+
 ## 📊 Module Status Overview
 **TOTAL SCORE**: 11 Major (110 points) + 5 Minor (25 points) = 135/100 points <br>
 (Evaluation sheet: 7 Major + 4 Major (2 points each) + 5 Minor (1 point each) = 🌟 Outstanding! > 125/100 points.)
