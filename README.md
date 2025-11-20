@@ -42,6 +42,20 @@ make clean
 # Other options
 make help
 ```
+4. Controls
+```
+1v1:
+Player 1 (left):  W, S
+Player 2 (right): ↑, ↓
+
+2v2:
+Player 1: W, S
+Player 2: A, Z
+Player 3: ↑, ↓
+Player 4: O, L
+```
+5. Tournament result saving and history<br>
+You'll need to set up a [`blockchain`](https://github.com/kaierhyeh/ft_transcendence/blob/main/tools/MetaMask.md) in order to save tournament results and browse match history.
 <br><br>
 ## 📊 Module Status Overview
 **TOTAL SCORE**: 11 Major (110 points) + 5 Minor (25 points) = 135/100 points <br>
